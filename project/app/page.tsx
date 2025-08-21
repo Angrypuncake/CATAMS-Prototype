@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import { Button } from "@mui/material";
 
 export default function Home() {
   const [response, setResponse] = useState("");
@@ -26,6 +27,9 @@ export default function Home() {
       >
         Send Message to Backend
       </button>
+      <Button>
+        Sample MUI Button
+      </Button>
     </div>
   );
 }

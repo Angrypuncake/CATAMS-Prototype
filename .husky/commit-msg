@@ -1,0 +1,20 @@
+commit_msg_file="$1"
+commit_msg="$(cat "$commit_msg_file")"
+
+# <type>(<scope>): [IS-<number>] <optional description>
+# types: feat|fix|docs|test
+# scopes: frontend|backend
+pattern='^(feat|fix|docs|test)\((frontend|backend)\) : \[IS-[0-9]+\]( .+)?$'
+
+if ! printf '%s' "$commit_msg" | grep -Eq "$pattern"; then
+  echo "❌ Invalid commit message."
+  echo "Required format:"
+  echo "  <type>(frontend|backend) : [IS-<number>] <optional description>"
+  echo ""
+  echo "Examples:"
+  echo "  feat(frontend) : [IS-123] Add login page"
+  echo "  fix(backend) : [IS-456] Handle null user"
+  exit 1
+fi
+echo "✅ Commit message is valid."
+exit 0

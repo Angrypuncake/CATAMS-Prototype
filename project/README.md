@@ -2,6 +2,14 @@
 
 This repository contains the frontend for a Next.js project, along with documentation and Git hooks for quality control.
 
+## Node JS
+This project uses `npm` and `npx` which comes with the installation of Node JS `v22.18.0`
+https://nodejs.org/en/download 
+Use the following commands to verify that the install was successful
+```bash
+npm --v
+npx --v
+```
 ## Repository Structure
 
 ```
@@ -88,13 +96,3 @@ All commit messages must follow this format:
 ## Documentation
 
 See the [documentation/](../documentation) folder for meeting minutes and other project docs.
-
-## Learn More
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Jest Documentation](https://jestjs.io/)
-- [ESLint Documentation](https://eslint.org/)
-- [Husky Documentation](https://typicode.github.io/husky/)
-
----
-This project was bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app)

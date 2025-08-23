@@ -1,0 +1,8 @@
+cd project
+echo "Running tests before push..."
+if npm run test; then
+  echo "✅ Tests passed. Proceeding with push."
+else
+  echo "❌ Tests failed. Aborting push."
+  exit 1
+fi

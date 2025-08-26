@@ -23,7 +23,7 @@ export default function Home() {
         onClick={sendMessage}
         className="bg-blue-500 text-white p-2 rounded"
       >
-        Send Message to Backend
+        Send Message to Backend plz
       </button>
       <Button>Sample MUI Button</Button>
     </div>

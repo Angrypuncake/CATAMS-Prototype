@@ -1,0 +1,7 @@
+echo "Running lint-staged (ESLint + Prettier) on staged files..."
+if npx lint-staged; then
+  echo "✅ Code formatting and lint checks passed."
+else
+  echo "❌ Lint-staged failed. Please fix issues before pushing."
+  exit 1
+fi

@@ -17,9 +17,7 @@ export default function Home() {
   }
   return (
     <div>
-      <h1>
-        welcome to the home page
-      </h1>
+      <h1>welcome to the home page</h1>
       Click the button here
       <button
         onClick={sendMessage}
@@ -27,9 +25,7 @@ export default function Home() {
       >
         Send Message to Backend
       </button>
-      <Button>
-        Sample MUI Button
-      </Button>
+      <Button>Sample MUI Button</Button>
     </div>
   );
 }

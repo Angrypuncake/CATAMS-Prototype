@@ -1,4 +1,13 @@
 cd project
+
+echo "Running code formatting check..."
+if npm run format; then
+  echo "✅ Code formatting is correct."
+else
+  echo "❌ Code formatting issues found. Please run 'npm run format:fix' to fix them."
+  exit 1
+fi
+
 echo "Running tests before push..."
 if npm run test; then
   echo "✅ Tests passed. Proceeding with push."

@@ -17,19 +17,15 @@ export default function Home() {
   }
   return (
     <div>
-      <h1>
-        welcome to the home page
-      </h1>
+      <h1>welcome to the home page</h1>
       Click the button here
       <button
         onClick={sendMessage}
         className="bg-blue-500 text-white p-2 rounded"
       >
-        Send Message to Backend
+        Send Message to Backend plz
       </button>
-      <Button>
-        Sample MUI Button
-      </Button>
+      <Button>Sample MUI Button</Button>
     </div>
   );
 }

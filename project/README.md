@@ -55,7 +55,6 @@ npm install
 ```bash
 cp .env.example .env.local
 ```
-cp .env.example .env.local
 
 ### 3. Running the Development Server
 

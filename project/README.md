@@ -50,7 +50,13 @@ cd project
 npm install
 ```
 
-### 2. Running the Development Server
+### 2. Configure Environment Variables (Supabase requirement)
+
+```bash
+cp .env.example .env.local
+```
+
+### 3. Running the Development Server
 
 ```bash
 npm run dev
@@ -58,7 +64,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-### 3. Linting
+### 4. Linting
 
 Run ESLint to check code quality:
 
@@ -66,7 +72,7 @@ Run ESLint to check code quality:
 npm run lint
 ```
 
-### 4. Testing
+### 5. Testing
 
 Run all tests with:
 
@@ -76,7 +82,7 @@ npm run test
 
 Test coverage reports are generated in the `coverage/` directory.
 
-### 5. Git Hooks
+### 6. Git Hooks
 
 - **Commit messages** are validated for format (see below).
 - **Pre-push** runs all tests; pushes are blocked if tests fail.

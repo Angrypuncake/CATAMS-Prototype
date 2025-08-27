@@ -12,12 +12,18 @@
     "format:fix": "prettier --write ."
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx}": ["eslint --fix", "prettier --write"]
+    "*.{js,jsx,ts,tsx}": [
+      "npx eslint --fix",
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.1",
     "@mui/material": "^7.3.1",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.56.0",
     "axios": "^1.11.0",
     "next": "15.5.0",
     "prisma": "^6.14.0",
@@ -25,7 +31,8 @@
     "react-dom": "19.1.0"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
+    "@eslint/eslintrc": "^3.3.1",
+    "@eslint/migrate-config": "^1.5.3",
     "@tailwindcss/postcss": "^4",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.7.0",
@@ -35,7 +42,7 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "autoprefixer": "^10.4.21",
-    "eslint": "^9.34.0",
+    "eslint": "9.34.0",
     "eslint-config-next": "15.5.0",
     "jest": "^30.0.5",
     "jest-environment-jsdom": "^30.0.5",

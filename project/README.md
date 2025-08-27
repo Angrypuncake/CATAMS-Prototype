@@ -53,7 +53,7 @@ npm install
 ### 2. Configure Environment Variables (Supabase requirement)
 
 ```bash
-cp .env.example .env.local
+cp keys.txt .env.local
 ```
 
 ### 3. Running the Development Server

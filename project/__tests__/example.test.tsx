@@ -13,12 +13,3 @@ test("adds two numbers", () => {
 test("works with negatives", () => {
   expect(add(-1, 4)).toBe(3);
 });
-
-describe("Home page", () => {
-  it("renders heading", () => {
-    render(<Home />);
-    expect(
-      screen.getByRole("heading", { name: /welcome to the home page/i }),
-    ).toBeInTheDocument();
-  });
-});

@@ -1,4 +1,5 @@
 cd project
+
 echo "Running tests before push..."
 if npm run test; then
   echo "✅ Tests passed. Proceeding with push."

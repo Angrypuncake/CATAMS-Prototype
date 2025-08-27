@@ -3,13 +3,16 @@
 This repository contains the frontend for a Next.js project, along with documentation and Git hooks for quality control.
 
 ## Node JS
+
 This project uses `npm` and `npx` which comes with the installation of Node JS `v22.18.0`
-https://nodejs.org/en/download 
+https://nodejs.org/en/download
 Use the following commands to verify that the install was successful
+
 ```bash
 npm --v
 npx --v
 ```
+
 ## Repository Structure
 
 ```
@@ -90,6 +93,7 @@ All commit messages must follow this format:
 - **Scope:** frontend | backend
 
 **Examples:**
+
 - `feat(frontend) : [IS-123] Add login page`
 - `fix(backend) : [IS-456] Handle null user`
 

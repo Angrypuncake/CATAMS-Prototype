@@ -1,5 +1,6 @@
 import React from "react";
 import Button from "@mui/material/Button";
+import { Typography } from "@mui/material";
 import {
   Table,
   TableBody,
@@ -20,7 +21,7 @@ const page = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      Tutor Page starts here
+      <Typography variant="body1">Tutor Page starts here</Typography>
       <Button variant="secondary">Click</Button>
       <Button variant="secondary" color="blue">
         Click

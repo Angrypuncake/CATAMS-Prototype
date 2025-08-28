@@ -38,9 +38,6 @@ const themeOptions: ThemeOptions = {
 
     body1: { fontSize: "1rem", lineHeight: 1.6 }, // ~16px (default)
     body2: { fontSize: "0.875rem", lineHeight: 1.57 }, // ~14px
-    button: {
-      fontFamily: "inherit", // ensures button uses the global font
-    },
   },
   components: {
     MuiButton: {
@@ -102,7 +99,7 @@ const themeOptions: ThemeOptions = {
           },
         },
         head: {
-          backgroundColor: "#1976a2", // header row
+          backgroundColor: "#1976a2",
           "& .MuiTableCell-root": {
             color: "white",
             fontWeight: 700,

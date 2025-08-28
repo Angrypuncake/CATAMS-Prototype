@@ -20,6 +20,7 @@ const secondaryBaseStyle = ({ theme }: { theme: Theme }) => ({
   width: "auto",
   alignSelf: "flex-start",
   justifyContent: "flex-start",
+  borderRadius: "16px",
   "&:hover": {
     filter: "brightness(110%)",
     boxShadow: theme.shadows[1],
@@ -75,7 +76,6 @@ const themeOptions: ThemeOptions = {
             color: theme.palette.common.white,
             backgroundColor: theme.palette.primary.main,
             border: `1.5px solid ${theme.palette.primary.main}`,
-            textTransform: "none",
           }),
         },
         {
@@ -85,7 +85,6 @@ const themeOptions: ThemeOptions = {
             color: theme.palette.common.white,
             backgroundColor: theme.palette.error.main,
             border: `1.5px solid ${theme.palette.error.main}`,
-            textTransform: "none",
           }),
         },
       ],

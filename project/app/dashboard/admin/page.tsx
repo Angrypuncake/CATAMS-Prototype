@@ -3,13 +3,15 @@ import { Button, Typography } from "@mui/material";
 
 const page = () => {
   return (
-    <div className="w-full flex flex-col">
-      <div className="flex justify-around flex-[1]">
+    <div className="w-full h-screen flex flex-col">
+      <div className="flex justify-around mt-20">
         <div>
-          <Typography variant="h3">System Admin Dashboard</Typography>
-          <Typography variant="body1">
-            Data operations, integrity checks, and system configuration.
-          </Typography>
+          <div>
+            <Typography variant="h3">System Admin Dashboard</Typography>
+            <Typography variant="body1">
+              Data operations, integrity checks, and system configuration.
+            </Typography>
+          </div>
         </div>
 
         <div className="gap-2 flex">
@@ -19,8 +21,34 @@ const page = () => {
           </Button>
         </div>
       </div>
+      <div className="flex gap-4 justify-around">
+        <div>
+          <Typography>Users</Typography>
+          <Typography>{320}</Typography>
+        </div>
+        <div>
+          <Typography>Users</Typography>
+          <Typography>{320}</Typography>
+        </div>
+        <div>
+          <Typography>Users</Typography>
+          <Typography>{320}</Typography>
+        </div>
+        <div>
+          <Typography>Users</Typography>
+          <Typography>{320}</Typography>
+        </div>
+      </div>
 
-      <div className="flex-[4]">asd</div>
+      <div className="flex justify-center h-full gap-4">
+        <div className="w-1/3 h-1/3 bg-white rounded-3xl">asd</div>
+
+        <div className="w-1/3 h-1/3 bg-white rounded-3xl">
+          <div>asd</div>
+          <div></div>
+          <div></div>
+        </div>
+      </div>
     </div>
   );
 };

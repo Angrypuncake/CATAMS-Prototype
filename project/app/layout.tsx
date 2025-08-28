@@ -1,5 +1,17 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
+import {
+  CssBaseline,
+  ThemeProvider,
+  StyledEngineProvider,
+} from "@mui/material";
+import websiteTheme from "@/theme/theme";
+
+import "@fontsource/inter/400.css";
+import "@fontsource/inter/500.css";
+import "@fontsource/inter/600.css";
+import "@fontsource/inter/700.css";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -14,9 +26,16 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <div className="flex items-center justify-center min-h-screen">
-          {children}
-        </div>
+        <AppRouterCacheProvider>
+          <StyledEngineProvider injectFirst>
+            <ThemeProvider theme={websiteTheme}>
+              <div className="flex items-center justify-center min-h-screen">
+                <CssBaseline />
+                {children}
+              </div>
+            </ThemeProvider>
+          </StyledEngineProvider>
+        </AppRouterCacheProvider>
       </body>
     </html>
   );

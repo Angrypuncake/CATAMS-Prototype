@@ -13,10 +13,7 @@ export default async function DbTest() {
   // - select("*") = fetch all columns
   // - limit(10) = only fetch up to 10 rows
   // - order("id", { ascending: false }) = optional, ensures consistent ordering
-  const { data, error } = await supabase
-    .from("messages")
-    .select("*")
-    .limit(10);
+  const { data, error } = await supabase.from("messages").select("*").limit(10);
 
   // 3. Render the result
   return (
@@ -38,4 +35,3 @@ export default async function DbTest() {
     </div>
   );
 }
-

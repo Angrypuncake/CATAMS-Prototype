@@ -76,6 +76,22 @@ const themeOptions: ThemeOptions = {
         },
       ],
     },
+    MuiTableRow: {
+      styleOverrides: {
+        root: {
+          "&:nth-of-type(even)": {
+            backgroundColor: "#f5f5f5", // gray for odd rows
+          },
+        },
+        head: {
+          backgroundColor: "#1976a2", // header row
+          "& .MuiTableCell-root": {
+            color: "white",
+            fontWeight: 700,
+          },
+        },
+      },
+    },
   },
 };
 

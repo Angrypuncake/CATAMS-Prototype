@@ -27,9 +27,25 @@ const secondaryBaseStyle = ({ theme }: { theme: Theme }) => ({
 });
 
 const themeOptions: ThemeOptions = {
+  typography: {
+    fontFamily: "Inter, Roboto, sans-serif",
+    h1: { fontSize: "2.25rem", fontWeight: 700 },
+    h2: { fontSize: "1.75rem", fontWeight: 600 },
+    h3: { fontSize: "1.5rem", fontWeight: 600 },
+    h4: { fontSize: "1.5rem", fontWeight: 600, lineHeight: 1.4 }, // ~24px
+    h5: { fontSize: "1.25rem", fontWeight: 500, lineHeight: 1.5 }, // ~20px
+    h6: { fontSize: "1.125rem", fontWeight: 500, lineHeight: 1.5 }, // ~18px
+
+    body1: { fontSize: "1rem", lineHeight: 1.6 }, // ~16px (default)
+    body2: { fontSize: "0.875rem", lineHeight: 1.57 }, // ~14px
+    button: {
+      fontFamily: "inherit", // ensures button uses the global font
+    },
+  },
   components: {
     MuiButton: {
       variants: [
+        //primary button, stretches with the parent container
         {
           props: { variant: "primary" },
           style: ({ theme }) => ({
@@ -45,6 +61,7 @@ const themeOptions: ThemeOptions = {
             },
           }),
         },
+        //secondary button, the size stretch with the contents, can set color blue/red
         {
           props: { variant: "secondary" },
           style: ({ theme }) => ({
@@ -77,6 +94,7 @@ const themeOptions: ThemeOptions = {
       ],
     },
     MuiTableRow: {
+      //table styling, follows Elvis' design
       styleOverrides: {
         root: {
           "&:nth-of-type(even)": {

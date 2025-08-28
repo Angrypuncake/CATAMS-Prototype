@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   try {
-    console.log("Backend received a request");
+    console.log("Backend received a request", request);
     return NextResponse.json({ reply: "Hello from backend!" });
   } catch (error) {
     console.error("Error in POST request:", error);

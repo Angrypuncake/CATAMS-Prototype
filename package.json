@@ -1,8 +1,12 @@
 {
   "devDependencies": {
+    "@types/pg": "^8.15.5",
     "husky": "^9.1.7"
   },
   "scripts": {
     "prepare": "husky"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
   }
 }

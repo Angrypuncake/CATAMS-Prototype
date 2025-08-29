@@ -149,6 +149,7 @@ CREATE TABLE public.session_occurrence (
   is_cancelled boolean DEFAULT false,
   location text NOT NULL,
   notes text,
+  hours integer,
   CONSTRAINT session_occurrence_pkey PRIMARY KEY (occurrence_id),
   CONSTRAINT session_occurrence_activity_id_fkey FOREIGN KEY (activity_id) REFERENCES public.teaching_activity(activity_id)
 );

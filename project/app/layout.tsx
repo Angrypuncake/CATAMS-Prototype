@@ -25,11 +25,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="bg-gray-200">
+      <body>
         <AppRouterCacheProvider>
           <StyledEngineProvider injectFirst>
             <ThemeProvider theme={websiteTheme}>
-              <div className="flex items-center justify-center min-h-screen">
+              <div className="flex items-center justify-center min-h-screen bg-gray-100">
                 <CssBaseline />
                 {children}
               </div>

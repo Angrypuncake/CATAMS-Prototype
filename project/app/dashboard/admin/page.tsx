@@ -3,8 +3,8 @@ import { Button, Typography } from "@mui/material";
 
 const page = () => {
   return (
-    <div className="w-full h-screen flex flex-col">
-      <div className="flex justify-around mt-20">
+    <div className="h-screen flex flex-col w-[80%] gap-5">
+      <div className="flex justify-around mt-20 w-full">
         <div>
           <div>
             <Typography variant="h3">System Admin Dashboard</Typography>
@@ -21,29 +21,49 @@ const page = () => {
           </Button>
         </div>
       </div>
-      <div className="flex gap-4 justify-around">
-        <div>
-          <Typography>Users</Typography>
-          <Typography>{320}</Typography>
+      <div className="flex gap-8 justify-center w-full">
+        <div className="w-[200px] h-[80px] bg-white flex gap-3 items-center justify-center rounded-2xl">
+          <div className="flex flex-col">
+            <Typography>Users</Typography>
+            <Typography variant="h3">{320}</Typography>
+          </div>
+          <div>
+            <Button variant="secondary">directory</Button>
+          </div>
         </div>
-        <div>
-          <Typography>Users</Typography>
-          <Typography>{320}</Typography>
+        <div className="w-[200px] h-[80px] bg-white flex gap-3 items-center justify-center rounded-2xl">
+          <div className="flex flex-col">
+            <Typography>Allocations</Typography>
+            <Typography variant="h3">{320}</Typography>
+          </div>
+          <div>
+            <Button variant="secondary">directory</Button>
+          </div>
         </div>
-        <div>
-          <Typography>Users</Typography>
-          <Typography>{320}</Typography>
+        <div className="w-[220px] h-[80px] bg-white flex gap-3 items-center justify-center rounded-2xl">
+          <div className="flex flex-col">
+            <Typography>Pending Errors</Typography>
+            <Typography variant="h3">{320}</Typography>
+          </div>
+          <div>
+            <Button variant="secondary">directory</Button>
+          </div>
         </div>
-        <div>
-          <Typography>Users</Typography>
-          <Typography>{320}</Typography>
+        <div className="w-[220px] h-[80px] bg-white flex gap-3 items-center justify-center rounded-2xl">
+          <div className="flex flex-col">
+            <Typography>Budgets Loaded</Typography>
+            <Typography variant="h3">{320}</Typography>
+          </div>
+          <div>
+            <Button variant="secondary">directory</Button>
+          </div>
         </div>
       </div>
 
-      <div className="flex justify-center h-full gap-4">
+      <div className="flex justify-center h-full gap-4 w-full">
         <div className="w-1/3 h-1/3 bg-white rounded-3xl">asd</div>
 
-        <div className="w-1/3 h-1/3 bg-white rounded-3xl">
+        <div className="w-2/3 h-1/3 bg-white rounded-3xl">
           <div>asd</div>
           <div></div>
           <div></div>

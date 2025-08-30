@@ -37,55 +37,21 @@ export async function POST(req: NextRequest) {
     // Insert into staging
     // Limit how many rows to insert (e.g. 50 for MVP)
     const MAX_INSERT = 50;
-
-    // Insert into staging (but cap)
     const limitedRecords = records.slice(0, MAX_INSERT);
 
-    for (const row of limitedRecords) {
-      await query(
-        `
-        INSERT INTO allocations_staging
-        (unit_code, unit_name, session, anticipated_enrolments, actual_enrolments,
-        allocation_status, error_text, activity_type, activity_description, activity_name,
-        activity_date, activity_start, activity_end, paycode, teaching_role, staff_id,
-        staff_name, faculty, school, department, units_hours)
-        VALUES
-        ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)
-        `,
-        [
-          row.unit_of_study_code || row.unit_code,
-          row.unit_of_study_name || row.unit_name,
-          row.session,
-          row.anticipated_enrolments,
-          row.actual_enrolments,
-          row.allocation_status,
-          row.error_text,
-          row.activity_type,
-          row.activity_description,
-          row.activity_name,
-          row.activity_date,
-          row.activity_start,
-          row.activity_end,
-          row.paycode,
-          row.teaching_role,
-          row.staffid || row.staff_id,
-          row.name || row.staff_name,
-          row.faculty,
-          row.school,
-          row.department,
-          row["units_(hrs)"] || row.units_hours,
-        ],
-      );
-    }
+    // Placeholder for SQL insert — not functional yet
+    // for (const row of limitedRecords) {
+    //   await query(
+    //     `INSERT INTO allocations_staging (...) VALUES (...)`,
+    //     [...]
+    //   );
+    // }
 
+    // Just return preview for now
     return NextResponse.json({
       rows: records.length,
-      inserted: limitedRecords.length,
-      preview: records.slice(0, 5),
-    });
-    return NextResponse.json({
-      rows: records.length,
-      preview: records.slice(0, 5),
+      inserted: 0, // no DB writes yet
+      preview: limitedRecords,
     });
   } catch (err) {
     console.error("Import error:", err);

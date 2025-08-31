@@ -3,12 +3,19 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 
+type By = {
+  id: number | null;
+  name: string | null;
+  email: string | null;
+} | null;
+
 type Staged = {
   batch_id: number;
   created_at: string;
   status: string;
   row_count: number | null;
   issues: Record<string, number> | null;
+  by: By; // NEW
 };
 
 type Run = {
@@ -24,6 +31,7 @@ type Run = {
   } | null;
   staged_rows: number | null;
   batch_created_at: string;
+  by: By; // NEW
 };
 
 export default function ImportHistoryPage() {
@@ -85,22 +93,23 @@ export default function ImportHistoryPage() {
 
   return (
     <main className="p-6 md:p-8 space-y-8">
-      <header className="flex items-center justify-between">
+      <header className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Import History</h1>
-        <button
-          className="px-3 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
-          onClick={load}
-          disabled={busy}
-        >
-          Reload
-        </button>
-
-        <Link
-          href="/admin/import"
-          className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700"
-        >
-          Import New
-        </Link>
+        <div className="ml-auto flex gap-2">
+          <button
+            className="px-3 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
+            onClick={load}
+            disabled={busy}
+          >
+            Reload
+          </button>
+          <Link
+            href="/admin/import"
+            className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700"
+          >
+            Import New
+          </Link>
+        </div>
       </header>
 
       {msg && (
@@ -120,6 +129,7 @@ export default function ImportHistoryPage() {
                 <th className="py-2 pr-4">Batch ID</th>
                 <th className="py-2 pr-4">Created</th>
                 <th className="py-2 pr-4">Rows</th>
+                <th className="py-2 pr-4">By</th> {/* NEW */}
                 <th className="py-2 pr-4">Blocking</th>
                 <th className="py-2 pr-4">Actions</th>
               </tr>
@@ -127,7 +137,7 @@ export default function ImportHistoryPage() {
             <tbody>
               {staged.length === 0 && (
                 <tr>
-                  <td className="py-6 text-center text-gray-500" colSpan={5}>
+                  <td className="py-6 text-center text-gray-500" colSpan={6}>
                     No staged batches.
                   </td>
                 </tr>
@@ -138,6 +148,7 @@ export default function ImportHistoryPage() {
                   Number(issues.missing_unit_code || 0) +
                   Number(issues.missing_activity_name || 0) +
                   Number(issues.missing_date || 0);
+                const by = b.by;
                 return (
                   <tr key={b.batch_id} className="border-b">
                     <td className="py-2 pr-4 font-mono">#{b.batch_id}</td>
@@ -145,6 +156,22 @@ export default function ImportHistoryPage() {
                       {new Date(b.created_at).toLocaleString()}
                     </td>
                     <td className="py-2 pr-4">{b.row_count ?? "—"}</td>
+                    <td className="py-2 pr-4">
+                      {by ? (
+                        <>
+                          <div className="font-medium">
+                            {by.name || by.email}
+                          </div>
+                          {by.name && by.email && (
+                            <div className="text-xs text-gray-500">
+                              {by.email}
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-gray-500">system</span>
+                      )}
+                    </td>
                     <td className="py-2 pr-4">
                       {blocking > 0 ? (
                         <span className="px-2 py-0.5 text-xs rounded bg-rose-100 text-rose-700">
@@ -188,13 +215,14 @@ export default function ImportHistoryPage() {
                 <th className="py-2 pr-4">Finished</th>
                 <th className="py-2 pr-4">Status</th>
                 <th className="py-2 pr-4">Counts</th>
+                <th className="py-2 pr-4">By</th> {/* NEW */}
                 <th className="py-2 pr-4">Actions</th>
               </tr>
             </thead>
             <tbody>
               {runs.length === 0 && (
                 <tr>
-                  <td className="py-6 text-center text-gray-500" colSpan={7}>
+                  <td className="py-6 text-center text-gray-500" colSpan={8}>
                     No runs yet.
                   </td>
                 </tr>
@@ -202,6 +230,7 @@ export default function ImportHistoryPage() {
               {runs.map((r) => {
                 const c = r.counts || {};
                 const canRollback = r.status === "committed";
+                const by = r.by;
                 return (
                   <tr key={r.run_id} className="border-b">
                     <td className="py-2 pr-4 font-mono">#{r.run_id}</td>
@@ -241,6 +270,22 @@ export default function ImportHistoryPage() {
                     <td className="py-2 pr-4">
                       TA: {c.teaching_activity ?? 0} • SO:{" "}
                       {c.session_occurrence ?? 0} • AL: {c.allocation ?? 0}
+                    </td>
+                    <td className="py-2 pr-4">
+                      {by ? (
+                        <>
+                          <div className="font-medium">
+                            {by.name || by.email}
+                          </div>
+                          {by.name && by.email && (
+                            <div className="text-xs text-gray-500">
+                              {by.email}
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <span className="text-gray-500">system</span>
+                      )}
                     </td>
                     <td className="py-2 pr-4">
                       <button

@@ -150,6 +150,27 @@ export default function AllocationPage({ params }: { params: { id: string } }) {
             <DetailRow label="Hours" value={allocation.hours} />
             <DetailRow label="Session" value={allocation.session} />
           </Box>
+
+          {/* Notes */}
+          {allocation.notes && (
+            <Box
+              sx={{
+                mt: 2,
+                p: 2,
+                borderLeft: "4px solid",
+                borderColor: "grey.300",
+                bgcolor: "grey.50",
+                borderRadius: 1,
+              }}
+            >
+              <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
+                Notes
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {allocation.notes}
+              </Typography>
+            </Box>
+          )}
         </CardContent>
       </Card>
     </Box>

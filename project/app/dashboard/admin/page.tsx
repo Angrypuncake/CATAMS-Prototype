@@ -1,7 +1,16 @@
+"use client";
 import React from "react";
 import { Button, Typography } from "@mui/material";
+import { useState } from "react";
 
-const page = () => {
+const Page = () => {
+  const [adminView, setAdminView] = useState({
+    numUsers: 0,
+    numAllocations: 0,
+    numPendingErrors: 0,
+    numBudgetLoaded: 0,
+  });
+  setAdminView(...[adminView]);
   return (
     <div className="h-screen flex flex-col w-[80%] gap-5">
       <div className="flex justify-around mt-20 w-full">
@@ -22,25 +31,25 @@ const page = () => {
         </div>
       </div>
       <div className="flex gap-8 justify-center w-full">
-        <div className="w-[200px] h-[80px] bg-white flex gap-3 items-center justify-center rounded-2xl">
+        <div className="w-[250px] h-[80px] bg-white flex gap-3 items-center justify-around rounded-2xl">
           <div className="flex flex-col">
             <Typography>Users</Typography>
-            <Typography variant="h3">{320}</Typography>
+            <Typography variant="h3">{adminView.numUsers}</Typography>
           </div>
           <div>
             <Button variant="secondary">directory</Button>
           </div>
         </div>
-        <div className="w-[200px] h-[80px] bg-white flex gap-3 items-center justify-center rounded-2xl">
+        <div className="w-[250px] h-[80px] bg-white flex gap-3 items-center justify-around rounded-2xl">
           <div className="flex flex-col">
             <Typography>Allocations</Typography>
-            <Typography variant="h3">{320}</Typography>
+            <Typography variant="h3">{adminView.numAllocations}</Typography>
           </div>
           <div>
             <Button variant="secondary">directory</Button>
           </div>
         </div>
-        <div className="w-[220px] h-[80px] bg-white flex gap-3 items-center justify-center rounded-2xl">
+        <div className="w-[250px] h-[80px] bg-white flex gap-3 items-center justify-around rounded-2xl">
           <div className="flex flex-col">
             <Typography>Pending Errors</Typography>
             <Typography variant="h3">{320}</Typography>
@@ -49,7 +58,7 @@ const page = () => {
             <Button variant="secondary">directory</Button>
           </div>
         </div>
-        <div className="w-[220px] h-[80px] bg-white flex gap-3 items-center justify-center rounded-2xl">
+        <div className="w-[250px] h-[80px] bg-white flex gap-3 items-center justify-center rounded-2xl">
           <div className="flex flex-col">
             <Typography>Budgets Loaded</Typography>
             <Typography variant="h3">{320}</Typography>
@@ -73,4 +82,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default Page;

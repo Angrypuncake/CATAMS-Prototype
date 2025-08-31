@@ -23,6 +23,7 @@ const secondaryBaseStyle = ({ theme }: { theme: Theme }) => ({
   alignSelf: "flex-start",
   justifyContent: "flex-start",
   borderRadius: "16px",
+  padding: "2px 12px",
   "&:hover": {
     filter: "brightness(110%)",
     boxShadow: theme.shadows[1],
@@ -148,6 +149,14 @@ const themeOptions: ThemeOptions = {
             color: "white",
             fontWeight: 700,
           },
+        },
+      },
+    },
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          paddingTop: 2,
+          paddingBottom: 2,
         },
       },
     },

@@ -123,7 +123,7 @@ export default function AllocationPage({ params }: { params: { id: string } }) {
 
   return (
     <Box sx={{ p: 3, maxWidth: 960, mx: "auto" }}>
-      {/* header + back */}
+      {/* Header & Back */}
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
         <IconButton
           component={Link}
@@ -140,7 +140,7 @@ export default function AllocationPage({ params }: { params: { id: string } }) {
 
       <Card variant="outlined" sx={{ borderRadius: 2 }}>
         <CardContent>
-          {/* course title + status */}
+          {/* Course + Status */}
           <Stack
             direction={{ xs: "column", sm: "row" }}
             justifyContent="space-between"
@@ -152,15 +152,21 @@ export default function AllocationPage({ params }: { params: { id: string } }) {
               {allocation.courseCode} – {allocation.courseName}
             </Typography>
             <Chip
-              label={`${allocation.status} ✅`}
+              label={
+                <Stack direction="row" alignItems="center" spacing={0.5}>
+                  <span>✅</span>
+                  <span>{allocation.status}</span>
+                </Stack>
+              }
               color="success"
               variant="outlined"
+              sx={{ fontWeight: 600 }}
             />
           </Stack>
 
           <Divider sx={{ my: 1 }} />
 
-          {/* details grid */}
+          {/* Details grid */}
           <Box sx={{ my: 1 }}>
             <DetailRow label="Date" value={allocation.date} />
             <DetailRow label="Time" value={allocation.time} />
@@ -226,13 +232,56 @@ export default function AllocationPage({ params }: { params: { id: string } }) {
               <RequestRow key={r.id} req={r} />
             ))}
           </Stack>
+
+          {/* Comments */}
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mt: 3 }}>
+            Comments
+          </Typography>
+          <Stack spacing={1.25} sx={{ mt: 1 }}>
+            {comments.map((c) => (
+              <CommentBubble key={c.id} comment={c} />
+            ))}
+
+            {/* New comment input */}
+            <Box
+              sx={{
+                mt: 1,
+                p: 1.5,
+                border: "1px solid",
+                borderColor: "grey.300",
+                borderRadius: 1.5,
+              }}
+            >
+              <Stack spacing={1}>
+                <TextField
+                  multiline
+                  minRows={3}
+                  placeholder="Write a comment…"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  fullWidth
+                />
+                <Stack direction="row" justifyContent="flex-end">
+                  <Button
+                    variant="contained"
+                    onClick={() => {
+                      // TODO: POST comment
+                      setComment("");
+                    }}
+                  >
+                    Comment
+                  </Button>
+                </Stack>
+              </Stack>
+            </Box>
+          </Stack>
         </CardContent>
       </Card>
     </Box>
   );
 }
 
-// small helper row (label: value)
+// ---------- Subcomponents ----------
 function DetailRow({ label, value }: { label: string; value: string }) {
   return (
     <Stack direction="row" spacing={2} sx={{ py: 0.25 }}>
@@ -280,5 +329,48 @@ function RequestRow({ req }: { req: RequestItem }) {
         View/Edit Request
       </Button>
     </Stack>
+  );
+}
+
+function CommentBubble({ comment }: { comment: CommentItem }) {
+  return (
+    <Box
+      sx={{
+        p: 1.5,
+        border: "1px solid",
+        borderColor: "grey.300",
+        borderRadius: 1.5,
+      }}
+    >
+      <Stack
+        direction="row"
+        alignItems="center"
+        justifyContent="space-between"
+        sx={{ mb: 0.5 }}
+      >
+        <Typography variant="body2" fontWeight={600}>
+          {comment.author}
+          {comment.role ? ` – ${comment.role}` : ""} ({comment.time})
+        </Typography>
+        {comment.mine && (
+          <Stack direction="row" spacing={0.5}>
+            <Button size="small" variant="outlined" startIcon={<EditIcon />}>
+              Edit
+            </Button>
+            <Button
+              size="small"
+              variant="outlined"
+              color="error"
+              startIcon={<DeleteIcon />}
+            >
+              Delete
+            </Button>
+          </Stack>
+        )}
+      </Stack>
+      <Typography variant="body2" color="text.primary">
+        {comment.body}
+      </Typography>
+    </Box>
   );
 }

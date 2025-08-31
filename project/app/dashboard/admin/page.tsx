@@ -117,6 +117,20 @@ const page = () => {
               </Button>
             </div>
           </div>
+          <div>
+            <div className="rounded-2xl border border-[#e3e3e3] p-2 flex justify-between items-center">
+              <div>
+                <Typography variant="h5">Allocations CSV</Typography>
+                <Typography variant="body1">
+                  Upload + preview in timetable
+                </Typography>
+              </div>
+
+              <Button variant="secondary" color="blue">
+                Open
+              </Button>
+            </div>
+          </div>
         </div>
 
         <div className="w-2/3 h-full  rounded-3xl flex flex-col gap-3">

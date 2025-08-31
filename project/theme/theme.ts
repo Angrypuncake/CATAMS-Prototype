@@ -151,6 +151,14 @@ const themeOptions: ThemeOptions = {
         },
       },
     },
+    MuiTableCell: {
+      styleOverrides: {
+        root: {
+          paddingTop: 6,
+          paddingBottom: 6,
+        },
+      },
+    },
   },
 };
 

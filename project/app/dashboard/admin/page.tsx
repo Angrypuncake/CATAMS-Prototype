@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect } from "react";
 import { Button, Typography } from "@mui/material";
 import { useState } from "react";
 
@@ -10,7 +10,9 @@ const Page = () => {
     numPendingErrors: 0,
     numBudgetLoaded: 0,
   });
-  setAdminView(...[adminView]);
+  useEffect(() => {
+    setAdminView(...[adminView]);
+  }, []);
   return (
     <div className="h-screen flex flex-col w-[80%] gap-5">
       <div className="flex justify-around mt-20 w-full">
@@ -37,7 +39,7 @@ const Page = () => {
             <Typography variant="h3">{adminView.numUsers}</Typography>
           </div>
           <div>
-            <Button variant="secondary">directory</Button>
+            <Button variant="bubble">directory</Button>
           </div>
         </div>
         <div className="w-[250px] h-[80px] bg-white flex gap-3 items-center justify-around rounded-2xl">
@@ -46,31 +48,37 @@ const Page = () => {
             <Typography variant="h3">{adminView.numAllocations}</Typography>
           </div>
           <div>
-            <Button variant="secondary">directory</Button>
+            <Button variant="bubble">current term</Button>
           </div>
         </div>
         <div className="w-[250px] h-[80px] bg-white flex gap-3 items-center justify-around rounded-2xl">
           <div className="flex flex-col">
             <Typography>Pending Errors</Typography>
-            <Typography variant="h3">{320}</Typography>
+            <Typography variant="h3">{adminView.numPendingErrors}</Typography>
           </div>
           <div>
-            <Button variant="secondary">directory</Button>
+            <Button variant="bubble" color="red">
+              attention
+            </Button>
           </div>
         </div>
         <div className="w-[250px] h-[80px] bg-white flex gap-3 items-center justify-center rounded-2xl">
           <div className="flex flex-col">
             <Typography>Budgets Loaded</Typography>
-            <Typography variant="h3">{320}</Typography>
+            <Typography variant="h3">{adminView.numBudgetLoaded}</Typography>
           </div>
           <div>
-            <Button variant="secondary">directory</Button>
+            <Button variant="bubble" color="green">
+              ok
+            </Button>
           </div>
         </div>
       </div>
 
       <div className="flex justify-center h-full gap-4 w-full">
-        <div className="w-1/3 h-1/3 bg-white rounded-3xl">asd</div>
+        <div className="w-1/3 h-1/3 bg-white rounded-3xl">
+          <Typography variant="subtitle1">Budgets Loaded</Typography>
+        </div>
 
         <div className="w-2/3 h-1/3 bg-white rounded-3xl">
           <div>asd</div>

@@ -7,10 +7,12 @@ declare module "@mui/material/Button" {
   interface ButtonPropsVariantOverrides {
     primary: true;
     secondary: true;
+    bubble: true;
   }
   interface ButtonPropsColorOverrides {
     blue: true;
     red: true;
+    green: true;
   }
 }
 
@@ -27,6 +29,15 @@ const secondaryBaseStyle = ({ theme }: { theme: Theme }) => ({
   },
 });
 
+const bubbleBaseStyle = ({ theme }: { theme: Theme }) => ({
+  borderRadius: "16px",
+  fontSize: "0.85rem",
+  paddingLeft: "10px",
+  paddingRight: "10px",
+  paddingTop: "3px",
+  paddingBottom: "3px",
+});
+
 const themeOptions: ThemeOptions = {
   typography: {
     fontFamily: "Inter, Roboto, sans-serif",
@@ -39,6 +50,13 @@ const themeOptions: ThemeOptions = {
 
     body1: { fontSize: "1rem", lineHeight: 1.6 }, // ~16px (default)
     body2: { fontSize: "0.875rem", lineHeight: 1.57 }, // ~14px
+
+    subtitle1: {
+      fontSize: "1rem",
+      color: "#666666",
+      fontWeight: "bold",
+      textTransform: "uppercase",
+    },
   },
   components: {
     MuiButton: {
@@ -85,6 +103,33 @@ const themeOptions: ThemeOptions = {
             color: theme.palette.common.white,
             backgroundColor: theme.palette.error.main,
             border: `1.5px solid ${theme.palette.error.main}`,
+          }),
+        },
+        {
+          props: { variant: "bubble" },
+          style: ({ theme }) => ({
+            ...bubbleBaseStyle({ theme }),
+            color: "#6d7177",
+            backgroundColor: "#f3f4f6",
+            textTransform: "none",
+          }),
+        },
+        {
+          props: { variant: "bubble", color: "green" },
+          style: ({ theme }) => ({
+            ...bubbleBaseStyle({ theme }),
+            color: "#59A56C",
+            backgroundColor: "#ebf7ef",
+            textTransform: "none",
+          }),
+        },
+        {
+          props: { variant: "bubble", color: "red" },
+          style: ({ theme }) => ({
+            ...bubbleBaseStyle({ theme }),
+            color: "#c6332c",
+            backgroundColor: "#faeceb",
+            textTransform: "none",
           }),
         },
       ],

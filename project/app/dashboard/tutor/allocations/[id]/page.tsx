@@ -1,4 +1,17 @@
 "use client";
+import * as React from "react";
+import Link from "next/link";
+import {
+  Box,
+  Card,
+  CardContent,
+  Chip,
+  Divider,
+  IconButton,
+  Stack,
+  Typography,
+} from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 // ------------ Types ------------
 type RequestType = "Swap" | "Correction" | "Extension" | "Cancellation";
@@ -84,3 +97,73 @@ const mockComments: CommentItem[] = [
     body: "Request acknowledged. I’ll review availability in Room B and confirm by tomorrow.",
   },
 ];
+
+// ---------- Page ----------
+export default function AllocationPage({ params }: { params: { id: string } }) {
+  // for now still use mocks; will swap to fetch(params.id) later
+  const allocation = mockAllocation;
+
+  return (
+    <Box sx={{ p: 3, maxWidth: 960, mx: "auto" }}>
+      {/* header + back */}
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+        <IconButton
+          component={Link}
+          href="/dashboard/tutor/allocations"
+          size="small"
+          aria-label="Back to Allocations"
+        >
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h5" fontWeight={700}>
+          Allocation
+        </Typography>
+      </Stack>
+
+      <Card variant="outlined" sx={{ borderRadius: 2 }}>
+        <CardContent>
+          {/* course title + status */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            justifyContent="space-between"
+            alignItems={{ xs: "flex-start", sm: "center" }}
+            spacing={1}
+            sx={{ mb: 1 }}
+          >
+            <Typography variant="h6" fontWeight={700}>
+              {allocation.courseCode} – {allocation.courseName}
+            </Typography>
+            <Chip
+              label={`${allocation.status} ✅`}
+              color="success"
+              variant="outlined"
+            />
+          </Stack>
+
+          <Divider sx={{ my: 1 }} />
+
+          {/* details grid */}
+          <Box sx={{ my: 1 }}>
+            <DetailRow label="Date" value={allocation.date} />
+            <DetailRow label="Time" value={allocation.time} />
+            <DetailRow label="Location" value={allocation.location} />
+            <DetailRow label="Hours" value={allocation.hours} />
+            <DetailRow label="Session" value={allocation.session} />
+          </Box>
+        </CardContent>
+      </Card>
+    </Box>
+  );
+}
+
+// small helper row (label: value)
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <Stack direction="row" spacing={2} sx={{ py: 0.25 }}>
+      <Typography variant="body2" sx={{ width: 120, color: "text.secondary" }}>
+        {label}:
+      </Typography>
+      <Typography variant="body2">{value}</Typography>
+    </Stack>
+  );
+}

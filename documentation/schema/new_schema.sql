@@ -7,12 +7,40 @@ CREATE TABLE public.allocation (
   session_id integer NOT NULL,
   status text,
   paycode_id text NOT NULL,
+  teaching_role text,
+  created_by_run_id integer,
   CONSTRAINT allocation_pkey PRIMARY KEY (allocation_id),
+  CONSTRAINT allocation_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.session_occurrence(occurrence_id),
   CONSTRAINT allocation_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id),
-  CONSTRAINT allocation_paycode_id_fkey FOREIGN KEY (paycode_id) REFERENCES public.paycode(code),
-  CONSTRAINT allocation_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.session_occurrence(occurrence_id)
+  CONSTRAINT allocation_paycode_id_fkey FOREIGN KEY (paycode_id) REFERENCES public.paycode(code)
 );
-
+CREATE TABLE public.allocations_staging (
+  id integer NOT NULL DEFAULT nextval('allocations_staging_id_seq'::regclass),
+  batch_id integer NOT NULL,
+  unit_code text,
+  unit_name text,
+  session text,
+  anticipated_enrolments integer,
+  actual_enrolments integer,
+  allocation_status text,
+  error_text text,
+  activity_type text,
+  activity_description text,
+  activity_name text,
+  activity_date date,
+  activity_start time without time zone,
+  activity_end time without time zone,
+  paycode text,
+  teaching_role text,
+  staff_id text,
+  staff_name text,
+  faculty text,
+  school text,
+  department text,
+  units_hours numeric,
+  created_at timestamp with time zone DEFAULT now(),
+  CONSTRAINT allocations_staging_pkey PRIMARY KEY (id)
+);
 CREATE TABLE public.approval (
   approval_id integer NOT NULL DEFAULT nextval('approval_approval_id_seq'::regclass),
   request_id integer NOT NULL,
@@ -20,8 +48,8 @@ CREATE TABLE public.approval (
   approval_status USER-DEFINED NOT NULL DEFAULT 'pending'::approval_status,
   approval_date timestamp with time zone DEFAULT now(),
   CONSTRAINT approval_pkey PRIMARY KEY (approval_id),
-  CONSTRAINT approval_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.request(request_id),
-  CONSTRAINT approval_approver_id_fkey FOREIGN KEY (approver_id) REFERENCES public.users(user_id)
+  CONSTRAINT approval_approver_id_fkey FOREIGN KEY (approver_id) REFERENCES public.users(user_id),
+  CONSTRAINT approval_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.request(request_id)
 );
 CREATE TABLE public.audit_log (
   log_id integer NOT NULL DEFAULT nextval('audit_log_log_id_seq'::regclass),
@@ -52,9 +80,9 @@ CREATE TABLE public.cancellationrequest (
   timing text NOT NULL,
   reason text NOT NULL,
   CONSTRAINT cancellationrequest_pkey PRIMARY KEY (request_id),
-  CONSTRAINT cancellationrequest_suggested_tutor_fkey FOREIGN KEY (suggested_tutor) REFERENCES public.users(user_id),
   CONSTRAINT cancellationrequest_occurrence_id_fkey FOREIGN KEY (occurrence_id) REFERENCES public.session_occurrence(occurrence_id),
-  CONSTRAINT cancellationrequest_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.request(request_id)
+  CONSTRAINT cancellationrequest_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.request(request_id),
+  CONSTRAINT cancellationrequest_suggested_tutor_fkey FOREIGN KEY (suggested_tutor) REFERENCES public.users(user_id)
 );
 CREATE TABLE public.changerequest (
   request_id integer NOT NULL,
@@ -64,8 +92,8 @@ CREATE TABLE public.changerequest (
   old_val text,
   new_val text,
   CONSTRAINT changerequest_pkey PRIMARY KEY (request_id),
-  CONSTRAINT changerequest_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.request(request_id),
-  CONSTRAINT changerequest_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.session_occurrence(occurrence_id)
+  CONSTRAINT changerequest_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.session_occurrence(occurrence_id),
+  CONSTRAINT changerequest_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.request(request_id)
 );
 CREATE TABLE public.claimrequest (
   request_id integer NOT NULL,
@@ -75,10 +103,10 @@ CREATE TABLE public.claimrequest (
   claimed_paycode text,
   comment text,
   CONSTRAINT claimrequest_pkey PRIMARY KEY (request_id),
-  CONSTRAINT claimrequest_allocation_id_fkey FOREIGN KEY (allocation_id) REFERENCES public.allocation(allocation_id),
-  CONSTRAINT claimrequest_claimed_paycode_fkey FOREIGN KEY (claimed_paycode) REFERENCES public.paycode(code),
   CONSTRAINT claimrequest_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.request(request_id),
-  CONSTRAINT claimrequest_occurrence_id_fkey FOREIGN KEY (occurrence_id) REFERENCES public.session_occurrence(occurrence_id)
+  CONSTRAINT claimrequest_occurrence_id_fkey FOREIGN KEY (occurrence_id) REFERENCES public.session_occurrence(occurrence_id),
+  CONSTRAINT claimrequest_allocation_id_fkey FOREIGN KEY (allocation_id) REFERENCES public.allocation(allocation_id),
+  CONSTRAINT claimrequest_claimed_paycode_fkey FOREIGN KEY (claimed_paycode) REFERENCES public.paycode(code)
 );
 CREATE TABLE public.comment (
   comment_id integer NOT NULL DEFAULT nextval('comment_comment_id_seq'::regclass),
@@ -87,8 +115,8 @@ CREATE TABLE public.comment (
   comment_text text NOT NULL,
   comment_date timestamp with time zone DEFAULT now(),
   CONSTRAINT comment_pkey PRIMARY KEY (comment_id),
-  CONSTRAINT comment_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.request(request_id),
-  CONSTRAINT comment_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id)
+  CONSTRAINT comment_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id),
+  CONSTRAINT comment_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.request(request_id)
 );
 CREATE TABLE public.course_unit (
   unit_code text NOT NULL UNIQUE,
@@ -96,7 +124,28 @@ CREATE TABLE public.course_unit (
   unit_description text,
   CONSTRAINT course_unit_pkey PRIMARY KEY (unit_code)
 );
-
+CREATE TABLE public.import_batch (
+  batch_id integer NOT NULL DEFAULT nextval('import_batch_batch_id_seq'::regclass),
+  created_at timestamp with time zone DEFAULT now(),
+  status text DEFAULT 'staged'::text,
+  row_count integer,
+  issues jsonb,
+  CONSTRAINT import_batch_pkey PRIMARY KEY (batch_id)
+);
+CREATE TABLE public.import_run (
+  run_id integer NOT NULL DEFAULT nextval('import_run_run_id_seq'::regclass),
+  batch_id integer NOT NULL,
+  started_at timestamp with time zone DEFAULT now(),
+  finished_at timestamp with time zone,
+  status text DEFAULT 'committed'::text,
+  counts jsonb,
+  CONSTRAINT import_run_pkey PRIMARY KEY (run_id),
+  CONSTRAINT import_run_batch_id_fkey FOREIGN KEY (batch_id) REFERENCES public.import_batch(batch_id)
+);
+CREATE TABLE public.messages (
+  id text NOT NULL,
+  CONSTRAINT messages_pkey PRIMARY KEY (id)
+);
 CREATE TABLE public.paycode (
   code text NOT NULL UNIQUE,
   paycode_description text,
@@ -144,12 +193,14 @@ CREATE TABLE public.role (
 CREATE TABLE public.session_occurrence (
   occurrence_id integer NOT NULL DEFAULT nextval('session_occurrence_occurrence_id_seq'::regclass),
   activity_id integer NOT NULL,
-  start_at timestamp with time zone NOT NULL,
-  end_at timestamp with time zone NOT NULL,
   is_cancelled boolean DEFAULT false,
-  location text NOT NULL,
+  location text,
   notes text,
   hours integer,
+  Date date,
+  start_at time without time zone,
+  end_at time without time zone,
+  created_by_run_id integer,
   CONSTRAINT session_occurrence_pkey PRIMARY KEY (occurrence_id),
   CONSTRAINT session_occurrence_activity_id_fkey FOREIGN KEY (activity_id) REFERENCES public.teaching_activity(activity_id)
 );
@@ -158,17 +209,18 @@ CREATE TABLE public.swaprequest (
   from_session_id integer NOT NULL,
   to_session_id integer NOT NULL,
   CONSTRAINT swaprequest_pkey PRIMARY KEY (request_id),
+  CONSTRAINT swaprequest_to_session_id_fkey FOREIGN KEY (to_session_id) REFERENCES public.session_occurrence(occurrence_id),
   CONSTRAINT swaprequest_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.request(request_id),
-  CONSTRAINT swaprequest_from_session_id_fkey FOREIGN KEY (from_session_id) REFERENCES public.session_occurrence(occurrence_id),
-  CONSTRAINT swaprequest_to_session_id_fkey FOREIGN KEY (to_session_id) REFERENCES public.session_occurrence(occurrence_id)
+  CONSTRAINT swaprequest_from_session_id_fkey FOREIGN KEY (from_session_id) REFERENCES public.session_occurrence(occurrence_id)
 );
 CREATE TABLE public.teaching_activity (
-  activity_id integer NOT NULL DEFAULT nextval('teaching_activity_activity_id_seq'::regclass),
+  activity_id integer GENERATED ALWAYS AS IDENTITY NOT NULL,
   unit_offering_id integer NOT NULL,
   activity_type text NOT NULL,
   capacity integer,
   activity_name text,
-  description text,
+  activity_description text,
+  created_by_run_id integer,
   CONSTRAINT teaching_activity_pkey PRIMARY KEY (activity_id),
   CONSTRAINT teaching_activity_unit_offering_id_fkey FOREIGN KEY (unit_offering_id) REFERENCES public.unit_offering(offering_id)
 );
@@ -184,8 +236,8 @@ CREATE TABLE public.timesheet_entry (
   minutes_calc integer DEFAULT ((EXTRACT(epoch FROM (end_actual - start_actual)) / (60)::numeric))::integer,
   CONSTRAINT timesheet_entry_pkey PRIMARY KEY (entry_id),
   CONSTRAINT timesheet_entry_occurrence_id_fkey FOREIGN KEY (occurrence_id) REFERENCES public.session_occurrence(occurrence_id),
-  CONSTRAINT timesheet_entry_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id),
-  CONSTRAINT timesheet_entry_approver_id_fkey FOREIGN KEY (approver_id) REFERENCES public.users(user_id)
+  CONSTRAINT timesheet_entry_approver_id_fkey FOREIGN KEY (approver_id) REFERENCES public.users(user_id),
+  CONSTRAINT timesheet_entry_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id)
 );
 CREATE TABLE public.unit_offering (
   offering_id integer NOT NULL DEFAULT nextval('unit_offering_offering_id_seq'::regclass),
@@ -194,7 +246,7 @@ CREATE TABLE public.unit_offering (
   year integer NOT NULL,
   budget numeric NOT NULL,
   anticipated_enrolments integer,
-  actual enrolments integer,
+  actual_enrolments integer,
   CONSTRAINT unit_offering_pkey PRIMARY KEY (offering_id),
   CONSTRAINT unit_offering_course_unit_id_fkey FOREIGN KEY (course_unit_id) REFERENCES public.course_unit(unit_code)
 );
@@ -203,9 +255,9 @@ CREATE TABLE public.user_role (
   role_id integer NOT NULL,
   unit_offering_id integer NOT NULL,
   CONSTRAINT user_role_pkey PRIMARY KEY (user_id, role_id, unit_offering_id),
-  CONSTRAINT user_role_role_id_fkey FOREIGN KEY (role_id) REFERENCES public.role(role_id),
+  CONSTRAINT user_role_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id),
   CONSTRAINT user_role_unit_offering_id_fkey FOREIGN KEY (unit_offering_id) REFERENCES public.unit_offering(offering_id),
-  CONSTRAINT user_role_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id)
+  CONSTRAINT user_role_role_id_fkey FOREIGN KEY (role_id) REFERENCES public.role(role_id)
 );
 CREATE TABLE public.users (
   user_id integer NOT NULL DEFAULT nextval('users_user_id_seq'::regclass),

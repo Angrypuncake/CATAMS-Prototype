@@ -13,6 +13,7 @@
   - `POST /api/admin/rollback`: Roll back a run  
   - `GET /api/admin/preview`: Fetch preview of staging data  
   - `GET /api/tutor/allocations`: Paginated tutor allocations
+  - `GET /api/uc/overview`: Budget overview table
 
 
 ---

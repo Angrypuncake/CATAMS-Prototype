@@ -3,15 +3,21 @@ import * as React from "react";
 import Link from "next/link";
 import {
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
   Divider,
   IconButton,
+  Menu,
+  MenuItem,
   Stack,
+  TextField,
   Typography,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
 
 // ------------ Types ------------
 type RequestType = "Swap" | "Correction" | "Extension" | "Cancellation";
@@ -100,8 +106,20 @@ const mockComments: CommentItem[] = [
 
 // ---------- Page ----------
 export default function AllocationPage({ params }: { params: { id: string } }) {
-  // for now still use mocks; will swap to fetch(params.id) later
+  // Menu state for "Create Request"
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleOpenMenu = (e: React.MouseEvent<HTMLElement>) =>
+    setAnchorEl(e.currentTarget);
+  const handleCloseMenu = () => setAnchorEl(null);
+
+  // Comment box state
+  const [comment, setComment] = React.useState("");
+
+  // TODO: replace mocks with real fetch using params.id
   const allocation = mockAllocation;
+  const requests = mockRequests;
+  const comments = mockComments;
 
   return (
     <Box sx={{ p: 3, maxWidth: 960, mx: "auto" }}>
@@ -171,6 +189,33 @@ export default function AllocationPage({ params }: { params: { id: string } }) {
               </Typography>
             </Box>
           )}
+
+          {/* Actions */}
+          <Stack
+            direction={{ xs: "column", sm: "row" }}
+            spacing={1}
+            sx={{ mt: 3, mb: 2 }}
+          >
+            <Button variant="contained">Submit Claim</Button>
+            <div>
+              <Button variant="outlined" onClick={handleOpenMenu}>
+                Create Request ▾
+              </Button>
+              <Menu anchorEl={anchorEl} open={open} onClose={handleCloseMenu}>
+                <MenuItem onClick={handleCloseMenu}>Swap</MenuItem>
+                <MenuItem onClick={handleCloseMenu}>Correction</MenuItem>
+                <MenuItem onClick={handleCloseMenu}>Extension</MenuItem>
+                <MenuItem onClick={handleCloseMenu}>Cancellation</MenuItem>
+              </Menu>
+            </div>
+            <Button
+              variant="outlined"
+              component={Link}
+              href="/dashboard/tutor/allocations"
+            >
+              Back to Allocations
+            </Button>
+          </Stack>
         </CardContent>
       </Card>
     </Box>

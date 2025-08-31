@@ -68,6 +68,7 @@ function Button({
   };
   return (
     <button
+      type="button"
       className={`px-3 py-2 rounded-md text-sm font-medium transition ${map[tone]} ${className}`}
       {...props}
     >
@@ -273,6 +274,7 @@ export default function PreviewPage() {
             </h1>
             <button
               onClick={copyId}
+              type="button"
               className="text-xs px-2 py-1 rounded bg-gray-100 hover:bg-gray-200"
               title="Copy batch id"
             >
@@ -291,6 +293,7 @@ export default function PreviewPage() {
           <div className="flex items-center gap-2">
             <Button
               tone="neutral"
+              type="button"
               onClick={() => router.push("/admin/import")}
               disabled={busy}
               title="Start a fresh import"
@@ -302,12 +305,14 @@ export default function PreviewPage() {
             </Button>
             <Button
               tone="danger"
+              type="button"
               onClick={() => confirmRefDiscard.current?.showModal()}
               disabled={busy}
             >
               Discard
             </Button>
             <Button
+              type="button"
               tone="primary"
               onClick={() => confirmRefCommit.current?.showModal()}
               disabled={busy || hasBlocking}
@@ -437,6 +442,7 @@ export default function PreviewPage() {
       <section className="border rounded-xl">
         <button
           className="w-full text-left p-4 flex items-center justify-between hover:bg-gray-50"
+          type="button"
           onClick={() => setRawOpen((v) => !v)}
         >
           <span className="font-medium">Raw Sample (first 100 rows)</span>
@@ -466,12 +472,14 @@ export default function PreviewPage() {
           <div className="flex justify-end gap-2">
             <Button
               tone="neutral"
+              type="button"
               onClick={() => confirmRefDiscard.current?.close()}
             >
               Cancel
             </Button>
             <Button
               tone="danger"
+              type="button"
               onClick={() => {
                 confirmRefDiscard.current?.close();
                 onDiscard();
@@ -493,6 +501,7 @@ export default function PreviewPage() {
           </p>
           <div className="flex justify-end gap-2">
             <Button
+              type="button"
               tone="neutral"
               onClick={() => confirmRefCommit.current?.close()}
             >
@@ -500,6 +509,7 @@ export default function PreviewPage() {
             </Button>
             <Button
               tone="primary"
+              type="button"
               onClick={() => {
                 confirmRefCommit.current?.close();
                 onCommit();

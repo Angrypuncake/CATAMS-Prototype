@@ -88,6 +88,7 @@ export default function ImportHistoryPage() {
       <header className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Import History</h1>
         <button
+          type="button"
           className="px-3 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
           onClick={load}
           disabled={busy}
@@ -244,6 +245,7 @@ export default function ImportHistoryPage() {
                     </td>
                     <td className="py-2 pr-4">
                       <button
+                        type="button"
                         className="px-3 py-1.5 rounded bg-rose-600 text-white disabled:opacity-50"
                         disabled={!canRollback || busy}
                         onClick={() => {
@@ -278,12 +280,14 @@ export default function ImportHistoryPage() {
           <div className="flex justify-end gap-2">
             <button
               className="px-3 py-2 rounded bg-gray-200"
+              type="button"
               onClick={() => confirmRollback.current?.close()}
             >
               Cancel
             </button>
             <button
               className="px-3 py-2 rounded bg-rose-600 text-white disabled:opacity-50"
+              type="button"
               disabled={busy}
               onClick={() => {
                 confirmRollback.current?.close();

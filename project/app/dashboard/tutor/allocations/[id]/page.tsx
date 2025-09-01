@@ -18,6 +18,7 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 // ------------ Types ------------
 type RequestType = "Swap" | "Correction" | "Extension" | "Cancellation";
@@ -37,13 +38,13 @@ interface AllocationDetail {
 }
 
 interface RequestItem {
-  id: number;
+  id: string;
   type: RequestType;
   state: RequestState;
 }
 
 interface CommentItem {
-  id: number;
+  id: string;
   author: string;
   role: string;
   time: string;
@@ -67,13 +68,13 @@ const mockAllocation: AllocationDetail = {
 };
 
 const mockRequests: RequestItem[] = [
-  { id: 123, type: "Swap", state: "Pending Review" },
-  { id: 124, type: "Correction", state: "Pending Review" },
+  { id: "123", type: "Swap", state: "Pending Review" },
+  { id: "124", type: "Correction", state: "Pending Review" },
 ];
 
 const mockComments: CommentItem[] = [
   {
-    id: 1,
+    id: "1",
     author: "John D.",
     role: "Tutor",
     time: "26/08/25, 2:14 PM",
@@ -81,14 +82,14 @@ const mockComments: CommentItem[] = [
     mine: true, //Show Edit/Delete buttons if the logged-in user wrote this comment
   },
   {
-    id: 2,
+    id: "2",
     author: "Sarah T.",
     role: "Teaching Assistant",
     time: "26/08/25, 3:02 PM",
     body: "Thanks John, I’ve flagged this as a pending swap. Please submit a formal request via the system so I can process it.",
   },
   {
-    id: 3,
+    id: "3",
     author: "John D.",
     role: "Tutor",
     time: "26/08/25, 3:15 PM",
@@ -96,7 +97,7 @@ const mockComments: CommentItem[] = [
     mine: true, //Show Edit/Delete buttons if the logged-in user wrote this comment
   },
   {
-    id: 4,
+    id: "4",
     author: "Unit Coordinator – Dr. Lee",
     role: "",
     time: "27/08/25, 9:20 AM",
@@ -152,12 +153,8 @@ export default function AllocationPage({ params }: { params: { id: string } }) {
               {allocation.courseCode} – {allocation.courseName}
             </Typography>
             <Chip
-              label={
-                <Stack direction="row" alignItems="center" spacing={0.5}>
-                  <span>✅</span>
-                  <span>{allocation.status}</span>
-                </Stack>
-              }
+              icon={<CheckCircleIcon fontSize="small" />}
+              label={allocation.status}
               color="success"
               variant="outlined"
               sx={{ fontWeight: 600 }}

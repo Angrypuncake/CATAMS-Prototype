@@ -12,14 +12,14 @@ import {
   Menu,
   MenuItem,
   Stack,
-  TextField,
   Typography,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import NewCommentBox from "../_components/NewCommentBox";
+import DetailRow from "../_components/DetailRow";
+import RequestRow from "../_components/RequestRow";
+import CommentBubble from "../_components/CommentBubble";
 
 // ------------ Types ------------
 type RequestType = "Swap" | "Correction" | "Extension" | "Cancellation";
@@ -262,100 +262,6 @@ export default function AllocationPage({ params }: { params: { id: string } }) {
           </Stack>
         </CardContent>
       </Card>
-    </Box>
-  );
-}
-
-// ---------- Subcomponents ----------
-function DetailRow({ label, value }: { label: string; value: string }) {
-  return (
-    <Stack direction="row" spacing={2} sx={{ py: 0.25 }}>
-      <Typography variant="body2" sx={{ width: 120, color: "text.secondary" }}>
-        {label}:
-      </Typography>
-      <Typography variant="body2">{value}</Typography>
-    </Stack>
-  );
-}
-
-function RequestRow({ req }: { req: RequestItem }) {
-  return (
-    <Stack
-      direction={{ xs: "column", sm: "row" }}
-      alignItems={{ xs: "flex-start", sm: "center" }}
-      spacing={1}
-      sx={{
-        p: 1,
-        border: "1px solid",
-        borderColor: "grey.300",
-        borderRadius: 1.5,
-      }}
-    >
-      <Typography variant="body2" sx={{ minWidth: 56 }}>
-        #{req.id}
-      </Typography>
-      <Divider
-        orientation="vertical"
-        flexItem
-        sx={{ display: { xs: "none", sm: "block" } }}
-      />
-      <Typography variant="body2" sx={{ minWidth: 90 }}>
-        {req.type}
-      </Typography>
-      <Divider
-        orientation="vertical"
-        flexItem
-        sx={{ display: { xs: "none", sm: "block" } }}
-      />
-      <Typography variant="body2" sx={{ color: "text.secondary", flexGrow: 1 }}>
-        {req.state}
-      </Typography>
-      <Button size="small" variant="outlined">
-        View/Edit Request
-      </Button>
-    </Stack>
-  );
-}
-
-function CommentBubble({ comment }: { comment: CommentItem }) {
-  return (
-    <Box
-      sx={{
-        p: 1.5,
-        border: "1px solid",
-        borderColor: "grey.300",
-        borderRadius: 1.5,
-      }}
-    >
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        sx={{ mb: 0.5 }}
-      >
-        <Typography variant="body2" fontWeight={600}>
-          {comment.author}
-          {comment.role ? ` – ${comment.role}` : ""} ({comment.time})
-        </Typography>
-        {comment.mine && (
-          <Stack direction="row" spacing={0.5}>
-            <Button size="small" variant="outlined" startIcon={<EditIcon />}>
-              Edit
-            </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              color="error"
-              startIcon={<DeleteIcon />}
-            >
-              Delete
-            </Button>
-          </Stack>
-        )}
-      </Stack>
-      <Typography variant="body2" color="text.primary">
-        {comment.body}
-      </Typography>
     </Box>
   );
 }

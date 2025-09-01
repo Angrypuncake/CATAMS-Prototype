@@ -19,6 +19,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import NewCommentBox from "../_components/NewCommentBox";
 
 // ------------ Types ------------
 type RequestType = "Swap" | "Correction" | "Extension" | "Cancellation";
@@ -250,37 +251,14 @@ export default function AllocationPage({ params }: { params: { id: string } }) {
             ))}
 
             {/* New comment input */}
-            <Box
-              sx={{
-                mt: 1,
-                p: 1.5,
-                border: "1px solid",
-                borderColor: "grey.300",
-                borderRadius: 1.5,
+            <NewCommentBox
+              value={comment}
+              onChange={setComment}
+              onSubmit={() => {
+                //TODO: POST comment
+                setComment("");
               }}
-            >
-              <Stack spacing={1}>
-                <TextField
-                  multiline
-                  minRows={3}
-                  placeholder="Write a comment…"
-                  value={comment}
-                  onChange={(e) => setComment(e.target.value)}
-                  fullWidth
-                />
-                <Stack direction="row" justifyContent="flex-end">
-                  <Button
-                    variant="contained"
-                    onClick={() => {
-                      // TODO: POST comment
-                      setComment("");
-                    }}
-                  >
-                    Comment
-                  </Button>
-                </Stack>
-              </Stack>
-            </Box>
+            ></NewCommentBox>
           </Stack>
         </CardContent>
       </Card>

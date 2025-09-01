@@ -2,8 +2,10 @@
 import React from "react";
 import { Button, Typography } from "@mui/material";
 import DynamicTable from "../../../components/DynamicTable";
+import { useEffect } from "react";
+import axios from "axios";
 
-const page = () => {
+const AdminDashboard = () => {
   const adminView = {
     numUsers: 0,
     numAllocations: 0,
@@ -38,6 +40,22 @@ const page = () => {
     },
   ];
 
+  const fetchUsers = async () => {
+    try {
+      const limit = 10;
+      const page = 1;
+      const result = await axios.get("/api/tutor/allocations", {
+        params: { page, limit },
+      });
+      console.log(result.data);
+    } catch (error) {
+      console.log("error while fetching users");
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
   return (
     <div className="h-screen flex flex-col w-[90%] gap-3">
       <div className="flex justify-around mt-15 w-full">
@@ -145,7 +163,15 @@ const page = () => {
           </div>
 
           <div className="h-[37%] bg-white rounded-3xl p-3">
-            <Typography variant="subtitle1">User & Role Management</Typography>
+            <div className="flex justify-between items-center">
+              <Typography variant="subtitle1">
+                User & Role Management
+              </Typography>
+              <div>
+                <Button>Prev</Button>
+                <Button>Next</Button>
+              </div>
+            </div>
             <DynamicTable rows={tutorRows} />
           </div>
 
@@ -159,4 +185,4 @@ const page = () => {
   );
 };
 
-export default page;
+export default AdminDashboard;

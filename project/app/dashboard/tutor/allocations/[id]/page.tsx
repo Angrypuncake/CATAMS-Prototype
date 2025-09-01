@@ -110,9 +110,6 @@ export default function AllocationPage({ params }: { params: { id: string } }) {
   // Menu state for "Create Request"
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-  const handleOpenMenu = (e: React.MouseEvent<HTMLElement>) =>
-    setAnchorEl(e.currentTarget);
-  const handleCloseMenu = () => setAnchorEl(null);
 
   // Comment box state
   const [comment, setComment] = React.useState("");
@@ -201,14 +198,27 @@ export default function AllocationPage({ params }: { params: { id: string } }) {
           >
             <Button variant="contained">Submit Claim</Button>
             <div>
-              <Button variant="outlined" onClick={handleOpenMenu}>
+              <Button
+                variant="outlined"
+                onClick={(e: React.MouseEvent<HTMLElement>) =>
+                  setAnchorEl(e.currentTarget)
+                }
+              >
                 Create Request ▾
               </Button>
-              <Menu anchorEl={anchorEl} open={open} onClose={handleCloseMenu}>
-                <MenuItem onClick={handleCloseMenu}>Swap</MenuItem>
-                <MenuItem onClick={handleCloseMenu}>Correction</MenuItem>
-                <MenuItem onClick={handleCloseMenu}>Extension</MenuItem>
-                <MenuItem onClick={handleCloseMenu}>Cancellation</MenuItem>
+              <Menu
+                anchorEl={anchorEl}
+                open={open}
+                onClose={() => setAnchorEl(null)}
+              >
+                <MenuItem onClick={() => setAnchorEl(null)}>Swap</MenuItem>
+                <MenuItem onClick={() => setAnchorEl(null)}>
+                  Correction
+                </MenuItem>
+                <MenuItem onClick={() => setAnchorEl(null)}>Extension</MenuItem>
+                <MenuItem onClick={() => setAnchorEl(null)}>
+                  Cancellation
+                </MenuItem>
               </Menu>
             </div>
             <Button

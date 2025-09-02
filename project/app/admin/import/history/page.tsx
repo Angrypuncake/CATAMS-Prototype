@@ -95,21 +95,21 @@ export default function ImportHistoryPage() {
     <main className="p-6 md:p-8 space-y-8">
       <header className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">Import History</h1>
-        <div className="ml-auto flex gap-2">
-          <button
-            className="px-3 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
-            onClick={load}
-            disabled={busy}
-          >
-            Reload
-          </button>
-          <Link
-            href="/admin/import"
-            className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700"
-          >
-            Import New
-          </Link>
-        </div>
+        <button
+          type="button"
+          className="px-3 py-2 rounded-md bg-gray-200 hover:bg-gray-300"
+          onClick={load}
+          disabled={busy}
+        >
+          Reload
+        </button>
+
+        <Link
+          href="/admin/import"
+          className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-700"
+        >
+          Import New
+        </Link>
       </header>
 
       {msg && (
@@ -289,6 +289,7 @@ export default function ImportHistoryPage() {
                     </td>
                     <td className="py-2 pr-4">
                       <button
+                        type="button"
                         className="px-3 py-1.5 rounded bg-rose-600 text-white disabled:opacity-50"
                         disabled={!canRollback || busy}
                         onClick={() => {
@@ -323,12 +324,14 @@ export default function ImportHistoryPage() {
           <div className="flex justify-end gap-2">
             <button
               className="px-3 py-2 rounded bg-gray-200"
+              type="button"
               onClick={() => confirmRollback.current?.close()}
             >
               Cancel
             </button>
             <button
               className="px-3 py-2 rounded bg-rose-600 text-white disabled:opacity-50"
+              type="button"
               disabled={busy}
               onClick={() => {
                 confirmRollback.current?.close();

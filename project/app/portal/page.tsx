@@ -19,7 +19,7 @@ const page = () => {
 
       <Button
         type="link"
-        href="/dashboard/assistent"
+        href="/dashboard/assistant"
         variant="primary"
         startIcon={<GroupsIcon />}
       >

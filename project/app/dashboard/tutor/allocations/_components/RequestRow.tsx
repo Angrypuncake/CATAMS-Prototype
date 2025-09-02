@@ -1,14 +1,6 @@
 "use client";
 import { Button, Divider, Stack, Typography } from "@mui/material";
-
-type RequestType = "Swap" | "Correction" | "Extension" | "Cancellation";
-type RequestState = "Pending Review" | "Approved" | "Rejected";
-
-export interface RequestItem {
-  id: string;
-  type: RequestType;
-  state: RequestState;
-}
+import type { RequestItem } from "@/app/_types/allocations";
 
 export default function RequestRow({ req }: { req: RequestItem }) {
   return (

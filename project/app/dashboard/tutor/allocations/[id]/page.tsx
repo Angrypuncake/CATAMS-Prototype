@@ -20,38 +20,11 @@ import NewCommentBox from "../_components/NewCommentBox";
 import DetailRow from "../_components/DetailRow";
 import RequestRow from "../_components/RequestRow";
 import CommentBubble from "../_components/CommentBubble";
-
-// ------------ Types ------------
-type RequestType = "Swap" | "Correction" | "Extension" | "Cancellation";
-type RequestState = "Pending Review" | "Approved" | "Rejected";
-
-interface AllocationDetail {
-  id: string;
-  courseCode: string;
-  courseName: string;
-  status: "Confirmed" | "Pending" | "Cancelled";
-  date: string;
-  time: string;
-  location: string;
-  hours: string;
-  session: string;
-  notes?: string;
-}
-
-interface RequestItem {
-  id: string;
-  type: RequestType;
-  state: RequestState;
-}
-
-interface CommentItem {
-  id: string;
-  author: string;
-  role: string;
-  time: string;
-  body: string;
-  mine?: boolean; // whether current user wrote this
-}
+import type {
+  AllocationDetail,
+  RequestItem,
+  CommentItem,
+} from "@/app/_types/allocations";
 
 // ---------- Mock data ----------
 const mockAllocation: AllocationDetail = {

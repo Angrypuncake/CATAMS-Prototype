@@ -2,15 +2,7 @@
 import { Box, Button, Stack, Typography } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-
-export interface CommentItem {
-  id: string;
-  author: string;
-  role: string;
-  time: string;
-  body: string;
-  mine?: boolean; // whether current user wrote this
-}
+import type { CommentItem } from "@/app/_types/allocations";
 
 export default function CommentBubble({ comment }: { comment: CommentItem }) {
   return (

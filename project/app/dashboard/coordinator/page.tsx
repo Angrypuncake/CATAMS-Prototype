@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Button from "@mui/material/Button";
 import { Slider, Typography, Menu, MenuItem } from "@mui/material";
 import {
@@ -13,16 +13,35 @@ import {
   Paper,
 } from "@mui/material";
 
+type Row = {
+  offeringId: number;
+  unitCode: string;
+  unitName: string;
+  year: number;
+  session: string;
+  budget: number;
+  spent: number;
+  pctUsed: number; // 0..1 from API
+  variance: number;
+};
+
+type ApiResp = {
+  year: number;
+  session: string;
+  threshold: number; // 0..1
+  rows: Row[];
+  alerts?: {
+    message: string;
+    offeringId: number;
+    unitCode: string;
+    pctUsed: number;
+  }[];
+};
+
 const Page = () => {
   // State for dropdown
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-
-  const [value, setValue] = useState<number>(30);
-
-  const changeSlider = (event: Event, newValue: number | number[]) => {
-    setValue(newValue as number);
-  };
 
   const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -31,6 +50,61 @@ const Page = () => {
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
+
+  const [data, setData] = useState<ApiResp | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [threshold, setThreshold] = useState(0.9);
+
+  async function load() {
+    try {
+      setBusy(true);
+      setError(null);
+      const res = await fetch(
+        `/api/uc/overview?year=2025&session=S2&threshold=${threshold}`,
+        { cache: "no-store" },
+      );
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json: ApiResp = await res.json();
+      setData(json);
+    } catch (e: unknown) {
+      if (e instanceof Error) {
+        setError(e.message || "Failed to load");
+      } else {
+        setError("Failed to load");
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  useEffect(() => {
+    load(); /* initial */
+  }, []);
+
+  // Recompute status/alerts client-side so slider is live without refetching
+  const computed = useMemo(() => {
+    if (!data) return null;
+    const rows = data.rows.map((r) => ({
+      ...r,
+      status: r.pctUsed >= threshold ? "Open" : "Healthy",
+    }));
+    const alerts = rows
+      .filter((r) => r.pctUsed >= threshold)
+      .map((r) => ({
+        message: `${r.unitCode} is at ${Math.round(r.pctUsed * 100)}% budget used.`,
+        unitCode: r.unitCode,
+      }));
+    return { rows, alerts };
+  }, [data, threshold]);
+
+  const AUD = new Intl.NumberFormat("en-AU", {
+    style: "currency",
+    currency: "AUD",
+    maximumFractionDigits: 0,
+  });
+
+  const PCT = (v: number) => `${(v * 100).toFixed(1)}%`;
 
   const budgetRows = [
     {
@@ -109,12 +183,27 @@ const Page = () => {
         </div>
       </div>
 
+      {/* Alerts */}
+
       <div>
         <Typography variant="h4">Alerts</Typography>
+      </div>
+      {computed && computed.alerts.length > 0 ? (
+        <div className="flex flex-wrap gap-3">
+          {computed.alerts.map((a, i) => (
+            <span
+              key={i}
+              className="inline-flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800"
+            >
+              {a.message}
+            </span>
+          ))}
+        </div>
+      ) : (
         <div style={{ display: "flex" }}>
           <Typography variant="body1">No alerts at this time.</Typography>
         </div>
-      </div>
+      )}
 
       <div>
         <Typography variant="h4" style={{ marginTop: "20px" }}>
@@ -148,15 +237,15 @@ const Page = () => {
             Open threshold
           </Typography>
           <Slider
-            value={value}
-            onChange={changeSlider}
-            step={1}
-            min={0}
-            max={100}
+            value={threshold}
+            onChange={(_, newValue) => setThreshold(newValue as number)}
+            step={0.01}
+            min={0.5}
+            max={1}
             style={{ width: "100px", marginRight: "10px" }}
           ></Slider>
           <Typography variant="body1" style={{ marginRight: "10px" }}>
-            90%
+            {Math.round(threshold * 100)}%
           </Typography>
           <Button
             style={{
@@ -193,19 +282,31 @@ const Page = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {budgetRows.map((row) => (
-                  <TableRow key={row.unit}>
+                {computed?.rows.map((row) => (
+                  <TableRow key={row.unitCode}>
                     <TableCell style={{ fontWeight: "bold" }}>
-                      {row.unit}
+                      {row.unitCode}
                     </TableCell>
                     <TableCell>{row.year}</TableCell>
                     <TableCell>{row.session}</TableCell>
-                    <TableCell>{row.budget}</TableCell>
-                    <TableCell>{row.spent}</TableCell>
-                    <TableCell>{row.percentUsed}</TableCell>
-                    <TableCell>{row.forecast}</TableCell>
-                    <TableCell>{row.variance}</TableCell>
-                    <TableCell>{row.status}</TableCell>
+                    <TableCell>{AUD.format(row.budget)}</TableCell>
+                    <TableCell>{AUD.format(row.spent)}</TableCell>
+                    <TableCell>{PCT(row.pctUsed)}</TableCell>
+                    <TableCell>---</TableCell>
+                    <TableCell>{AUD.format(row.variance)}</TableCell>
+                    <TableCell>
+                      {" "}
+                      <span
+                        className={
+                          "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium " +
+                          (row.status === "Open"
+                            ? "bg-amber-100 text-amber-800"
+                            : "bg-emerald-100 text-emerald-800")
+                        }
+                      >
+                        {row.status}
+                      </span>{" "}
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

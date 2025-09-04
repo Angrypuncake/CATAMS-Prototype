@@ -1,10 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import StyledBox from "./components";
 import Button from "@mui/material/Button";
-import Link from "next/link";
-import { Typography } from "@mui/material";
+// import Link from "next/link";
+// import { Typography } from "@mui/material";
 import {
   Table,
   TableBody,
@@ -83,54 +83,45 @@ const exportCSV = (
   URL.revokeObjectURL(url);
 };
 
-const page = () => {
-  const tutorSessions = [
-    {
-      date: "2025-09-01",
-      time: "10:00 AM - 12:00 PM",
-      unit: "MATH101",
-      location: "Room A1",
-      hours: 2,
-      status: "Confirmed",
-      actions: "View",
-    },
-    {
-      date: "2025-09-03",
-      time: "2:00 PM - 4:00 PM",
-      unit: "PHYS202",
-      location: "Lab 3",
-      hours: 2,
-      status: "Pending",
-      actions: "Edit",
-    },
-    {
-      date: "2025-09-05",
-      time: "9:00 AM - 11:00 AM",
-      unit: "CS105",
-      location: "Building B, Room 201",
-      hours: 2,
-      status: "Rejected",
-      actions: "Reschedule",
-    },
-    {
-      date: "2025-09-07",
-      time: "1:00 PM - 3:00 PM",
-      unit: "BIO110",
-      location: "Room C2",
-      hours: 2,
-      status: "Confirmed",
-      actions: "View",
-    },
-    {
-      date: "2025-09-10",
-      time: "11:00 AM - 1:00 PM",
-      unit: "CHEM150",
-      location: "Room D4",
-      hours: 2,
-      status: "Pending",
-      actions: "Edit",
-    },
-  ];
+type TutorSession = {
+  date: string;
+  time: string;
+  unit: string;
+  location: string;
+  hours: number;
+  status: string;
+  actions: string;
+};
+
+const Page = () => {
+  const [tutorSessions, setTutorSessions] = useState<TutorSession[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // need to fix fetch link to get correct data
+    const fetchTutorSessions = async () => {
+      try {
+        const res = await fetch(
+          "/api/tutor/allocations?userId=3&page=1&limit=10",
+        );
+        if (!res.ok) {
+          throw new Error("Failed to fetch tutor allocations");
+        }
+
+        const data = await res.json();
+        setTutorSessions(data.data); // <- 'data' array from the response
+      } catch (err) {
+        console.error("Error fetching data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTutorSessions();
+  }, []);
+
+  console.log(tutorSessions);
+
   const actions = [
     {
       date: "2025-09-09",
@@ -294,15 +285,15 @@ const page = () => {
             <TableBody>
               {tutorSessions.map((row, index) => (
                 <TableRow key={index}>
-                  <TableCell>{row.date}</TableCell>
-                  <TableCell>{row.time}</TableCell>
-                  <TableCell>{row.unit}</TableCell>
-                  <TableCell>{row.location}</TableCell>
-                  <TableCell>{row.hours}</TableCell>
-                  <TableCell>{row.status}</TableCell>
+                  <TableCell>{row.date ?? "N/A"}</TableCell>
+                  <TableCell>{row.time ?? "N/A"}</TableCell>
+                  <TableCell>{row.unit ?? "N/A"}</TableCell>
+                  <TableCell>{row.location ?? "N/A"}</TableCell>
+                  <TableCell>{row.hours ?? 0}</TableCell>
+                  <TableCell>{row.status ?? "N/A"}</TableCell>
                   <TableCell className="text-left">
                     <Button variant="contained" size="small">
-                      {row.actions}
+                      {row.actions ?? "None"}
                     </Button>
                   </TableCell>
                 </TableRow>

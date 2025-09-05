@@ -13,6 +13,10 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 
 const exportJSON = (
@@ -257,6 +261,28 @@ const page = () => {
   const sessions = 6;
   const requests = 2;
 
+  // --- Modal state for "My Allocations" row popup ---
+  const [allocDialogOpen, setAllocDialogOpen] = React.useState(false);
+  const [selectedAlloc, setSelectedAlloc] = React.useState<any>(null);
+
+  const openAllocModal = (row: any) => {
+    setSelectedAlloc(row);
+    setAllocDialogOpen(true);
+  };
+  const closeAllocModal = () => setAllocDialogOpen(false);
+
+  const canSubmitClaim = (row: any) => {
+    if (!row || row.status !== "Confirmed") return false;
+    try {
+      // time format: "10:00 AM - 12:00 PM"
+      const endStr = String(row.time).split("-")[1]?.trim() || "";
+      const end = new Date(`${row.date} ${endStr}`);
+      return Date.now() > end.getTime();
+    } catch {
+      return false;
+    }
+  };
+
   return (
     <div className="w-screen h-screen box-border bg-gray-100 px-5 flex flex-col items-start justify-start">
       <p className="m-5 font-bold text-xl">Tutor Dashboard</p>
@@ -301,7 +327,11 @@ const page = () => {
                   <TableCell>{row.hours}</TableCell>
                   <TableCell>{row.status}</TableCell>
                   <TableCell className="text-left">
-                    <Button variant="contained" size="small">
+                    <Button
+                      variant="contained"
+                      size="small"
+                      onClick={() => openAllocModal(row)}
+                    >
                       {row.actions}
                     </Button>
                   </TableCell>
@@ -470,6 +500,36 @@ const page = () => {
           </Table>
         </TableContainer>
       </StyledBox>
+
+      {/* Allocation popup modal */}
+      <Dialog open={allocDialogOpen} onClose={closeAllocModal} maxWidth="sm" fullWidth>
+        <DialogTitle>Allocation</DialogTitle>
+        <DialogContent dividers>
+          {selectedAlloc && (
+            <div className="space-y-1">
+              <Typography><b>Unit:</b> {selectedAlloc.unit}</Typography>
+              <Typography><b>Status:</b> {selectedAlloc.status}</Typography>
+              <Typography><b>Date:</b> {selectedAlloc.date}</Typography>
+              <Typography><b>Time:</b> {selectedAlloc.time}</Typography>
+              <Typography><b>Location:</b> {selectedAlloc.location}</Typography>
+              <Typography><b>Hours:</b> {selectedAlloc.hours}</Typography>
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button>View Details</Button>
+          <Button variant="outlined">Make Request</Button>
+          {selectedAlloc?.status === "Confirmed" && (
+            <Button
+              variant="contained"
+              disabled={!canSubmitClaim(selectedAlloc)}
+            >
+              Submit Claim
+            </Button>
+          )}
+          <Button onClick={closeAllocModal}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

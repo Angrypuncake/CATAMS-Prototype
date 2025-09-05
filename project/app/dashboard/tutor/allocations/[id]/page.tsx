@@ -13,6 +13,10 @@ import {
   MenuItem,
   Stack,
   Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -31,7 +35,7 @@ const mockAllocation: AllocationDetail = {
   id: "123",
   courseCode: "INFO1110",
   courseName: "Programming Fundamentals",
-  status: "Confirmed",
+  status: "Confirmed", // Confirmed | Pending | Rejected
   date: "12/09/2025",
   time: "9:00 AM – 11:00 AM",
   location: "Room A",
@@ -53,7 +57,7 @@ const mockComments: CommentItem[] = [
     role: "Tutor",
     time: "26/08/25, 2:14 PM",
     body: "Hi, I just noticed this clashes with another lab I’m running in INFO1910. Could I request a swap?",
-    mine: true, //Show Edit/Delete buttons if the logged-in user wrote this comment
+    mine: true,
   },
   {
     id: "2",
@@ -68,7 +72,7 @@ const mockComments: CommentItem[] = [
     role: "Tutor",
     time: "26/08/25, 3:15 PM",
     body: "Submitted now under Request #123. Let me know if you need further details.",
-    mine: true, //Show Edit/Delete buttons if the logged-in user wrote this comment
+    mine: true,
   },
   {
     id: "4",
@@ -81,17 +85,36 @@ const mockComments: CommentItem[] = [
 
 // ---------- Page ----------
 export default function AllocationPage({ params }: { params: { id: string } }) {
-  // Menu state for "Create Request"
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-
   // Comment box state
   const [comment, setComment] = React.useState("");
+
+  // Request menu state
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const menuOpen = Boolean(anchorEl);
+
+  // Modal state
+  const [dialogOpen, setDialogOpen] = React.useState(false);
 
   // TODO: replace mocks with real fetch using params.id
   const allocation = mockAllocation;
   const requests = mockRequests;
   const comments = mockComments;
+
+  // Handlers
+  const handleSubmitClaim = () => {
+    console.log("Submit Claim pressed");
+    // TODO: hook up real submit claim
+  };
+
+  const handleCreateRequestClick = (event: React.MouseEvent<HTMLElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null);
+  };
+
+  const showClaim = allocation.status === "Confirmed";
 
   return (
     <Box sx={{ p: 3, maxWidth: 960, mx: "auto" }}>
@@ -170,31 +193,27 @@ export default function AllocationPage({ params }: { params: { id: string } }) {
             spacing={1}
             sx={{ mt: 3, mb: 2 }}
           >
-            <Button variant="contained">Submit Claim</Button>
+            {/* New View button to open modal */}
+            <Button variant="outlined" onClick={() => setDialogOpen(true)}>
+              View
+            </Button>
+
+            <Button variant="contained" onClick={handleSubmitClaim}>
+              Submit Claim
+            </Button>
+
             <div>
-              <Button
-                variant="outlined"
-                onClick={(e: React.MouseEvent<HTMLElement>) =>
-                  setAnchorEl(e.currentTarget)
-                }
-              >
+              <Button variant="outlined" onClick={handleCreateRequestClick}>
                 Create Request ▾
               </Button>
-              <Menu
-                anchorEl={anchorEl}
-                open={open}
-                onClose={() => setAnchorEl(null)}
-              >
-                <MenuItem onClick={() => setAnchorEl(null)}>Swap</MenuItem>
-                <MenuItem onClick={() => setAnchorEl(null)}>
-                  Correction
-                </MenuItem>
-                <MenuItem onClick={() => setAnchorEl(null)}>Extension</MenuItem>
-                <MenuItem onClick={() => setAnchorEl(null)}>
-                  Cancellation
-                </MenuItem>
+              <Menu anchorEl={anchorEl} open={menuOpen} onClose={handleCloseMenu}>
+                <MenuItem onClick={handleCloseMenu}>Swap</MenuItem>
+                <MenuItem onClick={handleCloseMenu}>Correction</MenuItem>
+                <MenuItem onClick={handleCloseMenu}>Extension</MenuItem>
+                <MenuItem onClick={handleCloseMenu}>Cancellation</MenuItem>
               </Menu>
             </div>
+
             <Button
               variant="outlined"
               component={Link}
@@ -223,18 +242,76 @@ export default function AllocationPage({ params }: { params: { id: string } }) {
               <CommentBubble key={c.id} comment={c} />
             ))}
 
-            {/* New comment input */}
             <NewCommentBox
               value={comment}
               onChange={setComment}
               onSubmit={() => {
-                //TODO: POST comment
+                // TODO: POST comment
                 setComment("");
               }}
-            ></NewCommentBox>
+            />
           </Stack>
         </CardContent>
       </Card>
+
+      {/* Modal Popup */}
+      <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Allocation</DialogTitle>
+        <DialogContent dividers>
+          <Stack spacing={0.5}>
+            <Typography>
+              <b>Course:</b> {allocation.courseCode} – {allocation.courseName}
+            </Typography>
+            <Typography>
+              <b>Status:</b> {allocation.status}
+            </Typography>
+            <Typography>
+              <b>Date:</b> {allocation.date}
+            </Typography>
+            <Typography>
+              <b>Time:</b> {allocation.time}
+            </Typography>
+            <Typography>
+              <b>Location:</b> {allocation.location}
+            </Typography>
+            <Typography>
+              <b>Hours:</b> {allocation.hours}
+            </Typography>
+            <Typography>
+              <b>Session:</b> {allocation.session}
+            </Typography>
+          </Stack>
+        </DialogContent>
+
+        <DialogActions>
+          <Button>View Details</Button>
+
+          <Button
+            variant="outlined"
+            onClick={() => {
+              setDialogOpen(false);
+              // trigger same handler
+              handleCreateRequestClick({ currentTarget: document.body } as any);
+            }}
+          >
+            Make Request
+          </Button>
+
+          {showClaim && (
+            <Button
+              variant="contained"
+              onClick={() => {
+                setDialogOpen(false);
+                handleSubmitClaim();
+              }}
+            >
+              Submit Claim
+            </Button>
+          )}
+
+          <Button onClick={() => setDialogOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

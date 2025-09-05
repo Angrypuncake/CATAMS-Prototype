@@ -84,9 +84,10 @@ const exportCSV = (
 };
 
 type TutorSession = {
+  // fix typing to mach db schema
   date: string;
-  time: string;
-  unit: string;
+  start_at: string;
+  unit_code: string;
   location: string;
   hours: number;
   status: string;
@@ -98,11 +99,10 @@ const Page = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // need to fix fetch link to get correct data
     const fetchTutorSessions = async () => {
       try {
         const res = await fetch(
-          "/api/tutor/allocations?userId=3&page=1&limit=10",
+          "/api/tutor/allocations?userId=6&page=1&limit=10",
         );
         if (!res.ok) {
           throw new Error("Failed to fetch tutor allocations");
@@ -285,9 +285,10 @@ const Page = () => {
             <TableBody>
               {tutorSessions.map((row, index) => (
                 <TableRow key={index}>
+                  {/* Fix typing here to match schema */}
                   <TableCell>{row.date ?? "N/A"}</TableCell>
-                  <TableCell>{row.time ?? "N/A"}</TableCell>
-                  <TableCell>{row.unit ?? "N/A"}</TableCell>
+                  <TableCell>{row.start_at ?? "N/A"}</TableCell>
+                  <TableCell>{row.unit_code ?? "N/A"}</TableCell>
                   <TableCell>{row.location ?? "N/A"}</TableCell>
                   <TableCell>{row.hours ?? 0}</TableCell>
                   <TableCell>{row.status ?? "N/A"}</TableCell>
@@ -465,4 +466,4 @@ const Page = () => {
   );
 };
 
-export default page;
+export default Page;

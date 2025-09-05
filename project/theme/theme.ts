@@ -18,8 +18,9 @@ const secondaryBaseStyle = ({ theme }: { theme: Theme }) => ({
   boxShadow: theme.shadows[8],
   fontWeight: 700,
   width: "auto",
-  alignSelf: "flex-start",
-  justifyContent: "flex-start",
+  height: "auto",
+  //alignSelf: "flex-start",
+  //justifyContent: "flex-start",
   "&:hover": {
     filter: "brightness(110%)",
     boxShadow: theme.shadows[1],
@@ -37,7 +38,7 @@ const themeOptions: ThemeOptions = {
     h6: { fontSize: "1.125rem", fontWeight: 500, lineHeight: 1.5 }, // ~18px
 
     body1: { fontSize: "1rem", lineHeight: 1.6 }, // ~16px (default)
-    body2: { fontSize: "0.875rem", lineHeight: 1.57 }, // ~14px
+    body2: { fontSize: "0.875rem", lineHeight: 1.57, color: "grey" }, // ~14px
   },
   components: {
     MuiButton: {

@@ -17,7 +17,7 @@ const AdminBudgetBox: React.FC<AdminBudgetBoxProps> = ({
       <div className="mt-2 rounded-2xl border border-[#e3e3e3] p-2 flex justify-between items-center">
         <div>
           <Typography variant="h5">{title}</Typography>
-          <Typography variant="body1">{description}</Typography>
+          <Typography variant="body2">{description}</Typography>
         </div>
 
         <Button variant="secondary" color="blue" href={href ? href : undefined}>

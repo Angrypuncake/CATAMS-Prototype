@@ -12,25 +12,6 @@ import AdminBudgetBox from "./AdminBudgetBox";
 import AdminPagination from "./AdminPagination";
 import axios from "axios";
 
-interface StagedRow {
-  batch_id: number;
-  created_at: string;
-  status: string;
-  row_count: number;
-  issues: string;
-  [key: string]: string | number | boolean | null | undefined;
-}
-interface RunRow {
-  run_id: number;
-  batch_id: number;
-  started_at: string;
-  finished_at: string;
-  status: string;
-  counts?: Record<string, number>;
-  staged_rows: number;
-  batch_created_at: string;
-  [key: string]: string | number | boolean | Record<string, number> | undefined;
-}
 type TableRowData = {
   id?: string | number | null;
   [key: string]: string | number | boolean | null | undefined;
@@ -60,6 +41,7 @@ const AdminDashboard = () => {
     newAlignment: string,
   ) => {
     setAlignment(newAlignment);
+    setHistoryPage(1);
   };
   const loadOverview = useCallback(async () => {
     try {
@@ -84,9 +66,13 @@ const AdminDashboard = () => {
       const dropBy = <T extends { by?: unknown }>(rows: T[]): Omit<T, "by">[] =>
         rows.map(({ by, ...rest }) => rest);
 
+      const dropCounts = <T extends { counts?: unknown }>(
+        rows: T[],
+      ): Omit<T, "counts">[] => rows.map(({ counts, ...rest }) => rest);
+
       setHistoryRows({
         staged: dropBy(res.data.staged),
-        runs: dropBy(res.data.runs),
+        runs: dropBy(dropCounts(res.data.runs)),
       });
       console.log(res);
     } catch (err) {
@@ -98,9 +84,10 @@ const AdminDashboard = () => {
     loadOverview();
     loadImportHistory();
   }, []);
+
   return (
     <div className="h-screen flex flex-col w-[90%] gap-3">
-      <div className="flex justify-around mt-15 w-full">
+      <div className="flex justify-around mt-6 w-full">
         <div>
           <div>
             <Typography variant="h3">System Admin Dashboard</Typography>
@@ -117,7 +104,7 @@ const AdminDashboard = () => {
           </Button>
         </div>
       </div>
-      <div className="flex gap-3 justify-center w-full">
+      <div className="flex gap-2 justify-center w-full">
         <AdminInfoBox
           adminStatistic={adminView.numUsers}
           title="User"
@@ -149,7 +136,7 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          <div className="h-[35%] bg-white rounded-3xl p-3">
+          <div className="h-[34%] bg-white rounded-3xl p-3">
             <div className="flex justify-between items-center">
               <Typography variant="subtitle1">
                 User & Role Management
@@ -169,11 +156,11 @@ const AdminDashboard = () => {
             />
           </div>
 
-          <div className="h-[35%] bg-white rounded-3xl p-3">
+          <div className="h-[34%] bg-white rounded-3xl p-3">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
                 <Typography variant="subtitle1">
-                  User & Role Management
+                  Recent Jobs (Import/Exports)
                 </Typography>
                 <ToggleButtonGroup
                   color="primary"
@@ -197,13 +184,17 @@ const AdminDashboard = () => {
               <AdminPagination
                 page={historyPage}
                 setPage={setHistoryPage}
-                itemTotal={historyRows.staged.length}
+                itemTotal={
+                  alignment === "staged"
+                    ? historyRows.staged.length
+                    : historyRows.runs.length
+                }
                 itemLimit={LIMIT}
               />
             </div>
             <DynamicTable
               rows={
-                alignment === ""
+                alignment === "staged"
                   ? historyRows.staged.slice(
                       (historyPage - 1) * LIMIT,
                       historyPage * LIMIT,
@@ -220,18 +211,4 @@ const AdminDashboard = () => {
     </div>
   );
 };
-
 export default AdminDashboard;
-
-/* 
-  const fetchUsers = useCallback(async () => {
-    try {
-      const limit = 4;
-      const result = await axios.get("/api/tutor/allocations", {
-        params: { page, limit },
-      });
-      setTutorRows(result.data.data);
-    } catch (error) {
-      console.error("Error while fetching users:", error);
-    }
-  }, [page]);*/

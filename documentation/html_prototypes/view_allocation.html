@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Allocation • INFO1110</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#fafafa; --panel:#ffffff; --line:#cfcfd4; --text:#1b1d22;
+      --muted:#666b76; --ok:#16a34a; --btn:#ffffff; --btn-hover:#f3f4f6;
+    }
+    *{box-sizing:border-box}
+    body{margin:24px; background:var(--bg); color:var(--text); font:14px/1.4 system-ui, Arial, sans-serif}
+    .card{max-width:760px; background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:18px 18px 22px}
+    .hline{height:1px; background:var(--line); margin:14px 0}
+    .title{font-weight:700; margin-bottom:4px}
+    .status{display:inline-flex; gap:8px; align-items:center; font-weight:600; margin-top:4px}
+    .badge{display:inline-flex; align-items:center; gap:6px; padding:4px 8px; border:1px solid var(--line); border-radius:6px; background:#f5fff6}
+    .tick{width:14px; height:14px; border-radius:3px; background:var(--ok); display:inline-block}
+    .kv{display:grid; grid-template-columns:120px 1fr; gap:6px 12px; margin:6px 0}
+    .notes{background:#f9fafb; border:1px solid var(--line); padding:10px; border-radius:6px; margin:10px 0}
+    .section-heading{font-weight:700; margin:14px 0 8px}
+    .actions{display:flex; gap:10px; flex-wrap:wrap; align-items:center}
+    .btn{border:1px solid #000; background:var(--btn); padding:8px 12px; border-radius:6px; cursor:pointer}
+    .btn:hover{background:var(--btn-hover)}
+    .btn.secondary{border-color:var(--line); color:#111}
+    .split{display:flex; justify-content:space-between; align-items:center; gap:12px}
+    .req-list .req{display:flex; justify-content:space-between; align-items:center; padding:8px; border:1px solid var(--line); border-radius:6px; margin:6px 0; background:#fff}
+    .comment{border:1px solid var(--line); border-radius:6px; padding:8px; margin:10px 0}
+    .comment .meta{font-weight:600}
+    .comment .when{color:var(--muted); font-weight:400}
+    .comment .actions{margin-top:6px}
+    .comment .actions .btn{padding:6px 10px}
+    textarea{width:100%; min-height:92px; padding:10px; border:1px solid var(--line); border-radius:6px; resize:vertical; background:#fff}
+    .footer-bar{display:flex; justify-content:flex-end; margin-top:8px}
+    /* simple “Create Request” dropdown */
+    .menu{position:relative; display:inline-block}
+    .menu-list{position:absolute; left:0; top:100%; min-width:200px; background:#fff; border:1px solid var(--line); border-radius:6px; box-shadow:0 8px 18px rgba(0,0,0,.06); display:none; z-index:10}
+    .menu-list a{display:block; padding:8px 10px; text-decoration:none; color:inherit}
+    .menu-list a:hover{background:var(--btn-hover)}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="title">Allocation<br><span style="font-weight:600">INFO1110 – Programming Fundamentals</span></div>
+    <div class="status">
+      Status:
+      <span class="badge"><span class="tick"></span> Confirmed</span>
+    </div>
+
+    <div class="hline"></div>
+
+    <div class="kv">
+      <div>Date:</div><div>12/09/2025</div>
+      <div>Time:</div><div>9:00 AM – 11:00 AM</div>
+      <div>Location:</div><div>Room A</div>
+      <div>Hours:</div><div>2h</div>
+      <div>Session:</div><div>Tutorial</div>
+    </div>
+
+    <div class="notes">
+      <strong>Notes:</strong> “Please arrive 10 minutes early to assist with setup. Ensure attendance sheet is completed”
+    </div>
+
+    <div class="section-heading">Actions:</div>
+    <div class="actions">
+      <button class="btn">Submit Claim</button>
+
+      <div class="menu">
+        <button class="btn" id="reqBtn">Create Request ▾</button>
+        <div class="menu-list" id="reqMenu">
+          <a href="#">Swap</a>
+          <a href="#">Correction</a>
+          <a href="#">Cancel Session</a>
+        </div>
+      </div>
+
+      <button class="btn secondary">Back to Allocations</button>
+    </div>
+
+    <div class="section-heading">View/Edit Request</div>
+    <div class="req-list">
+      <div class="req">
+        <div>#123 | Swap | <em>Pending Review</em></div>
+        <button class="btn">View/Edit Request</button>
+      </div>
+      <div class="req">
+        <div>#123 | Correction | <em>Pending Review</em></div>
+        <button class="btn">View/Edit Request</button>
+      </div>
+    </div>
+
+    <div class="section-heading">Comments</div>
+
+    <div class="comment">
+      <div class="meta">John D. – Tutor <span class="when">(26/08/25, 2:14 PM)</span></div>
+      <div>Hi, I just noticed this clashes with another lab I’m running in INFO1910. Could I request a swap?</div>
+      <div class="actions">
+        <button class="btn">Edit</button>
+        <button class="btn">Delete</button>
+      </div>
+    </div>
+
+    <div class="comment">
+      <div class="meta">Sarah T. – Teaching Assistant <span class="when">(26/08/25, 3:02 PM)</span></div>
+      <div>Thanks John, I’ve flagged this as a pending swap. Please submit a formal request via the system so I can process it.</div>
+    </div>
+
+    <div class="comment">
+      <div class="meta">John D. – Tutor <span class="when">(26/08/25, 3:15 PM)</span></div>
+      <div>Submitted now under Request #123. Let me know if you need further details.</div>
+      <div class="actions">
+        <button class="btn">Edit</button>
+        <button class="btn">Delete</button>
+      </div>
+    </div>
+
+    <div class="comment">
+      <div class="meta">Unit Coordinator – Dr. Lee <span class="when">(27/08/25, 9:20 AM)</span></div>
+      <div>Request acknowledged. I’ll review availability in Room B and confirm by tomorrow.</div>
+    </div>
+
+    <div style="margin-top:14px">
+      <textarea placeholder="Write a comment…"></textarea>
+      <div class="footer-bar">
+        <button class="btn">Comment</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // simple dropdown behavior
+    const btn = document.getElementById('reqBtn');
+    const menu = document.getElementById('reqMenu');
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+    });
+    document.addEventListener('click', () => menu.style.display = 'none');
+  </script>
+</body>
+</html>

@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teaching Operations – Admin</title>
+  <style>
+    :root{
+      --bg:#f5f7fb; --card:#ffffff; --line:#e5e7eb; --muted:#6b7280; --text:#0f172a;
+      --brand:#2563eb; --ok:#16a34a; --warn:#f59e0b; --danger:#dc2626; --ink:#111827;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);font:15.5px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;color:var(--text)}
+    .page{max-width:1200px;margin:28px auto;padding:0 16px}
+
+    /* Header */
+    .topbar{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:14px}
+    .title{font-size:1.6rem;font-weight:800}
+    .filters{display:flex;gap:10px;flex-wrap:wrap}
+    .input, select{padding:8px 10px;border:1px solid var(--line);border-radius:10px;background:#fff}
+    .btn{appearance:none;border:1px solid var(--line);background:#fff;color:#334155;padding:9px 14px;border-radius:10px;cursor:pointer;text-decoration:none}
+    .btn.primary{background:var(--ink);color:#fff;border-color:var(--ink)}
+    .btn.ghost{background:#fff;border-color:var(--line)}
+
+    /* Grid */
+    .grid{display:grid;gap:16px}
+    @media(min-width:980px){.grid{grid-template-columns:1.3fr .7fr}}
+
+    /* Cards */
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.04)}
+    .card__hd{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;border-bottom:1px solid var(--line)}
+    .card__title{font-weight:800}
+    .card__bd{padding:12px 16px}
+
+    table{width:100%;border-collapse:collapse}
+    th,td{border:1px solid var(--line);padding:8px 10px;text-align:left}
+    th{background:#f8fafc;color:#334155;font-weight:700}
+
+    .pill{display:inline-flex;gap:6px;align-items:center;padding:2px 8px;border:1px solid var(--line);border-radius:999px;font-size:12px;background:#f3f4f6;color:#374151}
+    .pill.ok{background:#ecfdf5;color:#065f46;border-color:#a7f3d0}
+    .pill.warn{background:#fff7ed;color:#92400e;border-color:#f59e0b}
+    .pill.bad{background:#fef2f2;color:#7f1d1d;border-color:#fecaca}
+
+    .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+
+    /* Needs Attention list */
+    .list{display:grid;gap:8px}
+    .row{display:flex;justify-content:space-between;gap:12px;align-items:center;border:1px solid var(--line);border-radius:10px;background:#fbfbfd;padding:10px}
+    .left{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+    /* Sticky bottom */
+    .footer{display:flex;justify-content:flex-end;gap:10px;margin-top:12px}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <div class="topbar">
+      <div class="title">Teaching Operations</div>
+      <div class="filters">
+        <select>
+          <option>Term: S2 2025</option>
+          <option>S1 2025</option>
+          <option>S2 2024</option>
+        </select>
+        <select>
+          <option>Unit: All</option>
+          <option>INFO1110</option>
+          <option>INFO1910</option>
+          <option>INFO3333</option>
+        </select>
+        <select>
+          <option>View: All</option>
+          <option>Needs Attention</option>
+          <option>Claims Pending</option>
+          <option>Requests Pending</option>
+        </select>
+        <input class="input" placeholder="Search tutors / requests / units…" />
+        <a class="btn" href="#">Export CSV</a>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Left: Allocations Overview + Needs Attention -->
+      <div class="stack">
+        <div class="card">
+          <div class="card__hd">
+            <div class="card__title">Allocations Overview</div>
+            <a class="btn ghost" href="#">Manage Allocations</a>
+          </div>
+          <div class="card__bd">
+            <table>
+              <thead>
+                <tr><th>Unit</th><th>Week</th><th>Sessions</th><th>Assigned</th><th>Unassigned</th><th>Hours</th><th>Last Change</th><th>Status</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>INFO1110</td><td>03</td><td>22</td><td>21</td><td>1</td><td>44</td><td>14/09 09:10</td><td><span class="pill ok">Open</span></td></tr>
+                <tr><td>INFO1910</td><td>03</td><td>18</td><td>18</td><td>0</td><td>36</td><td>13/09 17:22</td><td><span class="pill ok">Open</span></td></tr>
+                <tr><td>INFO3333</td><td>03</td><td>20</td><td>18</td><td>2</td><td>40</td><td>13/09 18:05</td><td><span class="pill warn">Attention</span></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__hd">
+            <div class="card__title">Needs Attention</div>
+            <a class="btn" href="#">Open Unit Board →</a>
+          </div>
+          <div class="card__bd">
+            <div class="list">
+              <div class="row">
+                <div class="left">
+                  <span class="pill warn">Claim</span>
+                  <span>INFO1110 • 13/09 5pm — <strong>2h</strong> ➝ <strong>2.5h</strong></span>
+                  <span class="pill">Tutor: J. Tran</span>
+                </div>
+                <div class="row-actions">
+                  <a class="btn" href="#">Review</a>
+                  <a class="btn ghost" href="#">Open session</a>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="left">
+                  <span class="pill warn">Request</span>
+                  <span>Swap — Tutor A ⇄ Tutor B (INFO1910)</span>
+                  <span class="pill">Pending 48h</span>
+                </div>
+                <div class="row-actions">
+                  <a class="btn" href="#">Review</a>
+                  <a class="btn ghost" href="#">Contact</a>
+                </div>
+              </div>
+
+              <div class="row">
+                <div class="left">
+                  <span class="pill bad">Unassigned</span>
+                  <span>INFO3333 • 16/09 10am — <strong>No tutor</strong></span>
+                </div>
+                <div class="row-actions">
+                  <a class="btn primary" href="#">Fill</a>
+                  <a class="btn ghost" href="#">View options</a>
+                </div>
+              </div>
+            </div>
+            <div class="footer"><a class="btn" href="#">View all items</a></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Pending Claims / Requests -->
+      <div class="stack">
+        <div class="card">
+          <div class="card__hd">
+            <div class="card__title">Claims Pending</div>
+            <a class="btn" href="#">View all claims</a>
+          </div>
+          <div class="card__bd">
+            <table>
+              <thead>
+                <tr><th>Tutor</th><th>Session (Unit • Date • Time)</th><th>Diff</th><th>Submitted</th><th>Action</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>J. Tran</td><td>INFO1110 • 13/09 • 5pm</td><td>+0.5h</td><td>14/09 09:10</td><td><a class="btn" href="#">Review</a></td></tr>
+                <tr><td>A. Singh</td><td>INFO1910 • 12/09 • 3pm</td><td>Paycode</td><td>13/09 18:41</td><td><a class="btn" href="#">Review</a></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card__hd">
+            <div class="card__title">Requests Pending</div>
+            <a class="btn" href="#">View all requests</a>
+          </div>
+          <div class="card__bd">
+            <table>
+              <thead>
+                <tr><th>Tutor</th><th>Session (Unit • Date • Time)</th><th>Type</th><th>Submitted</th><th>Action</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>J. Tran</td><td>INFO1110 • 13/09 • 5pm</td><td>Swap</td><td>14/09 09:10</td><td><a class="btn" href="#">Review</a></td></tr>
+                <tr><td>A. Singh</td><td>INFO1910 • 12/09 • 3pm</td><td>Correction</td><td>13/09 18:41</td><td><a class="btn" href="#">Review</a></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+    <div class="footer">
+      <a href="portal.html" class="footer-button">Home</a>
+    </div>
+</body>
+
+</html>

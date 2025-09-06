@@ -36,6 +36,7 @@ const DynamicTable: React.FC<TableProps> = ({ rows }) => {
         transform: "scale(0.8)",
         transformOrigin: "top left",
         width: "125%",
+        marginTop: "2px",
       }}
     >
       <Table size="small">

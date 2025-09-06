@@ -20,7 +20,7 @@ const AdminBudgetBox: React.FC<AdminBudgetBoxProps> = ({
           <Typography variant="body1">{description}</Typography>
         </div>
 
-        <Button variant="secondary" color="blue" href={`${href}`}>
+        <Button variant="secondary" color="blue" href={href ? href : undefined}>
           Open
         </Button>
       </div>

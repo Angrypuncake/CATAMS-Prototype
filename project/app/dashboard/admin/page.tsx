@@ -12,21 +12,9 @@ const AdminDashboard = () => {
     numUsers: 0,
     numAllocations: 0,
   });
+  const LIMIT = 4;
   const [page, setPage] = useState(1);
-
   const [tutorRows, setTutorRows] = useState([]);
-  const fetchUsers = useCallback(async () => {
-    try {
-      const limit = 4;
-      const result = await axios.get("/api/tutor/allocations", {
-        params: { page, limit },
-      });
-      setTutorRows(result.data.data);
-    } catch (error) {
-      console.error("Error while fetching users:", error);
-    }
-  }, [page]);
-
   const loadOverview = useCallback(async () => {
     try {
       const result = await axios.get("/api/admin/overview");
@@ -35,13 +23,14 @@ const AdminDashboard = () => {
         numUsers: Number(result.data.totals.users),
         numAllocations: Number(result.data.totals.allocations),
       });
+      setTutorRows(result.data.userRoles);
     } catch (err) {
       console.error("Error loading overview:", err);
     }
   }, []);
 
   useEffect(() => {
-    fetchUsers();
+    //fetchUsers();
     loadOverview();
   }, [page]);
   return (
@@ -86,12 +75,12 @@ const AdminDashboard = () => {
         </div>
 
         <div className="w-3/4 h-full  rounded-3xl flex flex-col gap-3">
-          <div className="h-[10%] bg-white rounded-3xl p-3">
+          <div className="min-h-[85px] h-[10%] bg-white rounded-3xl p-3">
             <Typography variant="subtitle1">Validation Reports</Typography>
 
             <div>
               <Button variant="secondary" color="red">
-                Invalid Tutor Emails {`(4)`}
+                Invalid Tutor Emails {`(0)`}
               </Button>
             </div>
           </div>
@@ -116,13 +105,22 @@ const AdminDashboard = () => {
                   onClick={() => {
                     setPage(page + 1);
                   }}
-                  disabled={!tutorRows || tutorRows.length < 3}
+                  disabled={
+                    !tutorRows || (page - 1) * LIMIT + LIMIT >= tutorRows.length
+                  }
                 >
                   Next
                 </Button>
               </div>
             </div>
-            <DynamicTable rows={tutorRows ?? []} />
+            <DynamicTable
+              rows={
+                tutorRows.slice(
+                  (page - 1) * LIMIT,
+                  (page - 1) * LIMIT + LIMIT,
+                ) ?? []
+              }
+            />
           </div>
 
           <div className="h-[42%] bg-white rounded-3xl p-3">
@@ -135,3 +133,16 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+
+/* 
+  const fetchUsers = useCallback(async () => {
+    try {
+      const limit = 4;
+      const result = await axios.get("/api/tutor/allocations", {
+        params: { page, limit },
+      });
+      setTutorRows(result.data.data);
+    } catch (error) {
+      console.error("Error while fetching users:", error);
+    }
+  }, [page]);*/

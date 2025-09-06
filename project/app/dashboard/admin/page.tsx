@@ -8,10 +8,10 @@ import AdminInfoBox from "./AdminInfoBox";
 import AdminBudgetBox from "./AdminBudgetBox";
 
 const AdminDashboard = () => {
-  const adminView = {
+  const [adminView, setAdminView] = useState({
     numUsers: 0,
     numAllocations: 0,
-  };
+  });
   const [page, setPage] = useState(1);
 
   const [tutorRows, setTutorRows] = useState([]);
@@ -27,8 +27,22 @@ const AdminDashboard = () => {
     }
   }, [page]);
 
+  const loadOverview = useCallback(async () => {
+    try {
+      const result = await axios.get("/api/admin/overview");
+      console.log("Overview data:", result.data);
+      setAdminView({
+        numUsers: Number(result.data.totals.users),
+        numAllocations: Number(result.data.totals.allocations),
+      });
+    } catch (err) {
+      console.error("Error loading overview:", err);
+    }
+  }, []);
+
   useEffect(() => {
     fetchUsers();
+    loadOverview();
   }, [page]);
   return (
     <div className="h-screen flex flex-col w-[90%] gap-3">

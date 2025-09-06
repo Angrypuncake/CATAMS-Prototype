@@ -4,6 +4,8 @@ import { Button, Typography } from "@mui/material";
 import DynamicTable from "../../../components/DynamicTable";
 import { useEffect } from "react";
 import axios from "axios";
+import AdminInfoBox from "./AdminInfoBox";
+import AdminBudgetBox from "./AdminBudgetBox";
 
 const AdminDashboard = () => {
   const adminView = {
@@ -76,79 +78,26 @@ const AdminDashboard = () => {
         </div>
       </div>
       <div className="flex gap-3 justify-center w-full">
-        <div className="w-[250px] h-[80px] bg-white flex gap-3 items-center justify-around rounded-2xl">
-          <div className="flex flex-col">
-            <Typography>Users</Typography>
-            <Typography variant="h4">{adminView.numUsers}</Typography>
-          </div>
-          <div>
-            <Button variant="bubble">directory</Button>
-          </div>
-        </div>
-        <div className="w-[250px] h-[80px] bg-white flex gap-3 items-center justify-around rounded-2xl">
-          <div className="flex flex-col">
-            <Typography>Allocations</Typography>
-            <Typography variant="h4">{adminView.numAllocations}</Typography>
-          </div>
-          <div>
-            <Button variant="bubble">current term</Button>
-          </div>
-        </div>
-        <div className="w-[250px] h-[80px] bg-white flex gap-3 items-center justify-around rounded-2xl">
-          <div className="flex flex-col">
-            <Typography>Pending Errors</Typography>
-            <Typography variant="h4">{adminView.numPendingErrors}</Typography>
-          </div>
-          <div>
-            <Button variant="bubble" color="red">
-              attention
-            </Button>
-          </div>
-        </div>
-        <div className="w-[250px] h-[80px] bg-white flex gap-3 items-center justify-center rounded-2xl">
-          <div className="flex flex-col">
-            <Typography>Budgets Loaded</Typography>
-            <Typography variant="h4">{adminView.numBudgetLoaded}</Typography>
-          </div>
-          <div>
-            <Button variant="bubble" color="green">
-              ok
-            </Button>
-          </div>
-        </div>
+        <AdminInfoBox
+          adminStatistic={adminView.numUsers}
+          title="User"
+          bubbleText="directory"
+        />
+        <AdminInfoBox
+          adminStatistic={adminView.numAllocations}
+          title="Allocations"
+          bubbleText="current term"
+        />
       </div>
 
       <div className="flex justify-center h-full gap-3 w-full">
         <div className="w-1/3 h-1/3 bg-white rounded-3xl p-3">
           <Typography variant="subtitle1">Budgets Loaded</Typography>
-          <div>
-            <div className="rounded-2xl border border-[#e3e3e3] p-2 flex justify-between items-center">
-              <div>
-                <Typography variant="h5">Allocations CSV</Typography>
-                <Typography variant="body1">
-                  Upload + preview in timetable
-                </Typography>
-              </div>
-
-              <Button variant="secondary" color="blue">
-                Open
-              </Button>
-            </div>
-          </div>
-          <div>
-            <div className="rounded-2xl border border-[#e3e3e3] p-2 flex justify-between items-center">
-              <div>
-                <Typography variant="h5">Allocations CSV</Typography>
-                <Typography variant="body1">
-                  Upload + preview in timetable
-                </Typography>
-              </div>
-
-              <Button variant="secondary" color="blue">
-                Open
-              </Button>
-            </div>
-          </div>
+          <AdminBudgetBox
+            title="Allocations CSV"
+            description="Upload + preview in timetable"
+            href=""
+          />
         </div>
 
         <div className="w-2/3 h-full  rounded-3xl flex flex-col gap-3">

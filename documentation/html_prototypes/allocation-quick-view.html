@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Allocation Quick View — Demo</title>
+<style>
+  :root {
+    --bg:#ffffff;
+    --panel:#fdfdfd;
+    --panel-2:#fafafa;
+    --text:#111827;
+    --muted:#6b7280;
+    --line:#d1d5db;
+    --brand:#2563eb;
+    --ok:#16a34a;
+    --warn:#d97706;
+    --bad:#dc2626;
+    --chip:#f3f4f6;
+  }
+  body{margin:0;font-family:system-ui,sans-serif;color:var(--text);background:var(--bg)}
+  .wrap{max-width:900px;margin:40px auto;padding:0 16px}
+  .btn{border:1px solid var(--line);background:#f9fafb;padding:8px 12px;border-radius:8px;cursor:pointer}
+  .btn.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+  .btn:disabled{opacity:.55;cursor:not-allowed}
+  .btn.small{padding:6px 10px;font-size:14px}
+
+  /* Modal */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.25);display:none}
+  .modal{
+    position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);
+    width:min(640px,92vw);background:var(--panel);border:1px solid var(--line);
+    border-radius:10px;display:none;box-shadow:0 12px 32px rgba(0,0,0,.20);
+  }
+  .modal header{padding:12px 14px;border-bottom:1px solid var(--line);font-weight:600}
+  .modal .body{padding:12px 14px}
+  .kv{display:grid;grid-template-columns:120px 1fr;gap:6px 12px;font-size:14px}
+  .kv .k{color:var(--muted)}
+  .hr{height:1px;background:var(--line);margin:8px 0 12px}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+  .chip{display:inline-flex;align-items:center;gap:6px;background:var(--chip);border:1px solid var(--line);padding:2px 8px;border-radius:999px;font-size:12px}
+  .chip.ok{color:var(--ok)}
+  .tooltip{position:relative}
+  .tooltip[data-tip]:hover:after{
+    content:attr(data-tip); position:absolute;left:0;top:calc(100% + 6px);
+    background:#111827; color:#fff; font-size:12px; padding:6px 8px; border-radius:6px; white-space:nowrap;
+  }
+  select{border:1px solid var(--line);background:var(--panel-2);padding:7px 8px;border-radius:8px}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 style="font-size:20px;margin:0 0 14px">Allocation Quick View — Demo</h1>
+    <button class="btn primary" id="open">Open Quick View</button>
+  </div>
+
+  <div class="overlay" id="overlay"></div>
+  <div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="m-title">
+    <header id="m-title">Allocation quick view</header>
+    <div class="body">
+      <div style="font-weight:600">INFO1110 – Programming Fundamentals</div>
+      <div class="chip ok" style="margin-top:6px">Status: Confirmed</div>
+      <div class="hr"></div>
+      <div class="kv">
+        <div class="k">Date:</div><div id="kv-date">12/09/2025</div>
+        <div class="k">Time:</div><div id="kv-time">9:00 AM – 11:00 AM</div>
+        <div class="k">Location:</div><div>Room A</div>
+        <div class="k">Hours:</div><div>2h</div>
+        <div class="k">Session:</div><div>Tutorial</div>
+      </div>
+      <div style="margin-top:12px">
+        <div class="k" style="color:var(--muted);font-size:13px;margin-bottom:4px">Notes:</div>
+        <div style="font-size:14px">“Please arrive 10 minutes early to assist with setup. Ensure attendance sheet is completed.”</div>
+      </div>
+
+      <div class="row">
+        <span class="tooltip" id="submitTip" data-tip="You can submit a claim after this session ends (11:00 AM).">
+          <button class="btn small" id="submitBtn" disabled>Submit Claim</button>
+        </span>
+
+        <select id="createReq">
+          <option>Create Request ▾</option>
+          <option value="swap">Swap</option>
+          <option value="correction">Correction</option>
+          <option value="absence">Absence</option>
+        </select>
+
+        <button class="btn small" id="detailsBtn">View details</button>
+        <button class="btn small" id="close">Close</button>
+        <span id="countdown" class="meta" style="margin-left:auto;color:var(--muted);font-size:12px"></span>
+      </div>
+    </div>
+  </div>
+
+<script>
+// --- Demo data ---
+// Set start and end times for the session (local time)
+const sessionDate = "2025-09-12"; // YYYY-MM-DD
+const startTime = "09:00";         // 24h HH:MM
+const endTime   = "11:00";
+
+// Format helpers
+function fmtTime(date){
+  return date.toLocaleTimeString([], {hour:"numeric", minute:"2-digit"});
+}
+function pad(n){return String(n).padStart(2,"0");}
+
+// Populate header time text
+(function initHeader(){
+  const d = new Date(sessionDate + "T" + startTime);
+  const e = new Date(sessionDate + "T" + endTime);
+  document.getElementById("kv-date").textContent =
+    d.toLocaleDateString();
+  document.getElementById("kv-time").textContent =
+    fmtTime(d) + " – " + fmtTime(e);
+})();
+
+// Modal open/close
+const modal   = document.getElementById("modal");
+const overlay = document.getElementById("overlay");
+const openBtn = document.getElementById("open");
+const closeBtn= document.getElementById("close");
+const submitBtn = document.getElementById("submitBtn");
+const submitTip = document.getElementById("submitTip");
+const countdownEl= document.getElementById("countdown");
+
+function openModal(){ modal.style.display="block"; overlay.style.display="block"; modal.focus(); }
+function closeModal(){ modal.style.display="none"; overlay.style.display="none"; }
+
+openBtn.addEventListener("click", openModal);
+closeBtn.addEventListener("click", closeModal);
+overlay.addEventListener("click", closeModal);
+document.addEventListener("keydown", (e)=>{ if(e.key==="Escape") closeModal(); });
+
+// Countdown until session end; enable submit when past end
+(function startCountdown(){
+  const end = new Date(sessionDate + "T" + endTime);
+  function tick(){
+    const now = new Date();
+    const ms = end - now;
+    if (ms <= 0){
+      submitBtn.disabled = false;
+      submitTip.removeAttribute("data-tip");
+      countdownEl.textContent = "";
+      return; // stop ticking
+    }
+    // compute hh:mm:ss remaining
+    const s = Math.floor(ms/1000);
+    const h = Math.floor(s/3600);
+    const m = Math.floor((s%3600)/60);
+    const sec = s%60;
+    countdownEl.textContent = "Claim available in " + (h? h + "h ":"") + pad(m) + "m " + pad(sec) + "s";
+    requestAnimationFrame(()=> setTimeout(tick, 500));
+  }
+  tick();
+})();
+
+// Demo action hooks
+document.getElementById("detailsBtn").addEventListener("click", ()=> alert("Open full allocation page"));
+submitBtn.addEventListener("click", ()=> alert("Submitting claim..."));
+document.getElementById("createReq").addEventListener("change", (e)=>{
+  if(e.target.value && e.target.value!=="Create Request ▾"){
+    alert("Start request: " + e.target.options[e.target.selectedIndex].text);
+    e.target.selectedIndex = 0;
+  }
+});
+</script>
+</body>
+</html>

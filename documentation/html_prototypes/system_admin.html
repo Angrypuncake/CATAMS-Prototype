@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>System Admin Dashboard</title>
+<style>
+  :root{
+    --bg:#f9fafb; --card:#ffffff; --ink:#1a1a1a; --muted:#666; --line:#e0e0e0;
+    --accent:#3b82f6; --ok:#16a34a; --warn:#dc2626; --chip:#f3f4f6; --shadow:0 8px 20px rgba(0,0,0,.06)
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--ink)}
+  .wrap{max-width:1200px;margin:28px auto;padding:0 18px}
+
+  h1{margin:0 0 8px;font-size:24px}
+  .muted{color:var(--muted)}
+  .row{display:flex;gap:12px;align-items:center}
+  .push{margin-left:auto}
+
+  .btn{
+    border:1px solid var(--line); background:#fff; color:var(--ink);
+    padding:10px 14px; border-radius:10px; cursor:pointer; font-weight:600
+  }
+  .btn.primary{background:var(--accent); border-color:var(--accent); color:#fff}
+  .btn.ok{background:var(--ok); border-color:var(--ok); color:#fff}
+  .btn.warn{background:var(--warn); border-color:var(--warn); color:#fff}
+  .btn.ghost{background:#fff}
+
+  .grid{display:grid; gap:14px}
+  .grid.kpi{grid-template-columns:repeat(4,1fr); margin:16px 0 20px}
+  .grid.cards{grid-template-columns:360px 1fr}
+  @media (max-width:1100px){ .grid.kpi{grid-template-columns:repeat(2,1fr)} .grid.cards{grid-template-columns:1fr} }
+
+  .card{background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; box-shadow:var(--shadow)}
+  .card h3{margin:4px 0 10px; font-size:14px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em}
+  .kpiCard{display:flex; align-items:center; justify-content:space-between; padding:14px}
+  .kpiCard b{font-size:22px}
+  .pill{display:inline-block; padding:6px 10px; border-radius:999px; background:var(--chip); color:var(--muted); font-size:12px; font-weight:600}
+  .pill.ok{color:var(--ok); background:#e7f8ee}
+  .pill.warn{color:var(--warn); background:#feeceb}
+  .list{display:flex; flex-direction:column; gap:10px}
+  .list .item{display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 10px; border:1px solid var(--line); border-radius:10px; background:#fff}
+  .list .item .meta{font-size:12px; color:var(--muted)}
+
+  /* table */
+  .tableWrap{overflow:auto}
+  table{width:100%; border-collapse:collapse; table-layout:auto}
+  th,td{border:1px solid var(--line); padding:10px 14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  thead th{background:#f3f4f6}
+  tbody tr:nth-child(even){background:#fafafa}
+  tbody tr:hover{background:#eef4ff}
+  td.actions{text-align:right}
+
+  /* modal */
+  .modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center; background:rgba(0,0,0,.35); padding:16px}
+  .panel{background:#fff; border:1px solid var(--line); border-radius:14px; padding:16px; max-width:900px; width:100%; box-shadow:var(--shadow)}
+  .panel h2{margin:0 0 8px; font-size:18px}
+  .modal .actions{display:flex; gap:10px; justify-content:flex-end; margin-top:12px}
+  .twoCol{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+  @media (max-width:900px){ .twoCol{grid-template-columns:1fr} }
+
+  input,select{width:100%; padding:10px; border:1px solid var(--line); border-radius:10px; background:#fff; color:var(--ink)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="row">
+    <div>
+      <h1>System Admin Dashboard</h1>
+      <div class="muted">Data operations, integrity checks, and system configuration.</div>
+    </div>
+    <div class="push row">
+      <button class="btn" onclick="refreshStats()">Refresh</button>
+      <button class="btn primary" onclick="goToBulkImport()">Bulk Import Allocations</button>
+    </div>
+  </div>
+
+  <!-- KPIs -->
+  <div class="grid kpi">
+    <div class="card kpiCard">
+      <div>
+        <div class="muted">Users</div>
+        <b id="kpiUsers">—</b>
+      </div>
+      <span class="pill">directory</span>
+    </div>
+    <div class="card kpiCard">
+      <div>
+        <div class="muted">Allocations</div>
+        <b id="kpiAllocs">—</b>
+      </div>
+      <span class="pill">current term</span>
+    </div>
+    <div class="card kpiCard">
+      <div>
+        <div class="muted">Pending Errors</div>
+        <b id="kpiErrors">—</b>
+      </div>
+      <span id="errPill" class="pill warn">attention</span>
+    </div>
+    <div class="card kpiCard">
+      <div>
+        <div class="muted">Budgets Loaded</div>
+        <b id="kpiBudgets">—</b>
+      </div>
+      <span class="pill ok">ok</span>
+    </div>
+  </div>
+
+  <div class="grid cards">
+    <!-- LEFT COLUMN -->
+    <div class="grid" style="grid-template-columns:1fr; gap:14px">
+      <div class="card">
+        <h3>Bulk Imports</h3>
+        <div class="list">
+          <div class="item">
+            <div>
+              <strong>Allocations CSV</strong><div class="meta">Upload + preview in timetable, then confirm</div>
+            </div>
+            <button class="btn primary" onclick="goToBulkImport()">Open</button>
+          </div>
+          <div class="item">
+            <div>
+              <strong>Users CSV</strong><div class="meta">Create/Update tutors & staff in bulk</div>
+            </div>
+            <button class="btn" onclick="openUsersUpload()">Upload</button>
+          </div>
+          <div class="item">
+            <div>
+              <strong>Budgets CSV</strong><div class="meta">Load per-unit budgets (simulate first)</div>
+            </div>
+            <button class="btn" onclick="openBudgetsUpload()">Upload</button>
+          </div>
+          <div class="item">
+            <div>
+              <strong>Export Data</strong><div class="meta">Allocations, requests, audit logs (CSV/JSON)</div>
+            </div>
+            <button class="btn" onclick="exportData()">Export</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Configuration & Settings</h3>
+        <div class="list">
+          <div class="item">
+            <div><strong>Paycodes</strong><div class="meta">Add/edit paycodes and default rules</div></div>
+            <button class="btn" onclick="openConfig('paycodes')">Manage</button>
+          </div>
+          <div class="item">
+            <div><strong>System Dates</strong><div class="meta">Semester start/end, census dates</div></div>
+            <button class="btn" onclick="openConfig('dates')">Manage</button>
+          </div>
+          <div class="item">
+            <div><strong>Notifications</strong><div class="meta">Budget thresholds, validation warnings</div></div>
+            <button class="btn" onclick="openConfig('notifications')">Manage</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="grid" style="grid-template-columns:1fr; gap:14px">
+      <div class="card">
+        <h3>Validation Reports</h3>
+        <div class="row" style="flex-wrap:wrap; gap:10px">
+          <button class="btn warn" onclick="openValidation('invalidEmails')">Invalid Tutor Emails (4)</button>
+          <button class="btn warn" onclick="openValidation('overlaps')">Overlapping Sessions (2)</button>
+          <button class="btn warn" onclick="openValidation('budgetBreaches')">Budget Breaches (1)</button>
+          <button class="btn" onclick="openValidation('duplicates')">Duplicates (3)</button>
+          <span class="muted" style="margin-left:auto">Click to review & fix</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>User & Role Management</h3>
+        <div class="row" style="margin-bottom:10px">
+          <div class="pill">Total: <strong id="uTotal">—</strong></div>
+          <div class="pill">Tutors: <strong id="uTutors">—</strong></div>
+          <div class="pill">Admins: <strong id="uAdmins">—</strong></div>
+          <div class="pill">LICs: <strong id="uLICs">—</strong></div>
+          <button class="btn push" onclick="openDirectory()">Manage Users</button>
+        </div>
+        <div class="tableWrap">
+          <table>
+            <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Units</th><th>Status</th></tr></thead>
+            <tbody id="miniUsers"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Recent Jobs (Imports / Exports)</h3>
+        <div class="tableWrap">
+          <table id="jobsTable">
+            <thead><tr><th>When</th><th>Type</th><th>File</th><th>Rows</th><th>Status</th><th>By</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modals -->
+<div id="modal" class="modal" aria-hidden="true">
+  <div class="panel">
+    <h2 id="modalTitle">Modal</h2>
+    <div id="modalBody"></div>
+    <div class="actions">
+      <button class="btn" onclick="closeModal()">Close</button>
+      <button id="modalPrimary" class="btn primary" style="display:none">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // --- Seed Data ---
+  const state = {
+    users: { total: 320, tutors: 280, admins: 25, lics: 15 },
+    allocations: 2145,
+    budgets: 42,
+    errors: 7,
+    miniUsers: [
+      {name:'Alex Tutor', email:'alex.tutor@usyd.edu.au', role:'Tutor', units:3, status:'Active'},
+      {name:'J. Smith', email:'j.smith@usyd.edu.au', role:'Tutor', units:2, status:'Active'},
+      {name:'Penghui Wen', email:'penghui.wen@usyd.edu.au', role:'Admin', units:6, status:'Active'},
+      {name:'Dr. Armin Chitizadeh', email:'armin.chitizadeh@usyd.edu.au', role:'LIC', units:2, status:'Active'}
+    ],
+    jobs: [
+      {ts:'2025-09-13 14:10', type:'Import', file:'allocations_week3.csv', rows:120, status:'Success', by:'elvis.nguyen'},
+      {ts:'2025-09-13 13:42', type:'Import', file:'users_new_tutors.csv', rows:28, status:'Failed', by:'admin01'},
+      {ts:'2025-09-12 17:05', type:'Export', file:'audit_log_2025-09-12.json', rows:1340, status:'Success', by:'admin01'},
+      {ts:'2025-09-12 10:20', type:'Import', file:'budgets_sem2.csv', rows:42, status:'Success', by:'finance.bot'}
+    ],
+    validations: {
+      invalidEmails: [
+        {unit:'COMP2022', session:'TUT05', tutor:'error.tutor@notusyd.com', reason:'Email domain not recognized'},
+        {unit:'INFO1910', session:'LAB01', tutor:'john@usdy.edu', reason:'Malformed email'},
+        {unit:'INFO1110', session:'TUT03', tutor:'tutor@@usyd.edu.au', reason:'Malformed email'},
+        {unit:'COMP2123', session:'LEC01', tutor:'lecturer@usyded.au', reason:'Suspicious domain'}
+      ],
+      overlaps: [
+        {tutor:'alex.tutor@usyd.edu.au', a:'INFO1110 TUT01 17:00-19:00', b:'INFO1910 LAB02 18:00-20:00'},
+        {tutor:'m.wong@usyd.edu.au', a:'CONS01 09:30-10:30', b:'INFO1110 TUT04 10:00-11:00'}
+      ],
+      budgetBreaches: [
+        {unit:'INFO1110', cap:'$38,000', projected:'$39,250', variance:'-$1,250'}
+      ],
+      duplicates: [
+        {unit:'COMP2022', session:'LAB04', tutor:'emma@usyd.edu.au', reason:'Duplicate of 2025-09-16 09:00'}
+      ]
+    }
+  };
+
+  // --- Renderers ---
+  function refreshStats(){
+    document.getElementById('kpiUsers').textContent = state.users.total.toLocaleString();
+    document.getElementById('kpiAllocs').textContent = state.allocations.toLocaleString();
+    document.getElementById('kpiBudgets').textContent = state.budgets.toLocaleString();
+    document.getElementById('kpiErrors').textContent = state.errors.toString();
+    document.getElementById('errPill').className = 'pill ' + (state.errors ? 'warn' : 'ok');
+
+    // mini users
+    const mu = document.getElementById('miniUsers');
+    mu.innerHTML = state.miniUsers.map(u=>`
+      <tr><td title="${u.name}">${u.name}</td><td title="${u.email}">${u.email}</td>
+          <td>${u.role}</td><td>${u.units}</td><td>${u.status}</td></tr>`).join('');
+
+    // user count pills
+    document.getElementById('uTotal').textContent = state.users.total;
+    document.getElementById('uTutors').textContent = state.users.tutors;
+    document.getElementById('uAdmins').textContent = state.users.admins;
+    document.getElementById('uLICs').textContent = state.users.lics;
+
+    // jobs
+    const jt = document.querySelector('#jobsTable tbody');
+    jt.innerHTML = state.jobs.map(j=>{
+      const pill = j.status==='Success' ? '<span class="pill ok">Success</span>' :
+                  j.status==='Failed' ? '<span class="pill warn">Failed</span>' :
+                  `<span class="pill">${j.status}</span>`;
+      return `<tr>
+        <td>${j.ts}</td><td>${j.type}</td><td title="${j.file}">${j.file}</td>
+        <td>${j.rows}</td><td>${pill}</td><td>${j.by}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // --- Navigation / Actions ---
+  function goToBulkImport(){
+    // Replace with your actual route to the import preview page:
+    location.href = 'import_preview.html';
+    openModal('Bulk Import – Allocations', `
+      <div class="twoCol">
+        <div>
+          <p class="muted">This opens the CSV Import Preview (timetable + table) you built.</p>
+          <p>For demo purposes, this button shows a modal. Swap to <code>location.href = 'import-preview.html'</code> when ready.</p>
+        </div>
+        <div>
+          <button class="btn primary" onclick="location.href='import-preview.html'">Go to Import Preview</button>
+        </div>
+      </div>
+    `, false);
+  }
+
+  function openUsersUpload(){
+    openModal('Upload Users CSV', `
+      <div class="twoCol">
+        <div>
+          <label>Choose file</label>
+          <input type="file" accept=".csv" />
+        </div>
+        <div>
+          <label>Mapping Profile</label>
+          <select><option>Default</option><option>HR Export v2</option></select>
+        </div>
+      </div>
+      <p class="muted">Expected columns: <code>first_name,last_name,email,role,units</code></p>
+    `, true, ()=>enqueueJob('Import','users.csv',28,'Failed'));
+  }
+
+  function openBudgetsUpload(){
+    openModal('Upload Budgets CSV', `
+      <div class="twoCol">
+        <div><label>Choose file</label><input type="file" accept=".csv" /></div>
+        <div><label>Simulation</label><select><option>Validate only</option><option>Validate + Import</option></select></div>
+      </div>
+      <p class="muted">Columns: <code>unit_code,budget_amount,session_start,session_end</code></p>
+    `, true, ()=>enqueueJob('Import','budgets.csv',42,'Success'));
+  }
+
+  function exportData(){
+    openModal('Export Data', `
+      <div class="twoCol">
+        <div>
+          <label>Dataset</label>
+          <select><option>Allocations</option><option>Requests</option><option>Audit Logs</option></select>
+        </div>
+        <div>
+          <label>Format</label>
+          <select><option>CSV</option><option>JSON</option></select>
+        </div>
+      </div>
+    `, true, ()=>enqueueJob('Export','allocations.csv',2145,'Success'));
+  }
+
+  function openValidation(key){
+    const data = state.validations[key] || [];
+    const titleMap = {
+      invalidEmails:'Invalid Tutor Emails',
+      overlaps:'Overlapping Sessions',
+      budgetBreaches:'Budget Breaches',
+      duplicates:'Duplicates'
+    };
+    let html = '';
+    if(key==='invalidEmails'){
+      html = tableHtml(['Unit','Session','Tutor','Reason'], data.map(d=>[d.unit,d.session,d.tutor,d.reason]));
+    } else if(key==='overlaps'){
+      html = tableHtml(['Tutor','Allocation A','Allocation B'], data.map(d=>[d.tutor,d.a,d.b]));
+    } else if(key==='budgetBreaches'){
+      html = tableHtml(['Unit','Cap','Projected','Variance'], data.map(d=>[d.unit,d.cap,d.projected,d.variance]));
+    } else if(key==='duplicates'){
+      html = tableHtml(['Unit','Session','Tutor','Reason'], data.map(d=>[d.unit,d.session,d.tutor,d.reason]));
+    }
+    openModal(`Validation • ${titleMap[key]||key}`, html, false);
+  }
+
+  function openDirectory(){
+    const html = tableHtml(
+      ['Name','Email','Role','Units','Status'],
+      state.miniUsers.map(u=>[u.name,u.email,u.role,u.units,u.status])
+    ) + `<div class="actions"><button class="btn">Bulk Role Assign</button><button class="btn">Invite/Reset SSO</button></div>`;
+    openModal('User Directory (preview)', html, false);
+  }
+
+  function openConfig(section){
+    const map = {
+      paycodes: `
+        <div class="twoCol">
+          <div><label>Paycode</label><input placeholder="e.g., TUT01" /></div>
+          <div><label>Default Rate</label><input placeholder="$55.00" /></div>
+        </div>
+        <p class="muted">Editing paycodes updates default suggestions for new allocations.</p>
+      `,
+      dates: `
+        <div class="twoCol">
+          <div><label>Semester Start</label><input type="date" /></div>
+          <div><label>Semester End</label><input type="date" /></div>
+        </div>
+      `,
+      notifications: `
+        <div class="twoCol">
+          <div><label>Budget threshold alert</label><input placeholder="e.g., 90%" /></div>
+          <div><label>Validation email</label><input placeholder="admin@usyd.edu.au" /></div>
+        </div>
+      `
+    };
+    openModal('Settings • ' + section, map[section] || '<p class="muted">No editor for this section yet.</p>', true, ()=>alert('Saved'));
+  }
+
+  // --- Helpers ---
+  function tableHtml(headers, rows){
+    const head = `<thead><tr>${headers.map(h=>`<th>${h}</th>`).join('')}</tr></thead>`;
+    const body = `<tbody>${rows.map(r=>`<tr>${r.map(c=>`<td title="${String(c)}">${c}</td>`).join('')}</tr>`).join('')}</tbody>`;
+    return `<div class="tableWrap"><table>${head}${body}</table></div>`;
+  }
+
+  function enqueueJob(type,file,rows,status){
+    state.jobs.unshift({ts:new Date().toISOString().slice(0,16).replace('T',' '), type, file, rows, status, by:'you'});
+    if(status==='Failed') state.errors++;
+    refreshStats(); closeModal();
+  }
+
+  // --- Modal ---
+  const modal = document.getElementById('modal');
+  function openModal(title, bodyHtml, showPrimary=false, onPrimary){
+    document.getElementById('modalTitle').textContent = title;
+    document.getElementById('modalBody').innerHTML = bodyHtml;
+    const mp = document.getElementById('modalPrimary');
+    if(showPrimary){
+      mp.style.display='inline-block';
+      mp.onclick = onPrimary || null;
+    }else{
+      mp.style.display='none';
+      mp.onclick = null;
+    }
+    modal.style.display='flex'; modal.setAttribute('aria-hidden','false');
+  }
+  function closeModal(){ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); }
+
+  // init
+  refreshStats();
+</script>
+  <div class="footer">
+      <a href="portal.html" class="footer-button">Home</a>
+    </div>
+</body>
+</html>

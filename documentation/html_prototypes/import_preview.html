@@ -1,0 +1,735 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>System Admin – CSV Import Preview (Allocations)</title>
+<style>
+  :root {
+    --bg:#f9fafb;       /* page background */
+    --card:#ffffff;     /* card panels */
+    --ink:#1a1a1a;      /* primary text */
+    --muted:#666666;    /* muted/subtle text */
+    --line:#e0e0e0;     /* borders/dividers */
+    --accent:#3b82f6;   /* accent blue */
+    --ok:#16a34a;       /* success green */
+    --warn:#dc2626;     /* warning red */
+    --chip:#f3f4f6;     /* chip/pill background */
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin:0;
+    font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+  }
+  .wrap { max-width:1200px; margin:24px auto; padding:0 16px; }
+  h1 { font-size:22px; margin:0 0 8px; }
+  .muted { color:var(--muted); }
+  .bar { display:flex; gap:10px; align-items:center; justify-content:space-between; margin:12px 0 18px; }
+  .left, .right { display:flex; gap:10px; align-items:center; }
+
+  .btn {
+    border:1px solid var(--line);
+    background:#ffffff;
+    color:var(--ink);
+    padding:10px 14px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:600;
+  }
+  .btn.primary { background:var(--accent); border-color:var(--accent); color:#ffffff; }
+  .btn.ghost { background:#ffffff; }
+  .btn.ok { background:var(--ok); border-color:var(--ok); color:#ffffff; }
+  .btn.warn { background:var(--warn); border-color:var(--warn); color:#ffffff; }
+
+  .pill {
+    padding:6px 10px;
+    border-radius:999px;
+    background:var(--chip);
+    color:var(--muted);
+    font-size:12px;
+  }
+
+  .drop {
+    border:2px dashed var(--line);
+    background:#fafafa;
+    border-radius:14px;
+    padding:18px;
+    display:flex; align-items:center; justify-content:center; gap:10px;
+  }
+  .drop.drag { background:#f0f9ff; border-color:var(--accent); }
+
+  .layout { display:grid; grid-template-columns:280px 1fr; gap:14px; margin-top:14px; }
+  @media (max-width:1000px){ .layout{grid-template-columns:1fr} }
+
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px; }
+
+  .side h3 { margin:6px 0 10px; font-size:14px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+  .side .list { display:flex; flex-direction:column; gap:8px; max-height:340px; overflow:auto; }
+
+  .chip {
+    background:var(--chip);
+    border:1px solid var(--line);
+    padding:8px 10px;
+    border-radius:10px;
+    font-size:13px;
+    display:flex; justify-content:space-between; gap:8px;
+  }
+  .chip small { color:var(--muted); }
+
+  .tabs { display:flex; gap:8px; margin-bottom:10px; }
+  .tab {
+    padding:8px 12px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:#ffffff;
+    color:var(--muted);
+    cursor:pointer;
+  }
+  .tab.active { background:#e0ecff; color:var(--ink); border-color:var(--accent); }
+
+/* Table */
+.grid { width:100%; overflow:auto; }
+
+.tt {
+  min-width: 820px;
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: auto;           /* was: fixed */
+}
+
+.tt th, .tt td {
+  border: 1px solid var(--line);
+  padding: 10px 16px;           /* was: 6px */
+  text-align: left;
+  vertical-align: middle;       /* was: top */
+  white-space: nowrap;          /* optional: prevent wrap */
+  overflow: hidden;             /* optional: with nowrap */
+  text-overflow: ellipsis;      /* optional: show … */
+}
+
+.tt thead th { position: sticky; top: 0; background: #f3f4f6; z-index: 2; }
+.timecol { width: 86px; background: #f3f4f6; position: sticky; left: 0; z-index: 1; }
+.slot { height: 36px; background: #ffffff; }
+
+  .alloc {
+    background:#e8edff;
+    border:1px solid #c3d3ff;
+    border-left:4px solid var(--accent);
+    border-radius:8px;
+    padding:6px;
+    margin-bottom:6px;
+  }
+  .alloc .meta { font-size:12px; color:var(--muted); }
+  .alloc .row { display:flex; justify-content:space-between; gap:8px; }
+  .alloc .edit { cursor:pointer; font-size:12px; opacity:.8; }
+  .row + .meta { margin-top:4px; }
+
+  .kpis { display:flex; gap:10px; flex-wrap:wrap; }
+  .kpi { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 12px; }
+  .kpi b { display:block; }
+
+  /* Drawer */
+  .drawer {
+    position:fixed; right:16px; bottom:16px; width:340px; max-height:70vh; overflow:auto;
+    background:var(--card); border:1px solid var(--line); border-radius:14px; padding:14px;
+    box-shadow:0 10px 30px rgba(0,0,0,.1); display:none;
+  }
+  .drawer h3 { margin:0 0 10px; font-size:14px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+  .drawer ul { margin:0; padding-left:18px; }
+
+  /* Modal */
+  .modal { position:fixed; inset:0; background:rgba(0,0,0,.4); display:none; align-items:center; justify-content:center; padding:16px; }
+  .modal .panel { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:16px; max-width:520px; width:100%; }
+
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  label { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+  input,select,textarea {
+    width:100%; padding:10px; border:1px solid var(--line); border-radius:10px;
+    background:#ffffff; color:var(--ink);
+  }
+
+  .actions { display:flex; gap:10px; justify-content:flex-end; margin-top:12px; }
+  .hint { font-size:12px; color:var(--muted); }
+
+  .alloc.error {
+  background: #ffeaea;
+  border: 1px solid #fca5a5;
+  border-left: 4px solid #dc2626;
+
+
+  
+}
+
+</style>
+
+</head>
+<body>
+  <div class="wrap">
+    <h1>CSV Import Preview – Allocations</h1>
+    <div class="muted">Drag in CSVs, review allocations on a timetable, edit as needed, then save draft or confirm.</div>
+
+    <div class="bar">
+      <div class="left kpis">
+        <div class="kpi"><b id="kpiFiles">0</b><span class="muted">files added</span></div>
+        <div class="kpi"><b id="kpiAlloc">0</b><span class="muted">allocations parsed</span></div>
+        <div class="kpi"><b id="kpiErrors">0</b><span class="muted">rows with errors</span></div>
+      </div>
+      <div class="right">
+        <span class="pill" id="draftStatus">Draft • not saved</span>
+        <button class="btn ghost" id="saveDraft">Save Draft</button>
+        <button class="btn warn" id="cancelAll">Cancel</button>
+        <button class="btn primary" id="confirmBtn">Confirm Import</button>
+      </div>
+    </div>
+
+    <div id="drop" class="drop">
+      <input id="fileInput" type="file" accept=".csv" multiple style="display:none" />
+      <button class="btn" id="chooseBtn">Choose CSVs</button>
+      <div class="muted">or Drag & Drop CSV files here</div>
+    </div>
+
+    <div class="layout" style="margin-top:14px;">
+      <aside class="side card">
+        <h3>Datasets in Batch</h3>
+        <div id="fileList" class="list"></div>
+
+        <h3 style="margin-top:14px;">Filters</h3>
+        <div class="grid2">
+          <div>
+            <label>Unit</label>
+            <input id="fUnit" placeholder="e.g. INFO1110" />
+          </div>
+          <div>
+            <label>Tutor Email</label>
+            <input id="fTutor" placeholder="name@uni.edu" />
+          </div>
+        </div>
+        <div class="grid2" style="margin-top:8px;">
+          <div>
+            <label>From</label>
+            <input id="fFrom" type="date" />
+          </div>
+          <div>
+            <label>To</label>
+            <input id="fTo" type="date" />
+          </div>
+        </div>
+        <div class="actions" style="justify-content:flex-start;margin-top:10px">
+          <button class="btn ghost" id="applyFilters">Apply</button>
+          <button class="btn" id="clearFilters">Clear</button>
+        </div>
+
+        <h3 style="margin-top:14px;">Tools</h3>
+        <div class="actions" style="justify-content:flex-start">
+          <button class="btn" id="toggleErrors">Show Error Report</button>
+          <button class="btn" id="toggleView">Switch to Table View</button>
+        </div>
+      </aside>
+
+      <main class="card">
+        <div class="tabs">
+          <div class="tab active" data-view="timetable">Timetable</div>
+          <div class="tab" data-view="table">Table</div>
+        </div>
+        <div id="viewTimetable" class="grid"></div>
+        <div id="viewTable" style="display:none;overflow:auto"></div>
+        <div class="hint" style="margin-top:8px">Hint: double-click an allocation, or click the ✏️ icon, to edit.</div>
+      </main>
+    </div>
+  </div>
+
+  <!-- Error drawer -->
+  <div id="drawer" class="drawer">
+    <h3>Error Report</h3>
+    <ul id="errorList"></ul>
+    <div class="actions">
+      <button class="btn" id="closeDrawer">Close</button>
+    </div>
+  </div>
+
+  <!-- Edit modal -->
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="panel">
+      <h2 style="margin:0 0 10px">Edit Allocation</h2>
+      <div class="grid2">
+        <div>
+          <label>Unit Code</label>
+          <input id="mUnit" />
+        </div>
+        <div>
+          <label>Activity Type</label>
+          <input id="mActivity" />
+        </div>
+        <div>
+          <label>Session Code</label>
+          <input id="mSession" />
+        </div>
+        <div>
+          <label>Date</label>
+          <input id="mDate" type="date" />
+        </div>
+        <div>
+          <label>Start Time</label>
+          <input id="mStart" type="time" />
+        </div>
+        <div>
+          <label>End Time</label>
+          <input id="mEnd" type="time" />
+        </div>
+        <div>
+          <label>Location</label>
+          <input id="mLoc" />
+        </div>
+        <div>
+          <label>Tutor Email</label>
+          <input id="mTutor" />
+        </div>
+        <div>
+          <label>Paycode</label>
+          <input id="mPay" />
+        </div>
+      </div>
+      <div class="actions">
+        <button class="btn ghost" id="mCancel">Cancel</button>
+        <button class="btn ok" id="mSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ---------- Utilities ---------- */
+const byId = (id)=>document.getElementById(id);
+const drop = byId('drop'), chooseBtn = byId('chooseBtn'), fileInput = byId('fileInput');
+const fileList = byId('fileList'), kpiFiles = byId('kpiFiles'), kpiAlloc = byId('kpiAlloc'), kpiErrors = byId('kpiErrors');
+const viewTimetable = byId('viewTimetable'), viewTable = byId('viewTable');
+const drawer = byId('drawer'), errorList = byId('errorList'), toggleErrorsBtn = byId('toggleErrors'), closeDrawer = byId('closeDrawer');
+const toggleViewBtn = byId('toggleView'), tabs = document.querySelectorAll('.tab');
+const draftStatus = byId('draftStatus'), saveDraftBtn = byId('saveDraft'), cancelAllBtn = byId('cancelAll'), confirmBtn = byId('confirmBtn');
+
+// Filter inputs
+const fUnit = byId('fUnit'), fTutor = byId('fTutor'), fFrom = byId('fFrom'), fTo = byId('fTo');
+byId('applyFilters').onclick = ()=>renderAll();
+byId('clearFilters').onclick = ()=>{ fUnit.value=''; fTutor.value=''; fFrom.value=''; fTo.value=''; renderAll(); };
+
+/* In-memory state */
+let datasets = []; // {name,size,rows}
+let allocations = []; // normalized array
+let errors = [];
+let editIdx = -1;
+
+/* CSV parser (simple, handles commas in quotes) */
+function parseCSV(text){
+  const rows = [];
+  let i=0, field='', row=[], inQ=false;
+  while(i<text.length){
+    const c=text[i];
+    if(c==='\"'){
+      if(inQ && text[i+1]==='\"'){ field+='\"'; i++; }
+      else inQ=!inQ;
+    }else if(c===',' && !inQ){ row.push(field); field=''; }
+    else if((c==='\n' || c==='\r') && !inQ){
+      if(field!=='' || row.length){ row.push(field); rows.push(row); row=[]; field=''; }
+    }else field+=c;
+    i++;
+  }
+  if(field!=='' || row.length){ row.push(field); rows.push(row); }
+  return rows;
+}
+
+/* Normalize headers + map */
+function toAllocations(rows, fileName){
+  if(!rows.length) return [];
+  const headers = rows[0].map(h=>h.trim().toLowerCase());
+  const idx = (k)=>headers.indexOf(k);
+  const need = ['unit_code','activity_type','session_code','date','start_time','end_time','location','tutor_email','paycode'];
+  const missing = need.filter(k=>!headers.includes(k));
+  if(missing.length){
+    errors.push({file:fileName,msg:`Missing columns: ${missing.join(', ')}`});
+    return [];
+  }
+  const out=[];
+  for(let r=1;r<rows.length;r++){
+    const row=rows[r];
+    if(row.length===1 && row[0].trim()==='') continue;
+    const obj = {
+      unit: row[idx('unit_code')]?.trim(),
+      activity: row[idx('activity_type')]?.trim(),
+      session: row[idx('session_code')]?.trim(),
+      date: row[idx('date')]?.trim(),
+      start: row[idx('start_time')]?.trim(),
+      end: row[idx('end_time')]?.trim(),
+      location: row[idx('location')]?.trim(),
+      tutor: row[idx('tutor_email')]?.trim(),
+      paycode: row[idx('paycode')]?.trim(),
+      source: fileName
+    };
+    const err = validateAlloc(obj);
+    if(err) errors.push({file:fileName,row:r+1,msg:err}); else out.push(obj);
+  }
+  return out;
+}
+function validateAlloc(a){
+  if(!a.unit || !a.date || !a.start || !a.end || !a.tutor) return 'Required fields missing';
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(a.date)) return 'Invalid date (YYYY-MM-DD)';
+  if(!/^\d{2}:\d{2}$/.test(a.start) || !/^\d{2}:\d{2}$/.test(a.end)) return 'Invalid time (HH:MM)';
+  if(a.end <= a.start) return 'End time must be after start time';
+  return null;
+}
+
+/* File ingestion */
+async function handleFiles(fileListObj){
+  const files = Array.from(fileListObj);
+  for(const f of files){
+    const text = await f.text();
+    const rows=parseCSV(text);
+    const adds = toAllocations(rows, f.name);
+    datasets.push({name:f.name,size:f.size,rows:rows.length,adds:adds.length});
+    allocations.push(...adds);
+  }
+  renderAll();
+}
+chooseBtn.onclick = ()=>fileInput.click();
+fileInput.onchange = (e)=>handleFiles(e.target.files);
+
+['dragenter','dragover'].forEach(evt=>drop.addEventListener(evt,(e)=>{e.preventDefault();drop.classList.add('drag');}));
+['dragleave','drop'].forEach(evt=>drop.addEventListener(evt,()=>drop.classList.remove('drag')));
+drop.addEventListener('drop', (e)=>{ e.preventDefault(); handleFiles(e.dataTransfer.files); });
+
+/* Rendering */
+function applyFilterSet(list){
+  return list.filter(a=>{
+    if(fUnit.value && !a.unit.toLowerCase().includes(fUnit.value.toLowerCase())) return false;
+    if(fTutor.value && !a.tutor.toLowerCase().includes(fTutor.value.toLowerCase())) return false;
+    if(fFrom.value && a.date < fFrom.value) return false;
+    if(fTo.value && a.date > fTo.value) return false;
+    return true;
+  });
+}
+
+function renderAll(){
+  // KPIs
+  kpiFiles.textContent = datasets.length;
+  kpiAlloc.textContent = allocations.length;
+  kpiErrors.textContent = errors.length;
+  // files list
+  fileList.innerHTML = datasets.map(d=>`
+    <div class="chip"><span>${d.name}</span><small>${d.adds} rows valid • ${d.rows} raw</small></div>
+  `).join('') || '<div class="muted">No files yet</div>';
+  // errors
+  errorList.innerHTML = errors.length ? errors.map(e=>`<li><strong>${e.file}</strong>${e.row?` (row ${e.row})`:''}: ${e.msg}</li>`).join('') : '<li>No errors</li>';
+  // views
+  const filtered = applyFilterSet(allocations);
+  renderTimetable(filtered);
+  renderTable(filtered);
+  // draft state
+  draftStatus.textContent = localStorage.getItem('allocDraft') ? 'Draft • saved' : 'Draft • not saved';
+}
+
+function getWeekRange(items){
+  if(!items.length) return null;
+  const dates = items.map(a=>new Date(a.date));
+  const min = new Date(Math.min(...dates)), max=new Date(Math.max(...dates));
+  return {min, max};
+}
+function dayName(d){ return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d]; }
+
+function renderTimetable(list){
+  viewTimetable.innerHTML = '';
+  if(!list.length){
+    viewTimetable.innerHTML = '<div class="muted">No allocations to show.</div>';
+    return;
+  }
+
+  const uniqDates = [...new Set(list.map(a=>a.date))].sort();
+  const times=[]; 
+  for(let h=8; h<=20; h++){ 
+    times.push(`${String(h).padStart(2,'0')}:00`); 
+    times.push(`${String(h).padStart(2,'0')}:30`); 
+  }
+
+  const table = document.createElement('table'); table.className='tt';
+  const thead = document.createElement('thead');
+  const hr = document.createElement('tr');
+  const th0 = document.createElement('th'); th0.className='timecol'; th0.textContent='Time'; hr.appendChild(th0);
+  uniqDates.forEach(d=>{
+    const th = document.createElement('th'); 
+    th.textContent = `${dayName(new Date(d).getDay())} ${d}`; 
+    hr.appendChild(th);
+  });
+  thead.appendChild(hr); table.appendChild(thead);
+
+  const tbody = document.createElement('tbody');
+  times.forEach(t=>{
+    const tr = document.createElement('tr');
+    const tc = document.createElement('td'); tc.className='timecol slot'; tc.textContent=t; tr.appendChild(tc);
+
+    uniqDates.forEach(d=>{
+      const td = document.createElement('td'); td.className='slot';
+      const here = list
+        .map((a,i)=>({...a,idx:i}))
+        .filter(a=>a.date===d && a.start===t);
+
+      here.forEach(a=>{
+        const div = document.createElement('div');
+
+        // 👇 check if this allocation has an error (match tutor/date/start or however you track it)
+        const hasError = errors.some(e =>
+          e.row && e.row === a.idx+1 ||               // row-based match
+          (a.tutor && e.msg.includes('Tutor') && a.tutor.includes('notusyd.com')) // simple tutor-domain check
+        );
+
+        div.className = 'alloc' + (hasError ? ' error' : '');
+        div.title=`${a.unit} ${a.session} • ${a.start}-${a.end}`;
+        div.innerHTML = `
+          <div class="row"><strong>${a.unit} · ${a.activity}</strong>
+            <span class="edit" data-idx="${allocations.indexOf(a)}">✏️</span></div>
+          <div class="meta">${a.session} • ${a.start}–${a.end} • ${a.location}</div>
+          <div class="meta">${a.tutor} • ${a.paycode}</div>
+        `;
+        div.ondblclick = ()=>openEdit(allocations.indexOf(a));
+        div.querySelector('.edit').onclick = (e)=>openEdit(allocations.indexOf(a));
+
+        td.appendChild(div);
+      });
+
+      tr.appendChild(td);
+    });
+
+    tbody.appendChild(tr);
+  });
+
+  table.appendChild(tbody);
+  viewTimetable.appendChild(table);
+}
+
+
+function renderTable(list){
+  const cols = ['unit','activity','session','date','start','end','location','tutor','paycode','source'];
+  const head = `<tr>${cols.map(c=>`<th>${c.toUpperCase()}</th>`).join('')}<th>Edit</th></tr>`;
+  const rows = list.map(a=>{
+    const idx = allocations.indexOf(a);
+    return `<tr>${cols.map(c=>`<td>${a[c]??''}</td>`).join('')}<td><button class="btn" data-row="${idx}">Edit</button></td></tr>`;
+  }).join('');
+  viewTable.innerHTML = `<table class="tt">${head}${rows||'<tr><td class="muted" colspan="11">No rows</td></tr>'}</table>`;
+  // attach handlers
+  viewTable.querySelectorAll('button[data-row]').forEach(b=>b.onclick=()=>openEdit(Number(b.dataset.row)));
+}
+
+/* Drawer (errors) */
+toggleErrorsBtn.onclick = ()=>{ drawer.style.display = drawer.style.display==='block' ? 'none' : 'block'; };
+closeDrawer.onclick = ()=> drawer.style.display='none';
+
+/* View switch */
+toggleViewBtn.onclick = ()=> switchView();
+tabs.forEach(t=>t.onclick = ()=> switchView(t.dataset.view));
+function switchView(target){
+  const nowIsTable = viewTable.style.display==='block';
+  const to = target || (nowIsTable ? 'timetable' : 'table');
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelector(`.tab[data-view="${to}"]`).classList.add('active');
+  const tt = to==='timetable';
+  viewTimetable.style.display = tt?'block':'none';
+  viewTable.style.display = tt?'none':'block';
+  toggleViewBtn.textContent = tt ? 'Switch to Table View' : 'Switch to Timetable View';
+}
+
+/* Modal editing */
+const modal = byId('modal');
+const fields = {
+  unit: byId('mUnit'), activity: byId('mActivity'), session: byId('mSession'),
+  date: byId('mDate'), start: byId('mStart'), end: byId('mEnd'),
+  location: byId('mLoc'), tutor: byId('mTutor'), paycode: byId('mPay')
+};
+const mCancel = byId('mCancel'), mSave = byId('mSave');
+
+function openEdit(idx){
+  editIdx = idx;
+  const a = allocations[idx];
+  if(!a) return;
+  fields.unit.value=a.unit; fields.activity.value=a.activity; fields.session.value=a.session;
+  fields.date.value=a.date; fields.start.value=a.start; fields.end.value=a.end;
+  fields.location.value=a.location; fields.tutor.value=a.tutor; fields.paycode.value=a.paycode;
+  modal.style.display='flex'; modal.setAttribute('aria-hidden','false');
+}
+mCancel.onclick = ()=>{ modal.style.display='none'; modal.setAttribute('aria-hidden','true'); };
+mSave.onclick = ()=>{
+  const a = allocations[editIdx]; if(!a) return;
+  const draft = Object.fromEntries(Object.entries(fields).map(([k,el])=>[k, el.value.trim()]));
+  const err = validateAlloc({...a,...draft});
+  if(err){ alert('Fix errors: ' + err); return; }
+  Object.assign(a, draft);
+  modal.style.display='none'; modal.setAttribute('aria-hidden','true');
+  renderAll();
+};
+
+/* Draft & lifecycle */
+saveDraftBtn.onclick = ()=>{
+  const data = {datasets, allocations, savedAt:new Date().toISOString()};
+  localStorage.setItem('allocDraft', JSON.stringify(data));
+  draftStatus.textContent = 'Draft • saved';
+};
+cancelAllBtn.onclick = ()=>{
+  if(!confirm('Discard current batch and clear draft?')) return;
+  datasets=[]; allocations=[]; errors=[];
+  localStorage.removeItem('allocDraft');
+  renderAll();
+};
+confirmBtn.onclick = ()=>{
+  if(errors.length){ alert('Resolve errors before confirming.'); return; }
+  alert(`Imported ${allocations.length} allocations (mock).`);
+  datasets=[]; allocations=[]; errors=[];
+  localStorage.removeItem('allocDraft');
+  renderAll();
+};
+
+// Load existing draft on open
+(function init(){
+  const raw = localStorage.getItem('allocDraft');
+  if(raw){
+    try{
+      const data = JSON.parse(raw);
+      if(Array.isArray(data.allocations)){ datasets=data.datasets||[]; allocations=data.allocations||[]; }
+    }catch{}
+  }
+  renderAll();
+})();
+</script>
+<script>
+  datasets = [{ name: 'seed', size: 0, rows: 20, adds: 20 }];
+
+  allocations = [
+    // --- Your originals ---
+    {
+      unit: 'INFO1110', activity: 'Tutorial', session: 'TUT01',
+      date: '2025-09-13', start: '17:00', end: '19:00',
+      location: 'Room A', tutor: 'alex.tutor@usyd.edu.au',
+      paycode: 'TUT01', source: 'seed'
+    },
+    {
+      unit: 'INFO1910', activity: 'Lab', session: 'LAB02',
+      date: '2025-09-14', start: '13:00', end: '15:00',
+      location: 'Room B', tutor: 'j.smith@usyd.edu.au',
+      paycode: 'LAB01', source: 'seed'
+    },
+    {
+      unit: 'INFO1110', activity: 'Consultation', session: 'CONS01',
+      date: '2025-09-15', start: '09:30', end: '10:30',
+      location: 'Online', tutor: 'm.wong@usyd.edu.au',
+      paycode: 'CONS', source: 'seed'
+    },
+    {
+      unit: 'COMP2123', activity: 'Lecture', session: 'LEC01',
+      date: '2025-09-15', start: '11:00', end: '13:00',
+      location: 'LT12', tutor: 'dr.jones@usyd.edu.au',
+      paycode: 'LEC', source: 'seed'
+    },
+    {
+      unit: 'COMP2022', activity: 'Tutorial', session: 'TUT05',
+      date: '2025-09-16', start: '15:00', end: '17:00',
+      location: 'Room D', tutor: 'error.tutor@notusyd.com', /* ❌ intentionally wrong */
+      paycode: 'TUT', source: 'seed'
+    },
+    {
+      unit: 'COMP2022', activity: 'Lab', session: 'LAB04',
+      date: '2025-09-16', start: '09:00', end: '11:00',
+      location: 'Room E', tutor: 'emma@usyd.edu.au',
+      paycode: 'LAB', source: 'seed'
+    },
+
+    // --- Expanded week ---
+    {
+      unit: 'INFO1110', activity: 'Lecture', session: 'LEC01',
+      date: '2025-09-17', start: '09:00', end: '11:00',
+      location: 'LT12', tutor: 'prof.lee@usyd.edu.au',
+      paycode: 'LEC', source: 'seed'
+    },
+    {
+      unit: 'INFO1110', activity: 'Tutorial', session: 'TUT02',
+      date: '2025-09-17', start: '14:00', end: '16:00',
+      location: 'Room C', tutor: 'alex.tutor@usyd.edu.au',
+      paycode: 'TUT', source: 'seed'
+    },
+    {
+      unit: 'INFO1910', activity: 'Lecture', session: 'LEC01',
+      date: '2025-09-18', start: '13:00', end: '15:00',
+      location: 'LT2', tutor: 'dr.green@usyd.edu.au',
+      paycode: 'LEC', source: 'seed'
+    },
+    {
+      unit: 'INFO1910', activity: 'Tutorial', session: 'TUT01',
+      date: '2025-09-18', start: '15:30', end: '17:30',
+      location: 'Room F', tutor: 'j.smith@usyd.edu.au',
+      paycode: 'TUT', source: 'seed'
+    },
+    {
+      unit: 'COMP2123', activity: 'Lab', session: 'LAB02',
+      date: '2025-09-19', start: '09:00', end: '11:00',
+      location: 'Room G', tutor: 'c.ong@usyd.edu.au',
+      paycode: 'LAB', source: 'seed'
+    },
+    {
+      unit: 'COMP2123', activity: 'Tutorial', session: 'TUT02',
+      date: '2025-09-19', start: '12:00', end: '14:00',
+      location: 'Room H', tutor: 'dr.jones@usyd.edu.au',
+      paycode: 'TUT', source: 'seed'
+    },
+    {
+      unit: 'COMP2022', activity: 'Lecture', session: 'LEC01',
+      date: '2025-09-20', start: '10:00', end: '12:00',
+      location: 'LT5', tutor: 'dr.smith@usyd.edu.au',
+      paycode: 'LEC', source: 'seed'
+    },
+    {
+      unit: 'COMP2022', activity: 'Tutorial', session: 'TUT06',
+      date: '2025-09-20', start: '13:00', end: '15:00',
+      location: 'Room J', tutor: 'emma@usyd.edu.au',
+      paycode: 'TUT', source: 'seed'
+    },
+    {
+      unit: 'COMP2022', activity: 'Consultation', session: 'CONS02',
+      date: '2025-09-20', start: '16:00', end: '17:00',
+      location: 'Online', tutor: 'marco@usyd.edu.au',
+      paycode: 'CONS', source: 'seed'
+    },
+    {
+      unit: 'INFO1110', activity: 'Lab', session: 'LAB03',
+      date: '2025-09-21', start: '09:00', end: '11:00',
+      location: 'Room K', tutor: 'm.wong@usyd.edu.au',
+      paycode: 'LAB', source: 'seed'
+    },
+    {
+      unit: 'INFO1110', activity: 'Tutorial', session: 'TUT03',
+      date: '2025-09-21', start: '12:00', end: '14:00',
+      location: 'Room L', tutor: 'alex.tutor@usyd.edu.au',
+      paycode: 'TUT', source: 'seed'
+    },
+    // --- Edge case errors ---
+    {
+      unit: 'COMP2123', activity: 'Tutorial', session: 'TUT99',
+      date: '2025-09-18', start: '12:00', end: '14:00',
+      location: 'Room Z', tutor: 'dr.jones@usyd.edu.au',
+      paycode: 'TUTX', source: 'seed' // ❌ bad paycode
+    },
+    {
+      unit: 'INFO1910', activity: 'Lab', session: 'LAB99',
+      date: '2025-09-19', start: '15:30', end: '14:30', // ❌ end before start
+      location: 'Room Y', tutor: 'rupa@usyd.edu.au',
+      paycode: 'LAB', source: 'seed'
+    }
+  ];
+
+  errors = [
+    { file: 'seed', row: 5,  msg: 'Tutor email domain not recognized' },
+    { file: 'seed', row: 17, msg: 'Unknown paycode "TUTX"' },
+    { file: 'seed', row: 18, msg: 'End time before start time' }
+  ];
+
+  renderAll();
+</script>
+
+</body>
+</html>
+

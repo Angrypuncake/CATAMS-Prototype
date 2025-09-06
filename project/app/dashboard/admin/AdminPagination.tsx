@@ -28,7 +28,7 @@ const AdminPagination: React.FC<AdminPaginationProps> = ({
         onClick={() => {
           setPage(page + 1);
         }}
-        disabled={itemTotal === 0 || (page - 1) * itemLimit * 2 >= itemTotal}
+        disabled={page * itemLimit >= itemTotal}
       >
         Next
       </Button>

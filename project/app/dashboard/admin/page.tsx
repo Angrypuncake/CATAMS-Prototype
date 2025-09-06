@@ -1,11 +1,44 @@
 "use client";
 import React, { useCallback, useState, useEffect } from "react";
-import { Button, Typography } from "@mui/material";
+import {
+  Button,
+  Typography,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@mui/material";
 import DynamicTable from "../../../components/DynamicTable";
 import AdminInfoBox from "./AdminInfoBox";
 import AdminBudgetBox from "./AdminBudgetBox";
 import AdminPagination from "./AdminPagination";
 import axios from "axios";
+
+interface StagedRow {
+  batch_id: number;
+  created_at: string;
+  status: string;
+  row_count: number;
+  issues: string;
+  [key: string]: string | number | boolean | null | undefined;
+}
+interface RunRow {
+  run_id: number;
+  batch_id: number;
+  started_at: string;
+  finished_at: string;
+  status: string;
+  counts?: Record<string, number>;
+  staged_rows: number;
+  batch_created_at: string;
+  [key: string]: string | number | boolean | Record<string, number> | undefined;
+}
+type TableRowData = {
+  id?: string | number | null;
+  [key: string]: string | number | boolean | null | undefined;
+};
+interface HistoryState {
+  staged: TableRowData[];
+  runs: TableRowData[];
+}
 
 const AdminDashboard = () => {
   const [adminView, setAdminView] = useState({
@@ -13,13 +46,25 @@ const AdminDashboard = () => {
     numAllocations: 0,
   });
   const LIMIT = 4;
-  const [page, setPage] = useState(1);
+  const [tutorPage, setTutorPage] = useState(1);
   const [tutorRows, setTutorRows] = useState([]);
+  const [historyRows, setHistoryRows] = useState<HistoryState>({
+    staged: [],
+    runs: [],
+  });
+  const [historyPage, setHistoryPage] = useState(1);
+  const [alignment, setAlignment] = React.useState("staged");
 
+  const handleChange = (
+    event: React.MouseEvent<HTMLElement>,
+    newAlignment: string,
+  ) => {
+    setAlignment(newAlignment);
+  };
   const loadOverview = useCallback(async () => {
     try {
       const result = await axios.get("/api/admin/overview");
-      console.log("Overview data:", result.data);
+      //console.log("Overview data:", result.data);
       setAdminView({
         numUsers: Number(result.data.totals.users),
         numAllocations: Number(result.data.totals.allocations),
@@ -33,7 +78,15 @@ const AdminDashboard = () => {
   const loadImportHistory = useCallback(async () => {
     try {
       const res = await axios.get("/api/admin/history", {
-        params: { limit: LIMIT },
+        params: { limit: 200 },
+      });
+
+      const dropBy = <T extends { by?: unknown }>(rows: T[]): Omit<T, "by">[] =>
+        rows.map(({ by, ...rest }) => rest);
+
+      setHistoryRows({
+        staged: dropBy(res.data.staged),
+        runs: dropBy(res.data.runs),
       });
       console.log(res);
     } catch (err) {
@@ -44,7 +97,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     loadOverview();
     loadImportHistory();
-  }, [page]);
+  }, []);
   return (
     <div className="h-screen flex flex-col w-[90%] gap-3">
       <div className="flex justify-around mt-15 w-full">
@@ -86,7 +139,7 @@ const AdminDashboard = () => {
           />
         </div>
 
-        <div className="w-3/4 h-full  rounded-3xl flex flex-col gap-3">
+        <div className="w-3/4 h-full rounded-3xl flex flex-col gap-3">
           <div className="min-h-[85px] h-[10%] bg-white rounded-3xl p-3">
             <Typography variant="subtitle1">Validation Reports</Typography>
             <div>
@@ -96,30 +149,71 @@ const AdminDashboard = () => {
             </div>
           </div>
 
-          <div className="h-[42%] bg-white rounded-3xl p-3">
+          <div className="h-[35%] bg-white rounded-3xl p-3">
             <div className="flex justify-between items-center">
               <Typography variant="subtitle1">
                 User & Role Management
               </Typography>
               <AdminPagination
-                page={page}
-                setPage={setPage}
+                page={tutorPage}
+                setPage={setTutorPage}
                 itemTotal={tutorRows.length}
                 itemLimit={LIMIT}
               />
             </div>
             <DynamicTable
               rows={
-                tutorRows.slice(
-                  (page - 1) * LIMIT,
-                  (page - 1) * LIMIT + LIMIT,
-                ) ?? []
+                tutorRows.slice((tutorPage - 1) * LIMIT, tutorPage * LIMIT) ??
+                []
               }
             />
           </div>
 
-          <div className="h-[42%] bg-white rounded-3xl p-3">
-            <Typography variant="subtitle1">Recent Import&Exports</Typography>
+          <div className="h-[35%] bg-white rounded-3xl p-3">
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-3">
+                <Typography variant="subtitle1">
+                  User & Role Management
+                </Typography>
+                <ToggleButtonGroup
+                  color="primary"
+                  value={alignment}
+                  exclusive
+                  onChange={handleChange}
+                  aria-label="Platform"
+                  sx={{
+                    "& .MuiToggleButton-root": {
+                      padding: "0px 6px",
+                      minHeight: "22px",
+                      fontSize: "0.7rem",
+                      lineHeight: 1.2,
+                    },
+                  }}
+                >
+                  <ToggleButton value="staged">Staged</ToggleButton>
+                  <ToggleButton value="runs">Runs</ToggleButton>
+                </ToggleButtonGroup>
+              </div>
+              <AdminPagination
+                page={historyPage}
+                setPage={setHistoryPage}
+                itemTotal={historyRows.staged.length}
+                itemLimit={LIMIT}
+              />
+            </div>
+            <DynamicTable
+              rows={
+                alignment === ""
+                  ? historyRows.staged.slice(
+                      (historyPage - 1) * LIMIT,
+                      historyPage * LIMIT,
+                    )
+                  : historyRows.runs.slice(
+                      (historyPage - 1) * LIMIT,
+                      historyPage * LIMIT,
+                    )
+              }
+            />
           </div>
         </div>
       </div>

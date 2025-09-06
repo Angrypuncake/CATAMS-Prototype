@@ -10,8 +10,8 @@ import {
 } from "@mui/material";
 
 type TableRowData = {
-  id: string | number;
-  [key: string]: string | number | boolean;
+  id?: string | number | null;
+  [key: string]: string | number | boolean | null | undefined;
 };
 
 type TableProps = {
@@ -20,7 +20,6 @@ type TableProps = {
 
 const DynamicTable: React.FC<TableProps> = ({ rows }) => {
   if (rows.length === 0) return null;
-
   // dynamically take column headers from keys of first row, replace underscores with spaces and capitalize first letters
   const columns = Object.keys(rows[0])
     .filter((key) => key !== "id")
@@ -48,8 +47,8 @@ const DynamicTable: React.FC<TableProps> = ({ rows }) => {
           </TableRow>
         </TableHead>
         <TableBody>
-          {rows.map((row) => (
-            <TableRow key={row.id}>
+          {rows.map((row, index) => (
+            <TableRow key={`${index}`}>
               {columns.map((col) => (
                 <TableCell key={col.key}>{row[col.key]}</TableCell>
               ))}

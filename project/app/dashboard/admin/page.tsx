@@ -1,13 +1,11 @@
 "use client";
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useState, useEffect } from "react";
 import { Button, Typography } from "@mui/material";
 import DynamicTable from "../../../components/DynamicTable";
-import { useEffect } from "react";
-import axios from "axios";
 import AdminInfoBox from "./AdminInfoBox";
 import AdminBudgetBox from "./AdminBudgetBox";
 import AdminPagination from "./AdminPagination";
-import page from "../assistant/page";
+import axios from "axios";
 
 const AdminDashboard = () => {
   const [adminView, setAdminView] = useState({
@@ -17,6 +15,7 @@ const AdminDashboard = () => {
   const LIMIT = 4;
   const [page, setPage] = useState(1);
   const [tutorRows, setTutorRows] = useState([]);
+
   const loadOverview = useCallback(async () => {
     try {
       const result = await axios.get("/api/admin/overview");
@@ -31,9 +30,20 @@ const AdminDashboard = () => {
     }
   }, []);
 
+  const loadImportHistory = useCallback(async () => {
+    try {
+      const res = await axios.get("/api/admin/history", {
+        params: { limit: LIMIT },
+      });
+      console.log(res);
+    } catch (err) {
+      console.error("Failed to load history:", err);
+    }
+  }, []);
+
   useEffect(() => {
-    //fetchUsers();
     loadOverview();
+    loadImportHistory();
   }, [page]);
   return (
     <div className="h-screen flex flex-col w-[90%] gap-3">

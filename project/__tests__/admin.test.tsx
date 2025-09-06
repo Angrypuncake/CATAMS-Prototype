@@ -40,4 +40,23 @@ describe("AdminDashboard", () => {
     expect(screen.getByText("Refresh")).toBeInTheDocument();
     expect(screen.getByText("Bulk Import Allocations")).toBeInTheDocument();
   });
+
+  test("applies correct CSS classes and styling", () => {
+    const { container } = render(<AdminDashboard />);
+
+    const mainContainer = container.firstElementChild;
+    expect(mainContainer).toHaveClass(
+      "h-screen",
+      "flex",
+      "flex-col",
+      "w-[90%]",
+      "gap-3",
+    );
+
+    const whiteSections = container.querySelectorAll(".bg-white.rounded-3xl");
+    expect(whiteSections.length).toBeGreaterThan(0);
+
+    expect(screen.getByText("Budgets Loaded")).toBeInTheDocument();
+    expect(screen.getByText("Validation Reports")).toBeInTheDocument();
+  });
 });

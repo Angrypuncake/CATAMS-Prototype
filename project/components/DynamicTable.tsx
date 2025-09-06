@@ -21,8 +21,13 @@ type TableProps = {
 const DynamicTable: React.FC<TableProps> = ({ rows }) => {
   if (rows.length === 0) return null;
 
-  // dynamically take column headers from keys of first row
-  const columns = Object.keys(rows[0]).filter((key) => key !== "id");
+  // dynamically take column headers from keys of first row, replace underscores with spaces and capitalize first letters
+  const columns = Object.keys(rows[0])
+    .filter((key) => key !== "id")
+    .map((key) => ({
+      key,
+      label: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+    }));
 
   return (
     <TableContainer
@@ -37,7 +42,7 @@ const DynamicTable: React.FC<TableProps> = ({ rows }) => {
         <TableHead>
           <TableRow>
             {columns.map((col) => (
-              <TableCell key={col}>{col}</TableCell>
+              <TableCell key={col.key}>{col.label}</TableCell>
             ))}
           </TableRow>
         </TableHead>
@@ -45,7 +50,7 @@ const DynamicTable: React.FC<TableProps> = ({ rows }) => {
           {rows.map((row) => (
             <TableRow key={row.id}>
               {columns.map((col) => (
-                <TableCell key={col}>{row[col]}</TableCell>
+                <TableCell key={col.key}>{row[col.key]}</TableCell>
               ))}
             </TableRow>
           ))}

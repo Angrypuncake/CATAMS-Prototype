@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coordinator Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f3f4f6; margin: 0; padding: 20px; }
+    .dashboard { max-width: 1100px; margin: auto; background: #fff; padding: 24px 30px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    h1 { font-size: 1.6rem; margin-bottom: 8px; }
+    h2 { margin-top: 20px; font-size: 1.2rem; border-bottom: 1px solid #ddd; padding-bottom: 6px; }
+    .muted { color: #6b7280; }
+
+    /* Alerts */
+    .alerts { background: #fff7ed; border: 1px solid #fcd34d; border-radius: 8px; padding: 10px 14px; margin: 10px 0 20px 0; }
+    .alert { margin: 6px 0; font-size: 0.95rem; }
+    .alert strong { color: #b45309; }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { padding: 8px 10px; border: 1px solid #e5e7eb; text-align: left; font-size: 0.95rem; }
+    th { background: #f9fafb; }
+
+    .actions a { margin-right: 10px; font-size: 0.9rem; text-decoration: none; color: #2563eb; }
+
+    /* Modular request section */
+    .modules { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+    @media (min-width: 900px) { .modules { grid-template-columns: 1fr 1fr; } }
+
+    .card { background: #ffffff; border: 1px solid #e5e7eb; border-radius: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+    .card__header { display:flex; justify-content:space-between; align-items:center; padding:12px 14px; border-bottom:1px solid #e5e7eb; }
+    .card__title { font-weight:700; }
+    .card__body { padding: 10px 14px; }
+
+    .list { display:grid; gap:8px; }
+    .row { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:10px; border:1px solid #eef0f3; border-radius:8px; background:#fbfbfc; }
+    .row .left { display:flex; flex-wrap:wrap; gap:8px 12px; align-items:center; }
+
+    .pill { display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid #e5e7eb; background:#fff; }
+    .pill.warn { background:#fff7ed; border-color:#f59e0b; color:#92400e; }
+    .pill.info { background:#eff6ff; border-color:#93c5fd; color:#1e3a8a; }
+    .pill.tag { background:#f3f4f6; color:#374151; }
+
+    .btn { appearance:none; border:1px solid #cbd5e1; background:#fff; color:#374151; padding:6px 12px; border-radius:8px; font-size: 0.9rem; cursor:pointer; text-decoration:none; }
+    .btn.primary { background:#111827; color:#fff; border-color:#111827; }
+    .btn.link { border:none; background:transparent; color:#2563eb; padding:0; cursor:pointer; }
+
+    .footer-actions { display:flex; justify-content:flex-end; gap:10px; margin-top: 8px; }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <h1>Coordinator Dashboard</h1>
+    <p class="muted">Overview entire unit, view requests, approvals, and authority to override.</p>
+
+    <h2>Alerts</h2>
+    <div class="alerts">
+      <div class="alert">⚠️ <strong>Budget 90% used</strong> for INFO1110. [<a href="#">Open Budget</a>] [<a href="#">Acknowledge</a>]</div>
+      <div class="alert">⚠️ <strong>3 unassigned sessions</strong> in INFO3333 within 48h. [<a href="#">Open Unit</a>]</div>
+    </div>
+
+    <h2>Budget Overview</h2>
+    <table>
+      <tr>
+        <th>Unit</th><th>Budget</th><th>Spent</th><th>% Used</th><th>Forecast (Wk)</th><th>Variance</th><th>Status</th>
+      </tr>
+      <tr>
+        <td>INFO1110</td><td>$120,000</td><td>$108,500</td><td>90%</td><td>+4,200</td><td>-7,300</td><td>Open</td>
+      </tr>
+      <tr>
+        <td>INFO3333</td><td>$80,000</td><td>$62,300</td><td>78%</td><td>+3,100</td><td>-14,600</td><td>Open</td>
+      </tr>
+    </table>
+
+    <div class="actions">
+      <a href="#">Manage Budgets</a>
+      <a href="#">Set Thresholds</a>
+      <a href="#">Export Budget CSV</a>
+    </div>
+
+    <h2>UC Approvals (override/escalations only)</h2>
+    <div class="approvals">
+      <table>
+        <tr>
+          <th>Type</th><th>Submitted By</th><th>Target (Unit • Date • Time)</th><th>Reason/Flag</th><th>Status</th>
+        </tr>
+        <tr>
+          <td>Claim(diff)</td><td>A. Singh</td><td>INFO1910 • 12/09 • 3pm</td><td>+0.5h over</td><td>Review</td>
+        </tr>
+        <tr>
+          <td>Correction</td><td>J. Tran</td><td>INFO1110 • 11/09 • 4pm</td><td>PayCode change</td><td>Review</td>
+        </tr>
+        <tr>
+          <td>Policy</td><td>—</td><td>INFO3333 (global)</td><td>Threshold edit</td><td>Review</td>
+        </tr>
+      </table>
+      <div class="actions"><a href="#">View all approvals</a></div>
+    </div>
+
+    <!-- Modular: Flagged Pending + TA Escalations -->
+    <h2>Requests Requiring Attention</h2>
+    <div class="modules">
+      <!-- Flagged/Pending from Tutors -->
+      <div class="card">
+        <div class="card__header">
+          <div class="card__title">Flagged Pending (Tutors)</div>
+          <a class="btn link" href="requests.html">Full view →</a>
+        </div>
+        <div class="card__body">
+          <div class="list">
+            <div class="row">
+              <div class="left">
+                <span class="pill warn">⚠︎ Pending &gt; 48h</span>
+                <span class="pill tag">#221</span>
+                <span>Swap • INFO1110 • 12/09 • 3pm</span>
+              </div>
+              <a class="btn" href="#">View</a>
+            </div>
+            <div class="row">
+              <div class="left">
+                <span class="pill warn">⚠︎ Budget impact</span>
+                <span class="pill tag">#229</span>
+                <span>Correction • INFO3333 • 10/09 • 2h → 3h</span>
+              </div>
+              <a class="btn" href="#">View</a>
+            </div>
+            <div class="row">
+              <div class="left">
+                <span class="pill info">Info needed</span>
+                <span class="pill tag">#235</span>
+                <span>Cancellation • INFO1910 • 13/09 • 5pm</span>
+              </div>
+              <a class="btn" href="#">View</a>
+            </div>
+          </div>
+          <div class="footer-actions">
+            <a class="btn" href="requests.html">Open full request list</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Escalations from TAs -->
+      <div class="card">
+        <div class="card__header">
+          <div class="card__title">Escalations (Teaching Assistants)</div>
+          <a class="btn link" href="escalations.html">Full view →</a>
+        </div>
+        <div class="card__body">
+          <div class="list">
+            <div class="row">
+              <div class="left">
+                <span class="pill warn">Requires override</span>
+                <span class="pill tag">#241</span>
+                <span>Claim(diff) • INFO1110 • PayCode TUT01→MARK03</span>
+              </div>
+              <a class="btn" href="#">Review</a>
+            </div>
+            <div class="row">
+              <div class="left">
+                <span class="pill info">Policy check</span>
+                <span class="pill tag">#246</span>
+                <span>Swap • Cross-campus tutor</span>
+              </div>
+              <a class="btn" href="#">Review</a>
+            </div>
+            <div class="row">
+              <div class="left">
+                <span class="pill warn">Time-critical</span>
+                <span class="pill tag">#252</span>
+                <span>Unassigned session • INFO3333 • 48h</span>
+              </div>
+              <a class="btn" href="#">Review</a>
+            </div>
+          </div>
+          <div class="footer-actions">
+            <a class="btn" href="escalations.html">Open all escalations</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+    <div class="footer">
+      <a href="portal.html" class="footer-button">Home</a>
+    </div>
+</body>
+</html>

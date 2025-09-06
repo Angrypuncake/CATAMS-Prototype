@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Claim Request – View</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg:#f7f7fb; --card:#fff; --ink:#222; --muted:#666; --line:#e7e7ee;
+      --ok:#2e7d32; --warn:#c62828; --info:#1565c0; --pill:#ececf5;
+    }
+    * { box-sizing: border-box; }
+    body { font-family: Inter, system-ui, Arial, sans-serif; background: var(--bg); color: var(--ink); margin: 0; }
+    .wrap { max-width: 980px; margin: 32px auto; padding: 0 16px; }
+
+    .topbar { display:flex; align-items:center; gap:12px; margin-bottom: 16px; }
+    .crumbs { color: var(--muted); font-size: 14px; }
+    .titleRow { display:flex; align-items:center; justify-content:space-between; gap:16px; }
+    h1 { font-size: 22px; margin: 0; }
+    .pill { padding: 6px 10px; border-radius: 999px; background: var(--pill); font-size: 12px; font-weight: 600; }
+    .pill.pending { color: #b26a00; background: #fff3e0; }
+    .pill.approved { color: var(--ok); background: #e8f5e9; }
+    .pill.rejected { color: var(--warn); background: #ffebee; }
+
+    .card { background: var(--card); border:1px solid var(--line); border-radius: 12px; padding: 16px; }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap:16px; }
+    @media (max-width: 860px){ .grid { grid-template-columns: 1fr; } }
+
+    .sectionTitle { font-size: 14px; text-transform: uppercase; color: var(--muted); letter-spacing: .06em; margin: 6px 0 12px; }
+    label { display:block; font-size: 13px; color: var(--muted); margin: 12px 0 6px; }
+    input, select, textarea {
+      width: 100%; padding: 10px 12px; border:1px solid var(--line); border-radius: 8px; background: #fafafe;
+      font-size: 14px; color: var(--ink);
+    }
+    textarea { resize: vertical; min-height: 84px; }
+    input[readonly], select:disabled, textarea[readonly] { background:#f3f3fa; color:#444; }
+    .row { display:flex; gap:12px; }
+    .row > * { flex:1; }
+
+    .banner { border-radius: 10px; padding: 10px 12px; font-size: 14px; margin: 12px 0; }
+    .banner.info { background:#e3f2fd; color:#0d47a1; border:1px solid #bbdefb; }
+    .banner.warn { background:#ffebee; color:#b71c1c; border:1px solid #ffcdd2; display:none; }
+
+    .actions { display:flex; gap:10px; justify-content:flex-end; margin-top: 16px; }
+    button { border: 1px solid var(--line); background:#fff; border-radius: 8px; padding:10px 14px; cursor:pointer; font-weight:600; }
+    .primary { background: var(--ink); color:#fff; border-color: var(--ink); }
+    .ghost { background:#fff; }
+    .danger { background:#b71c1c; color:#fff; border-color:#b71c1c; }
+    .muted { color: var(--muted); font-size: 13px; }
+
+    .history li { margin: 6px 0; }
+    .rightNote { font-size: 13px; color: var(--muted); text-align: right; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="topbar">
+      <div class="crumbs">Dashboard ▸ Requests ▸ <strong>Claim Request #123</strong></div>
+    </div>
+
+    <div class="titleRow">
+      <h1>Claim Request #123</h1>
+      <div>
+        <span id="statusPill" class="pill pending">Pending Review</span>
+      </div>
+    </div>
+
+    <p class="muted">Created: 13/09/2025 5:12 PM • Last updated: 13/09/2025 5:40 PM • Submitted by: <strong>Elvis Nguyen</strong></p>
+
+    <div class="card" style="margin-top:12px;">
+      <div class="sectionTitle">Summary</div>
+      <div class="grid">
+        <div>
+          <div class="row">
+            <div>
+              <label>Unit</label>
+              <input id="unit" value="INFO1110 — Programming Fundamentals" readonly />
+            </div>
+            <div>
+              <label>Session</label>
+              <input id="session" value="TUT01" readonly />
+            </div>
+          </div>
+          <div class="row">
+            <div>
+              <label>Date</label>
+              <input id="date" value="13/09/2025" readonly />
+            </div>
+            <div>
+              <label>Time</label>
+              <input id="time" value="5:00 PM" readonly />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="banner info">Viewing an existing <strong>Claim Request</strong>. Click <em>Edit</em> to modify; saving will create a new request version.</div>
+          <div class="rightNote">Original Allocation ID: <strong>AL-456</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:16px;">
+      <!-- System record (always read-only) -->
+      <div class="card">
+        <div class="sectionTitle">System Record</div>
+        <div class="row">
+          <div>
+            <label>Hours</label>
+            <input id="sysHours" value="2" readonly />
+          </div>
+          <div>
+            <label>Pay Code</label>
+            <input id="sysPaycode" value="TUT01" readonly />
+          </div>
+        </div>
+        <label>Notes</label>
+        <textarea id="sysNotes" readonly>Baseline allocation as published by admin/LIC.</textarea>
+      </div>
+
+      <!-- Tutor claim (view-only by default, editable on toggle) -->
+      <div class="card">
+        <div class="sectionTitle">Tutor Claim (Requested)</div>
+        <div class="row">
+          <div>
+            <label>Claimed Hours</label>
+            <input id="claimHours" type="number" min="0.5" step="0.5" value="2" readonly />
+          </div>
+          <div>
+            <label>Claimed Pay Code</label>
+            <select id="claimPaycode" disabled>
+              <option value="TUT01" selected>TUT01</option>
+              <option value="TU2">TU2</option>
+              <option value="TU3">TU3</option>
+              <option value="TU4">TU4</option>
+            </select>
+          </div>
+        </div>
+        <label>Comment</label>
+        <textarea id="comment" readonly>I am claiming repeat tutorial rate TU4 as I taught the same tutorial previously.</textarea>
+
+        <div id="discrepancyBanner" class="banner warn">Comment is required when hours or pay code differ from the system record.</div>
+
+        <div class="actions">
+          <button id="editBtn" class="ghost">Edit</button>
+          <button id="saveBtn" class="primary" style="display:none">Save Changes</button>
+          <button id="cancelBtn" class="ghost" style="display:none">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid" style="margin-top:16px;">
+      <div class="card">
+        <div class="sectionTitle">Approvals</div>
+        <div class="row">
+          <div>
+            <label>Routing</label>
+            <input value="TA → Admin → LIC" readonly />
+          </div>
+          <div>
+            <label>Current Stage</label>
+            <input id="stage" value="Admin Review" readonly />
+          </div>
+        </div>
+        <label>Reviewer Notes</label>
+        <textarea readonly>—</textarea>
+      </div>
+
+      <div class="card">
+        <div class="sectionTitle">History</div>
+        <ul class="history">
+          <li>5:40 PM – Request edited by Elvis (changed paycode to TU4).</li>
+          <li>5:12 PM – Request created by Elvis.</li>
+        </ul>
+        <div class="actions" style="justify-content:flex-start;">
+          <button class="danger" onclick="alert('Request withdrawn (mock).')">Withdraw Request</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions" style="margin-top:18px;">
+      <button class="ghost" onclick="window.history.back()">Back</button>
+      <button class="primary" onclick="alert('Exported CSV (mock).')">Export CSV</button>
+    </div>
+  </div>
+
+  <script>
+    // --- constants (system record) ---
+    const sysHours = 2;
+    const sysPay = "TUT01";
+
+    // --- elements ---
+    const claimHours = document.getElementById('claimHours');
+    const claimPaycode = document.getElementById('claimPaycode');
+    const comment = document.getElementById('comment');
+    const discrepancyBanner = document.getElementById('discrepancyBanner');
+    const editBtn = document.getElementById('editBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+
+    // state
+    let editing = false;
+    let snapshot = { hours: claimHours.value, pay: claimPaycode.value, comment: comment.value };
+
+    function setReadonly(ro){
+      claimHours.readOnly = ro;
+      claimPaycode.disabled = ro;
+      comment.readOnly = ro;
+    }
+
+    function toggleEdit(){
+      editing = !editing;
+      setReadonly(!editing);
+      editBtn.style.display = editing ? 'none' : 'inline-block';
+      saveBtn.style.display = editing ? 'inline-block' : 'none';
+      cancelBtn.style.display = editing ? 'inline-block' : 'none';
+      validate();
+    }
+
+    function cancelEdit(){
+      // revert to snapshot
+      claimHours.value = snapshot.hours;
+      claimPaycode.value = snapshot.pay;
+      comment.value = snapshot.comment;
+      toggleEdit();
+    }
+
+    function validate(){
+      const hoursChanged = Number(claimHours.value) !== Number(sysHours);
+      const payChanged = claimPaycode.value !== sysPay;
+      const needsComment = hoursChanged || payChanged;
+      const hasComment = comment.value.trim().length > 0;
+
+      discrepancyBanner.style.display = (needsComment && !hasComment) ? 'block' : 'none';
+      return !(needsComment && !hasComment);
+    }
+
+    editBtn.addEventListener('click', toggleEdit);
+    cancelBtn.addEventListener('click', cancelEdit);
+
+    [claimHours, claimPaycode, comment].forEach(el=>{
+      el.addEventListener('input', validate);
+      el.addEventListener('change', validate);
+    });
+
+    saveBtn.addEventListener('click', ()=>{
+      if(!validate()){
+        discrepancyBanner.scrollIntoView({behavior:'smooth', block:'center'});
+        return;
+      }
+      // persist snapshot (mock)
+      snapshot = { hours: claimHours.value, pay: claimPaycode.value, comment: comment.value };
+      alert('Changes saved. New version of request created (mock).');
+      toggleEdit();
+    });
+  </script>
+</body>
+</html>

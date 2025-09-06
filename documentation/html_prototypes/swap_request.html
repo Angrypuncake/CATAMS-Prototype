@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Swap Request Form</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f9fafb;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 700px;
+      margin: auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 20px 30px;
+    }
+    .header {
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+    .summary {
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 20px;
+    }
+    .summary p {
+      margin: 4px 0;
+    }
+    .status {
+      color: green;
+      font-weight: bold;
+    }
+    label {
+      font-weight: 600;
+      display: block;
+      margin-top: 16px;
+    }
+    input[type="text"], textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin-top: 6px;
+      border: 1px solid #d1d5db;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+    .radio-group {
+      margin-top: 6px;
+    }
+    .radio-group div {
+      margin-bottom: 8px;
+    }
+    .upload {
+      margin-top: 8px;
+    }
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    button {
+      padding: 10px 18px;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+    .btn-primary {
+      background: #2563eb;
+      color: white;
+    }
+    .btn-outline {
+      background: white;
+      border: 1px solid #d1d5db;
+      color: #374151;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">Swap Request</div>
+
+    <div class="summary">
+      <p><strong>INFO1110 – Programming Fundamentals</strong></p>
+      <p>13/09/2025 • 5:00–7:00 PM • Room A • 2h</p>
+      <p class="status">Status: Confirmed</p>
+    </div>
+
+    <label>Swap Type</label>
+    <div class="radio-group">
+      <div>
+        <input type="radio" id="suggest" name="swapType" value="suggest">
+        <label for="suggest" style="font-weight: normal;">Suggest another tutor to swap with</label>
+      </div>
+      <div>
+        <input type="radio" id="coordinator" name="swapType" value="coordinator" checked>
+        <label for="coordinator" style="font-weight: normal;">Let coordinator assign replacement</label>
+      </div>
+    </div>
+
+    <div id="tutor-search-section" style="display:none;">
+      <label for="tutor-search">Find Tutor to Swap With</label>
+      <input type="text" id="tutor-search" placeholder="Type a name or email…">
+      <p style="font-size: 0.85rem; color: #6b7280; margin-top: 4px;">Start typing to search across eligible tutors.</p>
+    </div>
+
+    <div id="manual-tutor-entry" style="display:none; margin-top: 12px;">
+      <label for="manual-tutor-name">Or enter tutor name manually</label>
+      <input type="text" id="manual-tutor-name" placeholder="Type tutor's full name or email…">
+    </div>
+
+    <label for="reason">Reason for Swap</label>
+    <textarea id="reason" placeholder="e.g., Clashes with INFO1910 lab I am teaching."></textarea>
+
+    <div class="upload">
+      <label for="attachments">Attachments (optional)</label>
+      <input type="file" id="attachments" multiple>
+    </div>
+
+    <div class="actions">
+      <button type="button" class="btn-outline">Cancel</button>
+      <button type="button" class="btn-primary">Submit Swap Request</button>
+    </div>
+  </div>
+
+  <script>
+    // Show the tutor search bar when "Suggest another tutor to swap with" is selected
+    (function() {
+      var suggestRadio = document.getElementById('suggest');
+      var coordinatorRadio = document.getElementById('coordinator');
+      var tutorSection = document.getElementById('tutor-search-section');
+      var tutorInput = document.getElementById('tutor-search');
+      var manualEntrySection = document.getElementById('manual-tutor-entry');
+      var manualTutorInput = document.getElementById('manual-tutor-name');
+
+      function updateTutorSection() {
+        if (suggestRadio && suggestRadio.checked) {
+          tutorSection.style.display = 'block';
+          if (manualEntrySection) manualEntrySection.style.display = 'block';
+        } else {
+          tutorSection.style.display = 'none';
+          if (tutorInput) tutorInput.value = '';
+          if (manualTutorInput) manualTutorInput.value = '';
+          if (manualEntrySection) manualEntrySection.style.display = 'none';
+        }
+      }
+
+      // Initialize on page load
+      document.addEventListener('DOMContentLoaded', updateTutorSection);
+
+      if (suggestRadio) suggestRadio.addEventListener('change', updateTutorSection);
+      if (coordinatorRadio) coordinatorRadio.addEventListener('change', updateTutorSection);
+    })();
+  </script>
+</body>
+</html>

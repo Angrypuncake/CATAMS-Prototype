@@ -6,6 +6,8 @@ import { useEffect } from "react";
 import axios from "axios";
 import AdminInfoBox from "./AdminInfoBox";
 import AdminBudgetBox from "./AdminBudgetBox";
+import AdminPagination from "./AdminPagination";
+import page from "../assistant/page";
 
 const AdminDashboard = () => {
   const [adminView, setAdminView] = useState({
@@ -77,7 +79,6 @@ const AdminDashboard = () => {
         <div className="w-3/4 h-full  rounded-3xl flex flex-col gap-3">
           <div className="min-h-[85px] h-[10%] bg-white rounded-3xl p-3">
             <Typography variant="subtitle1">Validation Reports</Typography>
-
             <div>
               <Button variant="secondary" color="red">
                 Invalid Tutor Emails {`(0)`}
@@ -90,28 +91,12 @@ const AdminDashboard = () => {
               <Typography variant="subtitle1">
                 User & Role Management
               </Typography>
-              <div className="flex gap-2">
-                <Button
-                  variant="bubble"
-                  onClick={() => {
-                    setPage(page - 1);
-                  }}
-                  disabled={page === 1}
-                >
-                  Prev
-                </Button>
-                <Button
-                  variant="bubble"
-                  onClick={() => {
-                    setPage(page + 1);
-                  }}
-                  disabled={
-                    !tutorRows || (page - 1) * LIMIT + LIMIT >= tutorRows.length
-                  }
-                >
-                  Next
-                </Button>
-              </div>
+              <AdminPagination
+                page={page}
+                setPage={setPage}
+                itemTotal={tutorRows.length}
+                itemLimit={LIMIT}
+              />
             </div>
             <DynamicTable
               rows={

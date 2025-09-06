@@ -144,9 +144,9 @@ const themeOptions: ThemeOptions = {
           },
         },
         head: {
-          backgroundColor: "#1976a2",
+          backgroundColor: "#e8e8e8",
           "& .MuiTableCell-root": {
-            color: "white",
+            color: "black",
             fontWeight: 700,
           },
         },
@@ -155,8 +155,14 @@ const themeOptions: ThemeOptions = {
     MuiTableCell: {
       styleOverrides: {
         root: {
-          paddingTop: 2,
-          paddingBottom: 2,
+          borderRight: "1px solid #ccc",
+          borderLeft: "none",
+          "&:first-of-type": {
+            borderLeft: "1px solid #ccc", // left border for the first column
+          },
+          "&:last-child": {
+            borderRight: "1px solid #ccc", // keep right border on last column
+          },
         },
       },
     },

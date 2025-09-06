@@ -4,7 +4,7 @@ import React from "react";
 interface AdminBudgetBoxProps {
   title: string;
   description: string;
-  href: string;
+  href?: string;
 }
 
 const AdminBudgetBox: React.FC<AdminBudgetBoxProps> = ({

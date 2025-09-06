@@ -25,8 +25,15 @@ const DynamicTable: React.FC<TableProps> = ({ rows }) => {
   const columns = Object.keys(rows[0]).filter((key) => key !== "id");
 
   return (
-    <TableContainer component={Paper}>
-      <Table>
+    <TableContainer
+      component={Paper}
+      sx={{
+        transform: "scale(0.8)",
+        transformOrigin: "top left",
+        width: "125%",
+      }}
+    >
+      <Table size="small">
         <TableHead>
           <TableRow>
             {columns.map((col) => (

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { Button, Typography } from "@mui/material";
 import DynamicTable from "../../../components/DynamicTable";
 import { useEffect } from "react";
@@ -12,18 +12,20 @@ const AdminDashboard = () => {
     numUsers: 0,
     numAllocations: 0,
   };
+  const [page, setPage] = useState(1);
 
-  const fetchUsers = async () => {
+  const [tutorRows, setTutorRows] = useState([]);
+  const fetchUsers = useCallback(async () => {
     try {
       const limit = 4;
-      console.log(page);
       const result = await axios.get("/api/tutor/allocations", {
         params: { page, limit },
       });
+      setTutorRows(result.data.data);
     } catch (error) {
-      console.log("error while fetching users");
+      console.error("Error while fetching users:", error);
     }
-  };
+  }, [page]);
 
   useEffect(() => {
     fetchUsers();

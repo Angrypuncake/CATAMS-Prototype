@@ -147,10 +147,7 @@ const AdminDashboard = () => {
               />
             </div>
             <DynamicTable
-              rows={
-                tutorRows.slice((tutorPage - 1) * LIMIT, tutorPage * LIMIT) ??
-                []
-              }
+              rows={tutorRows.slice((tutorPage - 1) * LIMIT, tutorPage * LIMIT)}
             />
           </div>
 

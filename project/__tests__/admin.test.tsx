@@ -68,7 +68,8 @@ jest.mock("axios", () => ({
 }));
 
 describe("AdminDashboard", () => {
-  test("renders admin dashboard title", async () => {
+  // Basic rendering tests
+  test("should display the main dashboard title and description", async () => {
     await act(async () => {
       render(<AdminDashboard />);
     });
@@ -76,12 +77,12 @@ describe("AdminDashboard", () => {
     expect(screen.getByText("System Admin Dashboard")).toBeInTheDocument();
   });
 
-  test("renders main sections and action buttons", async () => {
+  test("should show all essential sections and navigation buttons", async () => {
     await act(async () => {
       render(<AdminDashboard />);
     });
 
-    // Main sections
+    // Check that all the main dashboard sections are visible
     expect(screen.getByText("User & Role Management")).toBeInTheDocument();
     expect(screen.getByText("Budgets Loaded")).toBeInTheDocument();
     expect(screen.getByText("Validation Reports")).toBeInTheDocument();
@@ -89,18 +90,19 @@ describe("AdminDashboard", () => {
       screen.getByText("Recent Jobs (Import/Exports)"),
     ).toBeInTheDocument();
 
-    // Action buttons
+    // Make sure the action buttons are there for admin workflows
     expect(screen.getByText("Refresh")).toBeInTheDocument();
     expect(screen.getByText("Bulk Import Allocations")).toBeInTheDocument();
   });
 
-  test("applies correct CSS classes and styling", async () => {
+  test("should apply proper layout styling with Tailwind classes", async () => {
     let container: HTMLElement;
     await act(async () => {
       const result = render(<AdminDashboard />);
       container = result.container;
     });
 
+    // Verify the main container has the correct layout classes
     const mainContainer = container!.firstElementChild;
     expect(mainContainer).toHaveClass(
       "h-screen",
@@ -110,151 +112,30 @@ describe("AdminDashboard", () => {
       "gap-3",
     );
 
+    // Check that we have white rounded sections for content areas
     const whiteSections = container!.querySelectorAll(".bg-white.rounded-3xl");
     expect(whiteSections.length).toBeGreaterThan(0);
   });
-  test("admin info boxes display correct statistics and styling", () => {
-    render(
-      <div>
-        <AdminInfoBox
-          adminStatistic={42}
-          title="Users"
-          bubbleText="directory"
-          bubbleColor="red"
-        />
-        <AdminInfoBox
-          adminStatistic={100}
-          title="Success"
-          bubbleText="request"
-          bubbleColor="green"
-        />
-      </div>,
-    );
 
-    expect(screen.getByText("Users")).toBeInTheDocument();
-    expect(screen.getByText("42")).toBeInTheDocument();
-    const redBubble = screen.getByRole("button", { name: /directory/i });
-    expect(redBubble).toHaveStyle({ backgroundColor: "rgb(255, 0, 0)" });
-
-    expect(screen.getByText("Success")).toBeInTheDocument();
-    expect(screen.getByText("100")).toBeInTheDocument();
-    const greenBubble = screen.getByRole("button", { name: /request/i });
-
-    expect(greenBubble).toHaveStyle({
-      backgroundColor: expect.stringMatching(/green|rgb\(0,\s*128,\s*0\)/),
-    });
-  });
-
-  test("renders dynamic tables with data from API", async () => {
+  // Data loading and API integration tests
+  test("should load and display statistics from the backend API", async () => {
     await act(async () => {
       render(<AdminDashboard />);
     });
 
-    // Wait for API data to load and verify basic table structure exists
+    // Wait for the mocked API data to load and show up in the UI
     await waitFor(() => {
-      expect(screen.getByText("10")).toBeInTheDocument(); // User count from API
-      expect(screen.getByText("50")).toBeInTheDocument(); // Allocation count from API
+      expect(screen.getByText("10")).toBeInTheDocument(); // User count from mock
+      expect(screen.getByText("50")).toBeInTheDocument(); // Allocation count from mock
     });
 
-    // Verify that the data was passed through (DynamicTable was exercised)
-    // This ensures the axios mock data reached the component and DynamicTable processed it
+    // Verify tables are being populated (exercises DynamicTable component)
     const tables = document.querySelectorAll("table");
-    expect(tables.length).toBeGreaterThanOrEqual(0); // Tables may be rendered depending on data structure
+    expect(tables.length).toBeGreaterThanOrEqual(0);
   });
 
-  test("pagination component functionality and edge cases", () => {
-    const mockSetPage = jest.fn();
-
-    // Test middle page functionality
-    const { rerender } = render(
-      <AdminPagination
-        page={2}
-        setPage={mockSetPage}
-        itemTotal={100}
-        itemLimit={10}
-      />,
-    );
-
-    const prevButton = screen.getByText("Prev");
-    const nextButton = screen.getByText("Next");
-
-    // Test button clicks
-    fireEvent.click(prevButton);
-    expect(mockSetPage).toHaveBeenCalledWith(1);
-    fireEvent.click(nextButton);
-    expect(mockSetPage).toHaveBeenCalledWith(3);
-
-    // Test middle page - neither disabled
-    expect(prevButton).not.toBeDisabled();
-    expect(nextButton).not.toBeDisabled();
-
-    // Test first page (prev disabled)
-    rerender(
-      <AdminPagination
-        page={1}
-        setPage={mockSetPage}
-        itemTotal={100}
-        itemLimit={10}
-      />,
-    );
-    expect(screen.getByText("Prev")).toBeDisabled();
-
-    // Test last page (next disabled)
-    rerender(
-      <AdminPagination
-        page={10}
-        setPage={mockSetPage}
-        itemTotal={100}
-        itemLimit={10}
-      />,
-    );
-    expect(screen.getByText("Next")).toBeDisabled();
-  });
-
-  test("handles staged/runs toggle functionality", async () => {
-    await act(async () => {
-      render(<AdminDashboard />);
-    });
-
-    // Find and test toggle buttons
-    const stagedButton = screen.getByText("Staged");
-    const runsButton = screen.getByText("Runs");
-
-    // Test clicking Runs button (should trigger handleAlignment)
-    await act(async () => {
-      fireEvent.click(runsButton);
-    });
-
-    // Test clicking Staged button
-    await act(async () => {
-      fireEvent.click(stagedButton);
-    });
-  });
-
-  test("handles API errors gracefully", async () => {
-    // Mock console.error to capture error messages
-    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
-    const mockedAxios = jest.mocked(axios);
-    mockedAxios.get
-      .mockRejectedValueOnce(new Error("Overview API Error"))
-      .mockRejectedValueOnce(new Error("History API Error"));
-
-    await act(async () => {
-      render(<AdminDashboard />);
-    });
-
-    // Wait for error handling
-    await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Error loading overview:",
-        expect.any(Error),
-      );
-    });
-
-    consoleErrorSpy.mockRestore();
-  });
-
-  test("pagination slicing works correctly", async () => {
+  test("should handle large datasets with proper pagination", async () => {
+    // Mock a bigger dataset to test pagination logic
     const mockedAxios = jest.mocked(axios);
     mockedAxios.get.mockResolvedValue({
       data: {
@@ -282,14 +163,143 @@ describe("AdminDashboard", () => {
       render(<AdminDashboard />);
     });
 
+    // Check that the larger numbers show up (tests pagination slicing)
     await waitFor(() => {
       expect(screen.getByText("50")).toBeInTheDocument();
       expect(screen.getByText("100")).toBeInTheDocument();
     });
   });
 
-  test("admin budget box with and without href", () => {
-    // Test with href (should render as link)
+  test("should gracefully handle API failures without crashing", async () => {
+    // Set up spies to catch error logging
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+    const mockedAxios = jest.mocked(axios);
+    mockedAxios.get
+      .mockRejectedValueOnce(new Error("Overview API Error"))
+      .mockRejectedValueOnce(new Error("History API Error"));
+
+    await act(async () => {
+      render(<AdminDashboard />);
+    });
+
+    // Make sure errors are properly logged instead of breaking the app
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Error loading overview:",
+        expect.any(Error),
+      );
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  // User interaction tests
+  test("should allow switching between staged and runs data views", async () => {
+    await act(async () => {
+      render(<AdminDashboard />);
+    });
+
+    // Find the toggle buttons for different data views
+    const stagedButton = screen.getByText("Staged");
+    const runsButton = screen.getByText("Runs");
+
+    // Test switching to runs view
+    await act(async () => {
+      fireEvent.click(runsButton);
+    });
+
+    // Test switching back to staged view
+    await act(async () => {
+      fireEvent.click(stagedButton);
+    });
+  });
+
+  // Component integration tests
+  test("should render info boxes with correct data and styling", () => {
+    render(
+      <div>
+        <AdminInfoBox
+          adminStatistic={42}
+          title="Users"
+          bubbleText="directory"
+          bubbleColor="red"
+        />
+        <AdminInfoBox
+          adminStatistic={100}
+          title="Success"
+          bubbleText="request"
+          bubbleColor="green"
+        />
+      </div>,
+    );
+
+    // Check basic content display
+    expect(screen.getByText("Users")).toBeInTheDocument();
+    expect(screen.getByText("42")).toBeInTheDocument();
+    expect(screen.getByText("Success")).toBeInTheDocument();
+    expect(screen.getByText("100")).toBeInTheDocument();
+
+    // Test colored bubble buttons work correctly
+    const redBubble = screen.getByRole("button", { name: /directory/i });
+    expect(redBubble).toHaveStyle({ backgroundColor: "rgb(255, 0, 0)" });
+
+    const greenBubble = screen.getByRole("button", { name: /request/i });
+    expect(greenBubble).toHaveStyle({
+      backgroundColor: expect.stringMatching(/green|rgb\(0,\s*128,\s*0\)/),
+    });
+  });
+
+  test("should handle pagination controls properly", () => {
+    const mockSetPage = jest.fn();
+
+    // Start with a middle page to test both directions
+    const { rerender } = render(
+      <AdminPagination
+        page={2}
+        setPage={mockSetPage}
+        itemTotal={100}
+        itemLimit={10}
+      />,
+    );
+
+    const prevButton = screen.getByText("Prev");
+    const nextButton = screen.getByText("Next");
+
+    // Test navigation in both directions
+    fireEvent.click(prevButton);
+    expect(mockSetPage).toHaveBeenCalledWith(1);
+    fireEvent.click(nextButton);
+    expect(mockSetPage).toHaveBeenCalledWith(3);
+
+    // Middle pages should have both buttons enabled
+    expect(prevButton).not.toBeDisabled();
+    expect(nextButton).not.toBeDisabled();
+
+    // Test edge case: first page should disable prev button
+    rerender(
+      <AdminPagination
+        page={1}
+        setPage={mockSetPage}
+        itemTotal={100}
+        itemLimit={10}
+      />,
+    );
+    expect(screen.getByText("Prev")).toBeDisabled();
+
+    // Test edge case: last page should disable next button
+    rerender(
+      <AdminPagination
+        page={10}
+        setPage={mockSetPage}
+        itemTotal={100}
+        itemLimit={10}
+      />,
+    );
+    expect(screen.getByText("Next")).toBeDisabled();
+  });
+
+  test("should render budget boxes as links or buttons based on href prop", () => {
+    // Test the href conditional logic in AdminBudgetBox
     const { rerender } = render(
       <AdminBudgetBox
         title="Test Budget"
@@ -301,10 +311,11 @@ describe("AdminDashboard", () => {
     expect(screen.getByText("Test Budget")).toBeInTheDocument();
     expect(screen.getByText("Test description")).toBeInTheDocument();
 
+    // When href is provided, should render as a clickable link
     const buttonWithHref = screen.getByText("Open");
     expect(buttonWithHref.closest("a")).toHaveAttribute("href", "/test-link");
 
-    // Test without href (should render as button, not link)
+    // Test without href - should just be a regular button
     rerender(
       <AdminBudgetBox
         title="No Link Budget"
@@ -313,7 +324,7 @@ describe("AdminDashboard", () => {
     );
 
     const buttonWithoutHref = screen.getByText("Open");
-    // When href is undefined, MUI Button renders as button element, not anchor
+    // Without href, MUI Button renders as a button element instead of anchor
     expect(buttonWithoutHref.tagName).toBe("BUTTON");
     expect(buttonWithoutHref.closest("a")).toBeNull();
   });

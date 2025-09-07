@@ -82,7 +82,8 @@ npm install
 
 Configure Environment Variables (Supabase requirement)
 ```
-cp .env.example .env.local
+Request environment variables from DB OWNER Elvis Nguyen
+Copy and paste variables into .env.local under /project
 ```
 
 ## Running the Development Server

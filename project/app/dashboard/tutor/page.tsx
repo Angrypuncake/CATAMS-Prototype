@@ -83,16 +83,16 @@ const exportCSV = (
   URL.revokeObjectURL(url);
 };
 
-type TutorSession = {
-  // fix typing to mach db schema
-  date: string;
-  start_at: string;
-  unit_code: string;
-  location: string;
-  hours: number;
-  status: string;
-  actions: string;
-};
+// type TutorSession = {
+//   // fix typing to match db schema
+//   date: string;
+//   start_at: string;
+//   unit_code: string;
+//   location: string;
+//   hours: number;
+//   status: string;
+//   actions: string;
+// };
 
 const Page = () => {
   const [tutorSessions, setTutorSessions] = useState<TutorSession[]>([]);
@@ -244,8 +244,8 @@ const Page = () => {
     },
   ];
 
-  const hours = 13;
-  const sessions = 6;
+  const hours = 20;
+  const sessions = 10;
   const requests = 2;
 
   return (
@@ -285,16 +285,51 @@ const Page = () => {
             <TableBody>
               {tutorSessions.map((row, index) => (
                 <TableRow key={index}>
-                  {/* Fix typing here to match schema */}
-                  <TableCell>{row.date ?? "N/A"}</TableCell>
+                  <TableCell>
+                    {row.date ? row.date.slice(0, 10) : "N/A"}
+                  </TableCell>
                   <TableCell>{row.start_at ?? "N/A"}</TableCell>
                   <TableCell>{row.unit_code ?? "N/A"}</TableCell>
                   <TableCell>{row.location ?? "N/A"}</TableCell>
-                  <TableCell>{row.hours ?? 0}</TableCell>
+                  <TableCell>
+                    {" "}
+                    {(() => {
+                      if (row.start_at && row.end_at) {
+                        const [startH, startM, startS] = row.start_at
+                          .split(":")
+                          .map(Number);
+                        const [endH, endM, endS] = row.end_at
+                          .split(":")
+                          .map(Number);
+
+                        const startDate = new Date(
+                          0,
+                          0,
+                          0,
+                          startH,
+                          startM,
+                          startS,
+                        );
+                        const endDate = new Date(0, 0, 0, endH, endM, endS);
+
+                        let diff =
+                          (endDate.getTime() - startDate.getTime()) /
+                          (1000 * 60 * 60);
+
+                        if (diff < 0) {
+                          diff += 24;
+                        }
+
+                        return diff.toFixed(2);
+                      }
+                      return 0;
+                    })()}
+                  </TableCell>
                   <TableCell>{row.status ?? "N/A"}</TableCell>
                   <TableCell className="text-left">
                     <Button variant="contained" size="small">
-                      {row.actions ?? "None"}
+                      {/* FIX THIS LATER */}
+                      {row.actions ?? "View"}
                     </Button>
                   </TableCell>
                 </TableRow>

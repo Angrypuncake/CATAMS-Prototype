@@ -94,8 +94,8 @@ npm run dev
 
 ## Run tests
 
-'''
+```
 npm run test
-'''
+```
 Open http://localhost:3000
  to view the app.

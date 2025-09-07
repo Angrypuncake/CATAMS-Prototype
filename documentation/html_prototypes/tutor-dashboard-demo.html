@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Tutor Dashboard — Demo</title>
+<style>
+:root {
+  --bg: #ffffff;
+  --panel: #fdfdfd;
+  --panel-2: #fafafa;
+  --text: #111827;
+  --muted: #6b7280;
+  --line: #d1d5db;
+  --brand: #2563eb;
+  --ok: #16a34a;
+  --warn: #d97706;
+  --bad: #dc2626;
+  --chip: #f3f4f6;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.wrap {
+  max-width: 1000px;
+  margin: 40px auto;
+  padding: 0 16px;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.title {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.btn {
+  border: 1px solid var(--line);
+  background: var(--chip);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.btn.sm {
+  font-size: 13px;
+  padding: 4px 8px;
+}
+
+.stats {
+  display: flex;
+  gap: 12px;
+  margin: 16px 0;
+}
+
+.stat {
+  flex: 1;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 12px;
+}
+
+.stat .k {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.stat .l {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  margin-top: 16px;
+}
+
+.card h3 {
+  margin: 0;
+  padding: 10px 12px;
+  font-size: 14px;
+  border-bottom: 1px solid var(--line);
+}
+
+.card .body {
+  padding: 8px 12px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.table th,
+.table td {
+  border-bottom: 1px solid var(--line);
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.table th {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.chip {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 12px;
+  font-size: 12px;
+  background: var(--chip);
+}
+
+.chip.ok {
+  color: var(--ok);
+}
+
+.chip.pending {
+  color: var(--warn);
+}
+
+.chip.bad {
+  color: var(--bad);
+}
+
+.notice-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.notice-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+</style>
+</head>
+<body>
+  <div class="wrap">
+
+    <div class="topbar">
+      <div class="title">Tutor Dashboard</div>
+      <div class="right">
+        <button class="btn ghost sm">Profile</button>
+        <button class="btn ghost sm">Logout</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="k">5</div><div class="l">Allocated Hours</div></div>
+      <div class="stat"><div class="k">2</div><div class="l">Upcoming Sessions</div></div>
+      <div class="stat"><div class="k">3</div><div class="l">Pending Requests</div></div>
+    </div>
+
+    <div class="grid-2">
+      <!-- left column -->
+      <div>
+        <div class="card">
+          <h3>My Allocations</h3>
+          <div class="body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Time</th><th>Unit</th><th>Location</th>
+                  <th>Hours</th><th>Status</th><th class="actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>12/09</td><td>9am</td><td>INFO1110</td><td>Room A</td>
+                  <td>2h</td><td><span class="chip ok">Confirmed</span></td>
+                  <td class="actions"><button class="btn xs">View</button></td>
+                </tr>
+                <tr>
+                  <td>14/09</td><td>1pm</td><td>INFO1910</td><td>Room B</td>
+                  <td>3h</td><td><span class="chip pending">Pending</span></td>
+                  <td class="actions"><button class="btn xs">View</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="toolbar">
+            <span class="muted">Export Allocations</span>
+            <span class="spacer"></span>
+            <button class="btn sm">CSV</button>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Action Required</h3>
+          <div class="body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Time</th><th>Unit</th><th>Hrs</th>
+                  <th>Desc</th><th>Status</th><th class="actions">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>13/09</td><td>5pm</td><td>INFO1110</td><td>2h</td>
+                  <td>TUT01</td><td><span class="chip">Unclaimed</span></td>
+                  <td class="actions">
+                    <button class="btn ok xs">Claim Now</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td>11/09</td><td>4pm</td><td>INFO1113</td><td>2h</td>
+                  <td>TUT02</td><td><span class="chip bad">Rejected</span></td>
+                  <td class="actions"><button class="btn xs">View/Edit Request</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>My Requests</h3>
+          <div class="body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Request ID</th><th>Type</th><th>Related Session</th>
+                  <th>Status</th><th class="actions">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>#123</td><td>Swap</td><td>INFO1110 – 11/09</td>
+                  <td><span class="chip pending">Pending Review</span></td>
+                  <td class="actions"><button class="btn xs">View/Edit Request</button></td>
+                </tr>
+                <tr>
+                  <td>#122</td><td>Correction</td><td>INFO1110 – 14/09</td>
+                  <td><span class="chip ok">Approved</span></td>
+                  <td class="actions"><button class="btn xs">View/Edit Request</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Claimed Sessions</h3>
+          <div class="body">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Time</th><th>Unit</th><th>Hours</th>
+                  <th>Desc</th><th>Status</th><th class="actions">Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>13/09</td><td>5pm</td><td>INFO1110</td><td>2h</td>
+                  <td>TUT01</td><td><span class="chip">Claimed</span></td>
+                  <td class="actions"><button class="btn xs">View Claim</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- right column -->
+      <div>
+        <div class="card">
+          <h3>Notices / Messages</h3>
+          <div class="body" style="padding-top:0">
+            <ul class="notice-list">
+              <li>
+                <div class="icon" title="Reject">✖️</div>
+                <div>
+                  <div>UC rejected Request <strong>#123</strong></div>
+                  <div class="meta">14/09 • Type: Reject</div>
+                </div>
+                <div class="right"><button class="btn xs">View/Edit Request</button></div>
+              </li>
+              <li>
+                <div class="icon" title="Approve">✔️</div>
+                <div>
+                  <div>TA approved Request <strong>#122</strong></div>
+                  <div class="meta">13/09 • Type: Approve</div>
+                </div>
+                <div class="right"><button class="btn xs">View/Edit Request</button></div>
+              </li>
+              <li>
+                <div class="icon" title="Claim">🧾</div>
+                <div>
+                  <div>Claim submitted for Allocation <strong>#456</strong></div>
+                  <div class="meta">13/09 • Type: Claim</div>
+                </div>
+                <div class="right"><button class="btn xs">View Claim</button></div>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /grid -->
+  </div><!-- /wrap -->
+
+  <div class="footer">
+      <a href="portal.html" class="footer-button">Home</a>
+    </div>
+</body>
+
+
+</html>

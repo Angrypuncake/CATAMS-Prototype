@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>UC Dashboard</title>
+  <style>
+    :root{
+      --bg:#ffffff; --panel:#f9fafb; --panel-2:#f3f4f6; --ink:#0f172a; --muted:#64748b; --line:#e5e7eb;
+      --brand:#2563eb; --ok:#16a34a; --warn:#d97706; --bad:#dc2626; --chip:#eef2ff; --chip-ink:#1f2937;
+      --focus:#7c3aed;
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font:14px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;color:var(--ink);background:var(--bg)}
+    a{color:var(--brand);text-decoration:none}
+    a:focus,button:focus,input:focus,select:focus,textarea:focus,[tabindex]:focus{outline:3px solid var(--focus);outline-offset:2px}
+
+    /* Layout */
+    .wrap{max-width:1200px;margin:24px auto;padding:0 16px}
+    header.top{
+      display:flex;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px
+    }
+    .page-title{font-size:20px;font-weight:700}
+    .top-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{appearance:none;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer}
+    .btn.primary{background:var(--brand);color:#fff;border-color:var(--brand)}
+    .btn.ghost{background:transparent}
+    .btn[disabled]{opacity:.6;cursor:not-allowed}
+
+    /* Alert bar */
+    #uc-alerts{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 16px}
+    .alert-pill{display:flex;align-items:center;gap:8px;background:var(--panel);border:1px solid var(--line);border-left-width:6px;border-radius:12px;padding:8px 12px}
+    .alert-pill .msg{white-space:nowrap}
+    .alert-pill.warn{border-left-color:var(--warn)}
+    .alert-pill.bad{border-left-color:var(--bad)}
+    .alert-pill.ok{border-left-color:var(--ok)}
+
+    /* Filter bar */
+    .filters{display:flex;gap:12px;align-items:center;margin:8px 0 16px}
+    .threshold-wrap{display:flex;align-items:center;gap:8px}
+    .threshold-val{font-variant-numeric:tabular-nums;font-weight:600}
+
+    /* Tables */
+    .table-wrap{background:#fff;border:1px solid var(--line);border-radius:14px;overflow:auto}
+    table{border-collapse:collapse;width:100%;min-width:860px}
+    thead th{position:sticky;top:0;background:var(--panel-2);z-index:1;border-bottom:1px solid var(--line)}
+    th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+    tbody tr:hover{background:#fafafa}
+
+    /* Badges & chips */
+    .badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:12px;border:1px solid var(--line);background:var(--chip);color:var(--chip-ink)}
+    .badge.ok{background:#ecfdf5;border-color:#bbf7d0;color:#065f46}
+    .badge.warn{background:#fff7ed;border-color:#fed7aa;color:#7c2d12}
+    .badge.danger{background:#fef2f2;border-color:#fecaca;color:#7f1d1d}
+    .chip{display:inline-block;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:2px 8px;font-size:12px;color:var(--muted)}
+
+    /* Cards grid */
+    .cards{display:grid;grid-template-columns:repeat(12,1fr);gap:12px}
+    .card{grid-column:span 6;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:8px}
+    .card h4{margin:0;font-size:14px}
+    .card-row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .card-badges{display:flex;gap:6px;flex-wrap:wrap}
+    .card .btn{align-self:flex-start}
+    @media (max-width: 700px){.card{grid-column:span 12}}
+
+    /* Section headers */
+    section{margin:22px 0}
+    section > header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+    section h2{font-size:18px;margin:0}
+    .sub{color:var(--muted)}
+
+    /* Error/empty bars */
+    .bar{border:1px dashed var(--line);border-radius:12px;padding:12px;background:var(--panel)}
+    .bar.error{border-color:#fecaca;background:#fef2f2;color:#7f1d1d}
+    .bar.empty{color:var(--muted)}
+
+    /* Marking list */
+    .list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+    .list-item{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px}
+    .muted{color:var(--muted)}
+
+    /* Dialog */
+    dialog{border:none;border-radius:16px;padding:0;max-width:520px;width:calc(100% - 24px)}
+    dialog::backdrop{background:rgba(2,6,23,.45)}
+    .modal{display:flex;flex-direction:column}
+    .modal header{padding:14px 16px;border-bottom:1px solid var(--line);background:var(--panel-2)}
+    .modal header h3{margin:0;font-size:16px}
+    .modal .body{padding:16px;display:flex;flex-direction:column;gap:10px}
+    .modal .row{display:flex;gap:10px}
+    .modal .row > *{flex:1}
+    .modal footer{padding:12px 16px;border-top:1px solid var(--line);display:flex;gap:8px;justify-content:flex-end}
+    label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}
+    input[type="text"], input[type="number"], textarea, select{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;font:inherit}
+    textarea{min-height:88px;resize:vertical}
+
+    /* Toasts */
+    #toast{position:fixed;right:16px;bottom:16px;display:flex;flex-direction:column;gap:8px;z-index:99}
+    .toast{background:#111827;color:#fff;border-radius:12px;padding:10px 12px;box-shadow:0 6px 24px rgba(0,0,0,.2)}
+
+    /* Sticky header label for Budget */
+    .scope-select{display:flex;gap:8px;align-items:center}
+    .sr-only{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="top" aria-label="Page header">
+      <div class="page-title">Unit Coordinator Dashboard</div>
+      <div class="top-actions">
+        <button class="btn" id="btn-refresh" aria-label="Refresh data">↻ Refresh</button>
+        <button class="btn primary" id="btn-open-marking" aria-haspopup="dialog" aria-controls="modal-marking">Assign Marking Hours</button>
+      </div>
+    </header>
+
+    <!-- Alerts -->
+    <section aria-labelledby="alerts-h">
+      <h2 id="alerts-h">Alerts</h2>
+      <div id="uc-alerts" role="region" aria-label="Alerts bar"></div>
+      <div id="uc-alerts-empty" class="bar empty" hidden>Nothing urgent right now.</div>
+    </section>
+
+    <!-- Budget Overview -->
+    <section aria-labelledby="budget-h">
+      <header>
+        <div>
+          <h2 id="budget-h">Budget Overview</h2>
+          <div class="sub">Per unit offering</div>
+        </div>
+        <div class="filters" role="toolbar" aria-label="Budget filters">
+          <div class="scope-select">
+            <label for="scope" class="sr-only">Scope</label>
+            <select id="scope" aria-label="Scope">
+              <option value="session">This Session</option>
+              <option value="all">All Sessions</option>
+            </select>
+          </div>
+          <div class="threshold-wrap">
+            <label for="threshold">Open threshold</label>
+            <input id="threshold" type="range" min="50" max="100" step="1" value="90" aria-valuemin="50" aria-valuemax="100" aria-valuenow="90"/>
+            <span class="threshold-val" id="threshold-val">90%</span>
+          </div>
+          <button class="btn" id="btn-save-threshold" aria-label="Save threshold">Save</button>
+        </div>
+      </header>
+      <div class="table-wrap" id="budget-wrap" role="region" aria-label="Budget table">
+        <table aria-describedby="budget-h">
+          <thead>
+            <tr>
+              <th>Unit</th>
+              <th>Year</th>
+              <th>Session</th>
+              <th>Budget</th>
+              <th>Spent</th>
+              <th>% Used</th>
+              <th>Forecast (Wk)</th>
+              <th>Variance</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="budget-rows"></tbody>
+        </table>
+      </div>
+      <div id="budget-empty" class="bar empty" hidden>No budget rows.</div>
+      <div id="budget-error" class="bar error" hidden>Could not load budget. <button class="btn" id="retry-budget">Retry</button></div>
+    </section>
+
+    <!-- UC Approvals -->
+    <section aria-labelledby="approvals-h">
+      <header>
+        <div>
+          <h2 id="approvals-h">UC Approvals</h2>
+          <div class="sub">Items awaiting your review</div>
+        </div>
+        <a id="approvals-viewall" href="#" class="btn ghost" aria-label="View all approvals">View all</a>
+      </header>
+      <div class="table-wrap" id="approvals-wrap" role="region" aria-label="Approvals table">
+        <table aria-describedby="approvals-h">
+          <thead>
+            <tr>
+              <th>Type</th>
+              <th>Submitted by</th>
+              <th>Target</th>
+              <th>Reason</th>
+              <th>Status</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="approvals-rows"></tbody>
+        </table>
+      </div>
+      <div id="approvals-empty" class="bar empty" hidden>Nothing to review.</div>
+      <div id="approvals-error" class="bar error" hidden>Could not load approvals. <button class="btn" id="retry-approvals">Retry</button></div>
+    </section>
+
+    <!-- Requests requiring attention -->
+    <section aria-labelledby="flags-h">
+      <header>
+        <div>
+          <h2 id="flags-h">Requests Requiring Attention</h2>
+          <div class="sub">Flagged queues</div>
+        </div>
+      </header>
+      <div id="flags" class="cards" role="region" aria-label="Flagged request groups"></div>
+      <div id="flags-empty" class="bar empty" hidden>No flagged items.</div>
+      <div id="flags-error" class="bar error" hidden>Could not load flagged requests. <button class="btn" id="retry-flags">Retry</button></div>
+    </section>
+
+    <!-- Marking hours -->
+    <section aria-labelledby="marking-h">
+      <header>
+        <div>
+          <h2 id="marking-h">Marking Hours</h2>
+          <div class="sub">Manual allocations</div>
+        </div>
+      </header>
+      <ul id="marking-list" class="list" aria-live="polite"></ul>
+      <div id="marking-empty" class="bar empty" hidden>No marking allocations yet.</div>
+      <div id="marking-error" class="bar error" hidden>Could not load marking hours. <button class="btn" id="retry-marking">Retry</button></div>
+    </section>
+  </div>
+
+  <!-- Assign Marking Modal -->
+  <dialog id="modal-marking" aria-labelledby="marking-title" aria-modal="true">
+    <form method="dialog" class="modal" id="marking-form">
+      <header>
+        <h3 id="marking-title">Assign Marking Hours</h3>
+      </header>
+      <div class="body">
+        <div class="row">
+          <div>
+            <label for="mk-offering">Offering ID</label>
+            <input id="mk-offering" name="offering_id" type="number" required inputmode="numeric" />
+          </div>
+          <div>
+            <label for="mk-email">Tutor email</label>
+            <input id="mk-email" name="tutor_email" type="text" placeholder="tutor@example.edu" required />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="mk-hours">Hours</label>
+            <input id="mk-hours" name="hours" type="number" min="0" step="0.5" required />
+          </div>
+          <div>
+            <label for="mk-desc">Description</label>
+            <input id="mk-desc" name="description" type="text" placeholder="e.g., A2 marking – 60 scripts" required />
+          </div>
+        </div>
+      </div>
+      <footer>
+        <button type="button" class="btn" value="cancel" id="mk-cancel">Cancel</button>
+        <button type="submit" class="btn primary" id="mk-submit">Submit</button>
+      </footer>
+    </form>
+  </dialog>
+
+  <div id="toast" aria-live="polite" aria-atomic="true"></div>
+
+  <script>
+  // ============================
+  // Config & utilities
+  // ============================
+  const USE_MOCKS_WHEN_FETCH_FAILS = true; // If a fetch fails, gracefully fall back to mocks below.
+  const STATE = {
+    threshold: 0.9,
+    scope: 'session', // 'session' | 'all'
+    selectedOfferingId: null,
+    budgets: [],
+  };
+
+  // Generic JSON fetch wrapper
+  async function apiFetch(url, options){
+    try{
+      const res = await fetch(url, Object.assign({headers:{'Content-Type':'application/json'}}, options||{}));
+      if(!res.ok) throw new Error('HTTP '+res.status);
+      const ct = res.headers.get('content-type')||'';
+      if(ct.includes('application/json')) return await res.json();
+      return null;
+    }catch(err){
+      console.warn('apiFetch failed:', url, err);
+      if(USE_MOCKS_WHEN_FETCH_FAILS) return null; // caller will inject mocks
+      throw err;
+    }
+  }
+
+  // Toast helper
+  function toast(msg){
+    const host=document.getElementById('toast');
+    const el=document.createElement('div');
+    el.className='toast';
+    el.textContent=msg;
+    host.appendChild(el);
+    setTimeout(()=>{el.remove();}, 3200);
+  }
+
+  // Number & currency helpers
+  const fmt = new Intl.NumberFormat(undefined, {maximumFractionDigits:1});
+  const fmt0 = new Intl.NumberFormat(undefined, {maximumFractionDigits:0});
+  const money = v => new Intl.NumberFormat(undefined, {style:'currency', currency:'AUD', maximumFractionDigits:0}).format(v);
+
+  // Badge class by percent used
+  function usageBadgeClass(pct){
+    if (pct >= 100) return 'danger';
+    if (pct >= 90) return 'warn';
+    return 'ok';
+  }
+
+  // Accessible safe setHTML utility
+  function setHTML(el, html){ el.innerHTML = html; }
+
+  // ============================
+  // Mocks (used only if endpoints fail)
+  // ============================
+  const MOCKS = {
+    budget_overview: {
+      rows: [
+        { offering_id:101, unit_code:'INFO1110', year:2025, session_code:'S2', budget:120000, spent:108500, pct_used:90.4, forecast_week:4200, variance:-7300, status:'Open' },
+        { offering_id:102, unit_code:'INFO1910', year:2025, session_code:'S2', budget:90000,  spent:45500,  pct_used:50.6, forecast_week:null, variance:44500, status:'Healthy' },
+        { offering_id:103, unit_code:'DATA2002', year:2025, session_code:'S2', budget:135000, spent:136200, pct_used:100.9, forecast_week:1200, variance:-2400, status:'Open' },
+      ],
+      threshold: 0.9,
+    },
+    approvals: {
+      items: [
+        { id:241, type:'Claim(diff)', submitted_by:'A. Singh', target:{unit:'INFO1910', date:'2025-09-12', time:'15:00'}, reason:'+0.5h over', status:'Review' },
+        { id:242, type:'Correction',  submitted_by:'G. Li',    target:{unit:'INFO1110', date:'2025-09-13', time:'14:00'}, reason:'Roster mismatch', status:'Review' },
+        { id:243, type:'Policy',      submitted_by:'D. Tran',   target:{unit:'INFO1910', date:'2025-09-15', time:'09:00'}, reason:'Cross-campus', status:'Review' },
+      ],
+      total: 17,
+    },
+    flags: {
+      groups: [
+        { title:'Flagged Pending (Tutors)', items:[{ request_id:221, label:'Swap • INFO1110 • 12/09 • 3pm', badges:['Pending >48h'], cta:{text:'View', href:'/uc/requests/221'} }] },
+        { title:'Escalations (Teaching Assistants)', items:[{ request_id:246, label:'Swap • Cross-campus tutor', badges:['Policy check'], cta:{text:'Review', href:'/uc/requests/246'} }] },
+      ]
+    },
+    marking: {
+      items: [
+        { id:501, tutor:'j.smith@usyd.edu.au', hours:12.0, description:'A2 marking – 60 scripts', status:'pending' },
+        { id:502, tutor:'alex.tutor@usyd.edu.au', hours:8.0, description:'Quiz 3 marking', status:'approved' },
+      ]
+    },
+    alerts: {
+      // Expected shapes supported:
+      // { alerts: [{id, text, level:"info|warning|danger", cta?:{text, href}}] }
+      // or { items: [...] } or { rows: [...] }
+      alerts: [
+        { id:1, text:'INFO1110 is at 90% budget used.', level:'warning', cta:{text:'Open budget', href:'#budget-h'} },
+        { id:2, text:'2 escalations awaiting review.', level:'danger', cta:{text:'View approvals', href:'#approvals-h'} },
+      ]
+    },
+  };
+
+  // ============================
+  // Renderers
+  // ============================
+  function renderAlerts(data){
+    const host = document.getElementById('uc-alerts');
+    host.innerHTML = '';
+    const items = (data && (data.alerts||data.items||data.rows)) || [];
+    if(!items.length){ document.getElementById('uc-alerts-empty').hidden=false; return; }
+    document.getElementById('uc-alerts-empty').hidden=true;
+
+    for(const a of items){
+      const level = (a.level||'info');
+      const cls = level==='danger'?'bad': level==='warning'?'warn':'ok';
+      const pill = document.createElement('div');
+      pill.className = `alert-pill ${cls}`;
+      pill.innerHTML = `<span class="msg">${a.text||a.label||'Notice'}</span>`;
+      if(a.cta){
+        const link = document.createElement('a');
+        link.className = 'btn'; link.href = a.cta.href; link.textContent = a.cta.text;
+        pill.appendChild(link);
+      }
+      const dismiss = document.createElement('button');
+      dismiss.className='btn ghost'; dismiss.setAttribute('aria-label','Dismiss'); dismiss.textContent='✕';
+      dismiss.addEventListener('click',()=> pill.remove());
+      pill.appendChild(dismiss);
+      host.appendChild(pill);
+    }
+  }
+
+  function renderBudgetOverview(rows, threshold){
+    const body = document.getElementById('budget-rows');
+    body.innerHTML='';
+    if(!rows || !rows.length){ document.getElementById('budget-empty').hidden=false; return; }
+    document.getElementById('budget-empty').hidden=true;
+
+    // Remember first offering id for default modal value
+    STATE.selectedOfferingId = rows[0]?.offering_id || null;
+    const mkOffering = document.getElementById('mk-offering');
+    if(STATE.selectedOfferingId && mkOffering && !mkOffering.value){ mkOffering.value = STATE.selectedOfferingId; }
+
+    for(const r of rows){
+      const tr = document.createElement('tr');
+      const pct = typeof r.pct_used==='number' ? r.pct_used : (r.budget? (r.spent / r.budget * 100) : 0);
+      const pctCls = usageBadgeClass(pct);
+      const variance = (typeof r.variance==='number') ? r.variance : ((r.budget||0) - ((r.spent||0) + (r.forecast_week||0||0)));
+      const varCls = variance < 0 ? 'danger' : 'ok';
+      const status = (pct/100 >= threshold) ? 'Open' : 'Healthy';
+
+      tr.innerHTML = `
+        <td><strong>${r.unit_code}</strong></td>
+        <td>${r.year}</td>
+        <td>${r.session_code}</td>
+        <td>${money(r.budget)}</td>
+        <td>${money(r.spent)}</td>
+        <td><span class="badge ${pctCls}">${fmt.format(pct)}%</span></td>
+        <td>${(r.forecast_week ?? null) === null ? '—' : money(r.forecast_week)}</td>
+        <td><span class="badge ${varCls}">${variance<0?'-':''}${money(Math.abs(variance))}</span></td>
+        <td>${status==='Open'?`<span class="badge warn">Open</span>`:`<span class="badge ok">Healthy</span>`}</td>
+      `;
+      body.appendChild(tr);
+    }
+  }
+
+  function renderApprovals(payload){
+    const rows = payload?.items || [];
+    const body = document.getElementById('approvals-rows');
+    body.innerHTML='';
+    const empty = document.getElementById('approvals-empty');
+    const link = document.getElementById('approvals-viewall');
+    if(payload?.total){ link.href = '/uc/approvals?status=pending'; link.textContent = `View all (${payload.total})`; }
+    if(!rows.length){ empty.hidden=false; return; }
+    empty.hidden=true;
+
+    for(const it of rows){
+      const tr = document.createElement('tr');
+      const target = it.target ? `${it.target.unit||''} • ${it.target.date||''} • ${it.target.time||''}` : '-';
+      tr.innerHTML = `
+        <td>${it.type||'-'}</td>
+        <td>${it.submitted_by||'-'}</td>
+        <td>${target}</td>
+        <td>${it.reason||'-'}</td>
+        <td><span class="chip">${it.status||'-'}</span></td>
+        <td><a class="btn" href="/uc/requests/${it.id}" aria-label="Review ${it.type}">Review</a></td>
+      `;
+      body.appendChild(tr);
+    }
+  }
+
+  function renderFlags(payload){
+    const host = document.getElementById('flags');
+    host.innerHTML='';
+    const groups = payload?.groups || [];
+    if(!groups.length){ document.getElementById('flags-empty').hidden=false; return; }
+    document.getElementById('flags-empty').hidden=true;
+
+    for(const g of groups){
+      const card = document.createElement('div');
+      card.className='card';
+      const h = document.createElement('h4'); h.textContent = g.title || 'Group'; card.appendChild(h);
+      if(!(g.items||[]).length){
+        const d = document.createElement('div'); d.className='muted'; d.textContent='No items'; card.appendChild(d);
+      }
+      for(const it of (g.items||[])){
+        const row = document.createElement('div'); row.className='card-row';
+        const left = document.createElement('div'); left.textContent = it.label; row.appendChild(left);
+        const right = document.createElement('div'); right.className='card-badges';
+        (it.badges||[]).forEach(b=>{ const s=document.createElement('span'); s.className='badge'; s.textContent=b; right.appendChild(s); });
+        if(it.cta){ const a=document.createElement('a'); a.className='btn'; a.href=it.cta.href; a.textContent=it.cta.text; right.appendChild(a); }
+        row.appendChild(right);
+        card.appendChild(row);
+      }
+      host.appendChild(card);
+    }
+  }
+
+  function renderMarking(payload){
+    const items = payload?.items || [];
+    const list = document.getElementById('marking-list');
+    list.innerHTML='';
+    if(!items.length){ document.getElementById('marking-empty').hidden=false; return; }
+    document.getElementById('marking-empty').hidden=true;
+
+    for(const it of items){
+      const li = document.createElement('li'); li.className='list-item';
+      li.innerHTML = `
+        <div>
+          <div><strong>${it.tutor}</strong> • ${fmt.format(it.hours)}h</div>
+          <div class="muted">${it.description}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="chip">${it.status}</span>
+          <button class="btn" ${it.status==='pending' ? 'disabled' : ''} aria-label="Cancel request ${it.id}">Cancel</button>
+        </div>
+      `;
+      list.appendChild(li);
+    }
+  }
+
+  // ============================
+  // Loaders
+  // ============================
+  async function loadAlerts(){
+    document.getElementById('uc-alerts-empty').hidden=true;
+    const res = await apiFetch('/api/uc/alerts');
+    if(!res){ renderAlerts(MOCKS.alerts); return; }
+    renderAlerts(res);
+  }
+
+  async function loadBudget(){
+    document.getElementById('budget-error').hidden=true;
+    const q = STATE.scope==='all' ? '?scope=all' : '';
+    const res = await apiFetch(`/api/uc/budget/overview${q}`);
+    const data = res || MOCKS.budget_overview;
+    try{
+      STATE.threshold = (res?.threshold ?? STATE.threshold);
+      document.getElementById('threshold').value = Math.round((STATE.threshold||0.9)*100);
+      document.getElementById('threshold-val').textContent = Math.round((STATE.threshold||0.9)*100)+'%';
+      STATE.budgets = data.rows || [];
+      renderBudgetOverview(STATE.budgets, STATE.threshold||0.9);
+    }catch(e){
+      document.getElementById('budget-error').hidden=false;
+    }
+  }
+
+  async function loadApprovals(){
+    document.getElementById('approvals-error').hidden=true;
+    const res = await apiFetch('/api/uc/approvals?status=pending&limit=5');
+    try{
+      renderApprovals(res || MOCKS.approvals);
+    }catch(e){
+      document.getElementById('approvals-error').hidden=false;
+    }
+  }
+
+  async function loadFlags(){
+    document.getElementById('flags-error').hidden=true;
+    const res = await apiFetch('/api/uc/requests/flags');
+    try{
+      renderFlags(res || MOCKS.flags);
+    }catch(e){
+      document.getElementById('flags-error').hidden=false;
+    }
+  }
+
+  async function loadMarking(offeringId){
+    document.getElementById('marking-error').hidden=true;
+    const id = offeringId || STATE.selectedOfferingId || 101;
+    const res = await apiFetch(`/api/uc/marking?offering=${encodeURIComponent(id)}`);
+    try{
+      renderMarking(res || MOCKS.marking);
+    }catch(e){
+      document.getElementById('marking-error').hidden=false;
+    }
+  }
+
+  // ============================
+  // Events & interactions
+  // ============================
+  function wireEvents(){
+    document.getElementById('btn-refresh').addEventListener('click', async()=>{
+      await Promise.all([loadAlerts(), loadBudget(), loadApprovals(), loadFlags(), loadMarking()]);
+      toast('Refreshed');
+    });
+
+    // Scope filter
+    document.getElementById('scope').addEventListener('change', (e)=>{
+      STATE.scope = e.target.value;
+      loadBudget();
+    });
+
+    // Threshold slider & save
+    const thr = document.getElementById('threshold');
+    thr.addEventListener('input', (e)=>{
+      const v = Number(e.target.value)/100;
+      document.getElementById('threshold-val').textContent = Math.round(v*100)+'%';
+      // Live recolor without saving
+      renderBudgetOverview(STATE.budgets, v);
+    });
+    document.getElementById('btn-save-threshold').addEventListener('click', async()=>{
+      const v = Number(document.getElementById('threshold').value)/100;
+      const res = await apiFetch('/api/uc/settings', {method:'POST', body: JSON.stringify({ threshold: v })});
+      if(res || USE_MOCKS_WHEN_FETCH_FAILS){ STATE.threshold = v; toast('Threshold saved'); }
+      else toast('Failed to save threshold');
+    });
+
+    // Retry buttons
+    document.getElementById('retry-budget').addEventListener('click', loadBudget);
+    document.getElementById('retry-approvals').addEventListener('click', loadApprovals);
+    document.getElementById('retry-flags').addEventListener('click', loadFlags);
+    document.getElementById('retry-marking').addEventListener('click', ()=>loadMarking());
+
+    // Modal open/close
+    const dlg = document.getElementById('modal-marking');
+    const openBtn = document.getElementById('btn-open-marking');
+    const closeBtn = document.getElementById('mk-cancel');
+    const form = document.getElementById('marking-form');
+
+    function openModal(){
+      try{
+        if(STATE.selectedOfferingId) document.getElementById('mk-offering').value = STATE.selectedOfferingId;
+        dlg.showModal();
+      }catch(e){ dlg.setAttribute('open',''); }
+      document.getElementById('mk-email').focus();
+    }
+    function closeModal(){
+      try{ dlg.close(); }catch(e){ dlg.removeAttribute('open'); }
+    }
+    openBtn.addEventListener('click', openModal);
+    closeBtn.addEventListener('click', (e)=>{ e.preventDefault(); closeModal(); });
+
+    // Escape to close (safety for non-dialog browsers)
+    document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && dlg.hasAttribute('open')) closeModal(); });
+
+    // Submit -> POST /api/uc/marking with optimistic UI
+    form.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const fd = new FormData(form);
+      const payload = {
+        offering_id: Number(fd.get('offering_id')),
+        tutor_email: String(fd.get('tutor_email')).trim(),
+        hours: Number(fd.get('hours')),
+        description: String(fd.get('description')).trim(),
+      };
+      // Optimistic append
+      const optimistic = { id: Math.floor(Math.random()*1e6), tutor: payload.tutor_email, hours: payload.hours, description: payload.description, status:'pending' };
+      const cur = document.getElementById('marking-list');
+      if(cur){
+        const li = document.createElement('li'); li.className='list-item';
+        li.innerHTML = `
+          <div>
+            <div><strong>${optimistic.tutor}</strong> • ${fmt.format(optimistic.hours)}h</div>
+            <div class="muted">${optimistic.description}</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span class="chip">pending</span>
+            <button class="btn" disabled aria-label="Cancel request ${optimistic.id}">Cancel</button>
+          </div>
+        `;
+        cur.prepend(li);
+        document.getElementById('marking-empty').hidden=true;
+      }
+
+      // Fire request
+      const res = await apiFetch('/api/uc/marking', {method:'POST', body: JSON.stringify(payload)});
+      if(res || USE_MOCKS_WHEN_FETCH_FAILS){ toast('Sent for admin approval'); closeModal(); form.reset(); }
+      else toast('Failed to submit');
+    });
+  }
+
+  // ============================
+  // Boot
+  // ============================
+  (async function init(){
+    wireEvents();
+    await Promise.all([loadAlerts(), loadBudget(), loadApprovals(), loadFlags(), loadMarking()]);
+  })();
+
+  // ============================
+  // API shapes (for the other AI):
+  // ============================
+  // GET /api/uc/budget/overview?[scope=session|all]
+  // -> { rows:[{ offering_id, unit_code, year, session_code, budget, spent, pct_used, forecast_week|null, variance, status }], threshold:0.9 }
+  // GET /api/uc/approvals?status=pending&limit=5
+  // -> { items:[{ id, type, submitted_by, target:{unit,date,time}, reason, status }], total }
+  // GET /api/uc/requests/flags
+  // -> { groups:[{ title, items:[{ request_id, label, badges:[...], cta:{text, href} }]}] }
+  // GET /api/uc/marking?offering=ID
+  // -> { items:[{ id, tutor, hours, description, status }] }
+  // POST /api/uc/marking { offering_id, tutor_email, hours, description }
+  // -> { ok:true, id }
+  // POST /api/uc/settings { threshold }
+  // -> { ok:true, threshold }
+  // GET /api/uc/alerts (flexible; any of the following keys is accepted: alerts|items|rows)
+  // -> { alerts:[{ id, text, level:"info|warning|danger", cta?:{text, href} }] }
+  </script>
+</body>
+</html>

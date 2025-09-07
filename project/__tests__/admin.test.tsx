@@ -62,4 +62,37 @@ describe("AdminDashboard", () => {
     expect(screen.getByText("Budgets Loaded")).toBeInTheDocument();
     expect(screen.getByText("Validation Reports")).toBeInTheDocument();
   });
+  test("admin info boxes display correct statistics and styling", () => {
+    render(
+      <div>
+        <AdminInfoBox
+          adminStatistic={42}
+          title="Users"
+          bubbleText="directory"
+          bubbleColor="red"
+        />
+        <AdminInfoBox
+          adminStatistic={100}
+          title="Success"
+          bubbleText="request"
+          bubbleColor="green"
+        />
+      </div>,
+    );
+
+    // Users box
+    expect(screen.getByText("Users")).toBeInTheDocument();
+    expect(screen.getByText("42")).toBeInTheDocument();
+    const redBubble = screen.getByRole("button", { name: /directory/i });
+    expect(redBubble).toHaveStyle({ backgroundColor: "rgb(255, 0, 0)" });
+
+    // Success box
+    expect(screen.getByText("Success")).toBeInTheDocument();
+    expect(screen.getByText("100")).toBeInTheDocument();
+    const greenBubble = screen.getByRole("button", { name: /request/i });
+    // more lenient: accept "rgb(0, 128, 0)" or "green"
+    expect(greenBubble).toHaveStyle({
+      backgroundColor: expect.stringMatching(/green|rgb\(0,\s*128,\s*0\)/),
+    });
+  });
 });

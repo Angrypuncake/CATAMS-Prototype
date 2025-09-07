@@ -1,5 +1,11 @@
 import "@testing-library/jest-dom";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  act,
+} from "@testing-library/react";
 import AdminDashboard from "../app/dashboard/admin/page";
 import axios from "axios";
 import AdminBudgetBox from "@/app/dashboard/admin/AdminBudgetBox";
@@ -20,14 +26,18 @@ jest.mock("axios", () => ({
 }));
 
 describe("AdminDashboard", () => {
-  test("renders admin dashboard title", () => {
-    render(<AdminDashboard />);
+  test("renders admin dashboard title", async () => {
+    await act(async () => {
+      render(<AdminDashboard />);
+    });
 
     expect(screen.getByText("System Admin Dashboard")).toBeInTheDocument();
   });
 
-  test("renders main sections", () => {
-    render(<AdminDashboard />);
+  test("renders main sections", async () => {
+    await act(async () => {
+      render(<AdminDashboard />);
+    });
 
     expect(screen.getByText("User & Role Management")).toBeInTheDocument();
     expect(screen.getByText("Budgets Loaded")).toBeInTheDocument();
@@ -37,17 +47,23 @@ describe("AdminDashboard", () => {
     ).toBeInTheDocument();
   });
 
-  test("renders action buttons", () => {
-    render(<AdminDashboard />);
+  test("renders action buttons", async () => {
+    await act(async () => {
+      render(<AdminDashboard />);
+    });
 
     expect(screen.getByText("Refresh")).toBeInTheDocument();
     expect(screen.getByText("Bulk Import Allocations")).toBeInTheDocument();
   });
 
-  test("applies correct CSS classes and styling", () => {
-    const { container } = render(<AdminDashboard />);
+  test("applies correct CSS classes and styling", async () => {
+    let container: HTMLElement;
+    await act(async () => {
+      const result = render(<AdminDashboard />);
+      container = result.container;
+    });
 
-    const mainContainer = container.firstElementChild;
+    const mainContainer = container!.firstElementChild;
     expect(mainContainer).toHaveClass(
       "h-screen",
       "flex",
@@ -56,7 +72,7 @@ describe("AdminDashboard", () => {
       "gap-3",
     );
 
-    const whiteSections = container.querySelectorAll(".bg-white.rounded-3xl");
+    const whiteSections = container!.querySelectorAll(".bg-white.rounded-3xl");
     expect(whiteSections.length).toBeGreaterThan(0);
 
     expect(screen.getByText("Budgets Loaded")).toBeInTheDocument();

@@ -11,7 +11,6 @@ describe("DynamicTable", () => {
 
     render(<DynamicTable rows={mockData} />);
 
-    // Check headers are formatted correctly (capitalize and replace underscores)
     expect(screen.getByText("Name")).toBeInTheDocument();
     expect(screen.getByText("Email")).toBeInTheDocument();
     expect(screen.getByText("Role")).toBeInTheDocument();
@@ -43,14 +42,11 @@ describe("DynamicTable", () => {
 
     render(<DynamicTable rows={mockData} />);
 
-    // Should not display ID column header
     expect(screen.queryByText("Id")).not.toBeInTheDocument();
     expect(screen.queryByText("ID")).not.toBeInTheDocument();
 
-    // Should not display ID value
     expect(screen.queryByText("123")).not.toBeInTheDocument();
 
-    // Should display other columns
     expect(screen.getByText("Name")).toBeInTheDocument();
     expect(screen.getByText("Value")).toBeInTheDocument();
     expect(screen.getByText("Test")).toBeInTheDocument();

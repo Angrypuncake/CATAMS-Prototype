@@ -2,16 +2,14 @@ import "@testing-library/jest-dom";
 import {
   render,
   screen,
-  fireEvent,
   waitFor,
   act,
+  fireEvent,
 } from "@testing-library/react";
 import AdminDashboard from "../app/dashboard/admin/page";
-import axios from "axios";
-import AdminBudgetBox from "@/app/dashboard/admin/AdminBudgetBox";
 import AdminInfoBox from "@/app/dashboard/admin/AdminInfoBox";
+import AdminPagination from "@/app/dashboard/admin/AdminPagination";
 
-// Mock axios to prevent actual API calls during tests
 jest.mock("axios", () => ({
   get: jest.fn(() =>
     Promise.resolve({
@@ -138,17 +136,15 @@ describe("AdminDashboard", () => {
       </div>,
     );
 
-    // Users box
     expect(screen.getByText("Users")).toBeInTheDocument();
     expect(screen.getByText("42")).toBeInTheDocument();
     const redBubble = screen.getByRole("button", { name: /directory/i });
     expect(redBubble).toHaveStyle({ backgroundColor: "rgb(255, 0, 0)" });
 
-    // Success box
     expect(screen.getByText("Success")).toBeInTheDocument();
     expect(screen.getByText("100")).toBeInTheDocument();
     const greenBubble = screen.getByRole("button", { name: /request/i });
-    // more lenient: accept "rgb(0, 128, 0)" or "green"
+
     expect(greenBubble).toHaveStyle({
       backgroundColor: expect.stringMatching(/green|rgb\(0,\s*128,\s*0\)/),
     });
@@ -161,8 +157,6 @@ describe("AdminDashboard", () => {
 
     // Wait for API data to load and verify basic table structure exists
     await waitFor(() => {
-      // Check that at least some table content is rendered
-      // (The exact content may vary depending on how AdminDashboard processes the data)
       expect(screen.getByText("10")).toBeInTheDocument(); // User count from API
       expect(screen.getByText("50")).toBeInTheDocument(); // Allocation count from API
     });
@@ -171,5 +165,67 @@ describe("AdminDashboard", () => {
     // This ensures the axios mock data reached the component and DynamicTable processed it
     const tables = document.querySelectorAll("table");
     expect(tables.length).toBeGreaterThanOrEqual(0); // Tables may be rendered depending on data structure
+  });
+
+  test("pagination component functionality", () => {
+    const mockSetPage = jest.fn();
+
+    render(
+      <AdminPagination
+        page={2}
+        setPage={mockSetPage}
+        itemTotal={100}
+        itemLimit={10}
+      />,
+    );
+
+    // Check buttons are rendered
+    const prevButton = screen.getByText("Prev");
+    const nextButton = screen.getByText("Next");
+
+    expect(prevButton).toBeInTheDocument();
+    expect(nextButton).toBeInTheDocument();
+
+    // Test prev button functionality
+    fireEvent.click(prevButton);
+    expect(mockSetPage).toHaveBeenCalledWith(1);
+
+    // Test next button functionality
+    fireEvent.click(nextButton);
+    expect(mockSetPage).toHaveBeenCalledWith(3);
+
+    // Test that buttons are not disabled for middle page
+    expect(prevButton).not.toBeDisabled();
+    expect(nextButton).not.toBeDisabled();
+  });
+
+  test("pagination component edge cases", () => {
+    const mockSetPage = jest.fn();
+
+    // Test first page (prev disabled)
+    const { rerender } = render(
+      <AdminPagination
+        page={1}
+        setPage={mockSetPage}
+        itemTotal={100}
+        itemLimit={10}
+      />,
+    );
+
+    const prevButton = screen.getByText("Prev");
+    expect(prevButton).toBeDisabled();
+
+    // Test last page (next disabled)
+    rerender(
+      <AdminPagination
+        page={10}
+        setPage={mockSetPage}
+        itemTotal={100}
+        itemLimit={10}
+      />,
+    );
+
+    const nextButton = screen.getByText("Next");
+    expect(nextButton).toBeDisabled();
   });
 });

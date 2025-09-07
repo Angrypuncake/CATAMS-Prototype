@@ -1,6 +1,9 @@
 import "@testing-library/jest-dom";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import AdminDashboard from "../app/dashboard/admin/page";
+import axios from "axios";
+import AdminBudgetBox from "@/app/dashboard/admin/AdminBudgetBox";
+import AdminInfoBox from "@/app/dashboard/admin/AdminInfoBox";
 
 // Mock axios to prevent actual API calls during tests
 jest.mock("axios", () => ({

@@ -46,7 +46,6 @@ const AdminDashboard = () => {
   const loadOverview = useCallback(async () => {
     try {
       const result = await axios.get("/api/admin/overview");
-      //console.log("Overview data:", result.data);
       setAdminView({
         numUsers: Number(result.data.totals.users),
         numAllocations: Number(result.data.totals.allocations),
@@ -74,7 +73,6 @@ const AdminDashboard = () => {
         staged: dropBy(res.data.staged),
         runs: dropBy(dropCounts(res.data.runs)),
       });
-      console.log(res);
     } catch (err) {
       console.error("Failed to load history:", err);
     }

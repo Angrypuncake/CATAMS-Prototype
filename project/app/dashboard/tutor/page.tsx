@@ -56,7 +56,8 @@ const exportCSV = (
   const keys = Object.keys(data[0]);
   let csvString = keys.join(",") + "\n";
   for (const row of data) {
-    csvString += keys.map((k) => CSVRowFormatter(row[k] ?? "")).join(",") + "\n";
+    csvString +=
+      keys.map((k) => CSVRowFormatter(row[k] ?? "")).join(",") + "\n";
   }
 
   const blob = new Blob([csvString], { type: "text/csv" });
@@ -72,13 +73,14 @@ const exportCSV = (
 
 /* ========= Types ========= */
 type TutorSession = {
-  date: string | null;        // ISO date-time string
-  start_at: string | null;    // "HH:MM:SS"
-  end_at?: string | null;     // "HH:MM:SS"
+  date: string | null; // ISO date-time string
+  start_at: string | null; // "HH:MM:SS"
+  end_at?: string | null; // "HH:MM:SS"
   unit_code: string | null;
   location?: string | null;
-  status?: string | null;     // "Confirmed" | "Pending" | "Rejected" | "Reschedule" | etc.
-  actions?: string | null;    // UI label for the table button
+  status?: string | null; // "Confirmed" | "Pending" | "Rejected" | "Reschedule" | etc.
+  actions?: string | null; // UI label for the table button
+  note?: string | null;
 };
 
 /* ========= Helpers ========= */
@@ -141,14 +143,17 @@ const Page = () => {
   const statusLower = (session?.status || "").toLowerCase();
   const isConfirmed = statusLower === "confirmed";
   const isPending = statusLower === "pending";
-  const isRejected =
-    statusLower === "rejected" || statusLower === "reschedule";
+  const isRejected = statusLower === "rejected" || statusLower === "reschedule";
 
-  const endOrStart = toDate(session?.date ?? null, session?.end_at || session?.start_at || null);
+  const endOrStart = toDate(
+    session?.date ?? null,
+    session?.end_at || session?.start_at || null,
+  );
   const hasEnded = endOrStart ? endOrStart.getTime() <= Date.now() : false;
 
-  const claimDisabledReason =
-    !hasEnded ? `You can submit a claim after this session ends (${niceTime(session?.end_at || session?.start_at)})` : "";
+  const claimDisabledReason = !hasEnded
+    ? `You can submit a claim after this session ends (${niceTime(session?.end_at || session?.start_at)})`
+    : "";
 
   const hours = 20;
   const sessions = 10;
@@ -306,7 +311,9 @@ const Page = () => {
                 <TableCell className="font-bold text-center">Date</TableCell>
                 <TableCell className="font-bold text-center">Time</TableCell>
                 <TableCell className="font-bold text-center">Unit</TableCell>
-                <TableCell className="font-bold text-center">Location</TableCell>
+                <TableCell className="font-bold text-center">
+                  Location
+                </TableCell>
                 <TableCell className="font-bold text-center">Hours</TableCell>
                 <TableCell className="font-bold text-center">Status</TableCell>
                 <TableCell className="font-bold text-center">Actions</TableCell>
@@ -315,7 +322,9 @@ const Page = () => {
             <TableBody>
               {tutorSessions.map((row, index) => (
                 <TableRow key={index}>
-                  <TableCell>{row.date ? row.date.slice(0, 10) : "N/A"}</TableCell>
+                  <TableCell>
+                    {row.date ? row.date.slice(0, 10) : "N/A"}
+                  </TableCell>
                   <TableCell>
                     {row.start_at
                       ? `${niceTime(row.start_at)}–${niceTime(row.end_at)}`
@@ -323,7 +332,9 @@ const Page = () => {
                   </TableCell>
                   <TableCell>{row.unit_code ?? "N/A"}</TableCell>
                   <TableCell>{row.location ?? "N/A"}</TableCell>
-                  <TableCell>{hoursBetween(row.start_at, row.end_at)}</TableCell>
+                  <TableCell>
+                    {hoursBetween(row.start_at, row.end_at)}
+                  </TableCell>
                   <TableCell>{row.status ?? "N/A"}</TableCell>
                   <TableCell className="text-left">
                     <Button
@@ -348,14 +359,22 @@ const Page = () => {
           <Button
             variant="contained"
             size="medium"
-            onClick={() => exportCSV(tutorSessions as unknown as Record<string, string | number>[]) }
+            onClick={() =>
+              exportCSV(
+                tutorSessions as unknown as Record<string, string | number>[],
+              )
+            }
           >
             Export as CSV
           </Button>
           <Button
             variant="contained"
             size="medium"
-            onClick={() => exportJSON(tutorSessions as unknown as Record<string, string | number>[]) }
+            onClick={() =>
+              exportJSON(
+                tutorSessions as unknown as Record<string, string | number>[],
+              )
+            }
           >
             Export as JSON
           </Button>
@@ -373,7 +392,9 @@ const Page = () => {
                 <TableCell className="font-bold text-center">Time</TableCell>
                 <TableCell className="font-bold text-center">Unit</TableCell>
                 <TableCell className="font-bold text-center">Hours</TableCell>
-                <TableCell className="font-bold text-center">Description</TableCell>
+                <TableCell className="font-bold text-center">
+                  Description
+                </TableCell>
                 <TableCell className="font-bold text-center">Status</TableCell>
                 <TableCell className="font-bold text-center">Actions</TableCell>
               </TableRow>
@@ -388,7 +409,9 @@ const Page = () => {
                   <TableCell>{row.desc}</TableCell>
                   <TableCell>{row.status}</TableCell>
                   <TableCell className="text-left">
-                    <Button variant="contained" size="small">{row.actions}</Button>
+                    <Button variant="contained" size="small">
+                      {row.actions}
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -403,9 +426,13 @@ const Page = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell className="font-bold text-center">Request ID</TableCell>
+                <TableCell className="font-bold text-center">
+                  Request ID
+                </TableCell>
                 <TableCell className="font-bold text-center">Type</TableCell>
-                <TableCell className="font-bold text-center">Related Session</TableCell>
+                <TableCell className="font-bold text-center">
+                  Related Session
+                </TableCell>
                 <TableCell className="font-bold text-center">Status</TableCell>
                 <TableCell className="font-bold text-center">Actions</TableCell>
               </TableRow>
@@ -418,7 +445,9 @@ const Page = () => {
                   <TableCell>{row.relatedSession}</TableCell>
                   <TableCell>{row.status}</TableCell>
                   <TableCell className="text-left">
-                    <Button variant="contained" size="small">{row.actions}</Button>
+                    <Button variant="contained" size="small">
+                      {row.actions}
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -437,7 +466,9 @@ const Page = () => {
                 <TableCell className="font-bold text-center">Time</TableCell>
                 <TableCell className="font-bold text-center">Unit</TableCell>
                 <TableCell className="font-bold text-center">Hours</TableCell>
-                <TableCell className="font-bold text-center">Description</TableCell>
+                <TableCell className="font-bold text-center">
+                  Description
+                </TableCell>
                 <TableCell className="font-bold text-center">Status</TableCell>
                 <TableCell className="font-bold text-center">Actions</TableCell>
               </TableRow>
@@ -452,7 +483,9 @@ const Page = () => {
                   <TableCell>{row.desc}</TableCell>
                   <TableCell>{row.status}</TableCell>
                   <TableCell className="text-left">
-                    <Button variant="contained" size="small">{row.actions}</Button>
+                    <Button variant="contained" size="small">
+                      {row.actions}
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -480,7 +513,9 @@ const Page = () => {
                   <TableCell>{row.type}</TableCell>
                   <TableCell>{row.message}</TableCell>
                   <TableCell className="text-left">
-                    <Button variant="contained" size="small">{row.actions}</Button>
+                    <Button variant="contained" size="small">
+                      {row.actions}
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -490,7 +525,12 @@ const Page = () => {
       </StyledBox>
 
       {/* ---------- Allocation Quick View Modal (ONLY for My Allocations) ---------- */}
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        fullWidth
+        maxWidth="sm"
+      >
         <DialogTitle>Allocation quick view</DialogTitle>
         <DialogContent dividers>
           <Stack spacing={1.25}>
@@ -511,14 +551,22 @@ const Page = () => {
             <Divider />
 
             <Stack direction="row" spacing={1.25}>
-              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ minWidth: 120 }}
+              >
                 Date
               </Typography>
               <Box>{session?.date?.slice(0, 10) ?? "—"}</Box>
             </Stack>
 
             <Stack direction="row" spacing={1.25}>
-              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ minWidth: 120 }}
+              >
                 Time
               </Typography>
               <Box>
@@ -529,30 +577,48 @@ const Page = () => {
             </Stack>
 
             <Stack direction="row" spacing={1.25}>
-              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ minWidth: 120 }}
+              >
                 Location
               </Typography>
               <Box>{session?.location ?? "—"}</Box>
             </Stack>
 
             <Stack direction="row" spacing={1.25}>
-              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ minWidth: 120 }}
+              >
                 Unit
               </Typography>
               <Box>{session?.unit_code ?? "—"}</Box>
             </Stack>
 
             <Stack direction="row" spacing={1.25}>
-              <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ minWidth: 120 }}
+              >
                 Hours
               </Typography>
               <Box>{hoursBetween(session?.start_at, session?.end_at)}</Box>
             </Stack>
 
-            {/* Optional notes section placeholder to match wireframe */}
-            <Box sx={{ fontSize: "0.875rem", color: "text.secondary" }}>
-              Notes: Please arrive 10 minutes early to assist with setup. Ensure attendance sheet is completed.
-            </Box>
+            <Stack direction="row" spacing={1.25}>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ minWidth: 120 }}
+              >
+                Description
+              </Typography>
+              <Box>{session?.note ?? "—"}</Box>
+            </Stack>
           </Stack>
         </DialogContent>
 
@@ -567,7 +633,11 @@ const Page = () => {
               <Button
                 variant="contained"
                 disabled={!hasEnded}
-                title={!hasEnded ? claimDisabledReason : "Submit your claim for this session"}
+                title={
+                  !hasEnded
+                    ? claimDisabledReason
+                    : "Submit your claim for this session"
+                }
                 onClick={() => setOpen(false)}
               >
                 Submit Claim

@@ -99,7 +99,7 @@ export default function AllocationPage({ params }: { params: { id: string } }) {
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
         <IconButton
           component={Link}
-          href="/dashboard/tutor/allocations"
+          href="/dashboard/tutor/"
           size="small"
           aria-label="Back to Allocations"
         >

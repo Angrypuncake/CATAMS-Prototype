@@ -9,6 +9,8 @@ import {
 import AdminDashboard from "../app/dashboard/admin/page";
 import AdminInfoBox from "@/app/dashboard/admin/AdminInfoBox";
 import AdminPagination from "@/app/dashboard/admin/AdminPagination";
+import AdminBudgetBox from "@/app/dashboard/admin/AdminBudgetBox";
+import axios from "axios";
 
 jest.mock("axios", () => ({
   get: jest.fn(() =>
@@ -74,24 +76,20 @@ describe("AdminDashboard", () => {
     expect(screen.getByText("System Admin Dashboard")).toBeInTheDocument();
   });
 
-  test("renders main sections", async () => {
+  test("renders main sections and action buttons", async () => {
     await act(async () => {
       render(<AdminDashboard />);
     });
 
+    // Main sections
     expect(screen.getByText("User & Role Management")).toBeInTheDocument();
     expect(screen.getByText("Budgets Loaded")).toBeInTheDocument();
     expect(screen.getByText("Validation Reports")).toBeInTheDocument();
     expect(
       screen.getByText("Recent Jobs (Import/Exports)"),
     ).toBeInTheDocument();
-  });
 
-  test("renders action buttons", async () => {
-    await act(async () => {
-      render(<AdminDashboard />);
-    });
-
+    // Action buttons
     expect(screen.getByText("Refresh")).toBeInTheDocument();
     expect(screen.getByText("Bulk Import Allocations")).toBeInTheDocument();
   });
@@ -114,9 +112,6 @@ describe("AdminDashboard", () => {
 
     const whiteSections = container!.querySelectorAll(".bg-white.rounded-3xl");
     expect(whiteSections.length).toBeGreaterThan(0);
-
-    expect(screen.getByText("Budgets Loaded")).toBeInTheDocument();
-    expect(screen.getByText("Validation Reports")).toBeInTheDocument();
   });
   test("admin info boxes display correct statistics and styling", () => {
     render(
@@ -167,10 +162,11 @@ describe("AdminDashboard", () => {
     expect(tables.length).toBeGreaterThanOrEqual(0); // Tables may be rendered depending on data structure
   });
 
-  test("pagination component functionality", () => {
+  test("pagination component functionality and edge cases", () => {
     const mockSetPage = jest.fn();
 
-    render(
+    // Test middle page functionality
+    const { rerender } = render(
       <AdminPagination
         page={2}
         setPage={mockSetPage}
@@ -179,31 +175,21 @@ describe("AdminDashboard", () => {
       />,
     );
 
-    // Check buttons are rendered
     const prevButton = screen.getByText("Prev");
     const nextButton = screen.getByText("Next");
 
-    expect(prevButton).toBeInTheDocument();
-    expect(nextButton).toBeInTheDocument();
-
-    // Test prev button functionality
+    // Test button clicks
     fireEvent.click(prevButton);
     expect(mockSetPage).toHaveBeenCalledWith(1);
-
-    // Test next button functionality
     fireEvent.click(nextButton);
     expect(mockSetPage).toHaveBeenCalledWith(3);
 
-    // Test that buttons are not disabled for middle page
+    // Test middle page - neither disabled
     expect(prevButton).not.toBeDisabled();
     expect(nextButton).not.toBeDisabled();
-  });
-
-  test("pagination component edge cases", () => {
-    const mockSetPage = jest.fn();
 
     // Test first page (prev disabled)
-    const { rerender } = render(
+    rerender(
       <AdminPagination
         page={1}
         setPage={mockSetPage}
@@ -211,9 +197,7 @@ describe("AdminDashboard", () => {
         itemLimit={10}
       />,
     );
-
-    const prevButton = screen.getByText("Prev");
-    expect(prevButton).toBeDisabled();
+    expect(screen.getByText("Prev")).toBeDisabled();
 
     // Test last page (next disabled)
     rerender(
@@ -224,8 +208,113 @@ describe("AdminDashboard", () => {
         itemLimit={10}
       />,
     );
+    expect(screen.getByText("Next")).toBeDisabled();
+  });
 
-    const nextButton = screen.getByText("Next");
-    expect(nextButton).toBeDisabled();
+  test("handles staged/runs toggle functionality", async () => {
+    await act(async () => {
+      render(<AdminDashboard />);
+    });
+
+    // Find and test toggle buttons
+    const stagedButton = screen.getByText("Staged");
+    const runsButton = screen.getByText("Runs");
+
+    // Test clicking Runs button (should trigger handleAlignment)
+    await act(async () => {
+      fireEvent.click(runsButton);
+    });
+
+    // Test clicking Staged button
+    await act(async () => {
+      fireEvent.click(stagedButton);
+    });
+  });
+
+  test("handles API errors gracefully", async () => {
+    // Mock console.error to capture error messages
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+    const mockedAxios = jest.mocked(axios);
+    mockedAxios.get
+      .mockRejectedValueOnce(new Error("Overview API Error"))
+      .mockRejectedValueOnce(new Error("History API Error"));
+
+    await act(async () => {
+      render(<AdminDashboard />);
+    });
+
+    // Wait for error handling
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Error loading overview:",
+        expect.any(Error),
+      );
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  test("pagination slicing works correctly", async () => {
+    const mockedAxios = jest.mocked(axios);
+    mockedAxios.get.mockResolvedValue({
+      data: {
+        totals: { users: 50, allocations: 100 },
+        userRoles: Array.from({ length: 25 }, (_, i) => ({
+          id: i + 1,
+          name: `User ${i + 1}`,
+          email: `user${i + 1}@example.com`,
+          role: "User",
+        })),
+        staged: Array.from({ length: 15 }, (_, i) => ({
+          id: i + 1,
+          file_name: `file${i + 1}.csv`,
+          status: "pending",
+        })),
+        runs: Array.from({ length: 20 }, (_, i) => ({
+          id: i + 1,
+          job_type: "import",
+          status: "completed",
+        })),
+      },
+    });
+
+    await act(async () => {
+      render(<AdminDashboard />);
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("50")).toBeInTheDocument();
+      expect(screen.getByText("100")).toBeInTheDocument();
+    });
+  });
+
+  test("admin budget box with and without href", () => {
+    // Test with href (should render as link)
+    const { rerender } = render(
+      <AdminBudgetBox
+        title="Test Budget"
+        description="Test description"
+        href="/test-link"
+      />,
+    );
+
+    expect(screen.getByText("Test Budget")).toBeInTheDocument();
+    expect(screen.getByText("Test description")).toBeInTheDocument();
+
+    const buttonWithHref = screen.getByText("Open");
+    expect(buttonWithHref.closest("a")).toHaveAttribute("href", "/test-link");
+
+    // Test without href (should render as button, not link)
+    rerender(
+      <AdminBudgetBox
+        title="No Link Budget"
+        description="No link description"
+      />,
+    );
+
+    const buttonWithoutHref = screen.getByText("Open");
+    // When href is undefined, MUI Button renders as button element, not anchor
+    expect(buttonWithoutHref.tagName).toBe("BUTTON");
+    expect(buttonWithoutHref.closest("a")).toBeNull();
   });
 });

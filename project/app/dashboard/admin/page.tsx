@@ -5,6 +5,8 @@ import {
   Typography,
   ToggleButton,
   ToggleButtonGroup,
+  Chip, // NEW
+  Stack, // NEW
 } from "@mui/material";
 import DynamicTable from "../../../components/DynamicTable";
 import AdminInfoBox from "./AdminInfoBox";
@@ -12,14 +14,62 @@ import AdminBudgetBox from "./AdminBudgetBox";
 import AdminPagination from "./AdminPagination";
 import axios from "axios";
 
+// Allow non-primitives in rows (arrays/objects)
 type TableRowData = {
   id?: string | number | null;
-  [key: string]: string | number | boolean | null | undefined;
+  [key: string]: unknown; // CHANGED
 };
 interface HistoryState {
   staged: TableRowData[];
   runs: TableRowData[];
 }
+
+// --- Helpers for renderers ---
+const statusColor = (
+  s?: string,
+): "default" | "success" | "warning" | "error" => {
+  switch ((s || "").toLowerCase()) {
+    case "confirmed":
+    case "committed":
+      return "success";
+    case "pending":
+    case "staged":
+      return "warning";
+    case "failed":
+    case "rolled_back":
+    case "cancelled":
+      return "error";
+    default:
+      return "default";
+  }
+};
+
+const fmtDateTime = (v: unknown) => {
+  const d = v ? new Date(String(v)) : null;
+  return d && !isNaN(d.getTime()) ? d.toLocaleString() : "—";
+};
+
+const kvPreview = (obj: unknown, limit = 4) => {
+  if (!obj || typeof obj !== "object") return <>—</>;
+  const entries = Object.entries(obj as Record<string, unknown>).slice(
+    0,
+    limit,
+  );
+  return (
+    <Stack spacing={0.25}>
+      {entries.map(([k, v]) => (
+        <Typography key={k} variant="body2">
+          {k}: {String(v)}
+        </Typography>
+      ))}
+      {Object.keys(obj as object).length > limit && (
+        <Typography variant="caption" color="text.secondary">
+          …more
+        </Typography>
+      )}
+    </Stack>
+  );
+};
 
 const AdminDashboard = () => {
   const [adminView, setAdminView] = useState({
@@ -28,21 +78,23 @@ const AdminDashboard = () => {
   });
   const LIMIT = 4;
   const [tutorPage, setTutorPage] = useState(1);
-  const [tutorRows, setTutorRows] = useState([]);
+  const [tutorRows, setTutorRows] = useState<TableRowData[]>([]);
   const [historyRows, setHistoryRows] = useState<HistoryState>({
     staged: [],
     runs: [],
   });
   const [historyPage, setHistoryPage] = useState(1);
-  const [alignment, setAlignment] = React.useState("staged");
+  const [alignment, setAlignment] = React.useState<"staged" | "runs">("staged");
 
   const handleChange = (
-    event: React.MouseEvent<HTMLElement>,
-    newAlignment: string,
+    _: React.MouseEvent<HTMLElement>,
+    next: "staged" | "runs" | null,
   ) => {
-    setAlignment(newAlignment);
+    if (!next) return;
+    setAlignment(next);
     setHistoryPage(1);
   };
+
   const loadOverview = useCallback(async () => {
     try {
       const result = await axios.get("/api/admin/overview");
@@ -64,7 +116,6 @@ const AdminDashboard = () => {
 
       const dropBy = <T extends { by?: unknown }>(rows: T[]): Omit<T, "by">[] =>
         rows.map(({ by, ...rest }) => rest);
-
       const dropCounts = <T extends { counts?: unknown }>(
         rows: T[],
       ): Omit<T, "counts">[] => rows.map(({ counts, ...rest }) => rest);
@@ -81,7 +132,7 @@ const AdminDashboard = () => {
   useEffect(() => {
     loadOverview();
     loadImportHistory();
-  }, []);
+  }, [loadOverview, loadImportHistory]);
 
   return (
     <div className="h-screen flex flex-col w-[90%] gap-3">
@@ -97,11 +148,15 @@ const AdminDashboard = () => {
 
         <div className="gap-2 flex">
           <Button variant="secondary">Refresh</Button>
-          <Button variant="secondary" color="blue">
+          <Button variant="secondary" color="blue" href="/admin/import">
             Bulk Import Allocations
+          </Button>
+          <Button variant="secondary" href="/admin/allocations">
+            Edit allocations
           </Button>
         </div>
       </div>
+
       <div className="flex gap-2 justify-center w-full">
         <AdminInfoBox
           adminStatistic={adminView.numUsers}
@@ -114,6 +169,7 @@ const AdminDashboard = () => {
           bubbleText="current term"
         />
       </div>
+
       <div className="flex justify-center h-full gap-3 w-full">
         <div className="w-1/4 h-1/3 bg-white rounded-3xl p-3">
           <Typography variant="subtitle1">Budgets Loaded</Typography>
@@ -125,6 +181,7 @@ const AdminDashboard = () => {
         </div>
 
         <div className="w-3/4 h-full rounded-3xl flex flex-col gap-3">
+          {/* Validation */}
           <div className="min-h-[85px] h-[10%] bg-white rounded-3xl p-3">
             <Typography variant="subtitle1">Validation Reports</Typography>
             <div>
@@ -134,6 +191,7 @@ const AdminDashboard = () => {
             </div>
           </div>
 
+          {/* User & Role Management */}
           <div className="h-[34%] bg-white rounded-3xl p-3">
             <div className="flex justify-between items-center">
               <Typography variant="subtitle1">
@@ -146,11 +204,47 @@ const AdminDashboard = () => {
                 itemLimit={LIMIT}
               />
             </div>
+
             <DynamicTable
               rows={tutorRows.slice((tutorPage - 1) * LIMIT, tutorPage * LIMIT)}
+              columnRenderers={{
+                // roles: array → chips
+                roles: (value) =>
+                  Array.isArray(value) ? (
+                    <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                      {value.map((r, i) => (
+                        <Chip
+                          key={i}
+                          size="small"
+                          variant="outlined"
+                          label={String(r)}
+                        />
+                      ))}
+                    </Stack>
+                  ) : (
+                    <>{String(value ?? "—")}</>
+                  ),
+
+                // active: boolean → chip
+                active: (value) =>
+                  typeof value === "boolean" ? (
+                    <Chip
+                      size="small"
+                      label={value ? "Active" : "Inactive"}
+                      color={value ? "success" : "default"}
+                    />
+                  ) : (
+                    <>{String(value ?? "—")}</>
+                  ),
+
+                // created_at (if present)
+                created_at: (value) => <>{fmtDateTime(value)}</>,
+                updated_at: (value) => <>{fmtDateTime(value)}</>,
+              }}
             />
           </div>
 
+          {/* Import/Export Jobs */}
           <div className="h-[34%] bg-white rounded-3xl p-3">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
@@ -187,6 +281,7 @@ const AdminDashboard = () => {
                 itemLimit={LIMIT}
               />
             </div>
+
             <DynamicTable
               rows={
                 alignment === "staged"
@@ -199,6 +294,30 @@ const AdminDashboard = () => {
                       historyPage * LIMIT,
                     )
               }
+              columnRenderers={{
+                status: (value) => (
+                  <Chip
+                    size="small"
+                    color={statusColor(String(value))}
+                    label={String(value ?? "—")}
+                  />
+                ),
+                issues: (value) => kvPreview(value),
+                counts: (value) => kvPreview(value),
+                created_at: (value) => <>{fmtDateTime(value)}</>,
+                started_at: (value) => <>{fmtDateTime(value)}</>,
+                finished_at: (value) => <>{fmtDateTime(value)}</>,
+                warnings: (value) =>
+                  Array.isArray(value) ? (
+                    <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                      {value.map((w, i) => (
+                        <Chip key={i} size="small" label={String(w)} />
+                      ))}
+                    </Stack>
+                  ) : (
+                    <>{String(value ?? "—")}</>
+                  ),
+              }}
             />
           </div>
         </div>

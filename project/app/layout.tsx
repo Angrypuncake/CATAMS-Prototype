@@ -12,6 +12,7 @@ import "@fontsource/inter/400.css";
 import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
+import HomePortalButton from "@/components/HomePortalButton";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -20,9 +21,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+}: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
       <body>
@@ -32,6 +31,10 @@ export default function RootLayout({
               <div className="flex items-center justify-center min-h-screen bg-gray-100">
                 <CssBaseline />
                 {children}
+              </div>
+
+              <div className="fixed bottom-4 right-4 z-[2000]">
+                <HomePortalButton />
               </div>
             </ThemeProvider>
           </StyledEngineProvider>

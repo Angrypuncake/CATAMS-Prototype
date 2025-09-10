@@ -30,7 +30,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const MAX_INSERT = 50;
+    const MAX_INSERT = 2000;
     const limited = records.slice(0, MAX_INSERT);
 
     // --- NEW: create batch + insert ---

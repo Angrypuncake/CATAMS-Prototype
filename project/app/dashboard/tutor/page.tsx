@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import StyledBox from "./components";
 import Button from "@mui/material/Button";
@@ -73,6 +73,7 @@ const exportCSV = (
 
 /* ========= Types ========= */
 type TutorSession = {
+  allocation_id: string;
   date: string | null; // ISO date-time string
   start_at: string | null; // "HH:MM:SS"
   end_at?: string | null; // "HH:MM:SS"
@@ -650,7 +651,11 @@ const Page = () => {
             </Button>
 
             {/* All statuses → View details */}
-            <Button variant="outlined" onClick={() => setOpen(false)}>
+            <Button
+              variant="outlined"
+              component={Link}
+              href={`/dashboard/tutor/allocations/${session?.allocation_id}`}
+            >
               View details
             </Button>
 

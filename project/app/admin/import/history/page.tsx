@@ -129,7 +129,7 @@ export default function ImportHistoryPage() {
                 <th className="py-2 pr-4">Batch ID</th>
                 <th className="py-2 pr-4">Created</th>
                 <th className="py-2 pr-4">Rows</th>
-                <th className="py-2 pr-4">By</th> {/* NEW */}
+                <th className="py-2 pr-4">By</th>
                 <th className="py-2 pr-4">Blocking</th>
                 <th className="py-2 pr-4">Actions</th>
               </tr>
@@ -215,7 +215,7 @@ export default function ImportHistoryPage() {
                 <th className="py-2 pr-4">Finished</th>
                 <th className="py-2 pr-4">Status</th>
                 <th className="py-2 pr-4">Counts</th>
-                <th className="py-2 pr-4">By</th> {/* NEW */}
+                <th className="py-2 pr-4">By</th>
                 <th className="py-2 pr-4">Actions</th>
               </tr>
             </thead>

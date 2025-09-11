@@ -33,7 +33,7 @@ export async function GET(req: Request) {
       so.end_at,
       ta.activity_type,
       ta.activity_name,
-      so.date,
+      so.session_date,
       a.status,
       so.location,
       a.note

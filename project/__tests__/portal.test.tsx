@@ -6,51 +6,58 @@ describe("Portal Page", () => {
   test("should render the first button (Tutor Dashboard)", () => {
     render(<Portal />);
 
-    const tutorButton = screen.getByText("Tutor Dashboard");
-    expect(tutorButton).toBeInTheDocument();
-    expect(tutorButton.closest("a")).toHaveAttribute(
-      "href",
-      "/dashboard/tutor",
-    );
+    const tutorCard = screen.getByText("Tutor");
+    expect(tutorCard).toBeInTheDocument();
+
+    const enterButton = tutorCard.closest(".MuiCard-root")?.querySelector("a");
+    expect(enterButton).toHaveAttribute("href", "/dashboard/tutor");
   });
 
   test("should render all 4 portal buttons with correct links", () => {
     render(<Portal />);
 
-    const tutorButton = screen.getByText("Tutor Dashboard");
-    expect(tutorButton).toBeInTheDocument();
-    expect(tutorButton.closest("a")).toHaveAttribute(
-      "href",
-      "/dashboard/tutor",
-    );
+    const tutorCard = screen.getByText("Tutor");
+    expect(tutorCard).toBeInTheDocument();
+    const tutorEnterButton = tutorCard
+      .closest(".MuiCard-root")
+      ?.querySelector("a");
+    expect(tutorEnterButton).toHaveAttribute("href", "/dashboard/tutor");
 
-    const assistantButton = screen.getByText("Teaching Assistant Dashboard");
-    expect(assistantButton).toBeInTheDocument();
-    expect(assistantButton.closest("a")).toHaveAttribute(
+    const assistantCard = screen.getByText("Teaching Assistant");
+    expect(assistantCard).toBeInTheDocument();
+    const assistantEnterButton = assistantCard
+      .closest(".MuiCard-root")
+      ?.querySelector("a");
+    expect(assistantEnterButton).toHaveAttribute(
       "href",
       "/dashboard/assistant",
     );
 
-    const coordinatorButton = screen.getByText("Coordinator Dashboard");
-    expect(coordinatorButton).toBeInTheDocument();
-    expect(coordinatorButton.closest("a")).toHaveAttribute(
+    const coordinatorCard = screen.getByText("Coordinator");
+    expect(coordinatorCard).toBeInTheDocument();
+    const coordinatorEnterButton = coordinatorCard
+      .closest(".MuiCard-root")
+      ?.querySelector("a");
+    expect(coordinatorEnterButton).toHaveAttribute(
       "href",
       "/dashboard/coordinator",
     );
 
-    const adminButton = screen.getByText("System Admin Dashboard");
-    expect(adminButton).toBeInTheDocument();
-    expect(adminButton.closest("a")).toHaveAttribute(
-      "href",
-      "/dashboard/admin",
-    );
+    const adminCard = screen.getByText("System Admin");
+    expect(adminCard).toBeInTheDocument();
+    const adminEnterButton = adminCard
+      .closest(".MuiCard-root")
+      ?.querySelector("a");
+    expect(adminEnterButton).toHaveAttribute("href", "/dashboard/admin");
   });
 
   test("should have proper layout styling", () => {
     const { container } = render(<Portal />);
     const mainContainer = container.firstElementChild;
 
-    expect(mainContainer).toHaveClass("flex", "flex-col", "gap-2");
-    expect(screen.getByText("Portal Page")).toBeInTheDocument();
+    expect(mainContainer).toHaveClass("MuiBox-root");
+    expect(
+      screen.getByText("Casual Academic Time Allocation"),
+    ).toBeInTheDocument();
   });
 });

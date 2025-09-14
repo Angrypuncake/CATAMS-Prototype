@@ -48,9 +48,32 @@ function toDDMMYYYY(iso?: string | null) {
 type UIStatus = AllocationDetail["status"]; // "Confirmed" | "Pending" | "Cancelled"
 function normalizeStatus(s?: string | null): UIStatus {
   const v = (s ?? "").trim().toLowerCase();
-  if (v === "confirmed") return "Confirmed";
-  if (v === "pending" || v === "in_progress" || v === "requested")
+
+  // Treat as Confirmed
+  if (
+    v === "confirmed" ||
+    v === "approved" ||
+    v === "accepted" ||
+    v === "allocated" ||
+    v === "active" ||
+    v === "assigned"
+  ) {
+    return "Confirmed";
+  }
+
+  // Treat as Pending
+  if (
+    v === "pending" ||
+    v === "in_progress" ||
+    v === "requested" ||
+    v.includes("pending") ||
+    v.includes("review") ||
+    v.includes("await")
+  ) {
     return "Pending";
+  }
+
+  // Fallback
   return "Cancelled";
 }
 

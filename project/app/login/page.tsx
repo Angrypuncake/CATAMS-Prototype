@@ -7,24 +7,16 @@ import { Button, TextField, Typography } from "@mui/material";
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!username.trim()) {
-      setError("Username is required");
-      return;
-    }
-
     setIsLoading(true);
-    setError("");
 
     try {
       // TODO connect to backend
     } catch (error) {
-      setError("An error occurred. Please try again.");
+      console.log(error);
     } finally {
       setIsLoading(false);
     }
@@ -59,10 +51,6 @@ export default function LoginPage() {
               variant="outlined"
             />
           </div>
-
-          {error && (
-            <div className="text-red-600 text-sm text-center">{error}</div>
-          )}
 
           <div>
             <Button

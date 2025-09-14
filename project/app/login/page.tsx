@@ -69,16 +69,17 @@ export default function LoginPage() {
               {isLoading ? "Signing in..." : "Sign in"}
             </Button>
           </div>
+          <div>
+            <Button
+              variant="outlined"
+              fullWidth
+              onClick={() => router.push("/portal")}
+              sx={{ mt: 2 }}
+            >
+              Go to Portal
+            </Button>
+          </div>
         </form>
-        <div>
-          <Button
-            variant="outlined"
-            fullWidth
-            onClick={() => router.push("/portal")}
-          >
-            Go to Portal
-          </Button>
-        </div>
       </div>
     </div>
   );

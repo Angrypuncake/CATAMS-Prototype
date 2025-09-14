@@ -74,7 +74,7 @@ const exportCSV = (
 /* ========= Types ========= */
 type TutorSession = {
   allocation_id: string;
-  date: string | null; // ISO date-time string
+  session_date: string | null; // ISO date-time string
   start_at: string | null; // "HH:MM:SS"
   end_at?: string | null; // "HH:MM:SS"
   unit_code: string | null;
@@ -147,7 +147,7 @@ const Page = () => {
   const isRejected = statusLower === "rejected" || statusLower === "reschedule";
 
   const endOrStart = toDate(
-    session?.date ?? null,
+    session?.session_date ?? null,
     session?.end_at || session?.start_at || null,
   );
   const hasEnded = endOrStart ? endOrStart.getTime() <= Date.now() : false;
@@ -324,7 +324,7 @@ const Page = () => {
               {tutorSessions.map((row, index) => (
                 <TableRow key={index}>
                   <TableCell>
-                    {row.date ? row.date.slice(0, 10) : "N/A"}
+                    {row.session_date ? row.session_date.slice(0, 10) : "N/A"}
                   </TableCell>
                   <TableCell>
                     {row.start_at
@@ -559,7 +559,7 @@ const Page = () => {
               >
                 Date
               </Typography>
-              <Box>{session?.date?.slice(0, 10) ?? "—"}</Box>
+              <Box>{session?.session_date?.slice(0, 10) ?? "—"}</Box>
             </Stack>
 
             <Stack direction="row" spacing={1.25}>

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, TextField } from "@mui/material";
+import { Button, TextField, Typography } from "@mui/material";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -34,9 +34,15 @@ export default function LoginPage() {
     <div className="min-h-screen flex w-full items-center justify-center bg-gray-50">
       <div className="max-w-lg w-full mx-4 space-y-8 bg-white p-8 rounded-lg shadow-lg">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <Typography
+            variant="h4"
+            component="h2"
+            align="center"
+            fontWeight="bold"
+            sx={{ mt: 3, mb: 3 }}
+          >
             Sign in to your account
-          </h2>
+          </Typography>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           <div>

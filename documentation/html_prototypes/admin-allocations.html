@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>All Allocations – Mock Admin Editor</title>
+  <style>
+    :root{
+      --bg:#f6f7fb;--card:#ffffff;--muted:#6b7280;--text:#111827;--primary:#2563eb;--primary-600:#1d4ed8;--danger:#dc2626;--ok:#16a34a;--border:#e5e7eb;--shadow:0 10px 20px rgba(0,0,0,.06),0 6px 6px rgba(0,0,0,.04)
+    }
+    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,Apple Color Emoji,Segoe UI Emoji; background:var(--bg); color:var(--text)}
+    .container{max-width:1100px;margin:48px auto;padding:0 20px}
+    .toolbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+    .h1{font-size:28px;font-weight:700;margin:0 0 14px}
+    .input,.select,.button{border:1px solid var(--border); border-radius:10px; padding:10px 12px; background:#fff; font-size:14px}
+    .button{background:var(--primary); color:#fff; border:none; cursor:pointer}
+    .button.secondary{background:#fff; color:var(--text); border:1px solid var(--border)}
+    .button:disabled{opacity:.6; cursor:not-allowed}
+    .card{background:var(--card); border:1px solid var(--border); border-radius:16px; box-shadow:var(--shadow)}
+    table{width:100%; border-collapse:collapse}
+    th,td{padding:10px 12px; border-bottom:1px solid var(--border); font-size:14px}
+    th{background:#fafafa; text-align:left; font-weight:600}
+    tbody tr:hover{background:#fafcff}
+    .badge{display:inline-flex; align-items:center; gap:6px; font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted)}
+    .status-ok{color:var(--ok); border-color:#bbf7d0; background:#f0fdf4}
+    .status-review{color:#a16207; border-color:#fde68a; background:#fffbeb}
+    .row-actions{display:flex; gap:8px}
+    .small{font-size:12px;color:var(--muted)}
+
+    /* modal */
+    dialog{border:none;border-radius:16px;box-shadow:var(--shadow); width:min(700px,94vw);}
+    .modal-header{display:flex;justify-content:space-between;align-items:center; padding:16px 20px; border-bottom:1px solid var(--border)}
+    .modal-body{padding:16px 20px; display:grid; grid-template-columns:repeat(12,1fr); gap:12px}
+    .modal-footer{padding:16px 20px; display:flex; justify-content:flex-end; gap:8px; border-top:1px solid var(--border)}
+    .field{display:flex; flex-direction:column; gap:6px}
+    .field label{font-weight:600; font-size:13px}
+    .field input[type="text"], .field input[type="time"], .field input[type="date"], .field textarea, .field select {padding:10px 12px; border:1px solid var(--border); border-radius:10px; font-size:14px}
+    .field .ro{background:#f9fafb}
+    .col-6{grid-column:span 6}
+    .col-4{grid-column:span 4}
+    .col-8{grid-column:span 8}
+    .col-12{grid-column:span 12}
+
+    /* typeahead */
+    .typeahead{position:relative}
+    .typeahead-list{position:absolute; inset-inline:0; top:100%; background:#fff; border:1px solid var(--border); border-radius:10px; margin-top:6px; max-height:220px; overflow:auto; box-shadow:var(--shadow); z-index:9}
+    .typeahead-item{padding:8px 10px; cursor:pointer}
+    .typeahead-item:hover{background:#f3f4f6}
+
+    .alert{padding:10px 12px; border-radius:10px; border:1px solid #fecaca; background:#fff1f2; color:#991b1b; font-size:14px}
+    .toast{position:fixed; right:16px; bottom:16px; background:#111827; color:#fff; padding:10px 12px; border-radius:10px; opacity:0; transform:translateY(8px); transition:all .2s ease}
+    .toast.show{opacity:1; transform:translateY(0)}
+    .chip{display:inline-block; padding:2px 8px; font-size:12px; border:1px solid var(--border); border-radius:999px; background:#fff}
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1 class="h1">All Allocations</h1>
+
+    <div class="toolbar">
+      <input id="q" class="input" placeholder="Search" />
+      <input id="unitFilter" class="input" placeholder="Unit Code (e.g., COMP2022)" />
+      <select id="typeFilter" class="select">
+        <option value="">Activity Type</option>
+        <option>Tutorial</option>
+        <option>Lecture</option>
+        <option>Marking</option>
+      </select>
+      <select id="statusFilter" class="select">
+        <option value="">Status</option>
+        <option>Approved Allocation</option>
+        <option>Hours for Review</option>
+      </select>
+      <button class="button" id="applyBtn">Apply</button>
+    </div>
+
+    <div class="card">
+      <table id="table">
+        <thead>
+          <tr>
+            <th style="width:120px">Date</th>
+            <th style="width:90px">Start</th>
+            <th style="width:90px">End</th>
+            <th>Unit</th>
+            <th>Activity</th>
+            <th>Tutor</th>
+            <th>Status</th>
+            <th style="width:120px">Actions</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    <p class="small" style="margin-top:10px">Demo data only. Editing opens a modal with server-like validation (including mock overlap checks).</p>
+  </div>
+
+  <dialog id="editModal" aria-labelledby="modalTitle">
+    <form method="dialog" id="editForm">
+      <div class="modal-header">
+        <div>
+          <div id="modalTitle" style="font-weight:700;font-size:18px">Edit Allocation</div>
+          <div id="modalSubtitle" class="small"></div>
+        </div>
+        <button class="button secondary" value="cancel" aria-label="Close">Close</button>
+      </div>
+
+      <div class="modal-body">
+        <div class="field col-6">
+          <label>Unit</label>
+          <input id="fUnit" class="ro" type="text" readonly />
+        </div>
+        <div class="field col-6">
+          <label>Activity</label>
+          <input id="fActivity" class="ro" type="text" readonly />
+        </div>
+
+        <div class="field col-4">
+          <label>Date</label>
+          <input id="fDate" type="date" />
+        </div>
+        <div class="field col-4">
+          <label>Start</label>
+          <input id="fStart" type="time" />
+        </div>
+        <div class="field col-4">
+          <label>End</label>
+          <input id="fEnd" type="time" />
+        </div>
+
+        <div class="field col-8 typeahead">
+          <label>Tutor</label>
+          <input id="fTutor" type="text" autocomplete="off" placeholder="Type to search…" />
+          <div id="tutorList" class="typeahead-list" hidden></div>
+          <input type="hidden" id="fTutorId" />
+        </div>
+        <div class="field col-4">
+          <label>Status</label>
+          <select id="fStatus">
+            <option>Approved Allocation</option>
+            <option>Hours for Review</option>
+          </select>
+        </div>
+        <div class="col-12" id="errorBox" hidden>
+          <div class="alert" id="errorText"></div>
+        </div>
+      </div>
+
+      
+
+      <div class="field col-12" id="manualToggle" hidden>
+          <label class="inline">
+            <input type="checkbox" id="fManual" />
+            Manual marking hours (unset start/end)
+          </label>
+          <span class="small">Tick to treat this as unscheduled marking; start/end will be cleared and ignored.</span>
+        </div>
+
+        <div class="field col-12" id="markingBox" hidden>
+          <label>Marking Hours (unscheduled)</label>
+          <input id="fHours" type="number" min="0" step="0.5" placeholder="e.g., 6" />
+          <span class="small">For Marking activities, start/end may be empty (unscheduled). Hours will drive budget deduction.</span>
+        </div>
+
+        <div class="col-12" id="errorBox" hidden>
+          <div class="alert" id="errorText"></div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="button secondary" value="cancel">Cancel</button>
+        <button type="submit" class="button" id="saveBtn">Save changes</button>
+      </div>
+  </dialog>
+
+  <div class="toast" id="toast">Saved</div>
+
+  <script>
+    /* -------------------- MOCK DATA -------------------- */
+    const tutors = [
+      {id:'u1', name:'Alice Admin', email:'alice.admin@demo.edu'},
+      {id:'u2', name:'Tom Tutor', email:'tom.tutor@demo.edu'},
+      {id:'u3', name:'Jane Singh', email:'jane.singh@demo.edu'},
+      {id:'u4', name:'Bob Wilson', email:'bob.wilson@demo.edu'},
+      {id:'u5', name:'Clara Zhang', email:'clara.zhang@demo.edu'}
+    ];
+
+    const rows = [
+      {id:'a1', date:'2025-12-09', start:'15:00', end:'17:00', unit:'COMP2022', unitTitle:'Models of Computation', actType:'Lecture', actCode:'Lecture-02', tutorId:'u1', status:'Hours for Review'},
+      {id:'a2', date:'2025-12-10', start:'11:00', end:'13:00', unit:'COMP2022', unitTitle:'Models of Computation', actType:'Tutorial', actCode:'Tutorial-01', tutorId:'u2', status:'Approved Allocation'},
+      {id:'a3', date:'', start:'', end:'', unit:'COMP2022', unitTitle:'Models of Computation', actType:'Marking', actCode:'Marking-A1', tutorId:'u1', status:'Hours for Review', hours:6},
+      {id:'a4', date:'2025-12-11', start:'11:00', end:'13:00', unit:'COMP2022', unitTitle:'Models of Computation', actType:'Tutorial', actCode:'Tutorial-02', tutorId:'u3', status:'Approved Allocation'}
+    ];
+
+    /* -------------------- RENDER TABLE -------------------- */
+    const tbody = document.querySelector('#table tbody');
+    function tutorName(id){ return (tutors.find(t=>t.id===id)||{}).name || '—'; }
+    function render(){
+      tbody.innerHTML = rows.map(r=>`
+        <tr data-id="${r.id}">
+          <td>${r.date ? new Date(r.date).toLocaleDateString() : '<span class="chip">Unscheduled</span>'}</td>
+          <td>${r.start||'—'}</td>
+          <td>${r.end||'—'}</td>
+          <td><div style="font-weight:600">${r.unit}</div><div class="small">${r.unitTitle}</div></td>
+          <td><div style="font-weight:600">${r.actType}</div><div class="small">${r.actCode}</div></td>
+          <td><div style="font-weight:600">${tutorName(r.tutorId)}</div><div class="small">${(tutors.find(t=>t.id===r.tutorId)||{}).email||''}</div></td>
+          <td>${r.status === 'Approved Allocation' ? '<span class="badge status-ok">Approved</span>' : '<span class="badge status-review">Hours for Review</span>'}</td>
+          <td class="row-actions"><button class="button secondary btn-edit">Edit</button></td>
+        </tr>
+      `).join('');
+    }
+    render();
+
+    /* -------------------- FILTERS (mock) -------------------- */
+    document.getElementById('applyBtn').addEventListener('click', ()=>{
+      const q=document.getElementById('q').value.toLowerCase();
+      const unit=document.getElementById('unitFilter').value.toLowerCase();
+      const type=document.getElementById('typeFilter').value;
+      const st=document.getElementById('statusFilter').value;
+      const filtered = rows.filter(r=>
+        (!q || (r.unit.toLowerCase().includes(q)||r.unitTitle.toLowerCase().includes(q)||r.actCode.toLowerCase().includes(q))) &&
+        (!unit || r.unit.toLowerCase().includes(unit)) &&
+        (!type || r.actType===type) &&
+        (!st || r.status===st)
+      );
+      // simple re-render with filtered (not persistent)
+      tbody.innerHTML = filtered.map(r=>`
+        <tr data-id="${r.id}">
+          <td>${r.date ? new Date(r.date).toLocaleDateString() : '<span class="chip">Unscheduled</span>'}</td>
+          <td>${r.start||'—'}</td>
+          <td>${r.end||'—'}</td>
+          <td><div style="font-weight:600">${r.unit}</div><div class="small">${r.unitTitle}</div></td>
+          <td><div style="font-weight:600">${r.actType}</div><div class="small">${r.actCode}</div></td>
+          <td><div style="font-weight:600">${tutorName(r.tutorId)}</div><div class="small">${(tutors.find(t=>t.id===r.tutorId)||{}).email||''}</div></td>
+          <td>${r.status === 'Approved Allocation' ? '<span class="badge status-ok">Approved</span>' : '<span class="badge status-review">Hours for Review</span>'}</td>
+          <td class="row-actions"><button class="button secondary btn-edit">Edit</button></td>
+        </tr>
+      `).join('');
+      hookRowButtons();
+    });
+
+    /* -------------------- MODAL LOGIC -------------------- */
+    const modal = document.getElementById('editModal');
+    const errorBox = document.getElementById('errorBox');
+    const errorText = document.getElementById('errorText');
+    const toast = document.getElementById('toast');
+
+    const fUnit = document.getElementById('fUnit');
+    const fActivity = document.getElementById('fActivity');
+    const fDate = document.getElementById('fDate');
+    const fStart = document.getElementById('fStart');
+    const fEnd = document.getElementById('fEnd');
+    const fTutor = document.getElementById('fTutor');
+    const fTutorId = document.getElementById('fTutorId');
+    const fStatus = document.getElementById('fStatus');
+    const fHours = document.getElementById('fHours');
+    const markingBox = document.getElementById('markingBox');
+    const manualToggle = document.getElementById('manualToggle');
+    const fManual = document.getElementById('fManual');
+
+    let currentRowId = null;
+
+    function hookRowButtons(){
+      document.querySelectorAll('.btn-edit').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{
+          const tr = e.target.closest('tr');
+          openModal(tr.dataset.id);
+        });
+      });
+    }
+    hookRowButtons();
+
+    function openModal(id){
+      const r = rows.find(x=>x.id===id);
+      currentRowId = id;
+      document.getElementById('modalSubtitle').textContent = `${r.unit} · ${r.actType} · ${r.actCode}`;
+      fUnit.value = `${r.unit} — ${r.unitTitle}`;
+      fActivity.value = `${r.actType} · ${r.actCode}`;
+      fDate.value = r.date || '';
+      fStart.value = r.start || '';
+      fEnd.value = r.end || '';
+      cachedTimes = { start: r.start || '', end: r.end || '' };
+      const t = tutors.find(t=>t.id===r.tutorId) || {name:'',email:''};
+      fTutor.value = t.name;
+      fTutorId.value = r.tutorId;
+      fStatus.value = r.status;
+      fHours.value = r.hours || '';
+      const isMarking = r.actType === 'Marking';
+      markingBox.hidden = !isMarking;
+      manualToggle.hidden = !isMarking;
+      errorBox.hidden = true;
+
+      // initial manual state: if marking and both start/end empty, consider manual = true
+      const initialManual = isMarking && !(r.start && r.end);
+      fManual.checked = !!initialManual;
+      applyManualToggle();
+
+      if(!modal.open) modal.showModal();
+    }
+
+    // Typeahead for tutors
+    const tutorList = document.getElementById('tutorList');
+    fTutor.addEventListener('input', ()=>{
+      const q = fTutor.value.toLowerCase();
+      const items = tutors.filter(t=>!q || t.name.toLowerCase().includes(q) || t.email.toLowerCase().includes(q));
+      tutorList.innerHTML = items.map(t=>`<div class="typeahead-item" data-id="${t.id}"><div style="font-weight:600">${t.name}</div><div class="small">${t.email}</div></div>`).join('');
+      tutorList.hidden = items.length===0;
+    });
+    tutorList.addEventListener('click', (e)=>{
+      const item = e.target.closest('.typeahead-item');
+      if(!item) return;
+      const t = tutors.find(x=>x.id===item.dataset.id);
+      fTutor.value = t.name;
+      fTutorId.value = t.id;
+      tutorList.hidden = true;
+    });
+    document.addEventListener('click', (e)=>{
+      if(!tutorList.contains(e.target) && e.target!==fTutor){ tutorList.hidden = true; }
+    });
+
+    // Overlap check (mock): same tutor, same date, intersecting times
+    function hasOverlap({tutorId,date,start,end,ignoreId}){
+      if(!date || !start || !end) return false; // unscheduled or incomplete => no conflict check
+      const startMin = toMin(start), endMin = toMin(end);
+      return rows.some(r=>{
+        if(r.id===ignoreId) return false;
+        if(r.tutorId!==tutorId) return false;
+        if(r.date!==date) return false;
+        if(!r.start || !r.end) return false;
+        const rs = toMin(r.start), re = toMin(r.end);
+        return rs < endMin && re > startMin; // overlap
+      });
+    }
+    function toMin(t){ const [h,m] = t.split(':').map(Number); return h*60+m; }
+
+    // Manual toggle behavior
+    fManual?.addEventListener('change', applyManualToggle);
+    function applyManualToggle(){
+      const manual = !!fManual?.checked;
+      if(manual){
+        // store current typed values and clear/disable
+        cachedTimes = { start: fStart.value, end: fEnd.value };
+        fStart.value = ''; fEnd.value='';
+        fStart.disabled = true; fEnd.disabled = true;
+      } else {
+        // restore and re-enable
+        fStart.disabled = false; fEnd.disabled = false;
+        fStart.value = cachedTimes.start; fEnd.value = cachedTimes.end;
+      }
+    }
+
+    // Save mock
+    document.getElementById('editForm').addEventListener('submit', (e)=>{
+      e.preventDefault();
+      const r = rows.find(x=>x.id===currentRowId);
+      const manual = !!fManual?.checked;
+
+      const startVal = manual ? '' : fStart.value;
+      const endVal = manual ? '' : fEnd.value;
+      const payload = {
+        tutorId: fTutorId.value || r.tutorId,
+        date: fDate.value,
+        start: fStart.value,
+        end: fEnd.value,
+        status: fStatus.value,
+        hours: fHours.value ? Number(fHours.value) : undefined
+      };
+
+      // simple validations
+      if(payload.start && payload.end && toMin(payload.end) <= toMin(payload.start)){
+        return showError('End time must be after start time.');
+      }
+      if(hasOverlap({tutorId:payload.tutorId, date:payload.date, start:payload.start, end:payload.end, ignoreId:r.id})){
+        return showError('Time conflict: this tutor already has an allocation that overlaps.');
+      }
+
+      // apply changes
+      r.tutorId = payload.tutorId;
+      r.date = payload.date;
+      r.start = payload.start;
+      r.end = payload.end;
+      r.status = payload.status;
+      if(r.actType==='Marking'){
+        r.hours = payload.hours || r.hours || 0;
+      }
+
+      modal.close();
+      render();
+      hookRowButtons();
+      popToast('Saved');
+    });
+
+    function showError(msg){
+      errorText.textContent = msg; errorBox.hidden = false; return false;
+    }
+
+    function popToast(msg){
+      toast.textContent = msg; toast.classList.add('show');
+      setTimeout(()=> toast.classList.remove('show'), 1600);
+    }
+  </script>
+</body>
+</html>

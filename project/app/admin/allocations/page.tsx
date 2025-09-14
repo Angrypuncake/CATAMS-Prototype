@@ -13,9 +13,9 @@ type AllocationRow = {
   unit_code: string | null;
   unit_name: string | null;
 
-  session_date: string | null; // ISO date or null
-  start_at: string | null; // HH:MM:SS or null
-  end_at: string | null; // HH:MM:SS or null
+  session_date: string | null; // ISO or "YYYY-MM-DD..." or null
+  start_at: string | null;     // "HH:MM:SS" or null
+  end_at: string | null;
   location: string | null;
 
   activity_type: string | null;
@@ -35,13 +35,25 @@ type ApiResult = {
   data: AllocationRow[];
 };
 
+type TutorOption = {
+  user_id: number;
+  first_name: string | null;
+  last_name: string | null;
+  email: string | null;
+};
+
+type PaycodeOption = {
+  code: string;
+  paycode_description: string | null;
+  amount: string | number;
+};
+
 /** ------------------------- Utility formatting ------------------------- */
 function pad2(n: number) {
   return n.toString().padStart(2, "0");
 }
 function toDisplayTime(hhmmss: string | null) {
   if (!hhmmss) return "";
-  // "13:00:00" -> "01:00 PM"
   const [hh, mm] = hhmmss.split(":").map((t) => parseInt(t, 10));
   const ampm = hh >= 12 ? "PM" : "AM";
   const hr = ((hh + 11) % 12) + 1;
@@ -58,14 +70,198 @@ function fromInputTime(hhmm: string) {
   return `${pad2(parseInt(hh, 10))}:${pad2(parseInt(mm, 10))}:00`;
 }
 function toInputDate(isoDate: string | null) {
-  // "2025-03-03T00:00:00.000Z" or "2025-03-03" -> "2025-03-03"
   if (!isoDate) return "";
   return isoDate.substring(0, 10);
 }
-function labelName(row: AllocationRow) {
+function labelName(row: Pick<AllocationRow, "first_name" | "last_name">) {
   const fn = row.first_name ?? "";
   const ln = row.last_name ?? "";
   return `${fn} ${ln}`.trim() || "—";
+}
+
+/** ----------------------- Small searchable comboboxes ---------------------- */
+function useOutsideClick(ref: React.RefObject<HTMLElement>, onClickAway: () => void) {
+  useEffect(() => {
+    function onClick(e: MouseEvent) {
+      if (!ref.current) return;
+      if (!ref.current.contains(e.target as Node)) onClickAway();
+    }
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [ref, onClickAway]);
+}
+
+function TutorCombo({
+  options,
+  valueId,
+  onChange,
+}: {
+  options: TutorOption[];
+  valueId: number | null;
+  onChange: (opt: TutorOption | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const boxRef = React.useRef<HTMLDivElement>(null);
+  useOutsideClick(boxRef, () => setOpen(false));
+
+  const selected = useMemo(
+    () => options.find((t) => t.user_id === valueId) || null,
+    [options, valueId]
+  );
+
+  const filtered = useMemo(() => {
+    const ql = q.trim().toLowerCase();
+    if (!ql) return options.slice(0, 50);
+    return options
+      .filter((t) => {
+        const name = `${t.first_name ?? ""} ${t.last_name ?? ""}`.toLowerCase();
+        return (
+          name.includes(ql) ||
+          (t.email ?? "").toLowerCase().includes(ql)
+        );
+      })
+      .slice(0, 50);
+  }, [q, options]);
+
+  return (
+    <div className="relative" ref={boxRef}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full border rounded px-3 py-2 text-left"
+      >
+        {selected
+          ? `${selected.first_name ?? ""} ${selected.last_name ?? ""}`.trim() +
+          (selected.email ? ` (${selected.email})` : "")
+          : "Select tutor…"}
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-white border rounded shadow-lg">
+          <div className="p-2 border-b">
+            <input
+              autoFocus
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="w-full border rounded px-2 py-1"
+              placeholder="Search name or email…"
+            />
+          </div>
+          <ul className="max-h-72 overflow-auto">
+            {filtered.map((t) => {
+              const key = `${t.user_id}`;
+              return (
+                <li key={key}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onChange(t);
+                      setOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-2 hover:bg-gray-50"
+                  >
+                    <div className="font-medium">
+                      {(t.first_name ?? "") + " " + (t.last_name ?? "")}
+                    </div>
+                    {t.email && (
+                      <div className="text-xs text-gray-500">{t.email}</div>
+                    )}
+                  </button>
+                </li>
+              );
+            })}
+            {filtered.length === 0 && (
+              <li className="px-3 py-2 text-sm text-gray-500">No matches</li>
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PaycodeCombo({
+  options,
+  valueCode,
+  onChange,
+}: {
+  options: PaycodeOption[];
+  valueCode: string | null;
+  onChange: (opt: PaycodeOption | null) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const boxRef = React.useRef<HTMLDivElement>(null);
+  useOutsideClick(boxRef, () => setOpen(false));
+
+  const selected =
+    options.find((p) => p.code === valueCode) || null;
+
+  const filtered = useMemo(() => {
+    const ql = q.trim().toLowerCase();
+    if (!ql) return options.slice(0, 100);
+    return options
+      .filter((p) => {
+        return (
+          p.code.toLowerCase().includes(ql) ||
+          (p.paycode_description ?? "").toLowerCase().includes(ql)
+        );
+      })
+      .slice(0, 100);
+  }, [q, options]);
+
+  return (
+    <div className="relative" ref={boxRef}>
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full border rounded px-3 py-2 text-left"
+      >
+        {selected
+          ? `${selected.code}` +
+          (selected.paycode_description ? ` — ${selected.paycode_description}` : "")
+          : "Select paycode…"}
+      </button>
+      {open && (
+        <div className="absolute z-50 mt-1 w-full bg-white border rounded shadow-lg">
+          <div className="p-2 border-b">
+            <input
+              autoFocus
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
+              className="w-full border rounded px-2 py-1"
+              placeholder="Search code or description…"
+            />
+          </div>
+          <ul className="max-h-72 overflow-auto">
+            {filtered.map((p) => (
+              <li key={p.code}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onChange(p);
+                    setOpen(false);
+                  }}
+                  className="w-full text-left px-3 py-2 hover:bg-gray-50"
+                >
+                  <div className="font-medium">{p.code}</div>
+                  {(p.paycode_description || p.amount) && (
+                    <div className="text-xs text-gray-500">
+                      {p.paycode_description ?? ""}{" "}
+                      {p.amount ? `• $${p.amount}` : ""}
+                    </div>
+                  )}
+                </button>
+              </li>
+            ))}
+            {filtered.length === 0 && (
+              <li className="px-3 py-2 text-sm text-gray-500">No matches</li>
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
 }
 
 /** ------------------------------ Drawer ------------------------------ */
@@ -74,20 +270,24 @@ function Drawer({
   onClose,
   row,
   onMockSave,
+  tutors,
+  paycodes,
 }: {
   open: boolean;
   onClose: () => void;
   row: AllocationRow | null;
   onMockSave: (updated: Partial<AllocationRow>) => void;
+  tutors: TutorOption[];
+  paycodes: PaycodeOption[];
 }) {
   const [form, setForm] = useState({
-    tutor: "",
-    paycode: "",
+    tutorId: null as number | null,
+    paycode: null as string | null,
     date: "",
     start: "",
     end: "",
-    scope: "this", // this | all | following
-    dow: "", // for propagation (optional)
+    scope: "this",
+    dow: "",
     propStart: "",
     propEnd: "",
     override: "",
@@ -97,8 +297,8 @@ function Drawer({
   useEffect(() => {
     if (!row) return;
     setForm({
-      tutor: labelName(row),
-      paycode: row.paycode_id ?? "",
+      tutorId: row.user_id ?? null,
+      paycode: row.paycode_id ?? null,
       date: toInputDate(row.session_date),
       start: toInputTime(row.start_at),
       end: toInputTime(row.end_at),
@@ -123,7 +323,7 @@ function Drawer({
       />
       {/* Panel */}
       <aside
-        className="fixed right-0 top-0 h-full w-[420px] max-w-[90vw] bg-white shadow-2xl z-50 overflow-y-auto"
+        className="fixed right-0 top-0 h-full w-[460px] max-w-[95vw] bg-white shadow-2xl z-50 overflow-y-auto"
         role="dialog"
         aria-modal="true"
       >
@@ -136,30 +336,27 @@ function Drawer({
         </div>
 
         <div className="p-5 space-y-5">
-          {/* Tutor */}
+          {/* Tutor (searchable dropdown) */}
           <div>
             <label className="block text-sm font-medium mb-1">Tutor</label>
-            <input
-              className="w-full border rounded px-3 py-2"
-              value={form.tutor}
-              onChange={(e) => setForm((f) => ({ ...f, tutor: e.target.value }))}
-              placeholder="Tutor name"
+            <TutorCombo
+              options={tutors}
+              valueId={form.tutorId}
+              onChange={(sel) =>
+                setForm((f) => ({ ...f, tutorId: sel ? sel.user_id : null }))
+              }
             />
-            <p className="text-xs text-gray-500 mt-1">
-              (Free text for now; hook up to a tutors list later.)
-            </p>
           </div>
 
-          {/* Paycode */}
+          {/* Paycode (searchable dropdown) */}
           <div>
             <label className="block text-sm font-medium mb-1">Paycode</label>
-            <input
-              className="w-full border rounded px-3 py-2"
-              value={form.paycode}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, paycode: e.target.value }))
+            <PaycodeCombo
+              options={paycodes}
+              valueCode={form.paycode}
+              onChange={(sel) =>
+                setForm((f) => ({ ...f, paycode: sel ? sel.code : null }))
               }
-              placeholder="e.g. TUT-L2"
             />
           </div>
 
@@ -301,12 +498,13 @@ function Drawer({
           <button
             onClick={() => {
               onMockSave({
+                user_id: form.tutorId,
+                paycode_id: form.paycode,
                 status: form.status,
                 override_note: form.override,
                 session_date: form.date || null,
                 start_at: fromInputTime(form.start),
                 end_at: fromInputTime(form.end),
-                paycode_id: form.paycode || null,
               });
               onClose();
             }}
@@ -322,7 +520,7 @@ function Drawer({
 
 /** ------------------------------ Main Page ------------------------------ */
 export default function AdminAllAllocationsPage() {
-  // Filters (keep it minimal; you can wire these to inputs later if needed)
+  // Filters
   const [q, setQ] = useState("");
   const [unitCode, setUnitCode] = useState("");
   const [activityType, setActivityType] = useState("");
@@ -337,6 +535,10 @@ export default function AdminAllAllocationsPage() {
   const [loading, setLoading] = useState(false);
   const [rows, setRows] = useState<AllocationRow[]>([]);
   const [total, setTotal] = useState(0);
+
+  // options
+  const [tutors, setTutors] = useState<TutorOption[]>([]);
+  const [paycodes, setPaycodes] = useState<PaycodeOption[]>([]);
 
   // drawer
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -368,9 +570,25 @@ export default function AdminAllAllocationsPage() {
     }
   }, [page, limit, q, unitCode, activityType, status]);
 
+  // load table and option lists
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const [t, p] = await Promise.all([
+          fetch("/api/admin/tutors").then((r) => r.json()),
+          fetch("/api/admin/paycodes").then((r) => r.json()),
+        ]);
+        setTutors(t.data || []);
+        setPaycodes(p.data || []);
+      } catch (e) {
+        console.error(e);
+      }
+    })();
+  }, []);
 
   const { scheduledRows, unscheduledRows } = useMemo(() => {
     const sched = rows.filter((r) => !!r.session_date);
@@ -458,17 +676,15 @@ export default function AdminAllAllocationsPage() {
       <div className="mb-3">
         <div className="inline-flex rounded-full border overflow-hidden">
           <button
-            className={`px-4 py-1 text-sm ${
-              tab === "scheduled" ? "bg-blue-600 text-white" : "bg-white"
-            }`}
+            className={`px-4 py-1 text-sm ${tab === "scheduled" ? "bg-blue-600 text-white" : "bg-white"
+              }`}
             onClick={() => setTab("scheduled")}
           >
             Scheduled
           </button>
           <button
-            className={`px-4 py-1 text-sm border-l ${
-              tab === "unscheduled" ? "bg-blue-600 text-white" : "bg-white"
-            }`}
+            className={`px-4 py-1 text-sm border-l ${tab === "unscheduled" ? "bg-blue-600 text-white" : "bg-white"
+              }`}
             onClick={() => setTab("unscheduled")}
           >
             Unscheduled
@@ -593,6 +809,8 @@ export default function AdminAllAllocationsPage() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         row={activeRow}
+        tutors={tutors}
+        paycodes={paycodes}
         onMockSave={onMockSave}
       />
     </div>

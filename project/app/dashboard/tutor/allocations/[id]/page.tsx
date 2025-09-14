@@ -1,6 +1,7 @@
 "use client";
 import * as React from "react";
 import Link from "next/link";
+import { useParams } from "next/navigation";
 import {
   Box,
   Button,
@@ -13,9 +14,11 @@ import {
   MenuItem,
   Stack,
   Typography,
+  CircularProgress,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+
 import NewCommentBox from "../_components/NewCommentBox";
 import DetailRow from "../_components/DetailRow";
 import RequestRow from "../_components/RequestRow";
@@ -26,72 +29,167 @@ import type {
   CommentItem,
 } from "@/app/_types/allocations";
 
-// ---------- Mock data ----------
-const mockAllocation: AllocationDetail = {
-  id: "123",
-  courseCode: "INFO1110",
-  courseName: "Programming Fundamentals",
-  status: "Confirmed",
-  date: "12/09/2025",
-  time: "9:00 AM – 11:00 AM",
-  location: "Room A",
-  hours: "2h",
-  session: "Tutorial",
-  notes:
-    "“Please arrive 10 minutes early to assist with setup. Ensure attendance sheet is completed”",
-};
+// ---------- Helpers ----------
+function toHHMM(hms?: string | null) {
+  if (!hms) return "—";
+  return hms.slice(0, 5); // assumes "HH:MM:SS"
+}
+function toDDMMYYYY(iso?: string | null) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const dd = String(d.getUTCDate()).padStart(2, "0");
+  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const yyyy = d.getUTCFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
 
-const mockRequests: RequestItem[] = [
-  { id: "123", type: "Swap", state: "Pending Review" },
-  { id: "124", type: "Correction", state: "Pending Review" },
-];
-
-const mockComments: CommentItem[] = [
-  {
-    id: "1",
-    author: "John D.",
-    role: "Tutor",
-    time: "26/08/25, 2:14 PM",
-    body: "Hi, I just noticed this clashes with another lab I’m running in INFO1910. Could I request a swap?",
-    mine: true, //Show Edit/Delete buttons if the logged-in user wrote this comment
-  },
-  {
-    id: "2",
-    author: "Sarah T.",
-    role: "Teaching Assistant",
-    time: "26/08/25, 3:02 PM",
-    body: "Thanks John, I’ve flagged this as a pending swap. Please submit a formal request via the system so I can process it.",
-  },
-  {
-    id: "3",
-    author: "John D.",
-    role: "Tutor",
-    time: "26/08/25, 3:15 PM",
-    body: "Submitted now under Request #123. Let me know if you need further details.",
-    mine: true, //Show Edit/Delete buttons if the logged-in user wrote this comment
-  },
-  {
-    id: "4",
-    author: "Unit Coordinator – Dr. Lee",
-    role: "",
-    time: "27/08/25, 9:20 AM",
-    body: "Request acknowledged. I’ll review availability in Room B and confirm by tomorrow.",
-  },
-];
+// DB status → UI union type normalization
+type UIStatus = AllocationDetail["status"]; // "Confirmed" | "Pending" | "Cancelled"
+function normalizeStatus(s?: string | null): UIStatus {
+  const v = (s ?? "").trim().toLowerCase();
+  if (v === "confirmed") return "Confirmed";
+  if (v === "pending" || v === "in_progress" || v === "requested")
+    return "Pending";
+  return "Cancelled";
+}
 
 // ---------- Page ----------
-export default function AllocationPage({ params }: { params: { id: string } }) {
-  // Menu state for "Create Request"
+export default function AllocationPage() {
+  const params = useParams<{ id: string }>();
+  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
+
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
-
-  // Comment box state
   const [comment, setComment] = React.useState("");
 
-  // TODO: replace mocks with real fetch using params.id
-  const allocation = mockAllocation;
-  const requests = mockRequests;
-  const comments = mockComments;
+  const [allocation, setAllocation] = React.useState<AllocationDetail | null>(
+    null,
+  );
+  const [requests, setRequests] = React.useState<RequestItem[]>([]);
+  const [comments, setComments] = React.useState<CommentItem[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const [err, setErr] = React.useState<string | null>(null);
+
+  // fetch allocation detail from DB
+  React.useEffect(() => {
+    if (!id) return; // wait until router provides id
+    let cancelled = false;
+
+    async function run() {
+      try {
+        if (!cancelled) {
+          setLoading(true);
+          setErr(null);
+        }
+
+        const res = await fetch(
+          `/api/tutor/allocations/${encodeURIComponent(id)}`,
+          { cache: "no-store" },
+        );
+        if (!res.ok) throw new Error(`Failed to fetch allocation ${id}`);
+        const json = await res.json();
+
+        const a = json.data as {
+          allocation_id: string;
+          unit_code: string | null;
+          unit_name: string | null;
+          status: string | null;
+          session_date: string | null;
+          start_at: string | null;
+          end_at: string | null;
+          location: string | null;
+          activity_name: string | null;
+          note: string | null;
+        };
+
+        const mapped: AllocationDetail = {
+          id: a.allocation_id,
+          courseCode: a.unit_code ?? "—",
+          courseName: a.unit_name ?? "—",
+          status: normalizeStatus(a.status),
+          date: toDDMMYYYY(a.session_date),
+          time:
+            a.start_at || a.end_at
+              ? `${toHHMM(a.start_at)} – ${toHHMM(a.end_at)}`
+              : "—",
+          location: a.location ?? "—",
+          hours:
+            a.start_at && a.end_at
+              ? (() => {
+                  const [sh, sm] = a.start_at.split(":").map(Number);
+                  const [eh, em] = a.end_at.split(":").map(Number);
+                  const start = new Date(0, 0, 0, sh || 0, sm || 0, 0);
+                  const end = new Date(0, 0, 0, eh || 0, em || 0, 0);
+                  let diff =
+                    (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+                  if (diff < 0) diff += 24;
+                  return `${diff.toFixed(2)}h`;
+                })()
+              : "—",
+          session: a.activity_name ?? "—",
+          notes: a.note ?? undefined,
+        };
+
+        if (!cancelled) {
+          setAllocation(mapped);
+          setRequests([]); // TODO: later wire to /requests
+          setComments([]); // TODO: later wire to /comments
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!cancelled) setErr(msg || "Unknown error");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  if (loading) {
+    return (
+      <Box sx={{ p: 3, maxWidth: 960, mx: "auto" }}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <CircularProgress size={20} />
+          <Typography variant="body2">Loading allocation…</Typography>
+        </Stack>
+      </Box>
+    );
+  }
+
+  if (err || !allocation) {
+    return (
+      <Box sx={{ p: 3, maxWidth: 960, mx: "auto" }}>
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
+          <IconButton component={Link} href="/dashboard/tutor/" size="small">
+            <ArrowBackIcon />
+          </IconButton>
+          <Typography variant="h6" fontWeight={700}>
+            Allocation
+          </Typography>
+        </Stack>
+        <Card variant="outlined" sx={{ borderRadius: 2, p: 2 }}>
+          <Typography color="error" sx={{ mb: 1 }}>
+            {err ?? "Allocation not found."}
+          </Typography>
+          <Button component={Link} href="/dashboard/tutor" variant="outlined">
+            Back to Allocations
+          </Button>
+        </Card>
+      </Box>
+    );
+  }
+
+  const statusColor: "success" | "warning" | "default" =
+    allocation.status === "Confirmed"
+      ? "success"
+      : allocation.status === "Pending"
+        ? "warning"
+        : "default";
 
   return (
     <Box sx={{ p: 3, maxWidth: 960, mx: "auto" }}>
@@ -126,7 +224,7 @@ export default function AllocationPage({ params }: { params: { id: string } }) {
             <Chip
               icon={<CheckCircleIcon fontSize="small" />}
               label={allocation.status}
-              color="success"
+              color={statusColor}
               variant="outlined"
               sx={{ fontWeight: 600 }}
             />
@@ -209,9 +307,13 @@ export default function AllocationPage({ params }: { params: { id: string } }) {
             View/Edit Request
           </Typography>
           <Stack spacing={1.25} sx={{ mt: 1 }}>
-            {requests.map((r) => (
-              <RequestRow key={r.id} req={r} />
-            ))}
+            {requests.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                No requests yet.
+              </Typography>
+            ) : (
+              requests.map((r) => <RequestRow key={r.id} req={r} />)
+            )}
           </Stack>
 
           {/* Comments */}
@@ -219,19 +321,23 @@ export default function AllocationPage({ params }: { params: { id: string } }) {
             Comments
           </Typography>
           <Stack spacing={1.25} sx={{ mt: 1 }}>
-            {comments.map((c) => (
-              <CommentBubble key={c.id} comment={c} />
-            ))}
+            {comments.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                No comments yet.
+              </Typography>
+            ) : (
+              comments.map((c) => <CommentBubble key={c.id} comment={c} />)
+            )}
 
             {/* New comment input */}
             <NewCommentBox
               value={comment}
               onChange={setComment}
               onSubmit={() => {
-                //TODO: POST comment
+                // TODO: POST comment
                 setComment("");
               }}
-            ></NewCommentBox>
+            />
           </Stack>
         </CardContent>
       </Card>

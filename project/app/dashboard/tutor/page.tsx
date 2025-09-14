@@ -73,7 +73,7 @@ const exportCSV = (
 
 /* ========= Types ========= */
 type TutorSession = {
-  allocation_id: string;
+  id: string;
   session_date: string | null; // ISO date-time string
   start_at: string | null; // "HH:MM:SS"
   end_at?: string | null; // "HH:MM:SS"
@@ -654,7 +654,7 @@ const Page = () => {
             <Button
               variant="outlined"
               component={Link}
-              href={`/dashboard/tutor/allocations/${session?.allocation_id}`}
+              href={`/dashboard/tutor/allocations/${session?.id}`}
             >
               View details
             </Button>

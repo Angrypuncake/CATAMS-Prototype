@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Allocation Editing – Two Tables Mock</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root{
+      --bg:#0b1020; --card:#0f162e; --muted:#94a3b8; --text:#e5e7eb;
+      --primary:#3b82f6; --primary-600:#2563eb; --danger:#ef4444; --ok:#22c55e;
+      --border:#1e293b; --shadow:0 10px 20px rgba(0,0,0,.35),0 6px 6px rgba(0,0,0,.25)
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial;
+      background:linear-gradient(180deg,#0a0f1f 0%,#0b1120 100%); color:var(--text)}
+    .container{max-width:1200px;margin:0 auto;padding:16px 20px 60px}
+    .sticky{position:sticky;top:0;background:rgba(10,15,31,.85);backdrop-filter: blur(8px);
+      z-index:20;border-bottom:1px solid var(--border)}
+    .filters{display:grid;grid-template-columns:repeat(12,1fr);gap:12px;padding:12px 20px}
+    .field{grid-column:span 3;background:var(--card);border:1px solid var(--border);
+      border-radius:12px;padding:10px 12px;box-shadow:var(--shadow)}
+    .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px}
+    select,input[type="text"],input[type="time"],input[type="date"],input[type="number"]{
+      width:100%;background:#0b1226;color:var(--text);border:1px solid var(--border);
+      border-radius:10px;padding:8px 10px;outline:none
+    }
+    .tabs{display:flex;gap:8px;margin:14px 20px 0}
+    .tab{padding:8px 12px;border:1px solid var(--border);border-radius:999px;background:#0b1226;color:var(--muted);cursor:pointer}
+    .tab.active{background:var(--primary);border-color:var(--primary);color:white}
+    .section{margin-top:16px;background:var(--card);border:1px solid var(--border);
+      border-radius:14px;box-shadow:var(--shadow);overflow:hidden}
+    .section h2{margin:0;padding:12px 16px;border-bottom:1px solid var(--border);background:#0b1226}
+    .toolbar{display:flex;gap:8px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--border)}
+    table{width:100%;border-collapse:collapse}
+    thead th{position:sticky;top:0;background:#0b1226;color:#cbd5e1;border-bottom:1px solid var(--border);font-weight:600;padding:10px}
+    tbody td{border-top:1px solid var(--border);padding:10px;vertical-align:middle}
+    tbody tr:hover{background:#0b1226}
+    .muted{color:var(--muted)}
+    .pill{display:inline-block;padding:4px 8px;border-radius:999px;font-size:12px;color:white}
+    .pill.sch{background:#7c3aed}
+    .pill.un{background:#10b981}
+    button{background:#0b1226;color:var(--text);border:1px solid var(--border);border-radius:10px;padding:8px 10px;cursor:pointer}
+    button.primary{background:var(--primary);border-color:var(--primary);color:white}
+    button.danger{background:#1f0b0b;border-color:#3b0f0f;color:#fecaca}
+    button:disabled{opacity:.55;cursor:not-allowed}
+    .bulkbar{position:sticky;bottom:0;display:none;gap:8px;align-items:center;padding:10px;
+      background:rgba(10,15,31,.95);backdrop-filter:blur(6px);border-top:1px solid var(--border);z-index:15}
+    .drawer{position:fixed;top:0;right:-460px;width:440px;height:100vh;background:var(--card);
+      border-left:1px solid var(--border);box-shadow:var(--shadow);padding:16px;transition:right .25s ease;z-index:30}
+    .drawer.open{right:0}
+    .drawer h3{margin:4px 0 12px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+    .help{font-size:12px;color:var(--muted)}
+    .divider{height:1px;background:var(--border);margin:10px 0}
+    .toast{position:fixed;top:16px;right:16px;background:#10203f;border:1px solid var(--border);padding:8px 12px;border-radius:10px;display:none;z-index:50}
+    .weeks-box{display:flex;flex-wrap:wrap;gap:6px;max-height:110px;overflow:auto;border:1px solid var(--border);border-radius:10px;padding:8px;background:#0b1226}
+    .weeks-box label{display:inline-flex;gap:6px;align-items:center;padding:4px 8px;border:1px solid var(--border);border-radius:8px;background:#0e1730;cursor:pointer}
+    .subtle{opacity:.85}
+    .grid-wrap{overflow:auto}
+  </style>
+</head>
+<body>
+  <div class="sticky">
+    <div class="container">
+      <div class="filters">
+        <div class="field">
+          <label>Session</label>
+          <select id="sessionSelect">
+            <option value="2025S1" selected>2025S1</option>
+            <option value="2025S2">2025S2</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Year</label>
+          <select id="yearSelect">
+            <option value="2025" selected>2025</option>
+            <option value="2026">2026</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Unit Offering</label>
+          <select id="offeringSelect"></select>
+        </div>
+        <div class="field">
+          <label>Activity (for Scheduled tab)</label>
+          <select id="activitySelect"><option value="">All activities</option></select>
+        </div>
+        <div class="field" style="grid-column: span 4;">
+          <label>Search (tutor/email)</label>
+          <input id="searchBox" type="text" placeholder="Type to filter…"/>
+        </div>
+      </div>
+      <div class="tabs">
+        <div class="tab active" data-tab="scheduled">Scheduled</div>
+        <div class="tab" data-tab="unscheduled">Unscheduled</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Scheduled -->
+    <div class="section" id="scheduledSection">
+      <h2>Scheduled Allocations</h2>
+      <div class="toolbar">
+        <label class="muted">Showing sessions for selected Offering / Activity.</label>
+        <div style="flex:1"></div>
+        <button id="schedRefresh">Refresh</button>
+      </div>
+      <div class="grid-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:36px;"><input type="checkbox" id="schedSelectAll"></th>
+              <th>Tutor</th>
+              <th>Date</th>
+              <th>Day</th>
+              <th>Start</th>
+              <th>End</th>
+              <th>Hours</th>
+              <th>Activity</th>
+              <th>Paycode</th>
+              <th>Status</th>
+              <th style="width:150px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="schedRows"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Unscheduled -->
+    <div class="section" id="unscheduledSection" style="display:none;">
+      <h2>Unscheduled Allocations</h2>
+      <div class="toolbar">
+        <label class="muted">Standalone hours; not linked to session occurrences.</label>
+        <div style="flex:1"></div>
+        <button id="unschedRefresh">Refresh</button>
+      </div>
+      <div class="grid-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:36px;"><input type="checkbox" id="unschedSelectAll"></th>
+              <th>Tutor</th>
+              <th>Activity</th>
+              <th>Allocated Hours</th>
+              <th>Paycode</th>
+              <th>Status</th>
+              <th style="width:150px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="unschedRows"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk bars -->
+  <div class="bulkbar" id="schedBulk">
+    <span class="muted" id="schedSelCount">0 selected</span>
+    <select id="schedBulkTutor"></select>
+    <select id="schedBulkPaycode"></select>
+    <input type="time" id="schedBulkStart">
+    <input type="time" id="schedBulkEnd">
+    <select id="schedBulkDOW">
+      <option value="">Day of Week…</option>
+      <option>Mon</option><option>Tue</option><option>Wed</option><option>Thu</option><option>Fri</option>
+    </select>
+    <button class="primary" id="schedBulkApply">Apply (pattern)</button>
+  </div>
+
+  <div class="bulkbar" id="unschedBulk">
+    <span class="muted" id="unschedSelCount">0 selected</span>
+    <select id="unschedBulkTutor"></select>
+    <select id="unschedBulkPaycode"></select>
+    <input type="number" step="0.25" min="0" id="unschedBulkHours" placeholder="Set hours"/>
+    <button class="primary" id="unschedBulkApply">Apply</button>
+  </div>
+
+  <!-- Drawer: Scheduled -->
+  <div class="drawer" id="drawerSched">
+    <h3>Edit Scheduled Allocation</h3>
+    <div id="schedMeta" class="help"></div>
+    <div class="divider"></div>
+
+    <div class="row">
+      <div>
+        <label class="help">Tutor</label>
+        <select id="schedTutor"></select>
+      </div>
+      <div>
+        <label class="help">Paycode</label>
+        <select id="schedPaycode"></select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label class="help">Date (this session only)</label>
+        <input type="date" id="schedDate"/>
+      </div>
+      <div>
+        <label class="help">Start / End</label>
+        <div style="display:flex;gap:8px;">
+          <input type="time" id="schedStart"/>
+          <input type="time" id="schedEnd"/>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+    <div class="help"><strong>Propagation Scope</strong> (for pattern changes)</div>
+    <div class="row">
+      <div style="grid-column:span 2;">
+        <select id="schedScope">
+          <option value="single" selected>This session only</option>
+          <option value="all">All sessions in this activity</option>
+          <option value="subset">Subset of weeks</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="row" id="schedPatternRow">
+      <div>
+        <label class="help">Day of Week (for propagation)</label>
+        <select id="schedDOW">
+          <option value="">— keep current —</option>
+          <option>Mon</option><option>Tue</option><option>Wed</option><option>Thu</option><option>Fri</option>
+        </select>
+      </div>
+      <div>
+        <label class="help">Start / End (for propagation)</label>
+        <div style="display:flex;gap:8px;">
+          <input type="time" id="schedPropStart"/>
+          <input type="time" id="schedPropEnd"/>
+        </div>
+      </div>
+    </div>
+
+    <div id="schedSubsetWrap" style="display:none;">
+      <div class="help" style="margin:6px 0 4px;">Select weeks</div>
+      <div class="weeks-box" id="schedSubsetBox"></div>
+    </div>
+
+    <div class="divider"></div>
+    <div id="schedMsg" class="help subtle"></div>
+    <div class="divider"></div>
+    <div style="display:flex;gap:8px;">
+      <button id="schedCancel">Cancel</button>
+      <button class="primary" id="schedSave">Save (Mock)</button>
+    </div>
+  </div>
+
+  <!-- Drawer: Unscheduled -->
+  <div class="drawer" id="drawerUnsched">
+    <h3>Edit Unscheduled Allocation</h3>
+    <div id="unschedMeta" class="help"></div>
+    <div class="divider"></div>
+
+    <div class="row">
+      <div>
+        <label class="help">Tutor</label>
+        <select id="unsTutor"></select>
+      </div>
+      <div>
+        <label class="help">Paycode</label>
+        <select id="unsPaycode"></select>
+      </div>
+    </div>
+
+    <div class="row">
+      <div>
+        <label class="help">Allocated Hours</label>
+        <input type="number" step="0.25" min="0" id="unsHours" placeholder="e.g., 2.0"/>
+      </div>
+      <div></div>
+    </div>
+
+    <div class="divider"></div>
+    <div id="unsMsg" class="help subtle"></div>
+    <div class="divider"></div>
+    <div style="display:flex;gap:8px;">
+      <button id="unsCancel">Cancel</button>
+      <button class="primary" id="unsSave">Save (Mock)</button>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    /* ---------------- Mock Data ---------------- */
+    const offerings = [
+      {offering_id:1, unit_code:'SOFT3888', unit_name:'Software Engineering Workshop', session:'2025S1', year:2025},
+      {offering_id:2, unit_code:'INFO3333', unit_name:'Enterprise Systems', session:'2025S1', year:2025},
+    ];
+    const activities = [
+      {activity_id:11, unit_offering_id:1, activity_type:'Workshop', activity_name:'WKSP A'},
+      {activity_id:12, unit_offering_id:1, activity_type:'Workshop', activity_name:'WKSP B'},
+      {activity_id:21, unit_offering_id:2, activity_type:'Lab',      activity_name:'LAB 1'},
+    ];
+    const paycodes = ['TUT-L1','TUT-L2','TUT-PHD'];
+    const tutorsByOffering = {
+      1: [
+        {user_id:101, name:'Alex Carter',   email:'alex@example.edu'},
+        {user_id:102, name:'Gemma Li',      email:'gemma@example.edu'},
+        {user_id:103, name:'Justin Tran',   email:'justin@example.edu'},
+      ],
+      2: [
+        {user_id:201, name:'Suryansh Rao',  email:'sury@example.edu'},
+        {user_id:202, name:'Cameron Ho',    email:'cameron@example.edu'},
+      ]
+    };
+    function makeWeeks(startISO, count){
+      const out=[], start=new Date(startISO);
+      for(let i=0;i<count;i++){ const d=new Date(start); d.setDate(start.getDate()+7*i);
+        out.push({occurrence_id:1000+i, date:d.toISOString().slice(0,10), dow:d.getDay()});
+      }
+      return out;
+    }
+    const weeksByActivity = {
+      11: makeWeeks('2025-03-03', 6), // Monday series
+      12: makeWeeks('2025-03-04', 6), // Tuesday series
+      21: makeWeeks('2025-03-05', 6), // Wednesday series
+    };
+    // Seed scheduled allocations (one per week to start)
+    let scheduled = [];
+    let unscheduled = [];
+    (function seed(){
+      // offering 1, act 11
+      weeksByActivity[11].forEach((w,i)=>{
+        scheduled.push({
+          allocation_id: 500+i, offering_id:1, activity_id:11, occurrence_id:w.occurrence_id,
+          tutor_id:101, tutor_name:'Alex Carter',
+          paycode:'TUT-L2',
+          date:w.date, start:'10:00', end:'12:00', hours:2,
+          status:'ok'
+        });
+      });
+      // offering 1, act 12
+      weeksByActivity[12].slice(0,3).forEach((w,i)=>{
+        scheduled.push({
+          allocation_id: 600+i, offering_id:1, activity_id:12, occurrence_id:w.occurrence_id,
+          tutor_id:102, tutor_name:'Gemma Li',
+          paycode:'TUT-L1',
+          date:w.date, start:'09:00', end:'11:00', hours:2,
+          status:'ok'
+        });
+      });
+      // offering 2, act 21
+      weeksByActivity[21].slice(0,2).forEach((w,i)=>{
+        scheduled.push({
+          allocation_id: 700+i, offering_id:2, activity_id:21, occurrence_id:w.occurrence_id,
+          tutor_id:201, tutor_name:'Suryansh Rao',
+          paycode:'TUT-L1',
+          date:w.date, start:'14:00', end:'16:00', hours:2,
+          status:'ok'
+        });
+      });
+      // Unscheduled hours (offering 1)
+      unscheduled.push(
+        {allocation_id: 800, offering_id:1, activity_id:12, tutor_id:102, tutor_name:'Gemma Li', paycode:'TUT-L1', hours:1.5, status:'pending'},
+        {allocation_id: 801, offering_id:1, activity_id:11, tutor_id:103, tutor_name:'Justin Tran', paycode:'TUT-L2', hours:2.0, status:'ok'},
+      );
+    })();
+
+    /* ---------------- State ---------------- */
+    const state = {
+      tab:'scheduled',
+      session:'2025S1',
+      year:'2025',
+      offering:null,
+      activity:null,
+      search:'',
+      schedSel:new Set(),
+      unselSel:new Set(),
+      editing:null, // {type:'scheduled'|'unscheduled', id:number}
+      editingContext:null // cached row for drawer
+    };
+
+    /* ---------------- DOM ---------------- */
+    const offeringSelect = document.getElementById('offeringSelect');
+    const activitySelect = document.getElementById('activitySelect');
+    const schedRowsEl = document.getElementById('schedRows');
+    const unschedRowsEl = document.getElementById('unschedRows');
+    const schedBulk = document.getElementById('schedBulk');
+    const unschedBulk = document.getElementById('unschedBulk');
+    const schedSelCount = document.getElementById('schedSelCount');
+    const unschedSelCount = document.getElementById('unschedSelCount');
+    const schedBulkTutor = document.getElementById('schedBulkTutor');
+    const schedBulkPaycode = document.getElementById('schedBulkPaycode');
+    const schedBulkStart = document.getElementById('schedBulkStart');
+    const schedBulkEnd   = document.getElementById('schedBulkEnd');
+    const schedBulkDOW   = document.getElementById('schedBulkDOW');
+    const unschedBulkTutor = document.getElementById('unschedBulkTutor');
+    const unschedBulkPaycode = document.getElementById('unschedBulkPaycode');
+    const unschedBulkHours = document.getElementById('unschedBulkHours');
+
+    const drawerSched = document.getElementById('drawerSched');
+    const schedMeta = document.getElementById('schedMeta');
+    const schedTutor = document.getElementById('schedTutor');
+    const schedPaycode = document.getElementById('schedPaycode');
+    const schedDate = document.getElementById('schedDate');
+    const schedStart = document.getElementById('schedStart');
+    const schedEnd = document.getElementById('schedEnd');
+    const schedScope = document.getElementById('schedScope');
+    const schedDOW = document.getElementById('schedDOW');
+    const schedPropStart = document.getElementById('schedPropStart');
+    const schedPropEnd = document.getElementById('schedPropEnd');
+    const schedSubsetWrap = document.getElementById('schedSubsetWrap');
+    const schedSubsetBox = document.getElementById('schedSubsetBox');
+    const schedMsg = document.getElementById('schedMsg');
+
+    const drawerUnsched = document.getElementById('drawerUnsched');
+    const unsTutor = document.getElementById('unsTutor');
+    const unsPaycode = document.getElementById('unsPaycode');
+    const unsHours = document.getElementById('unsHours');
+    const unsMsg = document.getElementById('unsMsg');
+
+    const toast = document.getElementById('toast');
+
+    /* ---------------- Init ---------------- */
+    initFilters();
+    attachGlobalHandlers();
+    render();
+
+    function initFilters(){
+      refillOfferings();
+      fillActivities();
+      fillTutorDropdowns();
+
+      document.getElementById('sessionSelect').addEventListener('change', e=>{
+        state.session = e.target.value;
+        refillOfferings(); fillActivities(); fillTutorDropdowns(); render();
+      });
+      document.getElementById('yearSelect').addEventListener('change', e=>{
+        state.year = e.target.value;
+        refillOfferings(); fillActivities(); fillTutorDropdowns(); render();
+      });
+      offeringSelect.addEventListener('change', e=>{
+        state.offering = Number(e.target.value)||null;
+        state.activity = null;
+        fillActivities(); fillTutorDropdowns(); render();
+      });
+      activitySelect.addEventListener('change', e=>{
+        state.activity = e.target.value ? Number(e.target.value) : null;
+        render();
+      });
+      document.getElementById('searchBox').addEventListener('input', e=>{
+        state.search = e.target.value.toLowerCase();
+        render();
+      });
+
+      document.querySelectorAll('.tab').forEach(t=>{
+        t.addEventListener('click', ()=>{
+          document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+          t.classList.add('active');
+          state.tab = t.dataset.tab;
+          document.getElementById('scheduledSection').style.display = (state.tab==='scheduled')?'block':'none';
+          document.getElementById('unscheduledSection').style.display = (state.tab==='unscheduled')?'block':'none';
+          renderBulkBars();
+        });
+      });
+
+      document.getElementById('schedSelectAll').addEventListener('change', e=>{
+        if(e.target.checked) visibleScheduled().forEach(r=>state.schedSel.add(r.allocation_id));
+        else state.schedSel.clear();
+        render(); renderBulkBars();
+      });
+      document.getElementById('unschedSelectAll').addEventListener('change', e=>{
+        if(e.target.checked) visibleUnscheduled().forEach(r=>state.unselSel.add(r.allocation_id));
+        else state.unselSel.clear();
+        render(); renderBulkBars();
+      });
+
+      document.getElementById('schedRefresh').addEventListener('click', ()=>{ render(); showToast('Refreshed'); });
+      document.getElementById('unschedRefresh').addEventListener('click', ()=>{ render(); showToast('Refreshed'); });
+
+      // Bulk apply handlers (mock)
+      document.getElementById('schedBulkApply').addEventListener('click', ()=>{
+        const ids = Array.from(state.schedSel);
+        if(!ids.length) return;
+        const tId = Number(schedBulkTutor.value)||null;
+        const pc = schedBulkPaycode.value||null;
+        const st = schedBulkStart.value||null;
+        const en = schedBulkEnd.value||null;
+        const dw = schedBulkDOW.value||null;
+
+        scheduled = scheduled.map(a=>{
+          if(!state.schedSel.has(a.allocation_id)) return a;
+          if(tId){
+            const t = (tutorsByOffering[a.offering_id]||[]).find(x=>x.user_id===tId);
+            if(t){ a.tutor_id=t.user_id; a.tutor_name=t.name; }
+          }
+          if(pc) a.paycode = pc;
+          if(st) a.start = st;
+          if(en) a.end = en;
+          if(dw){ a.date = shiftToDow(a.date, dw); }
+          return a;
+        });
+        showToast(`Applied pattern to ${ids.length} session(s)`);
+        render();
+      });
+
+      document.getElementById('unschedBulkApply').addEventListener('click', ()=>{
+        const ids = Array.from(state.unselSel);
+        if(!ids.length) return;
+        const tId = Number(unschedBulkTutor.value)||null;
+        const pc = unschedBulkPaycode.value||null;
+        const hrs = unschedBulkHours.value ? Number(unschedBulkHours.value) : null;
+        if(hrs!==null && hrs<=0) return showToast('Hours must be > 0');
+
+        unscheduled = unscheduled.map(a=>{
+          if(!state.unselSel.has(a.allocation_id)) return a;
+          if(tId){
+            const t = (tutorsByOffering[a.offering_id]||[]).find(x=>x.user_id===tId);
+            if(t){ a.tutor_id=t.user_id; a.tutor_name=t.name; }
+          }
+          if(pc) a.paycode = pc;
+          if(hrs!==null) a.hours = hrs;
+          return a;
+        });
+        showToast(`Applied to ${ids.length} allocation(s)`);
+        render();
+      });
+    }
+
+    function refillOfferings(){
+      const opts = offerings
+        .filter(o=>o.session===state.session && String(o.year)===String(state.year))
+        .map(o=>({value:o.offering_id, label:`${o.unit_code} – ${o.unit_name}`}));
+      offeringSelect.innerHTML = opts.map(o=>`<option value="${o.value}">${o.label}</option>`).join('');
+      state.offering = opts[0]?.value ?? null;
+    }
+
+    function fillActivities(){
+      const acts = activities.filter(a=>a.unit_offering_id===Number(state.offering));
+      activitySelect.innerHTML = `<option value="">All activities</option>` +
+        acts.map(a=>`<option value="${a.activity_id}">${a.activity_type} – ${a.activity_name}</option>`).join('');
+      if(state.activity && !acts.find(a=>a.activity_id===state.activity)) state.activity = null;
+      activitySelect.value = state.activity ?? '';
+    }
+
+    function fillTutorDropdowns(){
+      const tutors = tutorsByOffering[state.offering] || [];
+      // bulk
+      schedBulkTutor.innerHTML = `<option value="">Tutor…</option>` + tutors.map(t=>`<option value="${t.user_id}">${t.name}</option>`).join('');
+      unschedBulkTutor.innerHTML = `<option value="">Tutor…</option>` + tutors.map(t=>`<option value="${t.user_id}">${t.name}</option>`).join('');
+      // bulk paycodes
+      const pco = `<option value="">Paycode…</option>` + paycodes.map(p=>`<option>${p}</option>`).join('');
+      schedBulkPaycode.innerHTML = pco;
+      unschedBulkPaycode.innerHTML = pco;
+
+      // drawer (scheduled)
+      document.getElementById('schedTutor').innerHTML = tutors.map(t=>`<option value="${t.user_id}">${t.name}</option>`).join('');
+      document.getElementById('schedPaycode').innerHTML = paycodes.map(p=>`<option>${p}</option>`).join('');
+      // drawer (unscheduled)
+      document.getElementById('unsTutor').innerHTML = tutors.map(t=>`<option value="${t.user_id}">${t.name}</option>`).join('');
+      document.getElementById('unsPaycode').innerHTML = paycodes.map(p=>`<option>${p}</option>`).join('');
+    }
+
+    function attachGlobalHandlers(){
+      // Row click handlers delegated on render
+      document.getElementById('schedCancel').addEventListener('click', closeSchedDrawer);
+      document.getElementById('unsCancel').addEventListener('click', closeUnschedDrawer);
+      document.getElementById('schedSave').addEventListener('click', saveSchedMock);
+      document.getElementById('unsSave').addEventListener('click', saveUnschedMock);
+
+      schedScope.addEventListener('change', ()=>{
+        const v = schedScope.value;
+        schedSubsetWrap.style.display = (v==='subset') ? 'block' : 'none';
+      });
+    }
+
+    /* ---------------- Render ---------------- */
+    function visibleScheduled(){
+      const res = scheduled.filter(a=>{
+        if(state.offering && a.offering_id!==Number(state.offering)) return false;
+        if(state.activity && a.activity_id!==Number(state.activity)) return false;
+        if(state.search){
+          const hay = (a.tutor_name||'').toLowerCase();
+          if(!hay.includes(state.search)) return false;
+        }
+        return true;
+      });
+      return res.sort((a,b)=>a.date.localeCompare(b.date));
+    }
+    function visibleUnscheduled(){
+      const res = unscheduled.filter(a=>{
+        if(state.offering && a.offering_id!==Number(state.offering)) return false;
+        if(state.search){
+          const hay = (a.tutor_name||'').toLowerCase();
+          if(!hay.includes(state.search)) return false;
+        }
+        return true;
+      });
+      return res;
+    }
+
+    function render(){
+      // Scheduled table
+      const vs = visibleScheduled();
+      schedRowsEl.innerHTML = vs.map(r=>{
+        const checked = state.schedSel.has(r.allocation_id) ? 'checked' : '';
+        const dow = shortDow(new Date(r.date).getDay());
+        const act = activities.find(a=>a.activity_id===r.activity_id);
+        return `<tr>
+          <td><input class="schedPick" type="checkbox" data-id="${r.allocation_id}" ${checked}/></td>
+          <td>${r.tutor_name||'—'}</td>
+          <td>${r.date}</td>
+          <td>${dow}</td>
+          <td>${r.start}</td>
+          <td>${r.end}</td>
+          <td>${r.hours}</td>
+          <td>${act? (act.activity_type+' – '+act.activity_name) : '—'}</td>
+          <td>${r.paycode||'—'}</td>
+          <td>${r.status||'—'}</td>
+          <td><button class="editSched" data-id="${r.allocation_id}">Edit</button></td>
+        </tr>`;
+      }).join('');
+
+      // Unscheduled table
+      const vu = visibleUnscheduled();
+      unschedRowsEl.innerHTML = vu.map(r=>{
+        const checked = state.unselSel.has(r.allocation_id) ? 'checked' : '';
+        const act = activities.find(a=>a.activity_id===r.activity_id);
+        return `<tr>
+          <td><input class="unsPick" type="checkbox" data-id="${r.allocation_id}" ${checked}/></td>
+          <td>${r.tutor_name||'—'}</td>
+          <td>${act? (act.activity_type+' – '+act.activity_name) : '—'}</td>
+          <td>${r.hours}</td>
+          <td>${r.paycode||'—'}</td>
+          <td>${r.status||'—'}</td>
+          <td><button class="editUnsched" data-id="${r.allocation_id}">Edit</button></td>
+        </tr>`;
+      }).join('');
+
+      // Hook up row controls
+      document.querySelectorAll('.schedPick').forEach(cb=>{
+        cb.addEventListener('change', e=>{
+          const id = Number(e.target.dataset.id);
+          if(e.target.checked) state.schedSel.add(id); else state.schedSel.delete(id);
+          renderBulkBars();
+        });
+      });
+      document.querySelectorAll('.unsPick').forEach(cb=>{
+        cb.addEventListener('change', e=>{
+          const id = Number(e.target.dataset.id);
+          if(e.target.checked) state.unselSel.add(id); else state.unselSel.delete(id);
+          renderBulkBars();
+        });
+      });
+      document.querySelectorAll('.editSched').forEach(btn=>{
+        btn.addEventListener('click', ()=>openSchedDrawer(Number(btn.dataset.id)));
+      });
+      document.querySelectorAll('.editUnsched').forEach(btn=>{
+        btn.addEventListener('click', ()=>openUnschedDrawer(Number(btn.dataset.id)));
+      });
+
+      renderBulkBars();
+    }
+
+    function renderBulkBars(){
+      const ns = state.schedSel.size, nu = state.unselSel.size;
+      schedSelCount.textContent = `${ns} selected`;
+      unschedSelCount.textContent = `${nu} selected`;
+      schedBulk.style.display = (state.tab==='scheduled' && ns>0) ? 'flex' : 'none';
+      unschedBulk.style.display = (state.tab==='unscheduled' && nu>0) ? 'flex' : 'none';
+    }
+
+    /* ---------------- Scheduled Drawer ---------------- */
+    function openSchedDrawer(id){
+      const row = scheduled.find(a=>a.allocation_id===id);
+      if(!row) return;
+      state.editing = {type:'scheduled', id};
+      state.editingContext = row;
+
+      const tutors = tutorsByOffering[row.offering_id]||[];
+      schedTutor.innerHTML = tutors.map(t=>`<option value="${t.user_id}">${t.name}</option>`).join('');
+      schedTutor.value = row.tutor_id ?? '';
+      schedPaycode.innerHTML = paycodes.map(p=>`<option>${p}</option>`).join('');
+      schedPaycode.value = row.paycode ?? paycodes[0];
+      schedDate.value = row.date;
+      schedStart.value = row.start; schedEnd.value = row.end;
+
+      // Propagation helpers
+      schedScope.value = 'single';
+      schedSubsetWrap.style.display = 'none';
+      const weeks = weeksByActivity[row.activity_id] || [];
+      schedSubsetBox.innerHTML = weeks.map(w=>{
+        const id = `wk_${w.occurrence_id}`;
+        return `<label><input type="checkbox" value="${w.occurrence_id}"/> ${w.date}</label>`;
+      }).join('');
+      schedDOW.value = '';
+      schedPropStart.value=''; schedPropEnd.value='';
+
+      const act = activities.find(a=>a.activity_id===row.activity_id);
+      schedMeta.textContent = `Alloc #${row.allocation_id} • Offering ${row.offering_id} • ${act? (act.activity_type+' – '+act.activity_name) : ''}`;
+      schedMsg.textContent = 'Change Date to move only this session. Use Day of Week / Start-End to change pattern across weeks.';
+      drawerSched.classList.add('open');
+    }
+
+    function closeSchedDrawer(){
+      drawerSched.classList.remove('open');
+      state.editing = null;
+      state.editingContext = null;
+    }
+
+    function saveSchedMock(){
+      const row = state.editingContext;
+      if(!row) return;
+
+      const tId = Number(schedTutor.value)||null;
+      const pc  = schedPaycode.value;
+      const dt  = schedDate.value;
+      const st  = schedStart.value;
+      const en  = schedEnd.value;
+
+      // basic guards
+      if(!st || !en) return showToast('Start/End required');
+      if(st >= en)   return showToast('End must be after Start');
+
+      // apply single-session edits
+      scheduled = scheduled.map(a=>{
+        if(a.allocation_id!==row.allocation_id) return a;
+        if(tId){
+          const t = (tutorsByOffering[a.offering_id]||[]).find(x=>x.user_id===tId);
+          if(t){ a.tutor_id=t.user_id; a.tutor_name=t.name; }
+        }
+        a.paycode = pc || a.paycode;
+        a.date = dt || a.date; // single-session date move
+        a.start = st; a.end = en;
+        return a;
+      });
+
+      // handle propagation pattern if scope != single
+      const scope = schedScope.value;
+      if(scope!=='single'){
+        const propDow = schedDOW.value || null;
+        const propSt  = schedPropStart.value || null;
+        const propEn  = schedPropEnd.value || null;
+        // If user wants to propagate, they should specify at least one of DOW/time
+        if(!propDow && !propSt && !propEn){
+          showToast('No pattern change selected; saved single session only');
+          closeSchedDrawer(); render(); return;
+        }
+        const sameActivityIds = scheduled
+          .filter(a=>a.activity_id===row.activity_id && a.offering_id===row.offering_id)
+          .map(a=>a.allocation_id);
+
+        let targets = new Set(sameActivityIds);
+        if(scope==='subset'){
+          const chosen = Array.from(schedSubsetBox.querySelectorAll('input[type="checkbox"]:checked'))
+            .map(cb=>Number(cb.value));
+          const byOcc = new Set(chosen);
+          targets = new Set(scheduled.filter(a=>a.activity_id===row.activity_id && byOcc.has(a.occurrence_id)).map(a=>a.allocation_id));
+        }
+
+        scheduled = scheduled.map(a=>{
+          if(!targets.has(a.allocation_id)) return a;
+          if(propDow){ a.date = shiftToDow(a.date, propDow); }
+          if(propSt){ a.start = propSt; }
+          if(propEn){ a.end   = propEn; }
+          return a;
+        });
+      }
+
+      showToast('Saved (mock)');
+      closeSchedDrawer();
+      render();
+    }
+
+    /* ---------------- Unscheduled Drawer ---------------- */
+    function openUnschedDrawer(id){
+      const row = unscheduled.find(a=>a.allocation_id===id);
+      if(!row) return;
+      state.editing = {type:'unscheduled', id};
+      state.editingContext = row;
+
+      const tutors = tutorsByOffering[row.offering_id]||[];
+      unsTutor.innerHTML = tutors.map(t=>`<option value="${t.user_id}">${t.name}</option>`).join('');
+      unsTutor.value = row.tutor_id ?? '';
+      unsPaycode.innerHTML = paycodes.map(p=>`<option>${p}</option>`).join('');
+      unsPaycode.value = row.paycode ?? paycodes[0];
+      unsHours.value = row.hours ?? '';
+
+      const act = activities.find(a=>a.activity_id===row.activity_id);
+      document.getElementById('unschedMeta').textContent =
+        `Alloc #${row.allocation_id} • Offering ${row.offering_id} • ${act? (act.activity_type+' – '+act.activity_name) : ''}`;
+      unsMsg.textContent = 'Unscheduled hours editable. No session date/time.';
+      drawerUnsched.classList.add('open');
+    }
+    function closeUnschedDrawer(){
+      drawerUnsched.classList.remove('open');
+      state.editing = null;
+      state.editingContext = null;
+    }
+    function saveUnschedMock(){
+      const row = state.editingContext;
+      if(!row) return;
+      const tId = Number(unsTutor.value)||null;
+      const pc  = unsPaycode.value;
+      const hrs = unsHours.value ? Number(unsHours.value) : null;
+      if(hrs===null || hrs<=0) return showToast('Hours must be > 0');
+
+      unscheduled = unscheduled.map(a=>{
+        if(a.allocation_id!==row.allocation_id) return a;
+        if(tId){
+          const t = (tutorsByOffering[a.offering_id]||[]).find(x=>x.user_id===tId);
+          if(t){ a.tutor_id=t.user_id; a.tutor_name=t.name; }
+        }
+        a.paycode = pc || a.paycode;
+        a.hours = hrs;
+        return a;
+      });
+      showToast('Saved (mock)');
+      closeUnschedDrawer();
+      render();
+    }
+
+    /* ---------------- Utilities ---------------- */
+    function shortDow(n){ return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][n]; }
+    function dowToNum(dw){
+      const map = {Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+      return map[dw] ?? null;
+    }
+    function shiftToDow(dateISO, toDwShort){
+      const to = dowToNum(toDwShort);
+      if(to==null) return dateISO;
+      const d = new Date(dateISO);
+      const cur = d.getDay();
+      const diff = (to - cur + 7) % 7;
+      d.setDate(d.getDate() + diff);
+      return d.toISOString().slice(0,10);
+    }
+    function showToast(msg){
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      setTimeout(()=>toast.style.display='none', 1400);
+    }
+  </script>
+</body>
+</html>

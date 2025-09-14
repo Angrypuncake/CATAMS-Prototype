@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Allocations – Scheduled & Unscheduled (Light Mode)</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+  :root{
+    --bg:#f8fafc; --card:#ffffff; --muted:#64748b; --text:#0f172a;
+    --primary:#2563eb; --border:#e2e8f0; --ok:#16a34a; --warn:#d97706; --err:#dc2626;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:ui-sans-serif,system-ui,Segoe UI,Roboto,Helvetica,Arial;color:var(--text);background:var(--bg)}
+  .wrap{max-width:1200px;margin:24px auto;padding:0 16px}
+  h1{margin:0 0 6px;font-weight:700;font-size:22px}
+  h2{margin:18px 0 10px;font-size:18px}
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 24px rgba(15,23,42,.06);padding:14px}
+  .toolbar{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+  .spacer{flex:1}
+  .muted{color:var(--muted)}
+  .divider{height:1px;background:var(--border);margin:12px 0}
+  table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+  thead th{background:#f1f5f9;font-weight:600;color:#0f172a;text-align:left;padding:10px;border-bottom:1px solid var(--border)}
+  tbody td{padding:10px;border-top:1px solid var(--border);vertical-align:middle}
+  tbody tr:hover{background:#f8fafc}
+  .pill{display:inline-block;padding:2px 8px;border-radius:999px;background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe;font-size:12px}
+  button{background:#fff;border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:10px;cursor:pointer}
+  button.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+  button.ghost{background:#fff;border:1px solid var(--border);color:var(--text)}
+  input[type="text"],input[type="date"],input[type="time"],input[type="number"],select,textarea{
+    width:100%;background:#fff;color:var(--text);border:1px solid var(--border);
+    border-radius:10px;padding:8px 10px;outline:none
+  }
+  textarea{min-height:76px;resize:vertical}
+  .help{font-size:12px;color:var(--muted)}
+  .msg{padding:10px;border-radius:10px;margin:10px 0;border:1px solid;}
+  .msg.ok{background:#ecfdf5;border-color:#bbf7d0;color:#065f46}
+  .msg.warn{background:#fffbeb;border-color:#fde68a;color:#92400e}
+  .msg.err{background:#fef2f2;border-color:#fecaca;color:#7f1d1d}
+  .note{font-size:13px;color:#0f172a}
+  /* Drawer */
+  .drawer{position:fixed;top:0;right:-520px;width:500px;height:100vh;background:#fff;border-left:1px solid var(--border);
+    box-shadow: -8px 0 24px rgba(15,23,42,.08);transition:right .25s ease;z-index:50;display:flex;flex-direction:column}
+  .drawer.open{right:0}
+  .drawer-head{padding:14px 16px;border-bottom:1px solid var(--border)}
+  .drawer-body{padding:14px 16px;overflow:auto}
+  .drawer-foot{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+  .full{grid-column:1 / -1}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .weeks{border:1px solid var(--border);border-radius:12px;padding:10px;background:#fff}
+  .weeks table{width:100%;border-collapse:collapse}
+  .weeks th,.weeks td{border-top:1px solid var(--border);padding:10px;text-align:left;font-size:14px}
+  .weeks tr:first-child th,.weeks tr:first-child td{border-top:none}
+  /* Modal for unscheduled */
+  .modal{position:fixed;inset:0;background:rgba(15,23,42,.25);display:none;align-items:center;justify-content:center;z-index:60}
+  .modal.open{display:flex}
+  .sheet{width:min(560px,96vw);background:#fff;border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 24px rgba(15,23,42,.12)}
+  .sheet-head{padding:12px 14px;border-bottom:1px solid var(--border);display:flex;gap:8px;align-items:center}
+  .sheet-body{padding:14px}
+  .sheet-foot{padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px;justify-content:flex-end}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Allocations</h1>
+
+    <!-- Scheduled section -->
+    <div class="panel">
+      <div class="toolbar">
+        <h2 style="margin:0">Scheduled allocations</h2>
+        <div class="spacer"></div>
+        <span class="help muted">Editing acts on existing session occurrences only.</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Tutor</th><th>Date</th><th>Day</th><th>Start</th><th>End</th><th>Hours</th><th>Activity</th><th>Paycode</th><th>Status</th><th style="width:120px">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="schedBody"></tbody>
+      </table>
+    </div>
+
+    <!-- Unscheduled section -->
+    <div class="panel" style="margin-top:18px">
+      <div class="toolbar">
+        <h2 style="margin:0">Unscheduled allocations</h2>
+        <div class="spacer"></div>
+        <span class="help muted">Standalone hours; no session date/time.</span>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Tutor</th><th>Activity</th><th>Allocated Hours</th><th>Paycode</th><th>Status</th><th style="width:120px">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="unschedBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Drawer: Scheduled Edit -->
+  <div class="drawer" id="drawer">
+    <div class="drawer-head">
+      <div class="row">
+        <strong id="drawerTitle">Edit Scheduled Allocation</strong>
+        <span id="drawerMeta" class="muted help"></span>
+        <div class="spacer"></div>
+        <button id="closeDrawer">Close</button>
+      </div>
+    </div>
+    <div class="drawer-body">
+      <div class="grid2">
+        <div>
+          <label>Tutor</label>
+          <select id="tutorSel"></select>
+          <div class="help">Restricted to tutors eligible for this unit offering.</div>
+        </div>
+        <div>
+          <label>Paycode</label>
+          <select id="paySel"></select>
+        </div>
+
+        <div>
+          <label>Date (this session only)</label>
+          <input type="date" id="dateSingle"/>
+          <div class="help">Edits the underlying session occurrence (this week only).</div>
+        </div>
+        <div>
+          <label>Start / End (this session only)</label>
+          <div class="row"><input type="time" id="timeStart"/><span>–</span><input type="time" id="timeEnd"/></div>
+        </div>
+
+        <div class="full">
+          <label>Notes (this session)</label>
+          <textarea id="notes"></textarea>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="row">
+        <strong>Propagate across existing sessions</strong>
+        <span class="help">Tick weeks below to apply changes. Leave all unticked for “this session only”.</span>
+      </div>
+
+      <div class="grid3">
+        <div>
+          <label>Day of Week (pattern)</label>
+          <select id="dowSel">
+            <option value="">— keep current —</option>
+            <option>Mon</option><option>Tue</option><option>Wed</option><option>Thu</option><option>Fri</option>
+          </select>
+          <div class="help">Moves selected occurrences to this weekday within their calendar week.</div>
+        </div>
+        <div class="full" style="grid-column: span 2;">
+          <label>Fields to propagate</label>
+          <div class="row" style="gap:14px">
+            <label><input type="checkbox" class="prop" value="tutor"> Tutor</label>
+            <label><input type="checkbox" class="prop" value="paycode"> Paycode</label>
+            <label><input type="checkbox" class="prop" value="start"> Start</label>
+            <label><input type="checkbox" class="prop" value="end"> End</label>
+            <label><input type="checkbox" class="prop" value="notes"> Notes</label>
+          </div>
+          <div class="row" id="notesModeRow" style="display:none;margin-top:6px;">
+            <span class="help">Notes mode:</span>
+            <label class="row"><input type="radio" name="notesMode" value="overwrite" checked> Overwrite</label>
+            <label class="row"><input type="radio" name="notesMode" value="append"> Append (— separator)</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="weeks" style="margin-top:10px">
+        <div class="row">
+          <strong>Choose existing weeks</strong>
+          <div class="spacer"></div>
+          <button id="selectAll">Select All</button>
+          <button id="clearAll">Clear All</button>
+        </div>
+        <table>
+          <thead><tr><th style="width:44px"></th><th>Week</th><th>Date</th><th>Status</th></tr></thead>
+          <tbody id="wkBody"></tbody>
+        </table>
+        <div class="help" style="margin-top:6px">Tip: leaving all weeks unticked means “this session only”.</div>
+      </div>
+
+      <div id="alertBox" class="msg warn" style="display:none"></div>
+      <div id="previewBox" class="msg ok" style="display:none"></div>
+    </div>
+    <div class="drawer-foot">
+      <button id="cancelDrawer">Cancel</button>
+      <button id="previewBtn">Preview Changes</button>
+      <button class="primary" id="saveBtn">Save (Mock)</button>
+    </div>
+  </div>
+
+  <!-- Modal: Unscheduled Edit -->
+  <div class="modal" id="unsModal">
+    <div class="sheet">
+      <div class="sheet-head">
+        <strong>Edit Unscheduled Allocation</strong>
+        <div class="spacer"></div>
+        <button id="closeUns">Close</button>
+      </div>
+      <div class="sheet-body">
+        <div class="grid2">
+          <div>
+            <label>Tutor</label>
+            <select id="unsTutor"></select>
+          </div>
+          <div>
+            <label>Paycode</label>
+            <select id="unsPaycode"></select>
+          </div>
+          <div>
+            <label>Allocated Hours</label>
+            <input type="number" id="unsHours" min="0" step="0.25" placeholder="e.g., 2.0"/>
+          </div>
+          <div class="full">
+            <label>Notes</label>
+            <textarea id="unsNotes"></textarea>
+          </div>
+        </div>
+        <div id="unsAlert" class="msg err" style="display:none"></div>
+      </div>
+      <div class="sheet-foot">
+        <button id="cancelUns">Cancel</button>
+        <button class="primary" id="saveUns">Save (Mock)</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ---------------- Mock Data ---------------- */
+const tutorsByOffering = {
+  1: [
+    {user_id:101, name:'Alex Carter'},
+    {user_id:102, name:'Gemma Li'},
+    {user_id:103, name:'Justin Tran'},
+  ],
+  2: [
+    {user_id:201, name:'Suryansh Rao'},
+    {user_id:202, name:'Cameron Ho'},
+  ]
+};
+const paycodes = ['TUT-L1','TUT-L2','TUT-PHD'];
+
+const activities = [
+  {activity_id:11, offering_id:1, type:'Workshop', name:'WKSP A'},
+  {activity_id:12, offering_id:1, type:'Workshop', name:'WKSP B'},
+  {activity_id:21, offering_id:2, type:'Lab',      name:'LAB 1'},
+];
+
+function makeWeeks(startISO, n){
+  const out=[]; const start=new Date(startISO);
+  for(let i=0;i<n;i++){ const d=new Date(start); d.setDate(d.getDate()+7*i);
+    out.push({ occurrence_id:1000+i, date:d.toISOString().slice(0,10) });
+  } return out;
+}
+
+// Series per activity (existing sessions only)
+const seriesByActivity = {
+  11: makeWeeks('2025-03-03', 6), // Mon
+  12: makeWeeks('2025-03-04', 4), // Tue
+  21: makeWeeks('2025-03-05', 5), // Wed
+};
+
+// Seed scheduled allocations (one per existing occurrence for demo)
+let scheduled = [];
+Object.entries(seriesByActivity).forEach(([actId, weeks])=>{
+  const act = activities.find(a=>a.activity_id==actId);
+  const offering = act.offering_id;
+  const tutor = tutorsByOffering[offering][0];
+  weeks.forEach((w,i)=>{
+    scheduled.push({
+      allocation_id: Number(`${actId}${i}`),
+      offering_id: offering,
+      activity_id: Number(actId),
+      occurrence_id: w.occurrence_id,
+      date: w.date,
+      start:'10:00', end:'12:00', hours:2,
+      tutor_id: tutor.user_id, tutor_name: tutor.name,
+      paycode: 'TUT-L2',
+      status: 'ok'
+    });
+  });
+});
+
+// Unscheduled allocations (hours-only)
+let unscheduled = [
+  {allocation_id:800, offering_id:1, activity_id:11, tutor_id:102, tutor_name:'Gemma Li', paycode:'TUT-L1', hours:1.5, status:'pending', notes:''},
+  {allocation_id:801, offering_id:1, activity_id:12, tutor_id:103, tutor_name:'Justin Tran', paycode:'TUT-L2', hours:2.0, status:'ok', notes:''},
+];
+
+/* ---------------- DOM & Rendering ---------------- */
+const schedBody = document.getElementById('schedBody');
+const unschedBody = document.getElementById('unschedBody');
+
+function shortDow(n){ return ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][n]; }
+
+function renderTables(){
+  // Scheduled
+  schedBody.innerHTML = scheduled
+    .sort((a,b)=>a.date.localeCompare(b.date))
+    .map(r=>{
+      const act = activities.find(a=>a.activity_id===r.activity_id);
+      const dow = shortDow(new Date(r.date).getDay());
+      return `<tr>
+        <td>${r.tutor_name}</td>
+        <td>${r.date}</td>
+        <td>${dow}</td>
+        <td>${r.start}</td>
+        <td>${r.end}</td>
+        <td>${r.hours}</td>
+        <td>${act? (act.type+' – '+act.name) : '—'}</td>
+        <td>${r.paycode}</td>
+        <td>${r.status}</td>
+        <td><button class="editSched" data-id="${r.allocation_id}">Edit</button></td>
+      </tr>`;
+    }).join('');
+
+  // hook edits
+  document.querySelectorAll('.editSched').forEach(btn=>{
+    btn.addEventListener('click', ()=>openDrawer(Number(btn.dataset.id)));
+  });
+
+  // Unscheduled
+  unschedBody.innerHTML = unscheduled.map(r=>{
+    const act = activities.find(a=>a.activity_id===r.activity_id);
+    return `<tr>
+      <td>${r.tutor_name}</td>
+      <td>${act? (act.type+' – '+act.name) : '—'}</td>
+      <td>${r.hours}</td>
+      <td>${r.paycode}</td>
+      <td>${r.status}</td>
+      <td><button class="editUns" data-id="${r.allocation_id}">Edit</button></td>
+    </tr>`;
+  }).join('');
+  document.querySelectorAll('.editUns').forEach(btn=>{
+    btn.addEventListener('click', ()=>openUnsModal(Number(btn.dataset.id)));
+  });
+}
+renderTables();
+
+/* ---------------- Drawer (Scheduled Edit) ---------------- */
+const drawer = document.getElementById('drawer');
+const closeDrawerBtn = document.getElementById('closeDrawer');
+const cancelDrawerBtn = document.getElementById('cancelDrawer');
+const drawerTitle = document.getElementById('drawerTitle');
+const drawerMeta  = document.getElementById('drawerMeta');
+const tutorSel = document.getElementById('tutorSel');
+const paySel   = document.getElementById('paySel');
+const dateSingle = document.getElementById('dateSingle');
+const timeStart = document.getElementById('timeStart');
+const timeEnd   = document.getElementById('timeEnd');
+const notes     = document.getElementById('notes');
+const dowSel    = document.getElementById('dowSel');
+const notesModeRow = document.getElementById('notesModeRow');
+const wkBody    = document.getElementById('wkBody');
+const selectAllBtn = document.getElementById('selectAll');
+const clearAllBtn  = document.getElementById('clearAll');
+const alertBox  = document.getElementById('alertBox');
+const previewBox= document.getElementById('previewBox');
+const previewBtn= document.getElementById('previewBtn');
+const saveBtn   = document.getElementById('saveBtn');
+
+let editing = null; // current scheduled allocation row (object)
+
+function openDrawer(allocation_id){
+  const row = scheduled.find(a=>a.allocation_id===allocation_id);
+  if(!row) return;
+  editing = row;
+
+  const act = activities.find(a=>a.activity_id===row.activity_id);
+  drawerTitle.textContent = 'Edit Scheduled Allocation';
+  drawerMeta.textContent = ` • Alloc #${row.allocation_id} • ${act? (act.type+' '+act.name):''}`;
+
+  // Fill tutor/paycode lists per offering
+  fillSelect(tutorSel, (tutorsByOffering[row.offering_id]||[]).map(t=>({value:t.user_id,label:t.name})));
+  tutorSel.value = row.tutor_id;
+  fillSelect(paySel, paycodes.map(p=>({value:p,label:p})));
+  paySel.value = row.paycode;
+
+  // single session
+  dateSingle.value = row.date;
+  timeStart.value = row.start;
+  timeEnd.value   = row.end;
+  notes.value = row.notes || '';
+
+  // propagation
+  dowSel.value = '';
+  document.querySelectorAll('.prop').forEach(cb=>cb.checked=false);
+  notesModeRow.style.display='none';
+  renderWeeksForActivity(row.activity_id);
+
+  alertBox.style.display='none';
+  previewBox.style.display='none';
+
+  drawer.classList.add('open');
+}
+function closeDrawer(){ drawer.classList.remove('open'); editing=null; }
+closeDrawerBtn.addEventListener('click', closeDrawer);
+cancelDrawerBtn.addEventListener('click', closeDrawer);
+
+document.querySelectorAll('.prop').forEach(cb=>{
+  cb.addEventListener('change', ()=>{
+    notesModeRow.style.display = isChecked('notes') ? 'flex' : 'none';
+  });
+});
+
+function renderWeeksForActivity(activity_id){
+  const series = (seriesByActivity[activity_id]||[]).slice().sort((a,b)=>a.date.localeCompare(b.date));
+  wkBody.innerHTML = series.map((o,i)=>`
+    <tr>
+      <td><input type="checkbox" data-occ="${o.occurrence_id}" data-date="${o.date}"></td>
+      <td>Week ${i+1}</td>
+      <td>${o.date}</td>
+      <td><span class="pill">existing</span></td>
+    </tr>
+  `).join('');
+}
+selectAllBtn.addEventListener('click', ()=>{
+  wkBody.querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.checked=true);
+});
+clearAllBtn.addEventListener('click', ()=>{
+  wkBody.querySelectorAll('input[type="checkbox"]').forEach(cb=>cb.checked=false);
+});
+
+function isChecked(name){
+  return [...document.querySelectorAll('.prop')].some(cb=>cb.value===name && cb.checked);
+}
+function anyPropChecked(){ return [...document.querySelectorAll('.prop')].some(cb=>cb.checked); }
+function selectedOccs(){
+  return Array.from(wkBody.querySelectorAll('input[type="checkbox"]:checked'))
+    .map(cb=>({occurrence_id:Number(cb.dataset.occ), date:cb.dataset.date}));
+}
+
+function buildPreview(){
+  const errors=[];
+  if(!editing) errors.push('No allocation selected');
+  if(!tutorSel.value) errors.push('Tutor required');
+  if(!paySel.value) errors.push('Paycode required');
+  if(!timeStart.value || !timeEnd.value) errors.push('Start/End (this session) required');
+  if(timeStart.value && timeEnd.value && timeStart.value>=timeEnd.value) errors.push('End must be after Start');
+
+  const fields = [...document.querySelectorAll('.prop:checked')].map(cb=>cb.value);
+  const notesMode = (document.querySelector('input[name="notesMode"]:checked')||{}).value || 'overwrite';
+  const subset = selectedOccs();
+  const intends = subset.length>0;
+
+  if(intends && !fields.length) errors.push('Select at least one field to propagate.');
+
+  const act = activities.find(a=>a.activity_id===editing.activity_id);
+  const tutorName = (tutorsByOffering[editing.offering_id]||[]).find(t=>t.user_id==tutorSel.value)?.name || '(tutor)';
+  const lines=[];
+  lines.push(`${act? (act.type+' '+act.name):'Activity'} – Alloc #${editing.allocation_id}`);
+  lines.push(`This session → ${dateSingle.value||editing.date}, ${timeStart.value}–${timeEnd.value}`);
+
+  if(intends){
+    lines.push(`Propagation target: SUBSET (${subset.length})`);
+    if(dowSel.value) lines.push(` • Day of Week → ${dowSel.value}`);
+    if(fields.includes('tutor'))   lines.push(` • Tutor → ${tutorName}`);
+    if(fields.includes('paycode')) lines.push(` • Paycode → ${paySel.value}`);
+    if(fields.includes('start') || fields.includes('end')){
+      const st = fields.includes('start') ? timeStart.value : '(keep)';
+      const en = fields.includes('end')   ? timeEnd.value   : '(keep)';
+      lines.push(` • Start/End → ${st}–${en}`);
+    }
+    if(fields.includes('notes')){
+      lines.push(` • Notes → ${notesMode==='append' ? 'append' : 'overwrite'}`);
+    }
+    lines.push(` • Weeks: ${subset.map(w=>'W'+(indexOfOcc(editing.activity_id,w.occurrence_id)+1)).join(', ')||'-'}`);
+  } else {
+    lines.push('No propagation (single occurrence only).');
+  }
+
+  return {
+    errors,
+    plain: lines.join('\n'),
+    html: `<strong>Preview</strong><br><div class="note">${lines.map(escapeHtml).join('<br>')}</div>`
+  };
+}
+
+function indexOfOcc(activity_id, occId){
+  const s = seriesByActivity[activity_id]||[];
+  return s.findIndex(x=>x.occurrence_id===occId);
+}
+
+function showWarn(msg){
+  alertBox.style.display='block'; alertBox.className='msg warn'; alertBox.textContent=msg;
+}
+function hideAlert(){ alertBox.style.display='none'; }
+function showPreview(summary){
+  if(summary.errors.length){
+    alertBox.style.display='block';
+    alertBox.className='msg err';
+    alertBox.textContent = 'Fix errors: ' + summary.errors.join(' • ');
+    previewBox.style.display='none';
+    return;
+  }
+  hideAlert();
+  previewBox.style.display='block';
+  previewBox.className='msg ok';
+  previewBox.innerHTML = summary.html;
+}
+previewBtn.addEventListener('click', ()=>showPreview(buildPreview()));
+saveBtn.addEventListener('click', ()=>{
+  const s=buildPreview(); if(s.errors.length){ showPreview(s); return; }
+  alert('Saved (mock)\n\n'+s.plain);
+  closeDrawer();
+  renderTables();
+});
+
+/* ---------------- Unscheduled Modal ---------------- */
+const unsModal = document.getElementById('unsModal');
+const closeUns = document.getElementById('closeUns');
+const cancelUns= document.getElementById('cancelUns');
+const saveUns  = document.getElementById('saveUns');
+const unsTutor = document.getElementById('unsTutor');
+const unsPay   = document.getElementById('unsPaycode');
+const unsHours = document.getElementById('unsHours');
+const unsNotes = document.getElementById('unsNotes');
+const unsAlert = document.getElementById('unsAlert');
+
+let editingUns = null;
+
+function openUnsModal(allocation_id){
+  const row = unscheduled.find(a=>a.allocation_id===allocation_id);
+  if(!row) return;
+  editingUns = row;
+
+  fillSelect(unsTutor, (tutorsByOffering[row.offering_id]||[]).map(t=>({value:t.user_id,label:t.name})));
+  unsTutor.value = row.tutor_id;
+  fillSelect(unsPay, paycodes.map(p=>({value:p,label:p})));
+  unsPay.value = row.paycode;
+  unsHours.value = row.hours ?? '';
+  unsNotes.value = row.notes ?? '';
+
+  unsAlert.style.display='none';
+  unsModal.classList.add('open');
+}
+function closeUnsModal(){ unsModal.classList.remove('open'); editingUns=null; }
+closeUns.addEventListener('click', closeUnsModal);
+cancelUns.addEventListener('click', closeUnsModal);
+
+saveUns.addEventListener('click', ()=>{
+  if(!editingUns) return;
+  const hrs = unsHours.value ? Number(unsHours.value) : null;
+  if(hrs===null || hrs<=0){
+    unsAlert.style.display='block'; unsAlert.textContent='Hours must be > 0'; return;
+  }
+  const tList = tutorsByOffering[editingUns.offering_id]||[];
+  const t = tList.find(x=>x.user_id==unsTutor.value);
+  if(t){ editingUns.tutor_id=t.user_id; editingUns.tutor_name=t.name; }
+  editingUns.paycode = unsPay.value;
+  editingUns.hours = hrs;
+  editingUns.notes = unsNotes.value||'';
+  alert('Saved (mock)');
+  closeUnsModal();
+  renderTables();
+});
+
+/* ---------------- Utilities ---------------- */
+function fillSelect(sel, items){ sel.innerHTML = items.map(i=>`<option value="${i.value}">${i.label}</option>`).join(''); }
+function escapeHtml(s){ return s.replace(/[&<>"']/g, m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+renderTables();
+</script>
+</body>
+</html>

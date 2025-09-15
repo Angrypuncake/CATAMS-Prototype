@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import StyledBox from "./components";
 import Button from "@mui/material/Button";
 import {
@@ -21,6 +21,68 @@ import {
   Box,
   Divider,
 } from "@mui/material";
+
+/* ========= Helpers ========= */
+const timeConverter = (time: string): number => {
+  const hours = parseInt(time.split(":")[0], 10);
+  const minutes = parseInt(time.split(":")[1], 10);
+
+  return hours * 60 + minutes;
+};
+
+interface SortConfig {
+  column: string;
+  direction: "asc" | "desc";
+}
+
+interface TableRow {
+  session_date?: string;
+  start_at?: string;
+  location?: string;
+  status?: string;
+  [key: string]: unknown;
+}
+
+function useColumnSorter<T extends TableRow>(
+  tableData: T[],
+  sortConfig: SortConfig | null,
+): T[] {
+  return useMemo(() => {
+    if (!sortConfig) return tableData;
+    const sorted = [...tableData].sort((a, b) => {
+      if (sortConfig["column"] == "session_date") {
+        const dateA = toDate(a["session_date"], a["start_at"]);
+        const dateB = toDate(b["session_date"], b["start_at"]);
+        if (dateA && dateB) {
+          if (sortConfig["direction"] == "asc") {
+            return dateA.getTime() - dateB.getTime();
+          } else {
+            return dateB.getTime() - dateA.getTime();
+          }
+        }
+      } else if (sortConfig["column"] == "start_at") {
+        const timeA = timeConverter(a["start_at"] ?? "00:00");
+        const timeB = timeConverter(b["start_at"] ?? "00:00");
+
+        if (timeA && timeB) {
+          return sortConfig["direction"] == "asc"
+            ? timeA - timeB
+            : timeB - timeA;
+        }
+      } else if (
+        sortConfig["column"] == "location" ||
+        sortConfig["column"] == "status"
+      ) {
+        const textA = String(a[sortConfig["column"]]).toLowerCase();
+        const textB = String(b[sortConfig["column"]]).toLowerCase();
+        if (textA < textB) return sortConfig["direction"] === "asc" ? -1 : 1;
+        if (textA > textB) return sortConfig["direction"] === "asc" ? 1 : -1;
+      }
+      return 0;
+    });
+    return sorted;
+  }, [tableData, sortConfig]);
+}
 
 /* ========= Export helpers (unchanged) ========= */
 const exportJSON = (
@@ -84,6 +146,33 @@ type TutorSession = {
   note?: string | null;
 };
 
+type Actions = {
+  session_date: string | null;
+  time: string | null;
+  unit: string | null;
+  hours: number | null;
+  desc: string | null;
+  status: string | null;
+  actions: string | null;
+};
+
+type Requests = {
+  requestID: string | null;
+  type: string | null;
+  relatedSession: string | null;
+  status: string | null;
+  actions: string | null;
+};
+
+type Notices = {
+  session_date: string | null;
+  type: string | null;
+  message: string | null;
+  actions: string | null;
+};
+
+type SortableColumns = "session_date" | "start_at" | "location" | "status";
+
 /* ========= Helpers ========= */
 function hoursBetween(start?: string | null, end?: string | null) {
   if (!start || !end) return 0;
@@ -113,10 +202,147 @@ function niceTime(hms?: string | null) {
   return hms.slice(0, 5); // HH:MM
 }
 
+// mock sections below remain unchanged
+const actions = [
+  {
+    session_date: "2025-09-09",
+    time: "10:00 AM - 12:00 PM",
+    unit: "MATH201",
+    hours: 2,
+    desc: "Calculus II tutorial",
+    status: "Available",
+    actions: "Claim",
+  },
+  {
+    session_date: "2025-09-10",
+    time: "1:00 PM - 3:00 PM",
+    unit: "CS102",
+    hours: 2,
+    desc: "Intro to Programming lab",
+    status: "Pending Request",
+    actions: "View/Edit Request",
+  },
+  {
+    session_date: "2025-09-11",
+    time: "9:00 AM - 11:00 AM",
+    unit: "CHEM110",
+    hours: 2,
+    desc: "Organic Chemistry tutorial",
+    status: "Available",
+    actions: "Claim",
+  },
+  {
+    session_date: "2025-09-12",
+    time: "3:00 PM - 5:00 PM",
+    unit: "PHYS150",
+    hours: 2,
+    desc: "Classical Mechanics session",
+    status: "Pending Request",
+    actions: "View/Edit Request",
+  },
+  {
+    session_date: "2025-09-13",
+    time: "11:00 AM - 1:00 PM",
+    unit: "PSYC101",
+    hours: 2,
+    desc: "Introduction to Psychology tutorial",
+    status: "Available",
+    actions: "Claim",
+  },
+];
+
+const request = [
+  {
+    requestID: "REQ001",
+    type: "Swap",
+    relatedSession: "CS101 - 2025-09-10 2:00 PM",
+    status: "Pending",
+    actions: "View/Edit Request",
+  },
+  {
+    requestID: "REQ002",
+    type: "Correction",
+    relatedSession: "MATH202 - 2025-09-12 9:00 AM",
+    status: "Approved",
+    actions: "View/Edit Request",
+  },
+  {
+    requestID: "REQ003",
+    type: "Swap",
+    relatedSession: "BIO105 - 2025-09-14 1:00 PM",
+    status: "Pending",
+    actions: "View/Edit Request",
+  },
+  {
+    requestID: "REQ004",
+    type: "Correction",
+    relatedSession: "CHEM101 - 2025-09-09 11:00 AM",
+    status: "Approved",
+    actions: "View/Edit Request",
+  },
+  {
+    requestID: "REQ005",
+    type: "Swap",
+    relatedSession: "PHYS110 - 2025-09-13 10:00 AM",
+    status: "Pending",
+    actions: "View/Edit Request",
+  },
+];
+
+const notices = [
+  {
+    session_date: "2025-09-09",
+    type: "Reject",
+    message: "TA Rejected REQ008",
+    actions: "View/Edit Request",
+  },
+  {
+    session_date: "2025-09-09",
+    type: "Approve",
+    message: "UC Approved REQ009",
+    actions: "View/Edit Request",
+  },
+];
+
 /* ========= Page ========= */
 const Page = () => {
+  const userId = 6; // WILL BE REPLACED WITH ENVIRONMENT VARIABLE GIVEN FROM BACKEND FOR ID OF LOGGED IN TUTOR
+
   const [tutorSessions, setTutorSessions] = useState<TutorSession[]>([]);
   const [loading, setLoading] = useState(true);
+  const [sortAllocationsConfig, setSortAllocationsConfig] = useState<{
+    column: SortableColumns;
+    direction: "asc" | "desc";
+  } | null>(null);
+  const [sortActionsConfig, setSortActionsConfig] = useState<{
+    column: SortableColumns;
+    direction: "asc" | "desc";
+  } | null>(null);
+  const [sortRequestsConfig, setSortRequestsConfig] = useState<{
+    column: SortableColumns;
+    direction: "asc" | "desc";
+  } | null>(null);
+  const [sortNoticesConfig, setSortNoticesConfig] = useState<{
+    column: SortableColumns;
+    direction: "asc" | "desc";
+  } | null>(null);
+
+  const sortedSessions: TutorSession[] = useColumnSorter<TutorSession>(
+    tutorSessions,
+    sortAllocationsConfig,
+  );
+  const sortedActions: Actions[] = useColumnSorter<Actions>(
+    actions,
+    sortActionsConfig,
+  );
+  const sortedRequests: Requests[] = useColumnSorter<Requests>(
+    request,
+    sortRequestsConfig,
+  );
+  const sortedNotices: Notices[] = useColumnSorter<Notices>(
+    notices,
+    sortNoticesConfig,
+  );
 
   // modal (ONLY for "My Allocations")
   const [open, setOpen] = useState(false);
@@ -126,7 +352,7 @@ const Page = () => {
     const fetchTutorSessions = async () => {
       try {
         const res = await fetch(
-          "/api/tutor/allocations?userId=6&page=1&limit=10",
+          `/api/tutor/allocations?userId=${userId}&page=1&limit=10`,
         );
         if (!res.ok) throw new Error("Failed to fetch tutor allocations");
         const data = await res.json();
@@ -139,6 +365,40 @@ const Page = () => {
     };
     fetchTutorSessions();
   }, []);
+
+  // NEED MORE QUERIES FOR NOTICES, REQUESTS AND ACTIONS
+
+  const handleSortAllocations = (column: SortableColumns) => {
+    setSortAllocationsConfig((prev) =>
+      prev?.column === column
+        ? { column, direction: prev.direction === "asc" ? "desc" : "asc" }
+        : { column, direction: "asc" },
+    );
+  };
+
+  const handleSortActions = (column: SortableColumns) => {
+    setSortActionsConfig((prev) =>
+      prev?.column === column
+        ? { column, direction: prev.direction === "asc" ? "desc" : "asc" }
+        : { column, direction: "asc" },
+    );
+  };
+
+  const handleSortRequests = (column: SortableColumns) => {
+    setSortRequestsConfig((prev) =>
+      prev?.column === column
+        ? { column, direction: prev.direction === "asc" ? "desc" : "asc" }
+        : { column, direction: "asc" },
+    );
+  };
+
+  const handleSortNotices = (column: SortableColumns) => {
+    setSortNoticesConfig((prev) =>
+      prev?.column === column
+        ? { column, direction: prev.direction === "asc" ? "desc" : "asc" }
+        : { column, direction: "asc" },
+    );
+  };
 
   // derived values for modal button logic
   const statusLower = (session?.status || "").toLowerCase();
@@ -159,129 +419,6 @@ const Page = () => {
   const hours = 20;
   const sessions = 10;
   const requests = 2;
-
-  // mock sections below remain unchanged
-  const actions = [
-    {
-      date: "2025-09-09",
-      time: "10:00 AM - 12:00 PM",
-      unit: "MATH201",
-      hours: 2,
-      desc: "Calculus II tutorial",
-      status: "Available",
-      actions: "Claim",
-    },
-    {
-      date: "2025-09-10",
-      time: "1:00 PM - 3:00 PM",
-      unit: "CS102",
-      hours: 2,
-      desc: "Intro to Programming lab",
-      status: "Pending Request",
-      actions: "View/Edit Request",
-    },
-    {
-      date: "2025-09-11",
-      time: "9:00 AM - 11:00 AM",
-      unit: "CHEM110",
-      hours: 2,
-      desc: "Organic Chemistry tutorial",
-      status: "Available",
-      actions: "Claim",
-    },
-    {
-      date: "2025-09-12",
-      time: "3:00 PM - 5:00 PM",
-      unit: "PHYS150",
-      hours: 2,
-      desc: "Classical Mechanics session",
-      status: "Pending Request",
-      actions: "View/Edit Request",
-    },
-    {
-      date: "2025-09-13",
-      time: "11:00 AM - 1:00 PM",
-      unit: "PSYC101",
-      hours: 2,
-      desc: "Introduction to Psychology tutorial",
-      status: "Available",
-      actions: "Claim",
-    },
-  ];
-
-  const request = [
-    {
-      requestID: "REQ001",
-      type: "Swap",
-      relatedSession: "CS101 - 2025-09-10 2:00 PM",
-      status: "Pending",
-      actions: "View/Edit Request",
-    },
-    {
-      requestID: "REQ002",
-      type: "Correction",
-      relatedSession: "MATH202 - 2025-09-12 9:00 AM",
-      status: "Approved",
-      actions: "View/Edit Request",
-    },
-    {
-      requestID: "REQ003",
-      type: "Swap",
-      relatedSession: "BIO105 - 2025-09-14 1:00 PM",
-      status: "Pending",
-      actions: "View/Edit Request",
-    },
-    {
-      requestID: "REQ004",
-      type: "Correction",
-      relatedSession: "CHEM101 - 2025-09-09 11:00 AM",
-      status: "Approved",
-      actions: "View/Edit Request",
-    },
-    {
-      requestID: "REQ005",
-      type: "Swap",
-      relatedSession: "PHYS110 - 2025-09-13 10:00 AM",
-      status: "Pending",
-      actions: "View/Edit Request",
-    },
-  ];
-
-  const claimed = [
-    {
-      date: "2025-09-09",
-      time: "10:00 AM - 12:00 PM",
-      unit: "MATH201",
-      hours: 2,
-      desc: "Calculus II tutorial",
-      status: "Available",
-      actions: "View Claim",
-    },
-    {
-      date: "2025-09-10",
-      time: "1:00 PM - 3:00 PM",
-      unit: "CS102",
-      hours: 2,
-      desc: "Intro to Programming lab",
-      status: "Pending Request",
-      actions: "View Claim",
-    },
-  ];
-
-  const notices = [
-    {
-      date: "2025-09-09",
-      type: "Reject",
-      message: "TA Rejected REQ008",
-      actions: "View/Edit Request",
-    },
-    {
-      date: "2025-09-09",
-      type: "Approve",
-      message: "UC Approved REQ009",
-      actions: "View/Edit Request",
-    },
-  ];
 
   return (
     <div className="w-screen h-screen box-border bg-gray-100 px-5 flex flex-col items-start justify-start">
@@ -309,26 +446,64 @@ const Page = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell className="font-bold text-center">Date</TableCell>
-                <TableCell className="font-bold text-center">Time</TableCell>
+                <TableCell
+                  className="font-bold text-center cursor-pointer"
+                  onClick={() => handleSortAllocations("session_date")}
+                >
+                  Date{" "}
+                  {sortAllocationsConfig?.column === "session_date"
+                    ? sortAllocationsConfig.direction === "asc"
+                      ? "↑"
+                      : "↓"
+                    : ""}
+                </TableCell>
+                <TableCell
+                  className="font-bold text-center cursor-pointer"
+                  onClick={() => handleSortAllocations("start_at")}
+                >
+                  Time{" "}
+                  {sortAllocationsConfig?.column === "start_at"
+                    ? sortAllocationsConfig.direction === "asc"
+                      ? "↑"
+                      : "↓"
+                    : ""}
+                </TableCell>
                 <TableCell className="font-bold text-center">Unit</TableCell>
-                <TableCell className="font-bold text-center">
-                  Location
+                <TableCell
+                  className="font-bold text-center cursor-pointer"
+                  onClick={() => handleSortAllocations("location")}
+                >
+                  Location{" "}
+                  {sortAllocationsConfig?.column === "location"
+                    ? sortAllocationsConfig.direction === "asc"
+                      ? "↑"
+                      : "↓"
+                    : ""}
                 </TableCell>
                 <TableCell className="font-bold text-center">Hours</TableCell>
-                <TableCell className="font-bold text-center">Status</TableCell>
+                <TableCell
+                  className="font-bold text-center cursor-pointer"
+                  onClick={() => handleSortAllocations("status")}
+                >
+                  Status{" "}
+                  {sortAllocationsConfig?.column === "status"
+                    ? sortAllocationsConfig.direction === "asc"
+                      ? "↑"
+                      : "↓"
+                    : ""}
+                </TableCell>
                 <TableCell className="font-bold text-center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {tutorSessions.map((row, index) => (
+              {sortedSessions.map((row, index) => (
                 <TableRow key={index}>
                   <TableCell>
                     {row.session_date ? row.session_date.slice(0, 10) : "N/A"}
                   </TableCell>
                   <TableCell>
                     {row.start_at
-                      ? `${niceTime(row.start_at)}–${niceTime(row.end_at)}`
+                      ? `${niceTime(row.start_at)}-${niceTime(row.end_at)}`
                       : "N/A"}
                   </TableCell>
                   <TableCell>{row.unit_code ?? "N/A"}</TableCell>
@@ -389,21 +564,41 @@ const Page = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell className="font-bold text-center">Date</TableCell>
+                <TableCell
+                  className="font-bold text-center cursor-pointer"
+                  onClick={() => handleSortActions("session_date")}
+                >
+                  Date{" "}
+                  {sortActionsConfig?.column === "session_date"
+                    ? sortActionsConfig.direction === "asc"
+                      ? "↑"
+                      : "↓"
+                    : ""}
+                </TableCell>
                 <TableCell className="font-bold text-center">Time</TableCell>
                 <TableCell className="font-bold text-center">Unit</TableCell>
                 <TableCell className="font-bold text-center">Hours</TableCell>
                 <TableCell className="font-bold text-center">
                   Description
                 </TableCell>
-                <TableCell className="font-bold text-center">Status</TableCell>
+                <TableCell
+                  className="font-bold text-center cursor-pointer"
+                  onClick={() => handleSortActions("status")}
+                >
+                  Status{" "}
+                  {sortActionsConfig?.column === "status"
+                    ? sortActionsConfig.direction === "asc"
+                      ? "↑"
+                      : "↓"
+                    : ""}
+                </TableCell>
                 <TableCell className="font-bold text-center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {actions.map((row, index) => (
+              {sortedActions.map((row, index) => (
                 <TableRow key={index}>
-                  <TableCell>{row.date}</TableCell>
+                  <TableCell>{row.session_date}</TableCell>
                   <TableCell>{row.time}</TableCell>
                   <TableCell>{row.unit}</TableCell>
                   <TableCell>{row.hours}</TableCell>
@@ -434,54 +629,26 @@ const Page = () => {
                 <TableCell className="font-bold text-center">
                   Related Session
                 </TableCell>
-                <TableCell className="font-bold text-center">Status</TableCell>
+                <TableCell
+                  className="font-bold text-center cursor-pointer"
+                  onClick={() => handleSortRequests("status")}
+                >
+                  Status{" "}
+                  {sortRequestsConfig?.column === "status"
+                    ? sortRequestsConfig.direction === "asc"
+                      ? "↑"
+                      : "↓"
+                    : ""}
+                </TableCell>
                 <TableCell className="font-bold text-center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {request.map((row, index) => (
+              {sortedRequests.map((row, index) => (
                 <TableRow key={index}>
                   <TableCell>{row.requestID}</TableCell>
                   <TableCell>{row.type}</TableCell>
                   <TableCell>{row.relatedSession}</TableCell>
-                  <TableCell>{row.status}</TableCell>
-                  <TableCell className="text-left">
-                    <Button variant="contained" size="small">
-                      {row.actions}
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </StyledBox>
-
-      <StyledBox>
-        <p className="font-bold text-xl mb-2">Claimed Sessions</p>
-        <TableContainer component={Paper} className="shadow-sm">
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell className="font-bold text-center">Date</TableCell>
-                <TableCell className="font-bold text-center">Time</TableCell>
-                <TableCell className="font-bold text-center">Unit</TableCell>
-                <TableCell className="font-bold text-center">Hours</TableCell>
-                <TableCell className="font-bold text-center">
-                  Description
-                </TableCell>
-                <TableCell className="font-bold text-center">Status</TableCell>
-                <TableCell className="font-bold text-center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {claimed.map((row, index) => (
-                <TableRow key={index}>
-                  <TableCell>{row.date}</TableCell>
-                  <TableCell>{row.time}</TableCell>
-                  <TableCell>{row.unit}</TableCell>
-                  <TableCell>{row.hours}</TableCell>
-                  <TableCell>{row.desc}</TableCell>
                   <TableCell>{row.status}</TableCell>
                   <TableCell className="text-left">
                     <Button variant="contained" size="small">
@@ -501,16 +668,26 @@ const Page = () => {
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell className="font-bold text-center">Date</TableCell>
+                <TableCell
+                  className="font-bold text-center cursor-pointer"
+                  onClick={() => handleSortNotices("session_date")}
+                >
+                  Date{" "}
+                  {sortNoticesConfig?.column === "session_date"
+                    ? sortNoticesConfig.direction === "asc"
+                      ? "↑"
+                      : "↓"
+                    : ""}
+                </TableCell>
                 <TableCell className="font-bold text-center">Type</TableCell>
                 <TableCell className="font-bold text-center">Message</TableCell>
                 <TableCell className="font-bold text-center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {notices.map((row, index) => (
+              {sortedNotices.map((row, index) => (
                 <TableRow key={index}>
-                  <TableCell>{row.date}</TableCell>
+                  <TableCell>{row.session_date}</TableCell>
                   <TableCell>{row.type}</TableCell>
                   <TableCell>{row.message}</TableCell>
                   <TableCell className="text-left">

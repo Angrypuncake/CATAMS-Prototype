@@ -6,23 +6,29 @@ import { query } from "@/lib/db";
  * GET /api/admin/allocations
  * Query params (all optional):
  * - page, limit, sort, dir, q
- * - unit_code, unit_name, activity_type, activity_name, status, user_id
+ * - unit_code, unit_name, activity_type, activity_name, status, user_id, mode
  *
  * Notes:
  * - Schema link fixed: unit_offering.course_unit_id (text) -> course_unit.unit_code (text PK)
- * - allocation.override_note does not exist; mapping to allocation.note AS override_note
- * - Use LEFT JOINs where nullable (users, session_occurrence) so rows aren't dropped
+ * - Support both scheduled (via session_occurrence.activity_id) and unscheduled (via allocation.activity_id)
+ * - Use LEFT JOINs where nullable so rows aren't dropped
  */
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
 
     const page = Math.max(1, Number(searchParams.get("page") ?? 1));
-    const limit = Math.min(Math.max(1, Number(searchParams.get("limit") ?? 25)), 200);
+    const limit = Math.min(
+      Math.max(1, Number(searchParams.get("limit") ?? 25)),
+      200,
+    );
     const offset = (page - 1) * limit;
 
     const sort = (searchParams.get("sort") ?? "so.session_date").toString();
-    const dir = (searchParams.get("dir") ?? "asc").toLowerCase() === "desc" ? "DESC" : "ASC";
+    const dir =
+      (searchParams.get("dir") ?? "asc").toLowerCase() === "desc"
+        ? "DESC"
+        : "ASC";
     const q = searchParams.get("q");
 
     // Collect exact-match filters
@@ -37,6 +43,7 @@ export async function GET(req: Request) {
     pushFilter("activity_name", "ta.activity_name");
     pushFilter("status", "a.status");
     pushFilter("user_id", "a.user_id");
+    pushFilter("mode", "a.mode"); // NEW
 
     const whereParts: string[] = [];
     const params: unknown[] = [];
@@ -45,12 +52,12 @@ export async function GET(req: Request) {
     if (q) {
       params.push(`%${q}%`);
       whereParts.push(`(
-        cu.unit_code    ILIKE $${params.length} OR
-        cu.unit_name    ILIKE $${params.length} OR
-        ta.activity_name ILIKE $${params.length} OR
-        ta.activity_type ILIKE $${params.length} OR
-        u.first_name    ILIKE $${params.length} OR
-        u.last_name     ILIKE $${params.length}
+        cu.unit_code      ILIKE $${params.length} OR
+        cu.unit_name      ILIKE $${params.length} OR
+        ta.activity_name  ILIKE $${params.length} OR
+        ta.activity_type  ILIKE $${params.length} OR
+        u.first_name      ILIKE $${params.length} OR
+        u.last_name       ILIKE $${params.length}
       )`);
     }
 
@@ -60,9 +67,11 @@ export async function GET(req: Request) {
       whereParts.push(`${f.col} = $${params.length}`);
     }
 
-    const whereSQL = whereParts.length ? `WHERE ${whereParts.join(" AND ")}` : "";
+    const whereSQL = whereParts.length
+      ? `WHERE ${whereParts.join(" AND ")}`
+      : "";
 
-    // Whitelist sortable columns (UI may send "date", etc.)
+    // Whitelist sortable columns (UI may send aliases like "date")
     const sortable: Record<string, string> = {
       date: "so.session_date",
       start_at: "so.start_at",
@@ -71,22 +80,20 @@ export async function GET(req: Request) {
       activity_type: "ta.activity_type",
       activity_name: "ta.activity_name",
       status: "a.status",
+      mode: "a.mode", // NEW
+      allocated_hours: "a.allocated_hours", // NEW
     };
     const orderBy = sortable[sort.replace(/^.*\./, "")] ?? "so.session_date";
 
-    // IMPORTANT: schema-correct joins
-    // - u: users (nullable LEFT JOIN)
-    // - so: session_occurrence (nullable LEFT JOIN because allocation.session_id can be null)
-    // - ta: teaching_activity (INNER; a row without activity via so.activity_id would be rare, but if needed swap to LEFT)
-    // - uo: unit_offering (INNER)
-    // - cu: course_unit (INNER) via cu.unit_code = uo.course_unit_id
+    // Support scheduled (via so.activity_id) and unscheduled (via a.activity_id)
+    // All downstream joins LEFT to avoid dropping rows when nullable
     const baseSQL = `
       FROM allocation a
-      LEFT JOIN users u                 ON u.user_id = a.user_id
-      LEFT JOIN session_occurrence so   ON so.occurrence_id = a.session_id
-      JOIN teaching_activity ta         ON ta.activity_id = so.activity_id
-      JOIN unit_offering uo             ON uo.offering_id = ta.unit_offering_id
-      JOIN course_unit cu               ON cu.unit_code = uo.course_unit_id
+      LEFT JOIN users u               ON u.user_id = a.user_id
+      LEFT JOIN session_occurrence so ON so.occurrence_id = a.session_id
+      LEFT JOIN teaching_activity ta  ON ta.activity_id = COALESCE(so.activity_id, a.activity_id)
+      LEFT JOIN unit_offering uo      ON uo.offering_id = ta.unit_offering_id
+      LEFT JOIN course_unit cu        ON cu.unit_code = uo.course_unit_id
       ${whereSQL}
     `;
 
@@ -97,6 +104,10 @@ export async function GET(req: Request) {
         u.first_name,
         u.last_name,
         u.email,
+
+        a.mode,
+        a.activity_id       AS allocation_activity_id, -- avoid name clash with ta.activity_id
+        a.allocated_hours,
 
         cu.unit_code,
         cu.unit_name,
@@ -110,7 +121,7 @@ export async function GET(req: Request) {
         ta.activity_name,
 
         a.status,
-        a.note AS override_note,   -- allocation.override_note doesn't exist; map note -> override_note for UI
+        a.note,
         a.teaching_role,
         a.paycode_id
       ${baseSQL}
@@ -129,7 +140,8 @@ export async function GET(req: Request) {
     const total = totalRes.rows?.[0]?.total ?? 0;
 
     return NextResponse.json({ page, limit, total, data: rows });
-  } catch (err: any) {
-    return NextResponse.json({ error: err?.message ?? "Internal error" }, { status: 500 });
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Internal error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

@@ -4,15 +4,20 @@
 CREATE TABLE public.allocation (
   allocation_id integer NOT NULL DEFAULT nextval('allocation_allocation_id_seq'::regclass),
   user_id integer NOT NULL,
-  session_id integer NOT NULL,
+  session_id integer,
   status text,
   paycode_id text NOT NULL,
   teaching_role text,
   created_by_run_id integer,
+  note text,
+  mode USER-DEFINED NOT NULL DEFAULT 'scheduled'::allocation_mode,
+  activity_id integer,
+  allocated_hours numeric,
   CONSTRAINT allocation_pkey PRIMARY KEY (allocation_id),
-  CONSTRAINT allocation_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.session_occurrence(occurrence_id),
+  CONSTRAINT allocation_activity_fk FOREIGN KEY (activity_id) REFERENCES public.teaching_activity(activity_id),
   CONSTRAINT allocation_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id),
-  CONSTRAINT allocation_paycode_id_fkey FOREIGN KEY (paycode_id) REFERENCES public.paycode(code)
+  CONSTRAINT allocation_paycode_id_fkey FOREIGN KEY (paycode_id) REFERENCES public.paycode(code),
+  CONSTRAINT allocation_session_id_fkey FOREIGN KEY (session_id) REFERENCES public.session_occurrence(occurrence_id)
 );
 CREATE TABLE public.allocations_staging (
   id integer NOT NULL DEFAULT nextval('allocations_staging_id_seq'::regclass),
@@ -80,9 +85,9 @@ CREATE TABLE public.cancellationrequest (
   timing text NOT NULL,
   reason text NOT NULL,
   CONSTRAINT cancellationrequest_pkey PRIMARY KEY (request_id),
+  CONSTRAINT cancellationrequest_suggested_tutor_fkey FOREIGN KEY (suggested_tutor) REFERENCES public.users(user_id),
   CONSTRAINT cancellationrequest_occurrence_id_fkey FOREIGN KEY (occurrence_id) REFERENCES public.session_occurrence(occurrence_id),
-  CONSTRAINT cancellationrequest_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.request(request_id),
-  CONSTRAINT cancellationrequest_suggested_tutor_fkey FOREIGN KEY (suggested_tutor) REFERENCES public.users(user_id)
+  CONSTRAINT cancellationrequest_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.request(request_id)
 );
 CREATE TABLE public.changerequest (
   request_id integer NOT NULL,
@@ -104,9 +109,9 @@ CREATE TABLE public.claimrequest (
   comment text,
   CONSTRAINT claimrequest_pkey PRIMARY KEY (request_id),
   CONSTRAINT claimrequest_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.request(request_id),
-  CONSTRAINT claimrequest_occurrence_id_fkey FOREIGN KEY (occurrence_id) REFERENCES public.session_occurrence(occurrence_id),
+  CONSTRAINT claimrequest_claimed_paycode_fkey FOREIGN KEY (claimed_paycode) REFERENCES public.paycode(code),
   CONSTRAINT claimrequest_allocation_id_fkey FOREIGN KEY (allocation_id) REFERENCES public.allocation(allocation_id),
-  CONSTRAINT claimrequest_claimed_paycode_fkey FOREIGN KEY (claimed_paycode) REFERENCES public.paycode(code)
+  CONSTRAINT claimrequest_occurrence_id_fkey FOREIGN KEY (occurrence_id) REFERENCES public.session_occurrence(occurrence_id)
 );
 CREATE TABLE public.comment (
   comment_id integer NOT NULL DEFAULT nextval('comment_comment_id_seq'::regclass),
@@ -130,7 +135,9 @@ CREATE TABLE public.import_batch (
   status text DEFAULT 'staged'::text,
   row_count integer,
   issues jsonb,
-  CONSTRAINT import_batch_pkey PRIMARY KEY (batch_id)
+  creator integer,
+  CONSTRAINT import_batch_pkey PRIMARY KEY (batch_id),
+  CONSTRAINT import_batch_creator_fkey FOREIGN KEY (creator) REFERENCES public.users(user_id)
 );
 CREATE TABLE public.import_run (
   run_id integer NOT NULL DEFAULT nextval('import_run_run_id_seq'::regclass),
@@ -196,11 +203,11 @@ CREATE TABLE public.session_occurrence (
   is_cancelled boolean DEFAULT false,
   location text,
   notes text,
-  hours integer,
-  Date date,
   start_at time without time zone,
   end_at time without time zone,
   created_by_run_id integer,
+  session_date date,
+  hours integer,
   CONSTRAINT session_occurrence_pkey PRIMARY KEY (occurrence_id),
   CONSTRAINT session_occurrence_activity_id_fkey FOREIGN KEY (activity_id) REFERENCES public.teaching_activity(activity_id)
 );
@@ -209,9 +216,9 @@ CREATE TABLE public.swaprequest (
   from_session_id integer NOT NULL,
   to_session_id integer NOT NULL,
   CONSTRAINT swaprequest_pkey PRIMARY KEY (request_id),
-  CONSTRAINT swaprequest_to_session_id_fkey FOREIGN KEY (to_session_id) REFERENCES public.session_occurrence(occurrence_id),
+  CONSTRAINT swaprequest_from_session_id_fkey FOREIGN KEY (from_session_id) REFERENCES public.session_occurrence(occurrence_id),
   CONSTRAINT swaprequest_request_id_fkey FOREIGN KEY (request_id) REFERENCES public.request(request_id),
-  CONSTRAINT swaprequest_from_session_id_fkey FOREIGN KEY (from_session_id) REFERENCES public.session_occurrence(occurrence_id)
+  CONSTRAINT swaprequest_to_session_id_fkey FOREIGN KEY (to_session_id) REFERENCES public.session_occurrence(occurrence_id)
 );
 CREATE TABLE public.teaching_activity (
   activity_id integer GENERATED ALWAYS AS IDENTITY NOT NULL,

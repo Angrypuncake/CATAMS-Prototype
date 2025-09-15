@@ -426,19 +426,19 @@ const Page = () => {
   const requests = 2;
 
   return (
-    <div className="w-screen h-screen box-border bg-gray-100 px-5 flex flex-col items-start justify-start">
+    <div className="max-w-6xl w-full mx-auto">
       <p className="m-5 font-bold text-xl">Tutor Dashboard</p>
 
       <div className="flex w-full gap-5">
-        <StyledBox>
+        <StyledBox accentColor="border-l-blue-500">
           <p>Allocated Hours</p>
           <p className="font-bold">{hours}</p>
         </StyledBox>
-        <StyledBox>
+        <StyledBox accentColor="border-l-blue-500">
           <p>Upcoming Sessions</p>
           <p className="font-bold">{sessions}</p>
         </StyledBox>
-        <StyledBox>
+        <StyledBox accentColor="border-l-blue-500">
           <p>Pending Requests</p>
           <p className="font-bold">{requests}</p>
         </StyledBox>
@@ -517,17 +517,41 @@ const Page = () => {
                     {hoursBetween(row.start_at, row.end_at)}
                   </TableCell>
                   <TableCell>{row.status ?? "N/A"}</TableCell>
-                  <TableCell className="text-left">
-                    <Button
-                      variant="contained"
-                      size="small"
-                      onClick={() => {
-                        setSession(row);
-                        setOpen(true);
-                      }}
-                    >
-                      {row.actions ?? "View"}
-                    </Button>
+                  <TableCell>
+                    <Box display="flex" justifyContent="center">
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        sx={{
+                          borderRadius: "9999px", // pill shape
+                          textTransform: "none", // don't uppercase text
+                          fontWeight: 500, // semi-bold
+                          fontSize: "0.85rem", // readable but compact
+                          px: 2.5,
+                          py: 0.5,
+                          minHeight: "30px",
+                          background:
+                            "linear-gradient(to right, #3b82f6, #6414c7)", // gradient blue
+                          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // soft shadow
+                          transition: "all 0.2s ease-in-out",
+                          "&:hover": {
+                            background:
+                              "linear-gradient(to right, #2563eb, #490d91)",
+                            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
+                          },
+                          "&:active": {
+                            transform: "scale(0.98)",
+                          },
+                        }}
+                        size="small"
+                        onClick={() => {
+                          setSession(row);
+                          setOpen(true);
+                        }}
+                      >
+                        {row.actions ?? "View"}
+                      </Button>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}
@@ -539,6 +563,26 @@ const Page = () => {
           <p>You can export the above data in CSV or JSON formats</p>
           <Button
             variant="contained"
+            color="primary"
+            sx={{
+              borderRadius: "9999px", // pill shape
+              textTransform: "none", // don't uppercase text
+              fontWeight: 500, // semi-bold
+              fontSize: "0.85rem", // readable but compact
+              px: 2.5,
+              py: 0.5,
+              minHeight: "30px",
+              background: "linear-gradient(to right, #3b82f6, #6414c7)", // gradient blue
+              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // soft shadow
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                background: "linear-gradient(to right, #2563eb, #490d91)",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
+              },
+              "&:active": {
+                transform: "scale(0.98)",
+              },
+            }}
             size="medium"
             onClick={() =>
               exportCSV(
@@ -550,6 +594,26 @@ const Page = () => {
           </Button>
           <Button
             variant="contained"
+            color="primary"
+            sx={{
+              borderRadius: "9999px", // pill shape
+              textTransform: "none", // don't uppercase text
+              fontWeight: 500, // semi-bold
+              fontSize: "0.85rem", // readable but compact
+              px: 2.5,
+              py: 0.5,
+              minHeight: "30px",
+              background: "linear-gradient(to right, #3b82f6, #6414c7)", // gradient blue
+              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // soft shadow
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                background: "linear-gradient(to right, #2563eb, #490d91)",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
+              },
+              "&:active": {
+                transform: "scale(0.98)",
+              },
+            }}
             size="medium"
             onClick={() =>
               exportJSON(
@@ -610,9 +674,35 @@ const Page = () => {
                   <TableCell>{row.desc}</TableCell>
                   <TableCell>{row.status}</TableCell>
                   <TableCell className="text-left">
-                    <Button variant="contained" size="small">
-                      {row.actions}
-                    </Button>
+                    <Box display="flex" justifyContent="center">
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        sx={{
+                          borderRadius: "9999px", // pill shape
+                          textTransform: "none", // don't uppercase text
+                          fontWeight: 500, // semi-bold
+                          fontSize: "0.85rem", // readable but compact
+                          px: 2.5,
+                          py: 0.5,
+                          minHeight: "30px",
+                          background:
+                            "linear-gradient(to right, #3b82f6, #6414c7)", // gradient blue
+                          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // soft shadow
+                          transition: "all 0.2s ease-in-out",
+                          "&:hover": {
+                            background:
+                              "linear-gradient(to right, #2563eb, #490d91)",
+                            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
+                          },
+                          "&:active": {
+                            transform: "scale(0.98)",
+                          },
+                        }}
+                      >
+                        {row.actions}
+                      </Button>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}
@@ -656,9 +746,35 @@ const Page = () => {
                   <TableCell>{row.relatedSession}</TableCell>
                   <TableCell>{row.status}</TableCell>
                   <TableCell className="text-left">
-                    <Button variant="contained" size="small">
-                      {row.actions}
-                    </Button>
+                    <Box display="flex" justifyContent="center">
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        sx={{
+                          borderRadius: "9999px", // pill shape
+                          textTransform: "none", // don't uppercase text
+                          fontWeight: 500, // semi-bold
+                          fontSize: "0.85rem", // readable but compact
+                          px: 2.5,
+                          py: 0.5,
+                          minHeight: "30px",
+                          background:
+                            "linear-gradient(to right, #3b82f6, #6414c7)", // gradient blue
+                          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // soft shadow
+                          transition: "all 0.2s ease-in-out",
+                          "&:hover": {
+                            background:
+                              "linear-gradient(to right, #2563eb, #490d91)",
+                            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
+                          },
+                          "&:active": {
+                            transform: "scale(0.98)",
+                          },
+                        }}
+                      >
+                        {row.actions}
+                      </Button>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}
@@ -696,9 +812,35 @@ const Page = () => {
                   <TableCell>{row.type}</TableCell>
                   <TableCell>{row.message}</TableCell>
                   <TableCell className="text-left">
-                    <Button variant="contained" size="small">
-                      {row.actions}
-                    </Button>
+                    <Box display="flex" justifyContent="center">
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        sx={{
+                          borderRadius: "9999px", // pill shape
+                          textTransform: "none", // don't uppercase text
+                          fontWeight: 500, // semi-bold
+                          fontSize: "0.85rem", // readable but compact
+                          px: 2.5,
+                          py: 0.5,
+                          minHeight: "30px",
+                          background:
+                            "linear-gradient(to right, #3b82f6, #6414c7)", // gradient blue
+                          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // soft shadow
+                          transition: "all 0.2s ease-in-out",
+                          "&:hover": {
+                            background:
+                              "linear-gradient(to right, #2563eb, #490d91)",
+                            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
+                          },
+                          "&:active": {
+                            transform: "scale(0.98)",
+                          },
+                        }}
+                      >
+                        {row.actions}
+                      </Button>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}

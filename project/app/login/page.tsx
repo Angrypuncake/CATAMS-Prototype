@@ -6,6 +6,7 @@ import { Button, TextField, Typography } from "@mui/material";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -37,7 +38,7 @@ export default function LoginPage() {
           </Typography>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div>
+          <div className="flex flex-col gap-2">
             <TextField
               id="username"
               name="username"
@@ -48,6 +49,18 @@ export default function LoginPage() {
               placeholder="Enter your username"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              variant="outlined"
+            />
+            <TextField
+              id="password"
+              name="password"
+              type="password"
+              required
+              fullWidth
+              label="Password"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
               variant="outlined"
             />
           </div>

@@ -89,6 +89,10 @@ const exportJSON = (
   data: Record<string, string | number>[],
   filename = "tutor_allocations.json",
 ) => {
+  for (const dictionary of data) {
+    delete dictionary.id;
+    delete dictionary.user_id;
+  }
   const jsonString = JSON.stringify(data, null, 2);
   const blob = new Blob([jsonString], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -115,7 +119,8 @@ const exportCSV = (
   filename = "tutor_allocations.csv",
 ) => {
   if (!data?.length) return;
-  const keys = Object.keys(data[0]);
+  let keys = Object.keys(data[0]);
+  keys = keys.slice(2, keys.length);
   let csvString = keys.join(",") + "\n";
   for (const row of data) {
     csvString +=

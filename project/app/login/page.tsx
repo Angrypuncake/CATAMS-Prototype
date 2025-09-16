@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button, TextField, Typography } from "@mui/material";
+import axios from "axios";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -14,6 +15,10 @@ export default function LoginPage() {
 
     try {
       // TODO connect to backend
+      const result = axios.post("/api/auth/login", {
+        useremail: username,
+        password: password,
+      });
     } catch (error) {
       console.log(error);
     }

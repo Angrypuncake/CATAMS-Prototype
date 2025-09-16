@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import jwt from "jsonwebtoken";
 
 export async function POST(request: Request) {
   try {
@@ -31,12 +32,31 @@ export async function POST(request: Request) {
     const userData = user.rows[0];
 
     if (password === userData.user_id.toString()) {
-      return NextResponse.json({
+      const token = jwt.sign(
+        {
+          userId: userData.user_id,
+          email: userData.email,
+        },
+        process.env.JWT_SECRET!,
+        { expiresIn: "24h" },
+      );
+
+      const response = NextResponse.json({
         success: true,
         message: "Login successful",
         userId: userData.user_id,
         email: userData.email,
       });
+
+      response.cookies.set("auth-token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 86400,
+        path: "/",
+      });
+
+      return response;
     } else {
       return NextResponse.json(
         { error: "Invalid credentials" },

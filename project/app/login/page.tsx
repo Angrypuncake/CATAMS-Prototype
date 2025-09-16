@@ -14,10 +14,16 @@ export default function LoginPage() {
     e.preventDefault();
 
     try {
-      const result = await axios.post("/api/auth/login", {
-        useremail: username,
-        password: password,
-      });
+      const result = await axios.post(
+        "/api/auth/login",
+        {
+          useremail: username,
+          password: password,
+        },
+        {
+          withCredentials: true,
+        },
+      );
 
       if (result.data.success) {
         console.log("Login successful:", result.data);

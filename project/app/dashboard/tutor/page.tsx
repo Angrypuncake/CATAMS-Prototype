@@ -556,6 +556,7 @@ const Page = () => {
                       : "↓"
                     : ""}
                 </TableCell>
+                <TableCell className="font-bold text-center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -575,6 +576,40 @@ const Page = () => {
                     {hoursBetween(row.start_at, row.end_at)}
                   </TableCell>
                   <TableCell>{row.status ?? "N/A"}</TableCell>
+                  <TableCell>
+                    <Box display="flex" justifyContent="center">
+                      <Button
+                        variant="contained"
+                        color="primary"
+                        sx={{
+                          borderRadius: "9999px",
+                          textTransform: "none",
+                          fontWeight: 500,
+                          fontSize: "0.85rem",
+                          px: 2.5,
+                          py: 0.5,
+                          minHeight: "30px",
+                          background:
+                            "linear-gradient(to right, #3b82f6, #6414c7)",
+                          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+                          transition: "all 0.2s ease-in-out",
+                          "&:hover": {
+                            background:
+                              "linear-gradient(to right, #2563eb, #490d91)",
+                            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
+                          },
+                          "&:active": { transform: "scale(0.98)" },
+                        }}
+                        size="small"
+                        onClick={() => {
+                          setSession(row);
+                          setOpen(true);
+                        }}
+                      >
+                        {row.actions ?? "View"}
+                      </Button>
+                    </Box>
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -591,6 +626,67 @@ const Page = () => {
             }}
           />
         </TableContainer>
+        <div className="justify-end items-center flex gap-5 mt-5">
+          <p>You can export the above data in CSV or JSON formats</p>
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{
+              borderRadius: "9999px",
+              textTransform: "none",
+              fontWeight: 500,
+              fontSize: "0.85rem",
+              px: 2.5,
+              py: 0.5,
+              minHeight: "30px",
+              background: "linear-gradient(to right, #3b82f6, #6414c7)",
+              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                background: "linear-gradient(to right, #2563eb, #490d91)",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
+              },
+              "&:active": { transform: "scale(0.98)" },
+            }}
+            size="medium"
+            onClick={() =>
+              exportCSV(
+                tutorSessions as unknown as Record<string, string | number>[],
+              )
+            }
+          >
+            Export as CSV
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            sx={{
+              borderRadius: "9999px",
+              textTransform: "none",
+              fontWeight: 500,
+              fontSize: "0.85rem",
+              px: 2.5,
+              py: 0.5,
+              minHeight: "30px",
+              background: "linear-gradient(to right, #3b82f6, #6414c7)",
+              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+              transition: "all 0.2s ease-in-out",
+              "&:hover": {
+                background: "linear-gradient(to right, #2563eb, #490d91)",
+                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
+              },
+              "&:active": { transform: "scale(0.98)" },
+            }}
+            size="medium"
+            onClick={() =>
+              exportJSON(
+                tutorSessions as unknown as Record<string, string | number>[],
+              )
+            }
+          >
+            Export as JSON
+          </Button>
+        </div>
       </StyledBox>
 
       {/* ---------- Other sections (unchanged, no modals) ---------- */}

@@ -33,17 +33,19 @@ export async function POST(request: Request) {
 
     if (password === userData.user_id.toString()) {
       const roles = await query(
-        `SELECT DISTINCT ur.user_id, r.role_name
+        `SELECT DISTINCT r.role_name
           FROM user_role ur
           JOIN role r ON ur.role_id = r.role_id
           WHERE ur.user_id = $1`,
         [userData.user_id],
       );
-      console.log(roles);
+      const roleNames = roles.rows.map((row) => row.role_name);
+      console.log(roleNames);
       const token = jwt.sign(
         {
           userId: userData.user_id,
           email: userData.email,
+          roles: roleNames,
         },
         process.env.JWT_SECRET!,
         { expiresIn: "24h" },

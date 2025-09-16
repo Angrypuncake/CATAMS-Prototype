@@ -45,15 +45,7 @@ export async function middleware(request: NextRequest) {
         );
 
         if (!hasRequiredRole) {
-          if (decoded.roles.includes("admin")) {
-            return NextResponse.redirect(new URL("/admin", request.url));
-          } else if (decoded.roles.includes("tutor")) {
-            return NextResponse.redirect(
-              new URL("/tutor-dashboard", request.url),
-            );
-          } else {
-            return NextResponse.redirect(new URL("/portal", request.url));
-          }
+          return NextResponse.redirect(new URL("/portal", request.url));
         }
       }
     }

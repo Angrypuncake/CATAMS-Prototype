@@ -3,6 +3,7 @@ import Link from "next/link";
 import React, { useEffect, useState, useMemo } from "react";
 import StyledBox from "./components";
 import Button from "@mui/material/Button";
+import { TablePagination } from "@mui/material";
 import {
   Table,
   TableBody,
@@ -70,6 +71,11 @@ function useColumnSorter<T extends TableRow>(
             ? timeA - timeB
             : timeB - timeA;
         }
+      } else if (sortConfig["column"] === "unit_code") {
+        const textA = String(a["unit_code"]).toLowerCase();
+        const textB = String(b["unit_code"]).toLowerCase();
+        if (textA < textB) return sortConfig["direction"] === "asc" ? -1 : 1;
+        if (textA > textB) return sortConfig["direction"] === "asc" ? 1 : -1;
       } else if (
         sortConfig["column"] == "location" ||
         sortConfig["column"] == "status"
@@ -177,7 +183,12 @@ type Notices = {
   actions: string | null;
 };
 
-type SortableColumns = "session_date" | "start_at" | "location" | "status";
+type SortableColumns =
+  | "session_date"
+  | "start_at"
+  | "location"
+  | "status"
+  | "unit_code";
 
 /* ========= Helpers ========= */
 function hoursBetween(start?: string | null, end?: string | null) {
@@ -331,10 +342,31 @@ const Page = () => {
     direction: "asc" | "desc";
   } | null>(null);
 
+  // new states for pagination + search
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [search, setSearch] = useState("");
+
   const sortedSessions: TutorSession[] = useColumnSorter<TutorSession>(
     tutorSessions,
     sortAllocationsConfig,
   );
+  // filter
+  const filteredSessions = useMemo(() => {
+    if (!search) return sortedSessions;
+    return sortedSessions.filter((row) =>
+      Object.values(row).some((v) =>
+        String(v).toLowerCase().includes(search.toLowerCase()),
+      ),
+    );
+  }, [sortedSessions, search]);
+
+  // pagination
+  const paginatedSessions = useMemo(() => {
+    const start = page * rowsPerPage;
+    return filteredSessions.slice(start, start + rowsPerPage);
+  }, [filteredSessions, page, rowsPerPage]);
+
   const sortedActions: Actions[] = useColumnSorter<Actions>(
     actions,
     sortActionsConfig,
@@ -360,7 +392,7 @@ const Page = () => {
         });
 
         const res = await fetch(
-          `/api/tutor/allocations?userId=${sessionUser.data.userId}&page=1&limit=10`,
+          `/api/tutor/allocations?userId=${sessionUser.data.userId}&page=${page + 1}&limit=${rowsPerPage}`,
         );
         if (!res.ok) throw new Error("Failed to fetch tutor allocations");
         const data = await res.json();
@@ -372,7 +404,7 @@ const Page = () => {
       }
     };
     fetchTutorSessions();
-  }, []);
+  }, [page, rowsPerPage]);
 
   // NEED MORE QUERIES FOR NOTICES, REQUESTS AND ACTIONS
 
@@ -450,6 +482,19 @@ const Page = () => {
       {/* ---------- My Allocations (ONLY this table opens a modal) ---------- */}
       <StyledBox>
         <p className="font-bold text-xl mb-2">My Allocations</p>
+
+        {/* search box */}
+        <input
+          type="text"
+          placeholder="Search..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(0);
+          }}
+          className="border rounded px-2 py-1 mb-2 w-1/3"
+        />
+
         <TableContainer component={Paper} className="shadow-sm">
           <Table>
             <TableHead>
@@ -476,7 +521,18 @@ const Page = () => {
                       : "↓"
                     : ""}
                 </TableCell>
-                <TableCell className="font-bold text-center">Unit</TableCell>
+                <TableCell
+                  className="font-bold text-center cursor-pointer"
+                  onClick={() => handleSortAllocations("unit_code")}
+                >
+                  Unit{" "}
+                  {sortAllocationsConfig?.column === "unit_code"
+                    ? sortAllocationsConfig.direction === "asc"
+                      ? "↑"
+                      : "↓"
+                    : ""}
+                </TableCell>
+
                 <TableCell
                   className="font-bold text-center cursor-pointer"
                   onClick={() => handleSortAllocations("location")}
@@ -500,11 +556,10 @@ const Page = () => {
                       : "↓"
                     : ""}
                 </TableCell>
-                <TableCell className="font-bold text-center">Actions</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {sortedSessions.map((row, index) => (
+              {paginatedSessions.map((row, index) => (
                 <TableRow key={index}>
                   <TableCell>
                     {row.session_date ? row.session_date.slice(0, 10) : "N/A"}
@@ -520,113 +575,22 @@ const Page = () => {
                     {hoursBetween(row.start_at, row.end_at)}
                   </TableCell>
                   <TableCell>{row.status ?? "N/A"}</TableCell>
-                  <TableCell>
-                    <Box display="flex" justifyContent="center">
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        sx={{
-                          borderRadius: "9999px", // pill shape
-                          textTransform: "none", // don't uppercase text
-                          fontWeight: 500, // semi-bold
-                          fontSize: "0.85rem", // readable but compact
-                          px: 2.5,
-                          py: 0.5,
-                          minHeight: "30px",
-                          background:
-                            "linear-gradient(to right, #3b82f6, #6414c7)", // gradient blue
-                          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // soft shadow
-                          transition: "all 0.2s ease-in-out",
-                          "&:hover": {
-                            background:
-                              "linear-gradient(to right, #2563eb, #490d91)",
-                            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
-                          },
-                          "&:active": {
-                            transform: "scale(0.98)",
-                          },
-                        }}
-                        size="small"
-                        onClick={() => {
-                          setSession(row);
-                          setOpen(true);
-                        }}
-                      >
-                        {row.actions ?? "View"}
-                      </Button>
-                    </Box>
-                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
           </Table>
+          <TablePagination
+            component="div"
+            count={filteredSessions.length}
+            page={page}
+            onPageChange={(e, newPage) => setPage(newPage)}
+            rowsPerPage={rowsPerPage}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+          />
         </TableContainer>
-
-        <div className="justify-end items-center flex gap-5 mt-5">
-          <p>You can export the above data in CSV or JSON formats</p>
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{
-              borderRadius: "9999px", // pill shape
-              textTransform: "none", // don't uppercase text
-              fontWeight: 500, // semi-bold
-              fontSize: "0.85rem", // readable but compact
-              px: 2.5,
-              py: 0.5,
-              minHeight: "30px",
-              background: "linear-gradient(to right, #3b82f6, #6414c7)", // gradient blue
-              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // soft shadow
-              transition: "all 0.2s ease-in-out",
-              "&:hover": {
-                background: "linear-gradient(to right, #2563eb, #490d91)",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
-              },
-              "&:active": {
-                transform: "scale(0.98)",
-              },
-            }}
-            size="medium"
-            onClick={() =>
-              exportCSV(
-                tutorSessions as unknown as Record<string, string | number>[],
-              )
-            }
-          >
-            Export as CSV
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{
-              borderRadius: "9999px", // pill shape
-              textTransform: "none", // don't uppercase text
-              fontWeight: 500, // semi-bold
-              fontSize: "0.85rem", // readable but compact
-              px: 2.5,
-              py: 0.5,
-              minHeight: "30px",
-              background: "linear-gradient(to right, #3b82f6, #6414c7)", // gradient blue
-              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // soft shadow
-              transition: "all 0.2s ease-in-out",
-              "&:hover": {
-                background: "linear-gradient(to right, #2563eb, #490d91)",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
-              },
-              "&:active": {
-                transform: "scale(0.98)",
-              },
-            }}
-            size="medium"
-            onClick={() =>
-              exportJSON(
-                tutorSessions as unknown as Record<string, string | number>[],
-              )
-            }
-          >
-            Export as JSON
-          </Button>
-        </div>
       </StyledBox>
 
       {/* ---------- Other sections (unchanged, no modals) ---------- */}

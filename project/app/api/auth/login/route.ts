@@ -1,23 +1,78 @@
 import { NextResponse } from "next/server";
+import { query } from "@/lib/db";
+import jwt from "jsonwebtoken";
 
 export async function POST(request: Request) {
   try {
-    const { username } = await request.json();
+    const { useremail, password } = await request.json();
 
-    if (!username || typeof username !== "string" || !username.trim()) {
+    if (!useremail || typeof useremail !== "string" || !useremail.trim()) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
+    }
+
+    if (!password || typeof password !== "string") {
       return NextResponse.json(
-        { error: "Username is required" },
+        { error: "Password is required" },
         { status: 400 },
       );
     }
 
-    console.log("User logged in:", username.trim());
+    const user = await query(
+      `SELECT email, user_id FROM users WHERE email = $1`,
+      [useremail],
+    );
 
-    return NextResponse.json({
-      success: true,
-      message: "Login successful",
-      username: username.trim(),
-    });
+    if (!user.rows || user.rows.length === 0) {
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401 },
+      );
+    }
+
+    const userData = user.rows[0];
+
+    if (password === userData.user_id.toString()) {
+      const roles = await query(
+        `SELECT DISTINCT r.role_name
+          FROM user_role ur
+          JOIN role r ON ur.role_id = r.role_id
+          WHERE ur.user_id = $1`,
+        [userData.user_id],
+      );
+      const roleNames = roles.rows.map((row) => row.role_name);
+      console.log(roleNames);
+      const token = jwt.sign(
+        {
+          userId: userData.user_id,
+          email: userData.email,
+          roles: roleNames,
+        },
+        process.env.JWT_SECRET!,
+        { expiresIn: "24h" },
+      );
+
+      const response = NextResponse.json({
+        success: true,
+        message: "Login successful",
+        userId: userData.user_id,
+        email: userData.email,
+      });
+
+      response.cookies.set("auth-token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+        maxAge: 86400,
+        path: "/",
+      });
+
+      return response;
+    } else {
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401 },
+      );
+    }
   } catch (error) {
     console.error("Error in login request:", error);
     return NextResponse.json(

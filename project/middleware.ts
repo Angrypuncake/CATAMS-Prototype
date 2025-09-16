@@ -49,7 +49,13 @@ export async function middleware(request: NextRequest) {
         }
       }
     }
-    return NextResponse.next();
+
+    const response = NextResponse.next();
+    response.headers.set("x-user-id", decoded.userId.toString());
+    response.headers.set("x-user-email", decoded.email);
+    response.headers.set("x-user-roles", JSON.stringify(decoded.roles));
+
+    return response;
   } catch (error) {
     console.error("JWT verification failed:", error);
     return NextResponse.redirect(new URL("/login", request.url));

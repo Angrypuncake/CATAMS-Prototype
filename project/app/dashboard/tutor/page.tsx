@@ -21,6 +21,7 @@ import {
   Box,
   Divider,
 } from "@mui/material";
+import axios from "axios";
 
 /* ========= Helpers ========= */
 const timeConverter = (time: string): number => {
@@ -311,8 +312,6 @@ const notices = [
 
 /* ========= Page ========= */
 const Page = () => {
-  const userId = 6; // WILL BE REPLACED WITH ENVIRONMENT VARIABLE GIVEN FROM BACKEND FOR ID OF LOGGED IN TUTOR
-
   const [tutorSessions, setTutorSessions] = useState<TutorSession[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortAllocationsConfig, setSortAllocationsConfig] = useState<{
@@ -356,8 +355,12 @@ const Page = () => {
   useEffect(() => {
     const fetchTutorSessions = async () => {
       try {
+        const sessionUser = await axios.get("/api/auth/me", {
+          withCredentials: true,
+        });
+
         const res = await fetch(
-          `/api/tutor/allocations?userId=${userId}&page=1&limit=10`,
+          `/api/tutor/allocations?userId=${sessionUser.data.userId}&page=1&limit=10`,
         );
         if (!res.ok) throw new Error("Failed to fetch tutor allocations");
         const data = await res.json();

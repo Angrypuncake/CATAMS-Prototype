@@ -69,15 +69,17 @@ type SavePayload = Partial<AllocationRow> & {
   apply_all_for_activity?: boolean;
   propagate_occurrence_ids?: number[] | null;
 
-  propagate_fields?: Array<"tutor" | "paycode" | "start" | "end" | "notes">;
+  propagate_fields?: Array<
+    "tutor" | "paycode" | "start" | "end" | "notes" | "status"
+  >;
   propagate_notes_mode?: "overwrite" | "append";
   propagate_dow?: Dow;
 };
 
 type PropagationPayload = {
-  fields: Array<"tutor" | "paycode" | "start" | "end" | "notes">;
+  fields: Array<"tutor" | "paycode" | "start" | "end" | "notes" | "status">;
   notesMode?: "overwrite" | "append";
-  dow?: Dow; // stays, but will be injected by Drawer
+  dow?: Dow;
   occurrenceIds: number[];
 };
 
@@ -349,6 +351,7 @@ function PropagationPanel({
     "overwrite",
   );
   const [moveDow, setMoveDow] = React.useState<boolean>(false);
+  console.log("PropagationPanel activityId", activityId);
 
   // Fetch occurrences for this activity
   React.useEffect(() => {
@@ -496,6 +499,15 @@ function PropagationPanel({
               Notes
             </label>
 
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={fields.includes("status")}
+                onChange={() => toggleField("status" as const)}
+              />
+              Status
+            </label>
+
             {/* Notes mode */}
             {fields.includes("notes") && (
               <div className="flex items-center gap-3 text-xs">
@@ -612,14 +624,14 @@ function Drawer({
   open,
   onClose,
   row,
-  onMockSave,
+  onSave,
   tutors,
   paycodes,
 }: {
   open: boolean;
   onClose: () => void;
   row: AllocationRow | null;
-  onMockSave: (updated: SavePayload) => void;
+  onSave: (updated: SavePayload) => void;
   tutors: TutorOption[];
   paycodes: PaycodeOption[];
 }) {
@@ -632,6 +644,8 @@ function Drawer({
     notesMode: "overwrite",
     occurrenceIds: [],
   });
+
+  // console.log("Drawer row", row);
 
   const [form, setForm] = useState({
     tutorId: null as number | null,
@@ -952,7 +966,7 @@ function Drawer({
           <button
             onClick={() => {
               if (isScheduled) {
-                onMockSave({
+                onSave({
                   user_id: form.tutorId,
                   paycode_id: form.paycode,
                   status: form.status,
@@ -970,8 +984,10 @@ function Drawer({
                     ? propPayload.occurrenceIds
                     : undefined,
                 });
+                console.log("prop payload", propPayload);
+                console.log("propagate fields", propPayload.fields);
               } else {
-                onMockSave({
+                onSave({
                   user_id: form.tutorId,
                   paycode_id: form.paycode,
                   status: form.status,
@@ -988,7 +1004,7 @@ function Drawer({
             }}
             className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
           >
-            Save (Mock)
+            Save
           </button>
         </div>
       </aside>
@@ -1090,11 +1106,29 @@ export default function AdminAllAllocationsPage() {
     setDrawerOpen(true);
   }
 
-  function onMockSave(updated: SavePayload) {
+  async function onSave(updated: SavePayload) {
     if (!activeRow) return;
-    setRows((old) =>
-      old.map((r) => (r.id === activeRow.id ? { ...r, ...updated } : r)),
-    );
+
+    try {
+      const res = await fetch(`/api/admin/allocations/${activeRow.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updated),
+      });
+      console.log("onSave() called with", updated);
+
+      if (!res.ok) {
+        console.error("Failed to save allocation", await res.text());
+        return;
+      }
+
+      const saved = await res.json();
+
+      // Refresh the table from backend
+      await fetchData();
+    } catch (err) {
+      console.error("Error saving allocation", err);
+    }
   }
 
   return (
@@ -1189,6 +1223,7 @@ export default function AdminAllAllocationsPage() {
                 <th className="px-3 py-2">Unit</th>
                 <th className="px-3 py-2">Activity</th>
                 <th className="px-3 py-2">Tutor</th>
+                <th className="px-3 py-2">Paycode</th>
                 <th className="px-3 py-2">Status</th>
                 <th className="px-3 py-2">Note</th>
                 <th className="px-3 py-2 w-[80px]">Edit</th>
@@ -1199,6 +1234,7 @@ export default function AdminAllAllocationsPage() {
                 <th className="px-3 py-2">Unit</th>
                 <th className="px-3 py-2">Activity</th>
                 <th className="px-3 py-2">Tutor</th>
+                <th className="px-3 py-2">Paycode</th>
                 <th className="px-3 py-2">Status</th>
                 <th className="px-3 py-2">Note</th>
                 <th className="px-3 py-2 w-[80px]">Edit</th>
@@ -1267,6 +1303,9 @@ export default function AdminAllAllocationsPage() {
                     <div className="text-xs text-gray-500">{r.email ?? ""}</div>
                   </td>
                   <td className="px-3 py-2">
+                    <div className="font-medium">{r.paycode_id ?? "—"}</div>
+                  </td>
+                  <td className="px-3 py-2">
                     <div className="whitespace-pre-line">{r.status ?? "—"}</div>
                   </td>
                   <td className="px-3 py-2">
@@ -1319,7 +1358,7 @@ export default function AdminAllAllocationsPage() {
         row={activeRow}
         tutors={tutors}
         paycodes={paycodes}
-        onMockSave={onMockSave}
+        onSave={onSave}
       />
     </div>
   );

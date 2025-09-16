@@ -7,6 +7,7 @@ export async function GET(
 ) {
   const { id } = await params;
   const activityId = Number(id);
+
   if (!activityId) {
     return NextResponse.json({ error: "Invalid id" }, { status: 400 });
   }
@@ -26,7 +27,6 @@ export async function GET(
       [activityId],
     );
 
-    // status is optional in your UI; expose is_cancelled as a simple tag if you want
     const data = rows.map((r) => ({
       occurrence_id: r.occurrence_id,
       session_date: r.session_date,

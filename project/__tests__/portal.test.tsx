@@ -2,6 +2,15 @@ import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
 import Portal from "../app/portal/page";
 
+// Mock Next.js router
+jest.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+  }),
+}));
+
 describe("Portal Page", () => {
   test("should render the first button (Tutor Dashboard)", () => {
     render(<Portal />);

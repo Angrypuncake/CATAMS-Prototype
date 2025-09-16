@@ -16,43 +16,31 @@ export async function POST(request: Request) {
       );
     }
 
-    try {
-      const user = await query(
-        `
-            SELECT email, user_id
-            FROM users
-            WHERE email = $1
-            `,
-        [useremail],
-      );
+    const user = await query(
+      `SELECT email, user_id FROM users WHERE email = $1`,
+      [useremail],
+    );
 
-      if (!user.rows || user.rows.length === 0) {
-        return NextResponse.json(
-          { error: "Invalid credentials" },
-          { status: 401 },
-        );
-      }
-
-      const userData = user.rows[0];
-
-      if (password === userData.id) {
-        return NextResponse.json({
-          success: true,
-          message: "Login successful",
-          userId: userData.user_id,
-          email: userData.email,
-        });
-      } else {
-        return NextResponse.json(
-          { error: "Invalid credentials" },
-          { status: 401 },
-        );
-      }
-    } catch (e) {
-      console.error("Database error:", e);
+    if (!user.rows || user.rows.length === 0) {
       return NextResponse.json(
-        { error: "Internal Server Error" },
-        { status: 500 },
+        { error: "Invalid credentials" },
+        { status: 401 },
+      );
+    }
+
+    const userData = user.rows[0];
+
+    if (password === userData.user_id.toString()) {
+      return NextResponse.json({
+        success: true,
+        message: "Login successful",
+        userId: userData.user_id,
+        email: userData.email,
+      });
+    } else {
+      return NextResponse.json(
+        { error: "Invalid credentials" },
+        { status: 401 },
       );
     }
   } catch (error) {

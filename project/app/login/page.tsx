@@ -14,13 +14,22 @@ export default function LoginPage() {
     e.preventDefault();
 
     try {
-      // TODO connect to backend
-      const result = axios.post("/api/auth/login", {
+      const result = await axios.post("/api/auth/login", {
         useremail: username,
         password: password,
       });
+
+      if (result.data.success) {
+        console.log("Login successful:", result.data);
+        router.push("/portal");
+      }
     } catch (error) {
-      console.log(error);
+      console.error("Login error:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        alert(`Login failed: ${error.response.data.error}`);
+      } else {
+        alert("Login failed: Network error");
+      }
     }
   };
 

@@ -70,14 +70,16 @@ type SavePayload = Partial<AllocationRow> & {
   propagate_occurrence_ids?: number[] | null;
 
   propagate_fields?: Array<
-    "tutor" | "paycode" | "start" | "end" | "notes" | "status"
+    "tutor" | "paycode" | "start" | "end" | "notes" | "status" | "location"
   >;
   propagate_notes_mode?: "overwrite" | "append";
   propagate_dow?: Dow;
 };
 
 type PropagationPayload = {
-  fields: Array<"tutor" | "paycode" | "start" | "end" | "notes" | "status">;
+  fields: Array<
+    "tutor" | "paycode" | "start" | "end" | "notes" | "status" | "location"
+  >;
   notesMode?: "overwrite" | "append";
   dow?: Dow;
   occurrenceIds: number[];
@@ -130,18 +132,16 @@ type Dow = (typeof DOWS)[number];
 
 function isoDateToDow(iso: string | null | undefined): Dow | "" {
   if (!iso) return "";
-  // JS getDay(): 0=Sun..6=Sat  -> we want Mon..Sun
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "";
-  const js = d.getDay(); // 0..6
+  const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
+  const js = new Date(y, m - 1, d).getDay(); // local, but using exact parts
   const map: Record<number, Dow> = {
+    0: "Sun",
     1: "Mon",
     2: "Tue",
     3: "Wed",
     4: "Thu",
     5: "Fri",
     6: "Sat",
-    0: "Sun",
   };
   return map[js] ?? "";
 }
@@ -508,6 +508,15 @@ function PropagationPanel({
               Status
             </label>
 
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={fields.includes("location")}
+                onChange={() => toggleField("location" as const)}
+              />
+              Location
+            </label>
+
             {/* Notes mode */}
             {fields.includes("notes") && (
               <div className="flex items-center gap-3 text-xs">
@@ -655,6 +664,7 @@ function Drawer({
     end: "",
     note: "",
     status: "",
+    location: "",
     // Unscheduled UX
     allocatedHours: "" as string,
     manualHoursOnly: false,
@@ -676,6 +686,7 @@ function Drawer({
       end: toInputTime(row.end_at),
       note: row.note ?? "",
       status: row.status ?? "",
+      location: row.location ?? "",
       allocatedHours:
         row.allocated_hours != null ? String(row.allocated_hours) : "",
       manualHoursOnly: !row.session_date && !row.start_at && !row.end_at,
@@ -769,6 +780,39 @@ function Drawer({
             />
           </div>
 
+          {/* Status */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium mb-1">Status</label>
+              <select
+                className="w-full border rounded px-3 py-2"
+                value={form.status}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, status: e.target.value }))
+                }
+              >
+                <option value="">— Select status —</option>
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* {location} */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Location</label>
+            <textarea
+              className="w-full border rounded px-3 py-2 min-h-[20px]"
+              value={form.location}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, location: e.target.value }))
+              }
+            />
+          </div>
+
           {/* Scheduled: Date/Start/End; Unscheduled: Allocated Hours (+ optional time inputs) */}
           {isScheduled ? (
             <>
@@ -781,9 +825,9 @@ function Drawer({
                     type="date"
                     className="w-full border rounded px-3 py-2"
                     value={form.date}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, date: e.target.value }))
-                    }
+                    onChange={(e) => {
+                      setForm((f) => ({ ...f, date: e.target.value }));
+                    }}
                   />
                 </div>
                 <div>
@@ -933,27 +977,6 @@ function Drawer({
               </div>
             </>
           )}
-
-          {/* Status */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-sm font-medium mb-1">Status</label>
-              <select
-                className="w-full border rounded px-3 py-2"
-                value={form.status}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, status: e.target.value }))
-                }
-              >
-                <option value="">— Select status —</option>
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
         </div>
 
         <div className="p-5 border-t flex items-center gap-3">
@@ -974,6 +997,7 @@ function Drawer({
                   session_date: form.date || null,
                   start_at: fromInputTime(form.start),
                   end_at: fromInputTime(form.end),
+                  location: form.location,
                   // Smart propagation intent for backend write-path
                   propagate_fields: propPayload.fields,
                   propagate_notes_mode: propPayload.fields.includes("notes")
@@ -995,6 +1019,7 @@ function Drawer({
                   session_date: null,
                   start_at: null,
                   end_at: null,
+                  location: form.location,
                   allocated_hours: form.allocatedHours
                     ? Number(form.allocatedHours)
                     : null,
@@ -1225,6 +1250,7 @@ export default function AdminAllAllocationsPage() {
                 <th className="px-3 py-2">Tutor</th>
                 <th className="px-3 py-2">Paycode</th>
                 <th className="px-3 py-2">Status</th>
+                <th className="px-3 py-2">Location</th>
                 <th className="px-3 py-2">Note</th>
                 <th className="px-3 py-2 w-[80px]">Edit</th>
               </tr>
@@ -1307,6 +1333,11 @@ export default function AdminAllAllocationsPage() {
                   </td>
                   <td className="px-3 py-2">
                     <div className="whitespace-pre-line">{r.status ?? "—"}</div>
+                  </td>
+                  <td className="px-3 py-2">
+                    <div className="whitespace-pre-line">
+                      {r.location ?? "—"}
+                    </div>
                   </td>
                   <td className="px-3 py-2">
                     <div className="truncate max-w-[360px]">

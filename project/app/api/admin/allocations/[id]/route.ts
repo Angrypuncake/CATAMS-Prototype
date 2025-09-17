@@ -36,6 +36,7 @@ export async function PATCH(
     session_date,
     start_at,
     end_at,
+    location,
     propagate_fields, // ["tutor","paycode","start","end","notes"]
     propagate_notes_mode, // "overwrite" | "append"
     propagate_dow, // Weekday | undefined
@@ -48,6 +49,7 @@ export async function PATCH(
     session_date?: string;
     start_at?: string;
     end_at?: string;
+    location?: string;
     propagate_fields?: (
       | "tutor"
       | "paycode"
@@ -55,6 +57,7 @@ export async function PATCH(
       | "end"
       | "notes"
       | "status"
+      | "location"
     )[];
     propagate_notes_mode?: "overwrite" | "append";
     propagate_dow?: Weekday;
@@ -127,6 +130,7 @@ export async function PATCH(
           { status: 400 },
         );
       }
+      console.log("Date read as", session_date);
       await query(
         `UPDATE session_occurrence
             SET session_date = $2::date,
@@ -134,6 +138,21 @@ export async function PATCH(
                 end_at       = $4::time
           WHERE occurrence_id = $1`,
         [alloc.session_id, session_date, start_at, end_at],
+      );
+    }
+
+    if (location) {
+      if (!alloc.session_id) {
+        return NextResponse.json(
+          { error: "Cannot set schedule on an unscheduled allocation." },
+          { status: 400 },
+        );
+      }
+      await query(
+        `UPDATE session_occurrence
+          SET location = $2
+          WHERE occurrence_id = $1`,
+        [alloc.session_id, location],
       );
     }
 
@@ -178,12 +197,16 @@ export async function PATCH(
       const changeStatus =
         propagate_fields?.includes("status") && status != null;
 
+      const changeLocation =
+        propagate_fields?.includes("location") && location != null;
+
       console.log("Propagation change flags", {
         changeStart,
         changeEnd,
         changeTutor,
         changePay,
         changeNotes,
+        changeLocation,
       });
 
       for (const t of validTargets) {
@@ -199,6 +222,7 @@ export async function PATCH(
             start: changeStart,
             end: changeEnd,
             notes: changeNotes,
+            location: changeLocation,
           },
         });
 
@@ -257,14 +281,15 @@ export async function PATCH(
           newDate = d;
         }
 
-        // 4b) Apply occurrence-level changes (date/start/end only — no notes now)
-        if (propagate_dow || changeStart || changeEnd) {
+        // 4b) Apply occurrence-level changes (date/start/end and location — no notes now)
+        if (propagate_dow || changeStart || changeEnd || location) {
           await query(
             `
             UPDATE session_occurrence
               SET session_date = COALESCE($2::date, session_date),
                   start_at     = COALESCE($3::time, start_at),
-                  end_at       = COALESCE($4::time, end_at)
+                  end_at       = COALESCE($4::time, end_at),
+                  location     = COALESCE($5, location) 
             WHERE occurrence_id = $1
             `,
             [
@@ -272,6 +297,7 @@ export async function PATCH(
               newDate,
               changeStart ? start_at : null,
               changeEnd ? end_at : null,
+              changeLocation ? location : null,
             ],
           );
           console.log("Updated occurrence timing", {

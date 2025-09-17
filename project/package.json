@@ -32,6 +32,7 @@
     "@types/jsonwebtoken": "^9.0.10",
     "axios": "^1.11.0",
     "csv-parse": "^6.1.0",
+    "date-fns": "^4.1.0",
     "install": "^0.13.0",
     "jsonwebtoken": "^9.0.2",
     "next": "15.5.0",

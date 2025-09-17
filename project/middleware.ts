@@ -17,7 +17,6 @@ export async function middleware(request: NextRequest) {
   ) {
     return NextResponse.next();
   }
-
   const token = request.cookies.get("auth-token")?.value;
 
   if (!token) {

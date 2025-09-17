@@ -17,6 +17,8 @@ import SchoolIcon from "@mui/icons-material/School";
 import GroupsIcon from "@mui/icons-material/Groups";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 /* ------------ Minimal data (universal audience) ------------ */
 const dashboards = [
@@ -51,6 +53,16 @@ const dashboards = [
 ];
 
 export default function PortalPage() {
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await axios.post("/api/auth/logout", {}, { withCredentials: true });
+      router.push("/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  };
   return (
     <Box
       sx={{
@@ -78,6 +90,9 @@ export default function PortalPage() {
             sx={{ ml: 1, fontWeight: 600 }}
           />
           <Box sx={{ flex: 1 }} />
+          <Button variant="primary" type="button" onClick={handleLogout}>
+            Logout
+          </Button>
           <Button component={Link} href="/help" size="small">
             Help
           </Button>

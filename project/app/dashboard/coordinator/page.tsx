@@ -2,7 +2,9 @@
 
 import React, { useEffect, useState, useMemo } from "react";
 import Button from "@mui/material/Button";
-import { Slider, Typography, Menu, MenuItem } from "@mui/material";
+import { Slider, Typography, Menu, MenuItem, Tab } from "@mui/material";
+import Link from "next/link";
+
 import {
   Table,
   TableBody,
@@ -37,6 +39,36 @@ type ApiResp = {
     pctUsed: number;
   }[];
 };
+
+const request = [
+  {
+    requestID: "REQ001",
+    type: "Swap",
+    relatedSession: "CS101 - 2025-09-10 2:00 PM",
+    status: "Pending",
+    creator: "John Doe",
+    creatorRole: "Tutor",
+    user_id: 123,
+  },
+  {
+    requestID: "REQ003",
+    type: "Swap",
+    relatedSession: "BIO105 - 2025-09-14 1:00 PM",
+    status: "Pending",
+    creator: "Jane Smith",
+    creatorRole: "TA",
+    user_id: 456,
+  },
+  {
+    requestID: "REQ005",
+    type: "Swap",
+    relatedSession: "PHYS110 - 2025-09-13 10:00 AM",
+    status: "Pending",
+    creator: "Alice Johnson",
+    creatorRole: "Tutor",
+    user_id: 789,
+  },
+];
 
 const Page = () => {
   // State for dropdown
@@ -87,7 +119,7 @@ const Page = () => {
     if (!data) return null;
     const rows = data.rows.map((r) => ({
       ...r,
-      status: r.pctUsed >= threshold ? "Open" : "Healthy",
+      status: r.pctUsed >= threshold ? "Exceeding" : "Healthy",
     }));
     const alerts = rows
       .filter((r) => r.pctUsed >= threshold)
@@ -106,45 +138,10 @@ const Page = () => {
 
   const PCT = (v: number) => `${(v * 100).toFixed(1)}%`;
 
-  const budgetRows = [
-    {
-      unit: "INFO1110",
-      year: "2025",
-      session: "S2",
-      budget: "$120,000",
-      spent: "$108,500",
-      percentUsed: "90.4%",
-      forecast: "$4,200",
-      variance: "-$7,300",
-      status: "Open",
-    },
-    {
-      unit: "INFO1910",
-      year: "2025",
-      session: "S1",
-      budget: "$99,000",
-      spent: "$144,500",
-      percentUsed: "66.4%",
-      forecast: "$6,200",
-      variance: "$1,300",
-      status: "Healthy",
-    },
-    {
-      unit: "DATA2002",
-      year: "2024",
-      session: "S2",
-      budget: "$202,000",
-      spent: "$111,500",
-      percentUsed: "101.4%",
-      forecast: "$1,200",
-      variance: "$6,300",
-      status: "Open",
-    },
-  ];
-
   const ucApprovals = [
     {
       type: "Claim(diff)",
+      role: "Tutor",
       by: "A. Singh",
       target: "INFO1910 * 2025-09-12 * 15:00",
       reason: "+0.5 over",
@@ -152,6 +149,7 @@ const Page = () => {
     },
     {
       type: "Claim(same)",
+      role: "TA",
       by: "B. Wong",
       target: "INFO1110 * 2025-09-12 * 10:00",
       reason: "Roster mistmatch",
@@ -160,7 +158,10 @@ const Page = () => {
   ];
 
   return (
-    <div style={{ padding: "3vw", paddingTop: "20px" }}>
+    <div
+      className="w-screen h-screen box-border bg-gray-100 px-5 flex flex-col "
+      style={{ padding: "20px" }}
+    >
       <div
         style={{
           width: "100%",
@@ -176,9 +177,13 @@ const Page = () => {
           <Button variant="secondary" style={{ marginRight: "10px" }}>
             Refresh
           </Button>
-          <Button variant="secondary" color="blue">
-            {" "}
-            Assign Marking Hours
+          <Button
+            component={Link}
+            href="/admin/allocations"
+            variant="secondary"
+            color="blue"
+          >
+            Add/Edit Allocations
           </Button>
         </div>
       </div>
@@ -200,7 +205,7 @@ const Page = () => {
           ))}
         </div>
       ) : (
-        <div style={{ display: "flex" }}>
+        <div style={{ display: "flex", marginBottom: "15px" }}>
           <Typography variant="body1">No alerts at this time.</Typography>
         </div>
       )}
@@ -234,7 +239,7 @@ const Page = () => {
             This Session ⮟
           </Button>
           <Typography variant="body2" style={{ marginRight: "10px" }}>
-            Open threshold
+            Budget % Threshold
           </Typography>
           <Slider
             value={threshold}
@@ -273,8 +278,8 @@ const Page = () => {
                   <TableCell>Unit</TableCell>
                   <TableCell>Year</TableCell>
                   <TableCell>Session</TableCell>
-                  <TableCell>Budget</TableCell>
-                  <TableCell>Spent</TableCell>
+                  <TableCell>Allocated Amount (Budget) </TableCell>
+                  <TableCell>Claimed Amount (Spent) </TableCell>
                   <TableCell>% Used</TableCell>
                   <TableCell>Forecast (Wk)</TableCell>
                   <TableCell>Variance</TableCell>
@@ -299,7 +304,7 @@ const Page = () => {
                       <span
                         className={
                           "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium " +
-                          (row.status === "Open"
+                          (row.status === "Exceeding"
                             ? "bg-amber-100 text-amber-800"
                             : "bg-emerald-100 text-emerald-800")
                         }
@@ -320,26 +325,51 @@ const Page = () => {
           UC Approvals
         </Typography>
         <Typography variant="body2">Items awaiting your review</Typography>
+        <Button
+          variant="contained"
+          color="primary"
+          size="small"
+          style={{ margin: "10px 0" }}
+        >
+          Approve All
+        </Button>
         <div>
           <TableContainer component={Paper}>
             <Table>
               <TableHead>
                 <TableRow>
+                  <TableCell>Request Id</TableCell>
                   <TableCell>Type</TableCell>
-                  <TableCell>Submitted by</TableCell>
-                  <TableCell>Target</TableCell>
-                  <TableCell>Reason</TableCell>
-                  <TableCell>Status</TableCell>
+                  <TableCell>Related Session</TableCell>
+                  <TableCell>By</TableCell>
+                  <TableCell>Approve</TableCell>
+                  <TableCell>Reject</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
-                {ucApprovals.map((row) => (
-                  <TableRow key={row.type}>
+                {request.map((row) => (
+                  <TableRow key={row.requestID}>
+                    <TableCell>{row.requestID}</TableCell>
                     <TableCell>{row.type}</TableCell>
-                    <TableCell>{row.by}</TableCell>
-                    <TableCell>{row.target}</TableCell>
-                    <TableCell>{row.reason}</TableCell>
-                    <TableCell>{row.status}</TableCell>
+                    <TableCell>{row.relatedSession}</TableCell>
+                    <TableCell>
+                      {row.creatorRole}: {row.creator} ({row.user_id})
+                    </TableCell>
+
+                    <TableCell>
+                      <Button variant="contained" color="primary" size="small">
+                        Approve
+                      </Button>
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="contained"
+                        color="secondary"
+                        size="small"
+                      >
+                        Reject
+                      </Button>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

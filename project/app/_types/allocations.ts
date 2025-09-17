@@ -20,6 +20,10 @@ export interface RequestItem {
   id: string;
   type: RequestType;
   state: RequestState;
+  relatedSession: string;
+  creator: string;
+  creatorRole: string;
+  user_id: number;
 }
 
 export interface CommentItem {

@@ -310,10 +310,10 @@ export default function AllocationPage() {
                 <MenuItem onClick={() => setAnchorEl(null)}>
                   Correction
                 </MenuItem>
-                <MenuItem onClick={() => setAnchorEl(null)}>Extension</MenuItem>
                 <MenuItem onClick={() => setAnchorEl(null)}>
                   Cancellation
                 </MenuItem>
+                <MenuItem onClick={() => setAnchorEl(null)}>Query</MenuItem>
               </Menu>
             </div>
             <Button

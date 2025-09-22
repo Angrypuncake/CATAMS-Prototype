@@ -28,6 +28,7 @@ import type {
   RequestItem,
   CommentItem,
 } from "@/app/_types/allocations";
+import { useRouter } from "next/navigation";
 
 // ---------- Helpers ----------
 function toHHMM(hms?: string | null) {
@@ -79,6 +80,7 @@ function normalizeStatus(s?: string | null): UIStatus {
 
 // ---------- Page ----------
 export default function AllocationPage() {
+  const router = useRouter();
   const params = useParams<{ id: string }>();
   const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
 
@@ -313,7 +315,16 @@ export default function AllocationPage() {
                 <MenuItem onClick={() => setAnchorEl(null)}>
                   Cancellation
                 </MenuItem>
-                <MenuItem onClick={() => setAnchorEl(null)}>Query</MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    setAnchorEl(null);
+                    router.push(
+                      `/dashboard/tutor/allocations/${id}/requests/query`,
+                    );
+                  }}
+                >
+                  Query
+                </MenuItem>
               </Menu>
             </div>
             <Button

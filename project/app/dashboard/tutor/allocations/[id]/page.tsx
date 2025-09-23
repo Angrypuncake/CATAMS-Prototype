@@ -2,6 +2,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import {
   Box,
   Button,
@@ -79,6 +80,7 @@ function normalizeStatus(s?: string | null): UIStatus {
 
 // ---------- Page ----------
 export default function AllocationPage() {
+  const router = useRouter();
   const params = useParams<{ id: string }>();
   const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
 
@@ -306,7 +308,9 @@ export default function AllocationPage() {
                 open={open}
                 onClose={() => setAnchorEl(null)}
               >
-                <MenuItem onClick={() => setAnchorEl(null)}>Swap</MenuItem>
+                <MenuItem onClick={() => router.push(`${id}/requests/swap`)}>
+                  Swap
+                </MenuItem>
                 <MenuItem onClick={() => setAnchorEl(null)}>
                   Correction
                 </MenuItem>

@@ -153,6 +153,76 @@ const TeachingOperations: React.FC = () => {
           </div>
         </div>
       </header>
+
+      <div className="flex gap-6 p-6">
+        <div className="flex-1 space-y-6">
+          <section className="bg-white rounded-lg shadow-sm">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h2 className="text-xl font-semibold">Allocations Overview</h2>
+              <Button variant="text">Manage Allocations</Button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                      Unit
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                      Week
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                      Sessions
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                      Assigned
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                      Unassigned
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                      Hours
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                      Last Change
+                    </th>
+                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {allocationsData.map((row: AllocationRow, idx: number) => (
+                    <tr key={idx} className="hover:bg-gray-50">
+                      <td className="px-4 py-3 font-medium">{row.unit}</td>
+                      <td className="px-4 py-3">{row.week}</td>
+                      <td className="px-4 py-3">{row.sessions}</td>
+                      <td className="px-4 py-3">{row.assigned}</td>
+                      <td className="px-4 py-3">{row.unassigned}</td>
+                      <td className="px-4 py-3">{row.hours}</td>
+                      <td className="px-4 py-3 text-sm text-gray-600">
+                        {row.lastChange}
+                      </td>
+                      <td className="px-4 py-3">
+                        <Chip
+                          label={row.status}
+                          size="small"
+                          color={
+                            row.status === "Attention" ? "warning" : "success"
+                          }
+                          variant={
+                            row.status === "Attention" ? "filled" : "outlined"
+                          }
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </div>
+      </div>
     </div>
   );
 };

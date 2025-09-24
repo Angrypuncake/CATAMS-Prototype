@@ -1,3 +1,4 @@
+"use client";
 import React, { ReactNode, useState } from "react";
 import { Button } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
@@ -298,6 +299,122 @@ const TeachingOperations: React.FC = () => {
               </div>
             </div>
           </section>
+        </div>
+
+        <div className="w-96 space-y-6">
+          <div className="bg-white rounded-lg shadow-sm">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h2 className="text-xl font-semibold">Claims Pending</h2>
+              <Button variant="text" className="text-sm">
+                View all claims
+              </Button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                      Tutor
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                      Session
+                      <br />
+                      <span className="font-normal">
+                        (Unit •<br />
+                        Date •<br />
+                        Time)
+                      </span>
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                      Diff
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                      Submitted
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {claimsData.map((claim: ClaimData, idx: number) => (
+                    <tr key={idx}>
+                      <td className="px-3 py-3 text-sm">{claim.tutor}</td>
+                      <td className="px-3 py-3 text-sm">{claim.session}</td>
+                      <td className="px-3 py-3 text-sm font-medium">
+                        {claim.diff}
+                      </td>
+                      <td className="px-3 py-3 text-sm text-gray-600">
+                        {claim.submitted}
+                      </td>
+                      <td className="px-3 py-3">
+                        <Button variant="text" size="small">
+                          Review
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-sm">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h2 className="text-xl font-semibold">Requests Pending</h2>
+              <Button variant="text" className="text-sm">
+                View all requests
+              </Button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b">
+                  <tr>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                      Tutor
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                      Session
+                      <br />
+                      <span className="font-normal">
+                        (Unit •<br />
+                        Date •<br />
+                        Time)
+                      </span>
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                      Type
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                      Submitted
+                    </th>
+                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y">
+                  {requestsData.map((request: RequestData, idx: number) => (
+                    <tr key={idx}>
+                      <td className="px-3 py-3 text-sm">{request.tutor}</td>
+                      <td className="px-3 py-3 text-sm">{request.session}</td>
+                      <td className="px-3 py-3 text-sm font-medium">
+                        {request.type}
+                      </td>
+                      <td className="px-3 py-3 text-sm text-gray-600">
+                        {request.submitted}
+                      </td>
+                      <td className="px-3 py-3">
+                        <Button variant="text" size="small">
+                          Review
+                        </Button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </div>
     </div>

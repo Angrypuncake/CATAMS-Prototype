@@ -72,7 +72,7 @@ export async function PATCH(
       `
       SELECT a.allocation_id, a.user_id AS tutor_user_id, a.paycode_id, a.status,
              a.note AS alloc_note, a.session_id, so.activity_id as allocation_activity_id,
-             so.session_date AS cur_date, so.start_at AS cur_start, so.end_at AS cur_end, so.notes AS cur_occ_note
+             so.session_date AS cur_date, so.start_at AS cur_start, so.end_at AS cur_end, so.description AS cur_occ_note
         FROM allocation a
    LEFT JOIN session_occurrence so ON so.occurrence_id = a.session_id
        WHERE a.allocation_id = $1
@@ -170,7 +170,7 @@ export async function PATCH(
       // Filter target occurrences to the same activity for safety
       const { rows: validTargets } = await query(
         `
-        SELECT occurrence_id, session_date, start_at, end_at, notes
+        SELECT occurrence_id, session_date, start_at, end_at, description
           FROM session_occurrence
          WHERE activity_id = $1
            AND occurrence_id = ANY($2::int[])
@@ -425,7 +425,7 @@ export async function PATCH(
         FROM allocation a
    LEFT JOIN users u             ON u.user_id = a.user_id
    LEFT JOIN session_occurrence so ON so.occurrence_id = a.session_id
-   LEFT JOIN teaching_activity ta ON ta.activity_id = a.activity_id
+   LEFT JOIN teaching_activity ta ON ta.activity_id = so.activity_id
    LEFT JOIN unit_offering uo      ON uo.offering_id = ta.unit_offering_id
    LEFT JOIN course_unit cu        ON cu.unit_code = uo.course_unit_id
        WHERE a.allocation_id = $1

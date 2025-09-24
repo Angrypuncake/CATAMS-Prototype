@@ -18,7 +18,7 @@ export async function GET(
   try {
     const { rows } = await query(
       `
-      SELECT occurrence_id, session_date, start_at, end_at, is_cancelled, notes
+      SELECT occurrence_id, session_date, start_at, end_at, is_cancelled, description
       FROM session_occurrence
       WHERE activity_id = $1
         ${futureOnly ? "AND session_date >= CURRENT_DATE" : ""}

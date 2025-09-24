@@ -2,6 +2,7 @@ import React, { ReactNode, useState } from "react";
 import { Button } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DownloadIcon from "@mui/icons-material/Download";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import SelectField from "./SelectField";
 import Chip from "./Chip";
 
@@ -219,6 +220,82 @@ const TeachingOperations: React.FC = () => {
                   ))}
                 </tbody>
               </table>
+            </div>
+          </section>
+
+          <section className="bg-white rounded-lg shadow-sm">
+            <div className="flex justify-between items-center p-4 border-b">
+              <h2 className="text-xl font-semibold">Needs Attention</h2>
+              <Button
+                variant="text"
+                endIcon={<ChevronRightIcon className="w-4 h-4" />}
+              >
+                Open Unit Board
+              </Button>
+            </div>
+            <div className="p-4 space-y-3">
+              <div className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                    Claim
+                  </span>
+                  <span className="font-medium">
+                    INFO1110 • 13/09 5pm — 2h → 2.5h
+                  </span>
+                  <span className="text-sm text-gray-600">Tutor: J. Tran</span>
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="text" size="small">
+                    Review
+                  </Button>
+                  <Button variant="text" size="small">
+                    Open session
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                    Request
+                  </span>
+                  <span className="font-medium">
+                    Swap — Tutor A ⇄ Tutor B (INFO1910)
+                  </span>
+                  <span className="text-sm text-gray-600">Pending 48h</span>
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="text" size="small">
+                    Review
+                  </Button>
+                  <Button variant="text" size="small">
+                    Contact
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="flex items-center gap-3">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    Unassigned
+                  </span>
+                  <span className="font-medium">
+                    INFO3333 • 16/09 10am — No tutor
+                  </span>
+                </div>
+                <div className="flex gap-3">
+                  <Button variant="contained" size="small">
+                    Fill
+                  </Button>
+                  <Button variant="text" size="small">
+                    View options
+                  </Button>
+                </div>
+              </div>
+
+              <div className="text-right pt-2">
+                <Button variant="text">View all items</Button>
+              </div>
             </div>
           </section>
         </div>

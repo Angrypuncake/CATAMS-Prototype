@@ -1,4 +1,6 @@
 import React, { ReactNode } from "react";
+import SelectField from "./SelectField";
+import Chip from "./Chip";
 
 interface AllocationRow {
   unit: string;
@@ -25,13 +27,6 @@ interface RequestData {
   submitted: string;
 }
 
-interface SelectFieldProps {
-  value: string;
-  label: string;
-  options: string[];
-  onChange: (value: string) => void;
-}
-
 interface ButtonProps {
   variant?: "text" | "contained" | "outlined";
   children: ReactNode;
@@ -40,14 +35,6 @@ interface ButtonProps {
   endIcon?: ReactNode;
   size?: "small" | "medium";
   onClick?: () => void;
-}
-
-interface ChipProps {
-  label: string;
-  variant?: "filled" | "outlined";
-  color?: "success" | "warning" | "default";
-  size?: "small" | "medium";
-  className?: string;
 }
 
 const TeachingOperations: React.FC = () => {

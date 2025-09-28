@@ -91,7 +91,7 @@ export async function GET(req: Request) {
       FROM allocation a
       LEFT JOIN users u               ON u.user_id = a.user_id
       LEFT JOIN session_occurrence so ON so.occurrence_id = a.session_id
-      LEFT JOIN teaching_activity ta  ON ta.activity_id = COALESCE(so.activity_id, a.activity_id)
+      LEFT JOIN teaching_activity ta  ON ta.activity_id = so.activity_id
       LEFT JOIN unit_offering uo      ON uo.offering_id = ta.unit_offering_id
       LEFT JOIN course_unit cu        ON cu.unit_code = uo.course_unit_id
       ${whereSQL}
@@ -106,7 +106,7 @@ export async function GET(req: Request) {
         u.email,
 
         a.mode,
-        a.activity_id       AS allocation_activity_id, -- avoid name clash with ta.activity_id
+       
         a.allocated_hours,
 
         cu.unit_code,
@@ -116,6 +116,7 @@ export async function GET(req: Request) {
         so.start_at,
         so.end_at,
         so.location,
+        so.activity_id       AS allocation_activity_id, -- avoid name clash with ta.activity_id
 
         ta.activity_type,
         ta.activity_name,

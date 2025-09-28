@@ -16,9 +16,9 @@ import {
 type AllocationRow = {
   unit_code: string | null;
   unit_name: string | null;
-  session_date: string | null; // ISO
+  session_date: string | null;
   start_at: string | null; // "HH:MM:SS"
-  end_at: string | null; // "HH:MM:SS"
+  end_at: string | null;
   activity_name: string | null;
 };
 
@@ -41,7 +41,7 @@ export default function QueryRequestPage() {
         if (!res.ok) throw new Error("Failed to fetch allocation");
         const json = (await res.json()) as { data?: AllocationRow };
         setAllocation(json.data ?? null);
-      } catch (e: unknown) {
+      } catch (e) {
         console.error(e);
       } finally {
         setLoading(false);
@@ -59,13 +59,19 @@ export default function QueryRequestPage() {
       if (file) formData.append("attachment", file);
 
       const res = await fetch(
-        `/api/tutor/allocations/${allocationId}/requests`,
+        `/api/tutor/allocations/${allocationId}/requests/query`,
         {
           method: "POST",
           body: formData,
+          credentials: "include",
         },
       );
-      if (!res.ok) throw new Error("Failed to submit query");
+
+      if (!res.ok) {
+        const text = await res.text();
+        console.error("Submit failed:", res.status, text);
+        throw new Error("Failed to submit query");
+      }
 
       alert("Query submitted!");
       router.push(`/dashboard/tutor/allocations/${allocationId}`);

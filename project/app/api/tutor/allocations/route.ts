@@ -36,7 +36,7 @@ export async function GET(req: Request) {
       so.session_date,
       a.status,
       so.location,
-      a.note
+      so.note
     FROM allocation a
     LEFT JOIN users u ON u.user_id = a.user_id
     JOIN session_occurrence so ON so.occurrence_id = a.session_id

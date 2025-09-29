@@ -1,8 +1,16 @@
 {
   "devDependencies": {
-    "husky": "^9.1.7"
+    "@types/pg": "^8.15.5",
+    "drizzle-kit": "^0.31.5",
+    "husky": "^9.1.7",
+    "tsx": "^4.20.6"
   },
   "scripts": {
     "prepare": "husky"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.2",
+    "drizzle-orm": "^0.44.5",
+    "pg": "^8.16.3"
   }
 }

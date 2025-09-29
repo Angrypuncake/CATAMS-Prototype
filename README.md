@@ -99,3 +99,11 @@ npm run test
 ```
 Open http://localhost:3000
  to view the app.
+
+
+
+## run database backup
+
+'''
+./infra/backup.sh
+'''

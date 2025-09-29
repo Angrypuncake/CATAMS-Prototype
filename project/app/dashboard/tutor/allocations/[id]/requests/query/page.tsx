@@ -161,19 +161,6 @@ export default function QueryRequestPage() {
               hours” or “Does my swap request affect budget?”
             </Typography>
 
-            {/* Attachment */}
-            <Button variant="outlined" component="label">
-              {file ? file.name : "Choose File"}
-              <input
-                type="file"
-                hidden
-                accept=".pdf,.png,.jpg,.jpeg,.doc,.docx"
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                  const f = e.target.files?.[0] ?? null;
-                  setFile(f);
-                }}
-              />
-            </Button>
             <Typography variant="caption" color="text.secondary">
               Optional evidence or supporting screenshot (PDF/PNG/DOC up to
               5MB).

@@ -29,6 +29,7 @@ import type {
   RequestItem,
   CommentItem,
 } from "@/app/_types/allocations";
+import { useRouter } from "next/navigation";
 
 // ---------- Helpers ----------
 function toHHMM(hms?: string | null) {
@@ -317,7 +318,16 @@ export default function AllocationPage() {
                 <MenuItem onClick={() => setAnchorEl(null)}>
                   Cancellation
                 </MenuItem>
-                <MenuItem onClick={() => setAnchorEl(null)}>Query</MenuItem>
+                <MenuItem
+                  onClick={() => {
+                    setAnchorEl(null);
+                    router.push(
+                      `/dashboard/tutor/allocations/${id}/requests/query`,
+                    );
+                  }}
+                >
+                  Query
+                </MenuItem>
               </Menu>
             </div>
             <Button

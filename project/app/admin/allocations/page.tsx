@@ -70,7 +70,7 @@ type SavePayload = Partial<AllocationRow> & {
   propagate_occurrence_ids?: number[] | null;
 
   propagate_fields?: Array<
-    "tutor" | "paycode" | "start" | "end" | "notes" | "status" | "location"
+    "tutor" | "paycode" | "start" | "end" | "note" | "status" | "location"
   >;
   propagate_notes_mode?: "overwrite" | "append";
   propagate_dow?: Dow;
@@ -78,7 +78,7 @@ type SavePayload = Partial<AllocationRow> & {
 
 type PropagationPayload = {
   fields: Array<
-    "tutor" | "paycode" | "start" | "end" | "notes" | "status" | "location"
+    "tutor" | "paycode" | "start" | "end" | "note" | "status" | "location"
   >;
   notesMode?: "overwrite" | "append";
   dow?: Dow;
@@ -381,7 +381,7 @@ function PropagationPanel({
   React.useEffect(() => {
     onChange({
       fields,
-      notesMode: fields.includes("notes") ? notesMode : undefined,
+      notesMode: fields.includes("note") ? notesMode : undefined,
       dow: moveDow && derivedDow ? derivedDow : undefined, // <-- only when checked
       occurrenceIds: Array.from(selected),
     });
@@ -493,8 +493,8 @@ function PropagationPanel({
             <label className="inline-flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
-                checked={fields.includes("notes")}
-                onChange={() => toggleField("notes")}
+                checked={fields.includes("note")}
+                onChange={() => toggleField("note")}
               />
               Notes
             </label>
@@ -518,12 +518,12 @@ function PropagationPanel({
             </label>
 
             {/* Notes mode */}
-            {fields.includes("notes") && (
+            {fields.includes("note") && (
               <div className="flex items-center gap-3 text-xs">
                 <label className="inline-flex items-center gap-1">
                   <input
                     type="radio"
-                    name="notes-mode"
+                    name="note-mode"
                     checked={notesMode === "overwrite"}
                     onChange={() => setNotesMode("overwrite")}
                   />
@@ -532,7 +532,7 @@ function PropagationPanel({
                 <label className="inline-flex items-center gap-1">
                   <input
                     type="radio"
-                    name="notes-mode"
+                    name="note-mode"
                     checked={notesMode === "append"}
                     onChange={() => setNotesMode("append")}
                   />
@@ -870,7 +870,7 @@ function Drawer({
                   placeholder="Anything specific about this occurrence…"
                 />
                 <div className="text-xs text-gray-500 mt-1">
-                  These notes save to this session. To copy them to other weeks,
+                  These note save to this session. To copy them to other weeks,
                   tick <strong>Notes</strong> in “Fields to propagate” and
                   choose overwrite/append.
                 </div>
@@ -1000,7 +1000,7 @@ function Drawer({
                   location: form.location,
                   // Smart propagation intent for backend write-path
                   propagate_fields: propPayload.fields,
-                  propagate_notes_mode: propPayload.fields.includes("notes")
+                  propagate_notes_mode: propPayload.fields.includes("note")
                     ? propPayload.notesMode
                     : undefined,
                   propagate_dow: propPayload.dow || undefined, // keep current

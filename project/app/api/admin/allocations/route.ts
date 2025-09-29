@@ -43,7 +43,7 @@ export async function GET(req: Request) {
     pushFilter("activity_name", "ta.activity_name");
     pushFilter("status", "a.status");
     pushFilter("user_id", "a.user_id");
-    pushFilter("mode", "a.mode"); // NEW
+    pushFilter("mode", "ta.mode"); // NEW
 
     const whereParts: string[] = [];
     const params: unknown[] = [];
@@ -80,7 +80,7 @@ export async function GET(req: Request) {
       activity_type: "ta.activity_type",
       activity_name: "ta.activity_name",
       status: "a.status",
-      mode: "a.mode", // NEW
+      mode: "ta.mode", // NEW
       allocated_hours: "a.allocated_hours", // NEW
     };
     const orderBy = sortable[sort.replace(/^.*\./, "")] ?? "so.session_date";
@@ -105,7 +105,7 @@ export async function GET(req: Request) {
         u.last_name,
         u.email,
 
-        a.mode,
+        ta.mode,
        
         a.allocated_hours,
 
@@ -122,7 +122,7 @@ export async function GET(req: Request) {
         ta.activity_name,
 
         a.status,
-        a.note,
+        so.note,
         a.teaching_role,
         a.paycode_id
       ${baseSQL}

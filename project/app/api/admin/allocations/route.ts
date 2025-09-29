@@ -122,7 +122,7 @@ export async function GET(req: Request) {
         ta.activity_name,
 
         a.status,
-        a.note,
+        so.note,
         a.teaching_role,
         a.paycode_id
       ${baseSQL}

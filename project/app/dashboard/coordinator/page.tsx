@@ -5,6 +5,7 @@ import { CoordinatorBudgetOverview } from "./types";
 import UnitBudgetOverviewTable from "./UnitBudgetOverviewTable";
 import CoordinatorApprovalTable from "./CoordinatorApprovalTable";
 import Link from "next/link";
+import axios from "axios";
 
 const pendingRequests = [
   {
@@ -59,15 +60,17 @@ const Page = () => {
     try {
       setBusy(true);
       setError(null);
-      const res = await fetch(
-        `/api/uc/overview?year=2025&session=S2&threshold=${threshold}`,
-        { cache: "no-store" },
-      ); //use axios instead
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json: CoordinatorBudgetOverview = await res.json();
+      const { data: json } = await axios.get<CoordinatorBudgetOverview>(
+        `/api/uc/overview`,
+        {
+          params: { year: 2025, session: "S2", threshold },
+        },
+      );
       setData(json);
     } catch (e: unknown) {
-      if (e instanceof Error) {
+      if (axios.isAxiosError(e)) {
+        setError(e.message || "Failed to load");
+      } else if (e instanceof Error) {
         setError(e.message || "Failed to load");
       } else {
         setError("Failed to load");
@@ -94,7 +97,6 @@ const Page = () => {
         message: `${r.unitCode} is at ${Math.round(r.pctUsed * 100)}% budget used.`,
         unitCode: r.unitCode,
       }));
-    console.log(rows);
     return { rows, alerts };
   }, [data, threshold]);
 
@@ -121,7 +123,6 @@ const Page = () => {
       </div>
 
       {/* Alerts */}
-
       <Typography variant="h4">Alerts</Typography>
       {computed && computed.alerts.length > 0 ? (
         <div className="flex flex-wrap gap-3">

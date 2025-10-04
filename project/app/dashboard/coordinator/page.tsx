@@ -1,6 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import { Slider, Typography, Menu, MenuItem, Button } from "@mui/material";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { CoordinatorBudgetOverview, UnitBudgetRow } from "./types";
 import UnitBudgetOverviewTable from "./UnitBudgetOverviewTable";
 import CoordinatorApprovalTable from "./CoordinatorApprovalTable";
@@ -134,13 +135,14 @@ const Page = () => {
           <Button
             onClick={handleMenuClick}
             variant="primary"
+            endIcon={<ArrowDropDownIcon />}
             sx={{
               textTransform: "none",
               marginRight: "10px",
               boxShadow: "none",
             }}
           >
-            This Session ⮟
+            This Session
           </Button>
           <Typography variant="body2" sx={{ marginRight: "10px" }}>
             Budget % Threshold

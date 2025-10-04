@@ -99,7 +99,7 @@ const Page = () => {
   }, [data, threshold]);
 
   return (
-    <div className="w-screen h-screen box-border bg-gray-100 px-5 flex flex-col p-20">
+    <div className="w-screen h-screen box-border bg-gray-100 px-5 flex flex-col p-20 [&>*:not(:first-child)]:mt-[25px]">
       <div className="w-full justify-between mb-20">
         <Typography variant="h2" sx={{ display: "inline-block" }}>
           Unit Coordinator Dashboard
@@ -141,9 +141,7 @@ const Page = () => {
       )}
 
       <div>
-        <Typography variant="h4" sx={{ marginTop: "20px" }}>
-          Budget Overview
-        </Typography>
+        <Typography variant="h4">Budget Overview</Typography>
         <Typography variant="body2" sx={{ display: "inline" }}>
           Per unit offering
         </Typography>
@@ -201,9 +199,7 @@ const Page = () => {
       </div>
 
       <div>
-        <Typography variant="h4" sx={{ marginTop: "20px" }}>
-          UC Approvals
-        </Typography>
+        <Typography variant="h4">UC Approvals</Typography>
         <Typography variant="body2">Items awaiting your review</Typography>
         <Button
           variant="contained"
@@ -217,9 +213,7 @@ const Page = () => {
       </div>
 
       <div>
-        <Typography variant="h4" sx={{ marginTop: "20px" }}>
-          Requests Requiring Attention
-        </Typography>
+        <Typography variant="h4">Requests Requiring Attention</Typography>
         <Typography variant="body2">Flagged queues</Typography>
         <div className="flex">
           <Typography variant="body1">No Requests.</Typography>
@@ -227,9 +221,7 @@ const Page = () => {
       </div>
 
       <div>
-        <Typography variant="h4" sx={{ marginTop: "20px" }}>
-          Marking Hours
-        </Typography>
+        <Typography variant="h4">Marking Hours</Typography>
         <Typography variant="body2">Manual allocations</Typography>
         <div>
           <Typography variant="body1">No Hours Allocated.</Typography>

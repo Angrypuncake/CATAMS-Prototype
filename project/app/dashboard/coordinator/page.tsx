@@ -114,7 +114,7 @@ const Page = () => {
             ))}
           </div>
         ) : (
-          <div className="flex mb-15">
+          <div className="flex mb-5">
             <Typography variant="body1">No alerts at this time.</Typography>
           </div>
         )}

@@ -1,9 +1,10 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
-import { Slider, Typography, Menu, MenuItem, Button } from "@mui/material"; //unused import, delete
-import { CoordinatorBudgetOverview } from "./types";
+import { Slider, Typography, Menu, MenuItem, Button } from "@mui/material";
+import { CoordinatorBudgetOverview, UnitBudgetRow } from "./types";
 import UnitBudgetOverviewTable from "./UnitBudgetOverviewTable";
 import CoordinatorApprovalTable from "./CoordinatorApprovalTable";
+import AlertBox from "@/components/AlertBox";
 import Link from "next/link";
 import axios from "axios";
 
@@ -51,14 +52,10 @@ const Page = () => {
   };
 
   const [data, setData] = useState<CoordinatorBudgetOverview | null>(null);
-  const [error, setError] = useState<string | null>(null); //unused states, delete
-  const [busy, setBusy] = useState(false);
   const [threshold, setThreshold] = useState(0.9);
 
   async function fetchBudgetOverview() {
     try {
-      setBusy(true);
-      setError(null);
       const { data: json } = await axios.get<CoordinatorBudgetOverview>(
         `/api/uc/overview`,
         {
@@ -67,22 +64,17 @@ const Page = () => {
       );
       setData(json);
     } catch (e: unknown) {
-      if (axios.isAxiosError(e)) {
-        setError(e.message || "Failed to load");
-      } else if (e instanceof Error) {
-        setError(e.message || "Failed to load");
-      } else {
-        setError("Failed to load");
-      }
-    } finally {
-      setBusy(false);
+      console.error("Failed to load budget overview:", e);
     }
   }
   useEffect(() => {
     fetchBudgetOverview();
   }, []);
 
-  const computedBudgetData = useMemo(() => {
+  const computedBudgetData = useMemo<{
+    rows: (UnitBudgetRow & { status: string })[];
+    alerts: { message: string; unitCode: string }[];
+  } | null>(() => {
     if (!data) return null;
     const rows = data.rows.map((r) => ({
       ...r,
@@ -124,12 +116,7 @@ const Page = () => {
       {computedBudgetData && computedBudgetData.alerts.length > 0 ? (
         <div className="flex flex-wrap gap-3">
           {computedBudgetData.alerts.map((a, i) => (
-            <span
-              key={i}
-              className="inline-flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800"
-            >
-              {a.message}
-            </span>
+            <AlertBox key={i}>{a.message}</AlertBox>
           ))}
         </div>
       ) : (

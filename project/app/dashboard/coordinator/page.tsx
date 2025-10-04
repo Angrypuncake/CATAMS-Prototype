@@ -55,8 +55,7 @@ const Page = () => {
   const [busy, setBusy] = useState(false);
   const [threshold, setThreshold] = useState(0.9);
 
-  // function name not semantic enough, load what?
-  async function load() {
+  async function fetchBudgetOverview() {
     try {
       setBusy(true);
       setError(null);
@@ -80,12 +79,10 @@ const Page = () => {
     }
   }
   useEffect(() => {
-    load(); /* initial */
+    fetchBudgetOverview();
   }, []);
 
-  // Recompute status/alerts client-side so slider is live without refetching
-  // function name not semantic enough, make the name intuitive so you don't need comments
-  const computed = useMemo(() => {
+  const computedBudgetData = useMemo(() => {
     if (!data) return null;
     const rows = data.rows.map((r) => ({
       ...r,
@@ -124,9 +121,9 @@ const Page = () => {
 
       {/* Alerts */}
       <Typography variant="h4">Alerts</Typography>
-      {computed && computed.alerts.length > 0 ? (
+      {computedBudgetData && computedBudgetData.alerts.length > 0 ? (
         <div className="flex flex-wrap gap-3">
-          {computed.alerts.map((a, i) => (
+          {computedBudgetData.alerts.map((a, i) => (
             <span
               key={i}
               className="inline-flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800"
@@ -189,7 +186,7 @@ const Page = () => {
         </Menu>
 
         <div className="mt-[10px]">
-          <UnitBudgetOverviewTable computedData={computed} />
+          <UnitBudgetOverviewTable computedData={computedBudgetData} />
         </div>
       </div>
 

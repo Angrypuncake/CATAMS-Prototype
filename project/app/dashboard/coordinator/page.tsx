@@ -122,44 +122,44 @@ const Page = () => {
 
       <div>
         <Typography variant="h4">Budget Overview</Typography>
-        <Typography variant="body2" sx={{ display: "inline" }}>
-          Per unit offering
-        </Typography>
-        <div className="flex items-center justify-end">
-          <Button
-            onClick={(e) => setAnchorEl(e.currentTarget)}
-            variant="primary"
-            endIcon={<ArrowDropDownIcon />}
-            sx={{
-              textTransform: "none",
-              marginRight: "10px",
-              boxShadow: "none",
-            }}
-          >
-            This Session
-          </Button>
-          <Typography variant="body2" sx={{ marginRight: "10px" }}>
-            Budget % Threshold
-          </Typography>
-          <Slider
-            value={threshold}
-            onChange={(_, newValue) => setThreshold(newValue as number)}
-            step={0.01}
-            min={0.5}
-            max={1}
-            sx={{ width: "100px", marginRight: "10px" }}
-          />
-          <Typography variant="body1" sx={{ marginRight: "10px" }}>
-            {Math.round(threshold * 100)}%
-          </Typography>
-          <Button
-            variant="contained"
-            color="primary"
-            type="button"
-            sx={{ textTransform: "none" }}
-          >
-            Save
-          </Button>
+        <div className="flex items-center justify-between">
+          <Typography variant="body2">Per unit offering</Typography>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={(e) => setAnchorEl(e.currentTarget)}
+              variant="primary"
+              endIcon={<ArrowDropDownIcon />}
+              sx={{
+                textTransform: "none",
+                marginRight: "10px",
+                boxShadow: "none",
+              }}
+            >
+              This Session
+            </Button>
+            <Typography variant="body2" sx={{ marginRight: "10px" }}>
+              Budget % Threshold
+            </Typography>
+            <Slider
+              value={threshold}
+              onChange={(_, newValue) => setThreshold(newValue as number)}
+              step={0.01}
+              min={0.5}
+              max={1}
+              sx={{ width: "100px", marginRight: "10px" }}
+            />
+            <Typography variant="body1" sx={{ marginRight: "10px" }}>
+              {Math.round(threshold * 100)}%
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              type="button"
+              sx={{ textTransform: "none" }}
+            >
+              Save
+            </Button>
+          </div>
         </div>
 
         <Menu

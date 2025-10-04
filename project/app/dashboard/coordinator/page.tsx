@@ -1,8 +1,7 @@
 "use client";
-
 import React, { useEffect, useState, useMemo } from "react";
 import Button from "@mui/material/Button";
-import { Slider, Typography, Menu, MenuItem, Tab } from "@mui/material";
+import { Slider, Typography, Menu, MenuItem, Tab } from "@mui/material"; //unused import, delete
 import Link from "next/link";
 
 import {
@@ -14,7 +13,8 @@ import {
   TableRow,
   Paper,
 } from "@mui/material";
-
+// use interface instead, type cannot be expanded upon if we have a similar object with extra attributes
+// make name semantic, what row is this?
 type Row = {
   offeringId: number;
   unitCode: string;
@@ -84,10 +84,11 @@ const Page = () => {
   };
 
   const [data, setData] = useState<ApiResp | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null); //unused states, delete
   const [busy, setBusy] = useState(false);
   const [threshold, setThreshold] = useState(0.9);
 
+  // function name not semantic enough, load what?
   async function load() {
     try {
       setBusy(true);
@@ -95,7 +96,7 @@ const Page = () => {
       const res = await fetch(
         `/api/uc/overview?year=2025&session=S2&threshold=${threshold}`,
         { cache: "no-store" },
-      );
+      ); //use axios instead
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json: ApiResp = await res.json();
       setData(json);
@@ -115,6 +116,7 @@ const Page = () => {
   }, []);
 
   // Recompute status/alerts client-side so slider is live without refetching
+  // function name not semantic enough, make the name intuitive so you don't need comments
   const computed = useMemo(() => {
     if (!data) return null;
     const rows = data.rows.map((r) => ({
@@ -155,13 +157,14 @@ const Page = () => {
       reason: "Roster mistmatch",
       status: "Review",
     },
-  ];
+  ]; //unused mock data, delete
 
   return (
     <div
-      className="w-screen h-screen box-border bg-gray-100 px-5 flex flex-col "
+      className="w-screen h-screen box-border bg-gray-100 px-5 flex flex-col"
       style={{ padding: "20px" }}
     >
+      {/* Try and avoid using style and className together, className should have everything that style can do */}
       <div
         style={{
           width: "100%",
@@ -169,11 +172,13 @@ const Page = () => {
           marginBottom: "20px",
         }}
       >
+        {/* With mui components use sx not style */}
         <Typography variant="h2" style={{ display: "inline-block" }}>
           Unit Coordinator Dashboard
         </Typography>
-
+        {/* Same, avoid style */}
         <div style={{ display: "inline-block", float: "right", gap: "10px" }}>
+          {/* Implement refresh to do something */}
           <Button variant="secondary" style={{ marginRight: "10px" }}>
             Refresh
           </Button>
@@ -191,6 +196,7 @@ const Page = () => {
       {/* Alerts */}
 
       <div>
+        {/* Does this need to be wrapped in a div? */}
         <Typography variant="h4">Alerts</Typography>
       </div>
       {computed && computed.alerts.length > 0 ? (
@@ -237,7 +243,9 @@ const Page = () => {
             }}
           >
             This Session ⮟
-          </Button>
+          </Button>{" "}
+          {/* Avoid raw unicode icons, they might be inconsistent or missing across browsers import from mui */}
+          {/* Same, avoid style */}
           <Typography variant="body2" style={{ marginRight: "10px" }}>
             Budget % Threshold
           </Typography>
@@ -270,7 +278,9 @@ const Page = () => {
           <MenuItem>Last 7 days</MenuItem>
           <MenuItem>Last 30 days</MenuItem>
         </Menu>
+
         <div style={{ marginTop: "10px" }}>
+          {/* Make this into an component */}
           <TableContainer component={Paper}>
             <Table>
               <TableHead>
@@ -334,6 +344,9 @@ const Page = () => {
           Approve All
         </Button>
         <div>
+          {" "}
+          {/* No need for extra div */}
+          {/* Make this into an component */}
           <TableContainer component={Paper}>
             <Table>
               <TableHead>
@@ -379,6 +392,7 @@ const Page = () => {
       </div>
 
       <div>
+        {/* Avoid style */}
         <Typography variant="h4" style={{ marginTop: "20px" }}>
           Requests Requiring Attention
         </Typography>

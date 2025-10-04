@@ -16,7 +16,9 @@ interface BudgetOverviewTableProps {
   } | null;
 }
 
-const BudgetOverviewTable = ({ computedData }: BudgetOverviewTableProps) => {
+const UnitBudgetOverviewTable = ({
+  computedData,
+}: BudgetOverviewTableProps) => {
   const AUD = new Intl.NumberFormat("en-AU", {
     style: "currency",
     currency: "AUD",
@@ -74,4 +76,4 @@ const BudgetOverviewTable = ({ computedData }: BudgetOverviewTableProps) => {
   );
 };
 
-export default BudgetOverviewTable;
+export default UnitBudgetOverviewTable;

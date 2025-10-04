@@ -4,7 +4,8 @@ import Button from "@mui/material/Button";
 import { Slider, Typography, Menu, MenuItem, Tab } from "@mui/material"; //unused import, delete
 import { UnitBudgetRow, CoordinatorBudgetOverview } from "./types";
 import Link from "next/link";
-import BudgetOverviewTable from "./BudgetOverviewTable";
+import UnitBudgetOverviewTable from "./UnitBudgetOverviewTable";
+import CoordinatorApprovalTable from "./CoordinatorApprovalTable";
 
 import {
   Table,
@@ -16,7 +17,7 @@ import {
   Paper,
 } from "@mui/material";
 
-const request = [
+const pendingRequests = [
   {
     requestID: "REQ001",
     type: "Swap",
@@ -211,7 +212,7 @@ const Page = () => {
             }}
           >
             This Session ⮟
-          </Button>{" "}
+          </Button>
           {/* Avoid raw unicode icons, they might be inconsistent or missing across browsers import from mui */}
           {/* Same, avoid style */}
           <Typography variant="body2" style={{ marginRight: "10px" }}>
@@ -248,8 +249,7 @@ const Page = () => {
         </Menu>
 
         <div style={{ marginTop: "10px" }}>
-          {/* Make this into an component */}
-          <BudgetOverviewTable computedData={computed} />
+          <UnitBudgetOverviewTable computedData={computed} />
         </div>
       </div>
 
@@ -266,51 +266,7 @@ const Page = () => {
         >
           Approve All
         </Button>
-        <div>
-          {/* No need for extra div */}
-          {/* Make this into an component */}
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Request Id</TableCell>
-                  <TableCell>Type</TableCell>
-                  <TableCell>Related Session</TableCell>
-                  <TableCell>By</TableCell>
-                  <TableCell>Approve</TableCell>
-                  <TableCell>Reject</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {request.map((row) => (
-                  <TableRow key={row.requestID}>
-                    <TableCell>{row.requestID}</TableCell>
-                    <TableCell>{row.type}</TableCell>
-                    <TableCell>{row.relatedSession}</TableCell>
-                    <TableCell>
-                      {row.creatorRole}: {row.creator} ({row.user_id})
-                    </TableCell>
-
-                    <TableCell>
-                      <Button variant="contained" color="primary" size="small">
-                        Approve
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="contained"
-                        color="secondary"
-                        size="small"
-                      >
-                        Reject
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </div>
+        <CoordinatorApprovalTable pendingRequests={pendingRequests} />
       </div>
 
       <div>

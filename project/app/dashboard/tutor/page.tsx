@@ -15,6 +15,15 @@ import {
 } from "@mui/material";
 import axios from "axios";
 import AllocationQuickviewModal from "./AllocationQuickviewModal";
+import type {
+  AllocationRow,
+  ActionRequiredRow,
+  RequestRow,
+  NoticeRow,
+  SortableColumns,
+  SortConfig,
+  AllocationTableRow,
+} from "./types";
 
 /* ========= Helpers ========= */
 const timeConverter = (time: string): number => {
@@ -24,20 +33,7 @@ const timeConverter = (time: string): number => {
   return hours * 60 + minutes;
 };
 
-interface SortConfig {
-  column: string;
-  direction: "asc" | "desc";
-}
-
-interface TableRow {
-  session_date?: string | null;
-  start_at?: string | null;
-  location?: string | null;
-  status?: string | null;
-  [key: string]: unknown;
-}
-
-function useColumnSorter<T extends TableRow>(
+function useColumnSorter<T extends AllocationTableRow>(
   tableData: T[],
   sortConfig: SortConfig | null,
 ): T[] {
@@ -136,51 +132,6 @@ const exportCSV = (
 
   URL.revokeObjectURL(url);
 };
-
-/* ========= Types ========= */
-type TutorSession = {
-  id: string;
-  session_date: string | null; // ISO date-time string
-  start_at: string | null; // "HH:MM:SS"
-  end_at?: string | null; // "HH:MM:SS"
-  unit_code: string | null;
-  location?: string | null;
-  status?: string | null; // "Confirmed" | "Pending" | "Rejected" | "Reschedule" | etc.
-  actions?: string | null; // UI label for the table button
-  note?: string | null;
-};
-
-type Actions = {
-  session_date: string | null;
-  time: string | null;
-  unit: string | null;
-  hours: number | null;
-  desc: string | null;
-  status: string | null;
-  actions: string | null;
-};
-
-type Requests = {
-  requestID: string | null;
-  type: string | null;
-  relatedSession: string | null;
-  status: string | null;
-  actions: string | null;
-};
-
-type Notices = {
-  session_date: string | null;
-  type: string | null;
-  message: string | null;
-  actions: string | null;
-};
-
-type SortableColumns =
-  | "session_date"
-  | "start_at"
-  | "location"
-  | "status"
-  | "unit_code";
 
 /* ========= Helpers ========= */
 function hoursBetween(start?: string | null, end?: string | null) {
@@ -315,7 +266,7 @@ const notices = [
 
 /* ========= Page ========= */
 const Page = () => {
-  const [tutorSessions, setTutorSessions] = useState<TutorSession[]>([]);
+  const [tutorSessions, setTutorSessions] = useState<AllocationRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [sortAllocationsConfig, setSortAllocationsConfig] = useState<{
     column: SortableColumns;
@@ -339,7 +290,7 @@ const Page = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [search, setSearch] = useState("");
 
-  const sortedSessions: TutorSession[] = useColumnSorter<TutorSession>(
+  const sortedSessions: AllocationRow[] = useColumnSorter<AllocationRow>(
     tutorSessions,
     sortAllocationsConfig,
   );
@@ -359,22 +310,22 @@ const Page = () => {
     return filteredSessions.slice(start, start + rowsPerPage);
   }, [filteredSessions, page, rowsPerPage]);
 
-  const sortedActions: Actions[] = useColumnSorter<Actions>(
+  const sortedActions: ActionRequiredRow[] = useColumnSorter<ActionRequiredRow>(
     actions,
     sortActionsConfig,
   );
-  const sortedRequests: Requests[] = useColumnSorter<Requests>(
+  const sortedRequests: RequestRow[] = useColumnSorter<RequestRow>(
     request,
     sortRequestsConfig,
   );
-  const sortedNotices: Notices[] = useColumnSorter<Notices>(
+  const sortedNotices: NoticeRow[] = useColumnSorter<NoticeRow>(
     notices,
     sortNoticesConfig,
   );
 
   // modal (ONLY for "My Allocations")
   const [open, setOpen] = useState(false);
-  const [session, setSession] = useState<TutorSession | null>(null);
+  const [session, setSession] = useState<AllocationRow | null>(null);
 
   useEffect(() => {
     const fetchTutorSessions = async () => {

@@ -12,23 +12,12 @@ import {
   Button,
 } from "@mui/material";
 import Link from "next/link";
-
-type TutorSession = {
-  id: string;
-  session_date: string | null;
-  start_at: string | null;
-  end_at?: string | null;
-  unit_code: string | null;
-  location?: string | null;
-  status?: string | null;
-  actions?: string | null;
-  note?: string | null;
-};
+import type { AllocationRow } from "./types";
 
 interface AllocationQuickviewModalProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  session?: TutorSession | null;
+  session?: AllocationRow | null;
 }
 
 const niceTime = (time?: string) => {

@@ -42,16 +42,6 @@ const pendingRequests = [
 const Page = () => {
   // State for dropdown
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-
-  const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
   const [data, setData] = useState<CoordinatorBudgetOverview | null>(null);
   const [threshold, setThreshold] = useState(0.9);
 
@@ -97,8 +87,11 @@ const Page = () => {
           Unit Coordinator Dashboard
         </Typography>
         <div className="inline-block float-right gap-[10px]">
-          {/* Implement refresh to do something */}
-          <Button variant="secondary" sx={{ marginRight: "10px" }}>
+          <Button
+            variant="secondary"
+            sx={{ marginRight: "10px" }}
+            onClick={fetchBudgetOverview}
+          >
             Refresh
           </Button>
           <Button
@@ -112,19 +105,20 @@ const Page = () => {
         </div>
       </div>
 
-      {/* Alerts */}
-      <Typography variant="h4">Alerts</Typography>
-      {computedBudgetData && computedBudgetData.alerts.length > 0 ? (
-        <div className="flex flex-wrap gap-3">
-          {computedBudgetData.alerts.map((a, i) => (
-            <AlertBox key={i}>{a.message}</AlertBox>
-          ))}
-        </div>
-      ) : (
-        <div className="flex mb-15">
-          <Typography variant="body1">No alerts at this time.</Typography>
-        </div>
-      )}
+      <div>
+        <Typography variant="h4">Alerts</Typography>
+        {computedBudgetData && computedBudgetData.alerts.length > 0 ? (
+          <div className="flex flex-wrap gap-3">
+            {computedBudgetData.alerts.map((a, i) => (
+              <AlertBox key={i}>{a.message}</AlertBox>
+            ))}
+          </div>
+        ) : (
+          <div className="flex mb-15">
+            <Typography variant="body1">No alerts at this time.</Typography>
+          </div>
+        )}
+      </div>
 
       <div>
         <Typography variant="h4">Budget Overview</Typography>
@@ -133,7 +127,7 @@ const Page = () => {
         </Typography>
         <div className="flex items-center justify-end">
           <Button
-            onClick={handleMenuClick}
+            onClick={(e) => setAnchorEl(e.currentTarget)}
             variant="primary"
             endIcon={<ArrowDropDownIcon />}
             sx={{
@@ -168,7 +162,11 @@ const Page = () => {
           </Button>
         </div>
 
-        <Menu open={open} anchorEl={anchorEl} onClose={handleMenuClose}>
+        <Menu
+          open={Boolean(anchorEl)}
+          anchorEl={anchorEl}
+          onClose={() => setAnchorEl(null)}
+        >
           <MenuItem>This Session</MenuItem>
           <MenuItem>Last 7 days</MenuItem>
           <MenuItem>Last 30 days</MenuItem>

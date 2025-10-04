@@ -408,37 +408,27 @@ const Page = () => {
 
   // NEED MORE QUERIES FOR NOTICES, REQUESTS AND ACTIONS
 
-  const handleSortAllocations = (column: SortableColumns) => {
-    setSortAllocationsConfig((prev) =>
-      prev?.column === column
-        ? { column, direction: prev.direction === "asc" ? "desc" : "asc" }
-        : { column, direction: "asc" },
-    );
+  type SortConfig = {
+    column: SortableColumns;
+    direction: "asc" | "desc";
+  } | null;
+
+  const createSortHandler = (
+    setConfig: React.Dispatch<React.SetStateAction<SortConfig>>,
+  ) => {
+    return (column: SortableColumns) => {
+      setConfig((prev) =>
+        prev?.column === column
+          ? { column, direction: prev.direction === "asc" ? "desc" : "asc" }
+          : { column, direction: "asc" },
+      );
+    };
   };
 
-  const handleSortActions = (column: SortableColumns) => {
-    setSortActionsConfig((prev) =>
-      prev?.column === column
-        ? { column, direction: prev.direction === "asc" ? "desc" : "asc" }
-        : { column, direction: "asc" },
-    );
-  };
-
-  const handleSortRequests = (column: SortableColumns) => {
-    setSortRequestsConfig((prev) =>
-      prev?.column === column
-        ? { column, direction: prev.direction === "asc" ? "desc" : "asc" }
-        : { column, direction: "asc" },
-    );
-  };
-
-  const handleSortNotices = (column: SortableColumns) => {
-    setSortNoticesConfig((prev) =>
-      prev?.column === column
-        ? { column, direction: prev.direction === "asc" ? "desc" : "asc" }
-        : { column, direction: "asc" },
-    );
-  };
+  const handleSortAllocations = createSortHandler(setSortAllocationsConfig);
+  const handleSortActions = createSortHandler(setSortActionsConfig);
+  const handleSortRequests = createSortHandler(setSortRequestsConfig);
+  const handleSortNotices = createSortHandler(setSortNoticesConfig);
 
   // derived values for modal button logic
   const statusLower = (session?.status || "").toLowerCase();

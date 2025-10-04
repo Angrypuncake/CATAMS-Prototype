@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import React, { useEffect, useState, useMemo } from "react";
 import StyledBox from "./components";
 import Button from "@mui/material/Button";
@@ -12,17 +11,10 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Stack,
-  Typography,
-  Chip,
   Box,
-  Divider,
 } from "@mui/material";
 import axios from "axios";
+import AllocationQuickviewModal from "./AllocationQuickviewModal";
 
 /* ========= Helpers ========= */
 const timeConverter = (time: string): number => {
@@ -38,10 +30,10 @@ interface SortConfig {
 }
 
 interface TableRow {
-  session_date?: string;
-  start_at?: string;
-  location?: string;
-  status?: string;
+  session_date?: string | null;
+  start_at?: string | null;
+  location?: string | null;
+  status?: string | null;
   [key: string]: unknown;
 }
 
@@ -430,22 +422,6 @@ const Page = () => {
   const handleSortRequests = createSortHandler(setSortRequestsConfig);
   const handleSortNotices = createSortHandler(setSortNoticesConfig);
 
-  // derived values for modal button logic
-  const statusLower = (session?.status || "").toLowerCase();
-  const isConfirmed = statusLower === "confirmed";
-  const isPending = statusLower === "pending";
-  const isRejected = statusLower === "rejected" || statusLower === "reschedule";
-
-  const endOrStart = toDate(
-    session?.session_date ?? null,
-    session?.end_at || session?.start_at || null,
-  );
-  const hasEnded = endOrStart ? endOrStart.getTime() <= Date.now() : false;
-
-  const claimDisabledReason = !hasEnded
-    ? `You can submit a claim after this session ends (${niceTime(session?.end_at || session?.start_at)})`
-    : "";
-
   const hours = 20;
   const sessions = 10;
   const requests = 2;
@@ -608,7 +584,7 @@ const Page = () => {
             component="div"
             count={filteredSessions.length}
             page={page}
-            onPageChange={(e, newPage) => setPage(newPage)}
+            onPageChange={(_e, newPage) => setPage(newPage)}
             rowsPerPage={rowsPerPage}
             onRowsPerPageChange={(e) => {
               setRowsPerPage(parseInt(e.target.value, 10));
@@ -903,146 +879,11 @@ const Page = () => {
       </StyledBox>
 
       {/* ---------- Allocation Quick View Modal (ONLY for My Allocations) ---------- */}
-      <Dialog
+      <AllocationQuickviewModal
         open={open}
-        onClose={() => setOpen(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Allocation quick view</DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={1.25}>
-            <Stack direction="row" spacing={1.25} alignItems="center">
-              <Typography variant="subtitle2" component="span">
-                Status:
-              </Typography>
-              <Chip
-                size="small"
-                variant="outlined"
-                color={
-                  isConfirmed ? "success" : isPending ? "warning" : "default"
-                }
-                label={session?.status ?? "Unknown"}
-              />
-            </Stack>
-
-            <Divider />
-
-            <Stack direction="row" spacing={1.25}>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ minWidth: 120 }}
-              >
-                Date
-              </Typography>
-              <Box>{session?.session_date?.slice(0, 10) ?? "—"}</Box>
-            </Stack>
-
-            <Stack direction="row" spacing={1.25}>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ minWidth: 120 }}
-              >
-                Time
-              </Typography>
-              <Box>
-                {session?.start_at
-                  ? `${niceTime(session?.start_at)} – ${niceTime(session?.end_at)}`
-                  : "—"}
-              </Box>
-            </Stack>
-
-            <Stack direction="row" spacing={1.25}>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ minWidth: 120 }}
-              >
-                Location
-              </Typography>
-              <Box>{session?.location ?? "—"}</Box>
-            </Stack>
-
-            <Stack direction="row" spacing={1.25}>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ minWidth: 120 }}
-              >
-                Unit
-              </Typography>
-              <Box>{session?.unit_code ?? "—"}</Box>
-            </Stack>
-
-            <Stack direction="row" spacing={1.25}>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ minWidth: 120 }}
-              >
-                Hours
-              </Typography>
-              <Box>{hoursBetween(session?.start_at, session?.end_at)}</Box>
-            </Stack>
-
-            <Stack direction="row" spacing={1.25}>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ minWidth: 120 }}
-              >
-                Description
-              </Typography>
-              <Box>{session?.note ?? "—"}</Box>
-            </Stack>
-          </Stack>
-        </DialogContent>
-
-        <DialogActions sx={{ justifyContent: "space-between" }}>
-          {/* LEFT side kept empty to match wireframe spacing */}
-          <Box />
-
-          {/* RIGHT side buttons per rules */}
-          <Stack direction="row" spacing={1}>
-            {/* Confirmed → show Submit Claim (disabled until session ends) */}
-            {isConfirmed && (
-              <Button
-                variant="contained"
-                disabled={!hasEnded}
-                title={
-                  !hasEnded
-                    ? claimDisabledReason
-                    : "Submit your claim for this session"
-                }
-                onClick={() => setOpen(false)}
-              >
-                Submit Claim
-              </Button>
-            )}
-
-            {/* All statuses → Create Request */}
-            <Button variant="outlined" onClick={() => setOpen(false)}>
-              Create Request
-            </Button>
-
-            {/* All statuses → View details */}
-            <Button
-              variant="outlined"
-              component={Link}
-              href={`/dashboard/tutor/allocations/${session?.id}`}
-            >
-              View details
-            </Button>
-
-            {/* Close */}
-            <Button variant="text" onClick={() => setOpen(false)}>
-              Close
-            </Button>
-          </Stack>
-        </DialogActions>
-      </Dialog>
+        setOpen={setOpen}
+        session={session}
+      />
     </div>
   );
 };

@@ -2,7 +2,9 @@
 import React, { useEffect, useState, useMemo } from "react";
 import Button from "@mui/material/Button";
 import { Slider, Typography, Menu, MenuItem, Tab } from "@mui/material"; //unused import, delete
+import { UnitBudgetRow, CoordinatorBudgetOverview } from "./types";
 import Link from "next/link";
+import BudgetOverviewTable from "./BudgetOverviewTable";
 
 import {
   Table,
@@ -13,32 +15,6 @@ import {
   TableRow,
   Paper,
 } from "@mui/material";
-// use interface instead, type cannot be expanded upon if we have a similar object with extra attributes
-// make name semantic, what row is this?
-type Row = {
-  offeringId: number;
-  unitCode: string;
-  unitName: string;
-  year: number;
-  session: string;
-  budget: number;
-  spent: number;
-  pctUsed: number; // 0..1 from API
-  variance: number;
-};
-
-type ApiResp = {
-  year: number;
-  session: string;
-  threshold: number; // 0..1
-  rows: Row[];
-  alerts?: {
-    message: string;
-    offeringId: number;
-    unitCode: string;
-    pctUsed: number;
-  }[];
-};
 
 const request = [
   {
@@ -83,7 +59,7 @@ const Page = () => {
     setAnchorEl(null);
   };
 
-  const [data, setData] = useState<ApiResp | null>(null);
+  const [data, setData] = useState<CoordinatorBudgetOverview | null>(null);
   const [error, setError] = useState<string | null>(null); //unused states, delete
   const [busy, setBusy] = useState(false);
   const [threshold, setThreshold] = useState(0.9);
@@ -98,7 +74,7 @@ const Page = () => {
         { cache: "no-store" },
       ); //use axios instead
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json: ApiResp = await res.json();
+      const json: CoordinatorBudgetOverview = await res.json();
       setData(json);
     } catch (e: unknown) {
       if (e instanceof Error) {
@@ -110,7 +86,6 @@ const Page = () => {
       setBusy(false);
     }
   }
-
   useEffect(() => {
     load(); /* initial */
   }, []);
@@ -129,16 +104,9 @@ const Page = () => {
         message: `${r.unitCode} is at ${Math.round(r.pctUsed * 100)}% budget used.`,
         unitCode: r.unitCode,
       }));
+    console.log(rows);
     return { rows, alerts };
   }, [data, threshold]);
-
-  const AUD = new Intl.NumberFormat("en-AU", {
-    style: "currency",
-    currency: "AUD",
-    maximumFractionDigits: 0,
-  });
-
-  const PCT = (v: number) => `${(v * 100).toFixed(1)}%`;
 
   const ucApprovals = [
     {
@@ -281,52 +249,7 @@ const Page = () => {
 
         <div style={{ marginTop: "10px" }}>
           {/* Make this into an component */}
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Unit</TableCell>
-                  <TableCell>Year</TableCell>
-                  <TableCell>Session</TableCell>
-                  <TableCell>Allocated Amount (Budget) </TableCell>
-                  <TableCell>Claimed Amount (Spent) </TableCell>
-                  <TableCell>% Used</TableCell>
-                  <TableCell>Forecast (Wk)</TableCell>
-                  <TableCell>Variance</TableCell>
-                  <TableCell>Status</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {computed?.rows.map((row) => (
-                  <TableRow key={row.unitCode}>
-                    <TableCell style={{ fontWeight: "bold" }}>
-                      {row.unitCode}
-                    </TableCell>
-                    <TableCell>{row.year}</TableCell>
-                    <TableCell>{row.session}</TableCell>
-                    <TableCell>{AUD.format(row.budget)}</TableCell>
-                    <TableCell>{AUD.format(row.spent)}</TableCell>
-                    <TableCell>{PCT(row.pctUsed)}</TableCell>
-                    <TableCell>---</TableCell>
-                    <TableCell>{AUD.format(row.variance)}</TableCell>
-                    <TableCell>
-                      {" "}
-                      <span
-                        className={
-                          "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium " +
-                          (row.status === "Exceeding"
-                            ? "bg-amber-100 text-amber-800"
-                            : "bg-emerald-100 text-emerald-800")
-                        }
-                      >
-                        {row.status}
-                      </span>{" "}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+          <BudgetOverviewTable computedData={computed} />
         </div>
       </div>
 
@@ -344,7 +267,6 @@ const Page = () => {
           Approve All
         </Button>
         <div>
-          {" "}
           {/* No need for extra div */}
           {/* Make this into an component */}
           <TableContainer component={Paper}>

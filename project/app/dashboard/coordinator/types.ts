@@ -6,10 +6,9 @@ export interface UnitBudgetRow {
   session: string;
   budget: number;
   spent: number;
-  percentUsed: number;
+  pctUsed: number;
   variance: number;
 }
-
 export interface CoordinatorBudgetOverview {
   year: number;
   session: string;

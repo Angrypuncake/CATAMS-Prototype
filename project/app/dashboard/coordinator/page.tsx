@@ -1,21 +1,11 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import Button from "@mui/material/Button";
-import { Slider, Typography, Menu, MenuItem, Tab } from "@mui/material"; //unused import, delete
-import { UnitBudgetRow, CoordinatorBudgetOverview } from "./types";
+import { Slider, Typography, Menu, MenuItem } from "@mui/material"; //unused import, delete
+import { CoordinatorBudgetOverview } from "./types";
 import Link from "next/link";
 import UnitBudgetOverviewTable from "./UnitBudgetOverviewTable";
 import CoordinatorApprovalTable from "./CoordinatorApprovalTable";
-
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-} from "@mui/material";
 
 const pendingRequests = [
   {
@@ -108,25 +98,6 @@ const Page = () => {
     console.log(rows);
     return { rows, alerts };
   }, [data, threshold]);
-
-  const ucApprovals = [
-    {
-      type: "Claim(diff)",
-      role: "Tutor",
-      by: "A. Singh",
-      target: "INFO1910 * 2025-09-12 * 15:00",
-      reason: "+0.5 over",
-      status: "Review",
-    },
-    {
-      type: "Claim(same)",
-      role: "TA",
-      by: "B. Wong",
-      target: "INFO1110 * 2025-09-12 * 10:00",
-      reason: "Roster mistmatch",
-      status: "Review",
-    },
-  ]; //unused mock data, delete
 
   return (
     <div

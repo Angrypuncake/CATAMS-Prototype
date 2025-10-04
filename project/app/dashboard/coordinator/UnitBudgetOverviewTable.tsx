@@ -45,9 +45,7 @@ const UnitBudgetOverviewTable = ({
         <TableBody>
           {computedData?.rows.map((row) => (
             <TableRow key={row.unitCode}>
-              <TableCell style={{ fontWeight: "bold" }}>
-                {row.unitCode}
-              </TableCell>
+              <TableCell sx={{ fontWeight: "bold" }}>{row.unitCode}</TableCell>
               <TableCell>{row.year}</TableCell>
               <TableCell>{row.session}</TableCell>
               <TableCell>{AUD.format(row.budget)}</TableCell>

@@ -1,11 +1,10 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
-import Button from "@mui/material/Button";
-import { Slider, Typography, Menu, MenuItem } from "@mui/material"; //unused import, delete
+import { Slider, Typography, Menu, MenuItem, Button } from "@mui/material"; //unused import, delete
 import { CoordinatorBudgetOverview } from "./types";
-import Link from "next/link";
 import UnitBudgetOverviewTable from "./UnitBudgetOverviewTable";
 import CoordinatorApprovalTable from "./CoordinatorApprovalTable";
+import Link from "next/link";
 
 const pendingRequests = [
   {
@@ -100,26 +99,14 @@ const Page = () => {
   }, [data, threshold]);
 
   return (
-    <div
-      className="w-screen h-screen box-border bg-gray-100 px-5 flex flex-col"
-      style={{ padding: "20px" }}
-    >
-      {/* Try and avoid using style and className together, className should have everything that style can do */}
-      <div
-        style={{
-          width: "100%",
-          justifyContent: "space-between",
-          marginBottom: "20px",
-        }}
-      >
-        {/* With mui components use sx not style */}
-        <Typography variant="h2" style={{ display: "inline-block" }}>
+    <div className="w-screen h-screen box-border bg-gray-100 px-5 flex flex-col p-20">
+      <div className="w-full justify-between mb-20">
+        <Typography variant="h2" sx={{ display: "inline-block" }}>
           Unit Coordinator Dashboard
         </Typography>
-        {/* Same, avoid style */}
-        <div style={{ display: "inline-block", float: "right", gap: "10px" }}>
+        <div className="inline-block float-right gap-[10px]">
           {/* Implement refresh to do something */}
-          <Button variant="secondary" style={{ marginRight: "10px" }}>
+          <Button variant="secondary" sx={{ marginRight: "10px" }}>
             Refresh
           </Button>
           <Button
@@ -135,10 +122,7 @@ const Page = () => {
 
       {/* Alerts */}
 
-      <div>
-        {/* Does this need to be wrapped in a div? */}
-        <Typography variant="h4">Alerts</Typography>
-      </div>
+      <Typography variant="h4">Alerts</Typography>
       {computed && computed.alerts.length > 0 ? (
         <div className="flex flex-wrap gap-3">
           {computed.alerts.map((a, i) => (
@@ -151,28 +135,22 @@ const Page = () => {
           ))}
         </div>
       ) : (
-        <div style={{ display: "flex", marginBottom: "15px" }}>
+        <div className="flex mb-15">
           <Typography variant="body1">No alerts at this time.</Typography>
         </div>
       )}
 
       <div>
-        <Typography variant="h4" style={{ marginTop: "20px" }}>
+        <Typography variant="h4" sx={{ marginTop: "20px" }}>
           Budget Overview
         </Typography>
-        <Typography variant="body2" style={{ display: "inline" }}>
+        <Typography variant="body2" sx={{ display: "inline" }}>
           Per unit offering
         </Typography>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
-          }}
-        >
+        <div className="flex items-center justify-end">
           <Button
             onClick={handleMenuClick}
-            style={{
+            sx={{
               width: "120px",
               height: "35px",
               textTransform: "none",
@@ -184,9 +162,7 @@ const Page = () => {
           >
             This Session ⮟
           </Button>
-          {/* Avoid raw unicode icons, they might be inconsistent or missing across browsers import from mui */}
-          {/* Same, avoid style */}
-          <Typography variant="body2" style={{ marginRight: "10px" }}>
+          <Typography variant="body2" sx={{ marginRight: "10px" }}>
             Budget % Threshold
           </Typography>
           <Slider
@@ -195,13 +171,13 @@ const Page = () => {
             step={0.01}
             min={0.5}
             max={1}
-            style={{ width: "100px", marginRight: "10px" }}
-          ></Slider>
-          <Typography variant="body1" style={{ marginRight: "10px" }}>
+            sx={{ width: "100px", marginRight: "10px" }}
+          />
+          <Typography variant="body1" sx={{ marginRight: "10px" }}>
             {Math.round(threshold * 100)}%
           </Typography>
           <Button
-            style={{
+            sx={{
               height: "35px",
               textTransform: "none",
               color: "black",
@@ -219,13 +195,13 @@ const Page = () => {
           <MenuItem>Last 30 days</MenuItem>
         </Menu>
 
-        <div style={{ marginTop: "10px" }}>
+        <div className="mt-[10px]">
           <UnitBudgetOverviewTable computedData={computed} />
         </div>
       </div>
 
       <div>
-        <Typography variant="h4" style={{ marginTop: "20px" }}>
+        <Typography variant="h4" sx={{ marginTop: "20px" }}>
           UC Approvals
         </Typography>
         <Typography variant="body2">Items awaiting your review</Typography>
@@ -233,7 +209,7 @@ const Page = () => {
           variant="contained"
           color="primary"
           size="small"
-          style={{ margin: "10px 0" }}
+          sx={{ marginY: "10px" }}
         >
           Approve All
         </Button>
@@ -241,18 +217,17 @@ const Page = () => {
       </div>
 
       <div>
-        {/* Avoid style */}
-        <Typography variant="h4" style={{ marginTop: "20px" }}>
+        <Typography variant="h4" sx={{ marginTop: "20px" }}>
           Requests Requiring Attention
         </Typography>
         <Typography variant="body2">Flagged queues</Typography>
-        <div style={{ display: "flex" }}>
+        <div className="flex">
           <Typography variant="body1">No Requests.</Typography>
         </div>
       </div>
 
       <div>
-        <Typography variant="h4" style={{ marginTop: "20px" }}>
+        <Typography variant="h4" sx={{ marginTop: "20px" }}>
           Marking Hours
         </Typography>
         <Typography variant="body2">Manual allocations</Typography>

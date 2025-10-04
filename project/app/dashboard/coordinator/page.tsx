@@ -148,14 +148,11 @@ const Page = () => {
         <div className="flex items-center justify-end">
           <Button
             onClick={handleMenuClick}
+            variant="primary"
             sx={{
-              width: "120px",
-              height: "35px",
               textTransform: "none",
-              outline: "1px solid",
-              outlineColor: "lightgray",
               marginRight: "10px",
-              color: "black",
+              boxShadow: "none",
             }}
           >
             This Session ⮟
@@ -175,13 +172,10 @@ const Page = () => {
             {Math.round(threshold * 100)}%
           </Typography>
           <Button
-            sx={{
-              height: "35px",
-              textTransform: "none",
-              color: "black",
-              outline: "1px solid",
-              outlineColor: "lightgray",
-            }}
+            variant="contained"
+            color="primary"
+            type="button"
+            sx={{ textTransform: "none" }}
           >
             Save
           </Button>

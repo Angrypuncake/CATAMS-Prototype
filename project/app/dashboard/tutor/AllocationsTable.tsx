@@ -10,6 +10,7 @@ import {
   Paper,
   Box,
   TablePagination,
+  Typography,
 } from "@mui/material";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
@@ -54,7 +55,9 @@ const AllocationsTable: React.FC<AllocationsTableProps> = ({
 
   return (
     <>
-      <p className="font-bold text-xl mb-2">My Allocations</p>
+      <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
+        My Allocations
+      </Typography>
 
       {/* search box */}
       <input
@@ -143,13 +146,18 @@ const AllocationsTable: React.FC<AllocationsTableProps> = ({
                   {row.session_date ? row.session_date.slice(0, 10) : "N/A"}
                 </TableCell>
                 <TableCell>
-                  {row.start_at
+                  {row.start_at && row.end_at
                     ? `${niceTime(row.start_at)}-${niceTime(row.end_at)}`
                     : "N/A"}
                 </TableCell>
                 <TableCell>{row.unit_code ?? "N/A"}</TableCell>
                 <TableCell>{row.location ?? "N/A"}</TableCell>
-                <TableCell>{hoursBetween(row.start_at, row.end_at)}</TableCell>
+                <TableCell>
+                  {hoursBetween(
+                    row.start_at ?? undefined,
+                    row.end_at ?? undefined,
+                  )}
+                </TableCell>
                 <TableCell>{row.status ?? "N/A"}</TableCell>
                 <TableCell>
                   <Box display="flex" justifyContent="center">
@@ -171,8 +179,16 @@ const AllocationsTable: React.FC<AllocationsTableProps> = ({
           onRowsPerPageChange={onRowsPerPageChange}
         />
       </TableContainer>
-      <div className="justify-end items-center flex gap-5 mt-5">
-        <p>You can export the above data in CSV or JSON formats</p>
+      <Box
+        display="flex"
+        justifyContent="flex-end"
+        alignItems="center"
+        gap={2.5}
+        mt={2.5}
+      >
+        <Typography>
+          You can export the above data in CSV or JSON formats
+        </Typography>
         <StyledButton
           size="medium"
           onClick={() =>
@@ -189,7 +205,7 @@ const AllocationsTable: React.FC<AllocationsTableProps> = ({
         >
           Export as JSON
         </StyledButton>
-      </div>
+      </Box>
     </>
   );
 };

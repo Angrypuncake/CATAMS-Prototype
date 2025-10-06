@@ -1,19 +1,10 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import StyledBox from "./components";
-import StyledButton from "./StyledButton";
 import AllocationsTable from "./AllocationsTable";
-import { TablePagination } from "@mui/material";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Box,
-} from "@mui/material";
+import ActionRequiredTable from "./ActionRequiredTable";
+import RequestsTable from "./RequestsTable";
+import NoticesTable from "./NoticesTable";
 import axios from "axios";
 import AllocationQuickviewModal from "./AllocationQuickviewModal";
 import type {
@@ -23,13 +14,7 @@ import type {
   NoticeRow,
   SortableColumns,
 } from "./types";
-import {
-  useColumnSorter,
-  exportJSON,
-  exportCSV,
-  hoursBetween,
-  niceTime,
-} from "./utils";
+import { useColumnSorter } from "./utils";
 import { actions, request, notices } from "./mockData";
 
 /* ========= Page ========= */
@@ -192,147 +177,27 @@ const Page = () => {
 
       {/* ---------- Other sections (unchanged, no modals) ---------- */}
       <StyledBox>
-        <p className="font-bold text-xl mb-2">Action Required</p>
-        <TableContainer component={Paper} className="shadow-sm">
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  className="font-bold text-center cursor-pointer"
-                  onClick={() => handleSortActions("session_date")}
-                >
-                  Date{" "}
-                  {sortActionsConfig?.column === "session_date"
-                    ? sortActionsConfig.direction === "asc"
-                      ? "↑"
-                      : "↓"
-                    : ""}
-                </TableCell>
-                <TableCell className="font-bold text-center">Time</TableCell>
-                <TableCell className="font-bold text-center">Unit</TableCell>
-                <TableCell className="font-bold text-center">Hours</TableCell>
-                <TableCell className="font-bold text-center">
-                  Description
-                </TableCell>
-                <TableCell
-                  className="font-bold text-center cursor-pointer"
-                  onClick={() => handleSortActions("status")}
-                >
-                  Status{" "}
-                  {sortActionsConfig?.column === "status"
-                    ? sortActionsConfig.direction === "asc"
-                      ? "↑"
-                      : "↓"
-                    : ""}
-                </TableCell>
-                <TableCell className="font-bold text-center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {sortedActions.map((row, index) => (
-                <TableRow key={index}>
-                  <TableCell>{row.session_date}</TableCell>
-                  <TableCell>{row.time}</TableCell>
-                  <TableCell>{row.unit}</TableCell>
-                  <TableCell>{row.hours}</TableCell>
-                  <TableCell>{row.desc}</TableCell>
-                  <TableCell>{row.status}</TableCell>
-                  <TableCell className="text-left">
-                    <Box display="flex" justifyContent="center">
-                      <StyledButton>{row.actions}</StyledButton>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <ActionRequiredTable
+          actions={sortedActions}
+          sortConfig={sortActionsConfig}
+          onSort={handleSortActions}
+        />
       </StyledBox>
 
       <StyledBox>
-        <p className="font-bold text-xl mb-2">My Requests</p>
-        <TableContainer component={Paper} className="shadow-sm">
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell className="font-bold text-center">
-                  Request ID
-                </TableCell>
-                <TableCell className="font-bold text-center">Type</TableCell>
-                <TableCell className="font-bold text-center">
-                  Related Session
-                </TableCell>
-                <TableCell
-                  className="font-bold text-center cursor-pointer"
-                  onClick={() => handleSortRequests("status")}
-                >
-                  Status{" "}
-                  {sortRequestsConfig?.column === "status"
-                    ? sortRequestsConfig.direction === "asc"
-                      ? "↑"
-                      : "↓"
-                    : ""}
-                </TableCell>
-                <TableCell className="font-bold text-center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {sortedRequests.map((row, index) => (
-                <TableRow key={index}>
-                  <TableCell>{row.requestID}</TableCell>
-                  <TableCell>{row.type}</TableCell>
-                  <TableCell>{row.relatedSession}</TableCell>
-                  <TableCell>{row.status}</TableCell>
-                  <TableCell className="text-left">
-                    <Box display="flex" justifyContent="center">
-                      <StyledButton>{row.actions}</StyledButton>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <RequestsTable
+          requests={sortedRequests}
+          sortConfig={sortRequestsConfig}
+          onSort={handleSortRequests}
+        />
       </StyledBox>
 
       <StyledBox>
-        <p className="font-bold text-xl mb-2">Notices</p>
-        <TableContainer component={Paper} className="shadow-sm">
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  className="font-bold text-center cursor-pointer"
-                  onClick={() => handleSortNotices("session_date")}
-                >
-                  Date{" "}
-                  {sortNoticesConfig?.column === "session_date"
-                    ? sortNoticesConfig.direction === "asc"
-                      ? "↑"
-                      : "↓"
-                    : ""}
-                </TableCell>
-                <TableCell className="font-bold text-center">Type</TableCell>
-                <TableCell className="font-bold text-center">Message</TableCell>
-                <TableCell className="font-bold text-center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {sortedNotices.map((row, index) => (
-                <TableRow key={index}>
-                  <TableCell>{row.session_date}</TableCell>
-                  <TableCell>{row.type}</TableCell>
-                  <TableCell>{row.message}</TableCell>
-                  <TableCell className="text-left">
-                    <Box display="flex" justifyContent="center">
-                      <StyledButton>{row.actions}</StyledButton>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        <NoticesTable
+          notices={sortedNotices}
+          sortConfig={sortNoticesConfig}
+          onSort={handleSortNotices}
+        />
       </StyledBox>
 
       {/* ---------- Allocation Quick View Modal (ONLY for My Allocations) ---------- */}

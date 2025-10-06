@@ -19,6 +19,7 @@ export async function GET(req: Request) {
   // If no userId, return everything (or you could choose to block)
   const where = userId ? "WHERE a.user_id = $3" : "";
   const params = userId ? [limit, offset, userId] : [limit, offset];
+  const countParams = userId ? [userId] : [];
 
   const sql = `
     SELECT
@@ -47,12 +48,23 @@ export async function GET(req: Request) {
     ORDER BY a.allocation_id
     LIMIT $1 OFFSET $2
   `;
-
+  const countWhere = userId ? "WHERE a.user_id = $1" : "";
+  const countQuery = `
+    SELECT COUNT(*) AS total
+    FROM allocation a
+    LEFT JOIN users u ON u.user_id = a.user_id
+    JOIN session_occurrence so ON so.occurrence_id = a.session_id
+    JOIN teaching_activity ta  ON ta.activity_id = so.activity_id
+    JOIN unit_offering uo      ON uo.offering_id = ta.unit_offering_id
+    JOIN course_unit cu        ON cu.unit_code = uo.course_unit_id
+    ${countWhere}
+  `;
   const result = await query(sql, params);
-
+  const countResult = await query(countQuery, countParams);
   return NextResponse.json({
     page,
     limit,
     data: result.rows,
+    total: Number(countResult.rows[0].total),
   });
 }

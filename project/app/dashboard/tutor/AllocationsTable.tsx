@@ -20,6 +20,7 @@ import StyledButton from "./StyledButton";
 
 interface AllocationsTableProps {
   sessions: AllocationRow[];
+  totalCount: number;
   sortConfig: {
     column: SortableColumns;
     direction: "asc" | "desc";
@@ -32,11 +33,11 @@ interface AllocationsTableProps {
   onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
   search: string;
   onSearchChange: (value: string) => void;
-  filteredSessions: AllocationRow[];
 }
 
 const AllocationsTable: React.FC<AllocationsTableProps> = ({
   sessions,
+  totalCount,
   sortConfig,
   onSort,
   onRowClick,
@@ -46,13 +47,7 @@ const AllocationsTable: React.FC<AllocationsTableProps> = ({
   onRowsPerPageChange,
   search,
   onSearchChange,
-  filteredSessions,
 }) => {
-  const paginatedSessions = useMemo(() => {
-    const start = page * rowsPerPage;
-    return filteredSessions.slice(start, start + rowsPerPage);
-  }, [filteredSessions, page, rowsPerPage]);
-
   return (
     <>
       <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
@@ -140,7 +135,7 @@ const AllocationsTable: React.FC<AllocationsTableProps> = ({
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedSessions.map((row, index) => (
+            {sessions.map((row, index) => (
               <TableRow key={index}>
                 <TableCell>
                   {row.session_date ? row.session_date.slice(0, 10) : "N/A"}
@@ -172,7 +167,7 @@ const AllocationsTable: React.FC<AllocationsTableProps> = ({
         </Table>
         <TablePagination
           component="div"
-          count={filteredSessions.length}
+          count={totalCount}
           page={page}
           onPageChange={onPageChange}
           rowsPerPage={rowsPerPage}

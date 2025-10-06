@@ -21,6 +21,7 @@ import { actions, request, notices } from "./mockData";
 /* ========= Page ========= */
 const Page = () => {
   const [tutorSessions, setTutorSessions] = useState<AllocationRow[]>([]);
+  const [totalSessions, setTotalSessions] = useState(0);
   const [loading, setLoading] = useState(true);
   const [sortAllocationsConfig, setSortAllocationsConfig] = useState<{
     column: SortableColumns;
@@ -48,21 +49,6 @@ const Page = () => {
     tutorSessions,
     sortAllocationsConfig,
   );
-  // filter
-  const filteredSessions = useMemo(() => {
-    if (!search) return sortedSessions;
-    return sortedSessions.filter((row) =>
-      Object.values(row).some((v) =>
-        String(v).toLowerCase().includes(search.toLowerCase()),
-      ),
-    );
-  }, [sortedSessions, search]);
-
-  // pagination
-  const paginatedSessions = useMemo(() => {
-    const start = page * rowsPerPage;
-    return filteredSessions.slice(start, start + rowsPerPage);
-  }, [filteredSessions, page, rowsPerPage]);
 
   const sortedActions: ActionRequiredRow[] = useColumnSorter<ActionRequiredRow>(
     actions,
@@ -94,6 +80,7 @@ const Page = () => {
         if (!res.ok) throw new Error("Failed to fetch tutor allocations");
         const data = await res.json();
         setTutorSessions(data.data);
+        setTotalSessions(data.total);
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
@@ -155,7 +142,8 @@ const Page = () => {
       {/* ---------- My Allocations (ONLY this table opens a modal) ---------- */}
       <StyledBox>
         <AllocationsTable
-          sessions={tutorSessions}
+          sessions={sortedSessions}
+          totalCount={totalSessions}
           sortConfig={sortAllocationsConfig}
           onSort={handleSortAllocations}
           onRowClick={(row) => {
@@ -174,7 +162,6 @@ const Page = () => {
             setSearch(value);
             setPage(0);
           }}
-          filteredSessions={filteredSessions}
         />
       </StyledBox>
 

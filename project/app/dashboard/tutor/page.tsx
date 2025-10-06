@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
 import StyledBox from "./components";
-import Button from "@mui/material/Button";
+import StyledButton from "./StyledButton";
 import { TablePagination } from "@mui/material";
 import {
   Table,
@@ -262,36 +262,14 @@ const Page = () => {
                   <TableCell>{row.status ?? "N/A"}</TableCell>
                   <TableCell>
                     <Box display="flex" justifyContent="center">
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        sx={{
-                          borderRadius: "9999px",
-                          textTransform: "none",
-                          fontWeight: 500,
-                          fontSize: "0.85rem",
-                          px: 2.5,
-                          py: 0.5,
-                          minHeight: "30px",
-                          background:
-                            "linear-gradient(to right, #3b82f6, #6414c7)",
-                          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-                          transition: "all 0.2s ease-in-out",
-                          "&:hover": {
-                            background:
-                              "linear-gradient(to right, #2563eb, #490d91)",
-                            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
-                          },
-                          "&:active": { transform: "scale(0.98)" },
-                        }}
-                        size="small"
+                      <StyledButton
                         onClick={() => {
                           setSession(row);
                           setOpen(true);
                         }}
                       >
                         {row.actions ?? "View"}
-                      </Button>
+                      </StyledButton>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -312,26 +290,7 @@ const Page = () => {
         </TableContainer>
         <div className="justify-end items-center flex gap-5 mt-5">
           <p>You can export the above data in CSV or JSON formats</p>
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{
-              borderRadius: "9999px",
-              textTransform: "none",
-              fontWeight: 500,
-              fontSize: "0.85rem",
-              px: 2.5,
-              py: 0.5,
-              minHeight: "30px",
-              background: "linear-gradient(to right, #3b82f6, #6414c7)",
-              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-              transition: "all 0.2s ease-in-out",
-              "&:hover": {
-                background: "linear-gradient(to right, #2563eb, #490d91)",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
-              },
-              "&:active": { transform: "scale(0.98)" },
-            }}
+          <StyledButton
             size="medium"
             onClick={() =>
               exportCSV(
@@ -340,27 +299,8 @@ const Page = () => {
             }
           >
             Export as CSV
-          </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            sx={{
-              borderRadius: "9999px",
-              textTransform: "none",
-              fontWeight: 500,
-              fontSize: "0.85rem",
-              px: 2.5,
-              py: 0.5,
-              minHeight: "30px",
-              background: "linear-gradient(to right, #3b82f6, #6414c7)",
-              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
-              transition: "all 0.2s ease-in-out",
-              "&:hover": {
-                background: "linear-gradient(to right, #2563eb, #490d91)",
-                boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
-              },
-              "&:active": { transform: "scale(0.98)" },
-            }}
+          </StyledButton>
+          <StyledButton
             size="medium"
             onClick={() =>
               exportJSON(
@@ -369,7 +309,7 @@ const Page = () => {
             }
           >
             Export as JSON
-          </Button>
+          </StyledButton>
         </div>
       </StyledBox>
 
@@ -422,33 +362,7 @@ const Page = () => {
                   <TableCell>{row.status}</TableCell>
                   <TableCell className="text-left">
                     <Box display="flex" justifyContent="center">
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        sx={{
-                          borderRadius: "9999px", // pill shape
-                          textTransform: "none", // don't uppercase text
-                          fontWeight: 500, // semi-bold
-                          fontSize: "0.85rem", // readable but compact
-                          px: 2.5,
-                          py: 0.5,
-                          minHeight: "30px",
-                          background:
-                            "linear-gradient(to right, #3b82f6, #6414c7)", // gradient blue
-                          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // soft shadow
-                          transition: "all 0.2s ease-in-out",
-                          "&:hover": {
-                            background:
-                              "linear-gradient(to right, #2563eb, #490d91)",
-                            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
-                          },
-                          "&:active": {
-                            transform: "scale(0.98)",
-                          },
-                        }}
-                      >
-                        {row.actions}
-                      </Button>
+                      <StyledButton>{row.actions}</StyledButton>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -494,33 +408,7 @@ const Page = () => {
                   <TableCell>{row.status}</TableCell>
                   <TableCell className="text-left">
                     <Box display="flex" justifyContent="center">
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        sx={{
-                          borderRadius: "9999px", // pill shape
-                          textTransform: "none", // don't uppercase text
-                          fontWeight: 500, // semi-bold
-                          fontSize: "0.85rem", // readable but compact
-                          px: 2.5,
-                          py: 0.5,
-                          minHeight: "30px",
-                          background:
-                            "linear-gradient(to right, #3b82f6, #6414c7)", // gradient blue
-                          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // soft shadow
-                          transition: "all 0.2s ease-in-out",
-                          "&:hover": {
-                            background:
-                              "linear-gradient(to right, #2563eb, #490d91)",
-                            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
-                          },
-                          "&:active": {
-                            transform: "scale(0.98)",
-                          },
-                        }}
-                      >
-                        {row.actions}
-                      </Button>
+                      <StyledButton>{row.actions}</StyledButton>
                     </Box>
                   </TableCell>
                 </TableRow>
@@ -560,33 +448,7 @@ const Page = () => {
                   <TableCell>{row.message}</TableCell>
                   <TableCell className="text-left">
                     <Box display="flex" justifyContent="center">
-                      <Button
-                        variant="contained"
-                        color="primary"
-                        sx={{
-                          borderRadius: "9999px", // pill shape
-                          textTransform: "none", // don't uppercase text
-                          fontWeight: 500, // semi-bold
-                          fontSize: "0.85rem", // readable but compact
-                          px: 2.5,
-                          py: 0.5,
-                          minHeight: "30px",
-                          background:
-                            "linear-gradient(to right, #3b82f6, #6414c7)", // gradient blue
-                          boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)", // soft shadow
-                          transition: "all 0.2s ease-in-out",
-                          "&:hover": {
-                            background:
-                              "linear-gradient(to right, #2563eb, #490d91)",
-                            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.15)",
-                          },
-                          "&:active": {
-                            transform: "scale(0.98)",
-                          },
-                        }}
-                      >
-                        {row.actions}
-                      </Button>
+                      <StyledButton>{row.actions}</StyledButton>
                     </Box>
                   </TableCell>
                 </TableRow>

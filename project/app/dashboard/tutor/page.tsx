@@ -1,5 +1,6 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
+import { Typography } from "@mui/material";
 import StyledBox from "./components";
 import AllocationsTable from "./AllocationsTable";
 import ActionRequiredTable from "./ActionRequiredTable";
@@ -132,20 +133,22 @@ const Page = () => {
 
   return (
     <div className="max-w-6xl w-full mx-auto">
-      <p className="m-5 font-bold text-xl">Tutor Dashboard</p>
+      <Typography variant="h5" fontWeight="bold" sx={{ m: 2.5 }}>
+        Tutor Dashboard
+      </Typography>
 
       <div className="flex w-full gap-5">
         <StyledBox accentColor="border-l-blue-500">
-          <p>Allocated Hours</p>
-          <p className="font-bold">{hours}</p>
+          <Typography>Allocated Hours</Typography>
+          <Typography fontWeight="bold">{hours}</Typography>
         </StyledBox>
         <StyledBox accentColor="border-l-blue-500">
-          <p>Upcoming Sessions</p>
-          <p className="font-bold">{sessions}</p>
+          <Typography>Upcoming Sessions</Typography>
+          <Typography fontWeight="bold">{sessions}</Typography>
         </StyledBox>
         <StyledBox accentColor="border-l-blue-500">
-          <p>Pending Requests</p>
-          <p className="font-bold">{requests}</p>
+          <Typography>Pending Requests</Typography>
+          <Typography fontWeight="bold">{requests}</Typography>
         </StyledBox>
       </div>
 

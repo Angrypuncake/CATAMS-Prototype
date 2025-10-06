@@ -1,46 +1,15 @@
 "use client";
-
 import React, { useEffect, useState, useMemo } from "react";
-import Button from "@mui/material/Button";
-import { Slider, Typography, Menu, MenuItem, Tab } from "@mui/material";
+import { Slider, Typography, Menu, MenuItem, Button } from "@mui/material";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+import { CoordinatorBudgetOverview, UnitBudgetRow } from "./types";
+import UnitBudgetOverviewTable from "./UnitBudgetOverviewTable";
+import CoordinatorApprovalTable from "./CoordinatorApprovalTable";
+import AlertBox from "@/components/AlertBox";
 import Link from "next/link";
+import axios from "axios";
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-} from "@mui/material";
-
-type Row = {
-  offeringId: number;
-  unitCode: string;
-  unitName: string;
-  year: number;
-  session: string;
-  budget: number;
-  spent: number;
-  pctUsed: number; // 0..1 from API
-  variance: number;
-};
-
-type ApiResp = {
-  year: number;
-  session: string;
-  threshold: number; // 0..1
-  rows: Row[];
-  alerts?: {
-    message: string;
-    offeringId: number;
-    unitCode: string;
-    pctUsed: number;
-  }[];
-};
-
-const request = [
+const pendingRequests = [
   {
     requestID: "REQ001",
     type: "Swap",
@@ -73,49 +42,30 @@ const request = [
 const Page = () => {
   // State for dropdown
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const open = Boolean(anchorEl);
-
-  const handleMenuClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuClose = () => {
-    setAnchorEl(null);
-  };
-
-  const [data, setData] = useState<ApiResp | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [busy, setBusy] = useState(false);
+  const [data, setData] = useState<CoordinatorBudgetOverview | null>(null);
   const [threshold, setThreshold] = useState(0.9);
 
-  async function load() {
+  async function fetchBudgetOverview() {
     try {
-      setBusy(true);
-      setError(null);
-      const res = await fetch(
-        `/api/uc/overview?year=2025&session=S2&threshold=${threshold}`,
-        { cache: "no-store" },
+      const { data: json } = await axios.get<CoordinatorBudgetOverview>(
+        `/api/uc/overview`,
+        {
+          params: { year: 2025, session: "S2", threshold },
+        },
       );
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json: ApiResp = await res.json();
       setData(json);
     } catch (e: unknown) {
-      if (e instanceof Error) {
-        setError(e.message || "Failed to load");
-      } else {
-        setError("Failed to load");
-      }
-    } finally {
-      setBusy(false);
+      console.error("Failed to load budget overview:", e);
     }
   }
-
   useEffect(() => {
-    load(); /* initial */
+    fetchBudgetOverview();
   }, []);
 
-  // Recompute status/alerts client-side so slider is live without refetching
-  const computed = useMemo(() => {
+  const computedBudgetData = useMemo<{
+    rows: (UnitBudgetRow & { status: string })[];
+    alerts: { message: string; unitCode: string }[];
+  } | null>(() => {
     if (!data) return null;
     const rows = data.rows.map((r) => ({
       ...r,
@@ -130,51 +80,18 @@ const Page = () => {
     return { rows, alerts };
   }, [data, threshold]);
 
-  const AUD = new Intl.NumberFormat("en-AU", {
-    style: "currency",
-    currency: "AUD",
-    maximumFractionDigits: 0,
-  });
-
-  const PCT = (v: number) => `${(v * 100).toFixed(1)}%`;
-
-  const ucApprovals = [
-    {
-      type: "Claim(diff)",
-      role: "Tutor",
-      by: "A. Singh",
-      target: "INFO1910 * 2025-09-12 * 15:00",
-      reason: "+0.5 over",
-      status: "Review",
-    },
-    {
-      type: "Claim(same)",
-      role: "TA",
-      by: "B. Wong",
-      target: "INFO1110 * 2025-09-12 * 10:00",
-      reason: "Roster mistmatch",
-      status: "Review",
-    },
-  ];
-
   return (
-    <div
-      className="w-screen h-screen box-border bg-gray-100 px-5 flex flex-col "
-      style={{ padding: "20px" }}
-    >
-      <div
-        style={{
-          width: "100%",
-          justifyContent: "space-between",
-          marginBottom: "20px",
-        }}
-      >
-        <Typography variant="h2" style={{ display: "inline-block" }}>
+    <div className="w-screen h-screen box-border bg-gray-100 px-5 flex flex-col p-20 [&>*:not(:first-child)]:mt-[25px]">
+      <div className="w-full justify-between mb-20">
+        <Typography variant="h2" sx={{ display: "inline-block" }}>
           Unit Coordinator Dashboard
         </Typography>
-
-        <div style={{ display: "inline-block", float: "right", gap: "10px" }}>
-          <Button variant="secondary" style={{ marginRight: "10px" }}>
+        <div className="inline-block float-right gap-[10px]">
+          <Button
+            variant="secondary"
+            sx={{ marginRight: "10px" }}
+            onClick={fetchBudgetOverview}
+          >
             Refresh
           </Button>
           <Button
@@ -188,210 +105,102 @@ const Page = () => {
         </div>
       </div>
 
-      {/* Alerts */}
-
       <div>
         <Typography variant="h4">Alerts</Typography>
+        {computedBudgetData && computedBudgetData.alerts.length > 0 ? (
+          <div className="flex flex-wrap gap-3">
+            {computedBudgetData.alerts.map((a, i) => (
+              <AlertBox key={i}>{a.message}</AlertBox>
+            ))}
+          </div>
+        ) : (
+          <div className="flex mb-5">
+            <Typography variant="body1">No alerts at this time.</Typography>
+          </div>
+        )}
       </div>
-      {computed && computed.alerts.length > 0 ? (
-        <div className="flex flex-wrap gap-3">
-          {computed.alerts.map((a, i) => (
-            <span
-              key={i}
-              className="inline-flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-amber-800"
-            >
-              {a.message}
-            </span>
-          ))}
-        </div>
-      ) : (
-        <div style={{ display: "flex", marginBottom: "15px" }}>
-          <Typography variant="body1">No alerts at this time.</Typography>
-        </div>
-      )}
 
       <div>
-        <Typography variant="h4" style={{ marginTop: "20px" }}>
-          Budget Overview
-        </Typography>
-        <Typography variant="body2" style={{ display: "inline" }}>
-          Per unit offering
-        </Typography>
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
-          }}
-        >
-          <Button
-            onClick={handleMenuClick}
-            style={{
-              width: "120px",
-              height: "35px",
-              textTransform: "none",
-              outline: "1px solid",
-              outlineColor: "lightgray",
-              marginRight: "10px",
-              color: "black",
-            }}
-          >
-            This Session ⮟
-          </Button>
-          <Typography variant="body2" style={{ marginRight: "10px" }}>
-            Budget % Threshold
-          </Typography>
-          <Slider
-            value={threshold}
-            onChange={(_, newValue) => setThreshold(newValue as number)}
-            step={0.01}
-            min={0.5}
-            max={1}
-            style={{ width: "100px", marginRight: "10px" }}
-          ></Slider>
-          <Typography variant="body1" style={{ marginRight: "10px" }}>
-            {Math.round(threshold * 100)}%
-          </Typography>
-          <Button
-            style={{
-              height: "35px",
-              textTransform: "none",
-              color: "black",
-              outline: "1px solid",
-              outlineColor: "lightgray",
-            }}
-          >
-            Save
-          </Button>
+        <Typography variant="h4">Budget Overview</Typography>
+        <div className="flex items-center justify-between">
+          <Typography variant="body2">Per unit offering</Typography>
+          <div className="flex items-center gap-2">
+            <Button
+              onClick={(e) => setAnchorEl(e.currentTarget)}
+              variant="primary"
+              endIcon={<ArrowDropDownIcon />}
+              sx={{
+                textTransform: "none",
+                marginRight: "10px",
+                boxShadow: "none",
+              }}
+            >
+              This Session
+            </Button>
+            <Typography variant="body2" sx={{ marginRight: "10px" }}>
+              Budget % Threshold
+            </Typography>
+            <Slider
+              value={threshold}
+              onChange={(_, newValue) => setThreshold(newValue as number)}
+              step={0.01}
+              min={0.5}
+              max={1}
+              sx={{ width: "100px", marginRight: "10px" }}
+            />
+            <Typography variant="body1" sx={{ marginRight: "10px" }}>
+              {Math.round(threshold * 100)}%
+            </Typography>
+            <Button
+              variant="contained"
+              color="primary"
+              type="button"
+              sx={{ textTransform: "none" }}
+            >
+              Save
+            </Button>
+          </div>
         </div>
 
-        <Menu open={open} anchorEl={anchorEl} onClose={handleMenuClose}>
+        <Menu
+          open={Boolean(anchorEl)}
+          anchorEl={anchorEl}
+          onClose={() => setAnchorEl(null)}
+        >
           <MenuItem>This Session</MenuItem>
           <MenuItem>Last 7 days</MenuItem>
           <MenuItem>Last 30 days</MenuItem>
         </Menu>
-        <div style={{ marginTop: "10px" }}>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Unit</TableCell>
-                  <TableCell>Year</TableCell>
-                  <TableCell>Session</TableCell>
-                  <TableCell>Allocated Amount (Budget) </TableCell>
-                  <TableCell>Claimed Amount (Spent) </TableCell>
-                  <TableCell>% Used</TableCell>
-                  <TableCell>Forecast (Wk)</TableCell>
-                  <TableCell>Variance</TableCell>
-                  <TableCell>Status</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {computed?.rows.map((row) => (
-                  <TableRow key={row.unitCode}>
-                    <TableCell style={{ fontWeight: "bold" }}>
-                      {row.unitCode}
-                    </TableCell>
-                    <TableCell>{row.year}</TableCell>
-                    <TableCell>{row.session}</TableCell>
-                    <TableCell>{AUD.format(row.budget)}</TableCell>
-                    <TableCell>{AUD.format(row.spent)}</TableCell>
-                    <TableCell>{PCT(row.pctUsed)}</TableCell>
-                    <TableCell>---</TableCell>
-                    <TableCell>{AUD.format(row.variance)}</TableCell>
-                    <TableCell>
-                      {" "}
-                      <span
-                        className={
-                          "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium " +
-                          (row.status === "Exceeding"
-                            ? "bg-amber-100 text-amber-800"
-                            : "bg-emerald-100 text-emerald-800")
-                        }
-                      >
-                        {row.status}
-                      </span>{" "}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
+
+        <div className="mt-[10px]">
+          <UnitBudgetOverviewTable computedData={computedBudgetData} />
         </div>
       </div>
 
       <div>
-        <Typography variant="h4" style={{ marginTop: "20px" }}>
-          UC Approvals
-        </Typography>
+        <Typography variant="h4">UC Approvals</Typography>
         <Typography variant="body2">Items awaiting your review</Typography>
         <Button
           variant="contained"
           color="primary"
           size="small"
-          style={{ margin: "10px 0" }}
+          sx={{ marginY: "10px" }}
         >
           Approve All
         </Button>
-        <div>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Request Id</TableCell>
-                  <TableCell>Type</TableCell>
-                  <TableCell>Related Session</TableCell>
-                  <TableCell>By</TableCell>
-                  <TableCell>Approve</TableCell>
-                  <TableCell>Reject</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {request.map((row) => (
-                  <TableRow key={row.requestID}>
-                    <TableCell>{row.requestID}</TableCell>
-                    <TableCell>{row.type}</TableCell>
-                    <TableCell>{row.relatedSession}</TableCell>
-                    <TableCell>
-                      {row.creatorRole}: {row.creator} ({row.user_id})
-                    </TableCell>
-
-                    <TableCell>
-                      <Button variant="contained" color="primary" size="small">
-                        Approve
-                      </Button>
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="contained"
-                        color="secondary"
-                        size="small"
-                      >
-                        Reject
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        </div>
+        <CoordinatorApprovalTable pendingRequests={pendingRequests} />
       </div>
 
       <div>
-        <Typography variant="h4" style={{ marginTop: "20px" }}>
-          Requests Requiring Attention
-        </Typography>
+        <Typography variant="h4">Requests Requiring Attention</Typography>
         <Typography variant="body2">Flagged queues</Typography>
-        <div style={{ display: "flex" }}>
+        <div className="flex">
           <Typography variant="body1">No Requests.</Typography>
         </div>
       </div>
 
       <div>
-        <Typography variant="h4" style={{ marginTop: "20px" }}>
-          Marking Hours
-        </Typography>
+        <Typography variant="h4">Marking Hours</Typography>
         <Typography variant="body2">Manual allocations</Typography>
         <div>
           <Typography variant="body1">No Hours Allocated.</Typography>

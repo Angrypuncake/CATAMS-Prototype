@@ -15,7 +15,7 @@ import {
   // example: createSwapRequest, updateAllocationStatus, etc.
 } from "@/app/services/allocationService";
 
-import { getAllTutors } from "@/app/services/tutorService";
+import { getAllTutors, getTutorsByUnit } from "@/app/services/tutorService";
 
 // This is a simple “sandbox page” where you can test any service calls.
 export default function ServicesTestPage() {
@@ -44,6 +44,11 @@ export default function ServicesTestPage() {
 
   const handleFetchAllTutors = async () => {
     const data = await getAllTutors();
+    setTutorData(data);
+  };
+
+  const handleFetchTutorsByUnit = async () => {
+    const data = await getTutorsByUnit(unitCode);
     setTutorData(data);
   };
 
@@ -108,6 +113,13 @@ export default function ServicesTestPage() {
           className="bg-green-500 text-white px-4 py-2 rounded"
         >
           Handle fetch all tutors
+        </button>
+
+        <button
+          onClick={handleFetchTutorsByUnit}
+          className="bg-green-500 text-white px-4 py-2 rounded"
+        >
+          Handle fetch tutor by Unit
         </button>
         {/* Example: Add your own button for new function */}
         {/* <button onClick={handleCreateSwapRequest}>Create Swap Request</button> */}

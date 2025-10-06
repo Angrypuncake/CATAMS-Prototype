@@ -13,30 +13,13 @@ import {
 } from "@mui/material";
 import Link from "next/link";
 import type { AllocationRow } from "./types";
+import { niceTime, hoursBetween } from "./utils";
 
 interface AllocationQuickviewModalProps {
   open: boolean;
   setOpen: (open: boolean) => void;
   session?: AllocationRow | null;
 }
-
-const niceTime = (time?: string) => {
-  if (!time) return "—";
-  // Handle both ISO datetime strings and HH:MM:SS format
-  if (time.includes("T")) return time.slice(11, 16);
-  return time.slice(0, 5);
-};
-
-const hoursBetween = (start?: string | null, end?: string | null) => {
-  if (!start || !end) return "—";
-  const [sh, sm, ss] = start.split(":").map(Number);
-  const [eh, em, es] = end.split(":").map(Number);
-  const a = new Date(0, 0, 0, sh || 0, sm || 0, ss || 0);
-  const b = new Date(0, 0, 0, eh || 0, em || 0, es || 0);
-  let diff = (b.getTime() - a.getTime()) / (1000 * 60 * 60);
-  if (diff < 0) diff += 24;
-  return diff.toFixed(2);
-};
 
 const AllocationQuickviewModal: React.FC<AllocationQuickviewModalProps> = ({
   open,

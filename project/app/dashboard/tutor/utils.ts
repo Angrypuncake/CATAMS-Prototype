@@ -107,7 +107,10 @@ export const exportCSV = (
   URL.revokeObjectURL(url);
 };
 
-export function hoursBetween(start?: string | null, end?: string | null) {
+export function hoursBetween(
+  start?: string | null,
+  end?: string | null,
+): number | string {
   if (!start || !end) return 0;
   const [sh, sm, ss] = start.split(":").map(Number);
   const [eh, em, es] = end.split(":").map(Number);
@@ -135,5 +138,7 @@ export function toDate(
 
 export function niceTime(hms?: string | null) {
   if (!hms) return "—";
+  // Handle both ISO datetime strings and HH:MM:SS format
+  if (hms.includes("T")) return hms.slice(11, 16);
   return hms.slice(0, 5); // HH:MM
 }

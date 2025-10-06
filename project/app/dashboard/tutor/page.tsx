@@ -2,6 +2,7 @@
 import React, { useEffect, useState, useMemo } from "react";
 import StyledBox from "./components";
 import StyledButton from "./StyledButton";
+import AllocationsTable from "./AllocationsTable";
 import { TablePagination } from "@mui/material";
 import {
   Table,
@@ -165,152 +166,28 @@ const Page = () => {
 
       {/* ---------- My Allocations (ONLY this table opens a modal) ---------- */}
       <StyledBox>
-        <p className="font-bold text-xl mb-2">My Allocations</p>
-
-        {/* search box */}
-        <input
-          type="text"
-          placeholder="Search..."
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
+        <AllocationsTable
+          sessions={tutorSessions}
+          sortConfig={sortAllocationsConfig}
+          onSort={handleSortAllocations}
+          onRowClick={(row) => {
+            setSession(row);
+            setOpen(true);
+          }}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          onPageChange={(_e, newPage) => setPage(newPage)}
+          onRowsPerPageChange={(e) => {
+            setRowsPerPage(parseInt(e.target.value, 10));
             setPage(0);
           }}
-          className="border rounded px-2 py-1 mb-2 w-1/3"
+          search={search}
+          onSearchChange={(value) => {
+            setSearch(value);
+            setPage(0);
+          }}
+          filteredSessions={filteredSessions}
         />
-
-        <TableContainer component={Paper} className="shadow-sm">
-          <Table>
-            <TableHead>
-              <TableRow>
-                <TableCell
-                  className="font-bold text-center cursor-pointer"
-                  onClick={() => handleSortAllocations("session_date")}
-                >
-                  Date{" "}
-                  {sortAllocationsConfig?.column === "session_date"
-                    ? sortAllocationsConfig.direction === "asc"
-                      ? "↑"
-                      : "↓"
-                    : ""}
-                </TableCell>
-                <TableCell
-                  className="font-bold text-center cursor-pointer"
-                  onClick={() => handleSortAllocations("start_at")}
-                >
-                  Time{" "}
-                  {sortAllocationsConfig?.column === "start_at"
-                    ? sortAllocationsConfig.direction === "asc"
-                      ? "↑"
-                      : "↓"
-                    : ""}
-                </TableCell>
-                <TableCell
-                  className="font-bold text-center cursor-pointer"
-                  onClick={() => handleSortAllocations("unit_code")}
-                >
-                  Unit{" "}
-                  {sortAllocationsConfig?.column === "unit_code"
-                    ? sortAllocationsConfig.direction === "asc"
-                      ? "↑"
-                      : "↓"
-                    : ""}
-                </TableCell>
-
-                <TableCell
-                  className="font-bold text-center cursor-pointer"
-                  onClick={() => handleSortAllocations("location")}
-                >
-                  Location{" "}
-                  {sortAllocationsConfig?.column === "location"
-                    ? sortAllocationsConfig.direction === "asc"
-                      ? "↑"
-                      : "↓"
-                    : ""}
-                </TableCell>
-                <TableCell className="font-bold text-center">Hours</TableCell>
-                <TableCell
-                  className="font-bold text-center cursor-pointer"
-                  onClick={() => handleSortAllocations("status")}
-                >
-                  Status{" "}
-                  {sortAllocationsConfig?.column === "status"
-                    ? sortAllocationsConfig.direction === "asc"
-                      ? "↑"
-                      : "↓"
-                    : ""}
-                </TableCell>
-                <TableCell className="font-bold text-center">Actions</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {paginatedSessions.map((row, index) => (
-                <TableRow key={index}>
-                  <TableCell>
-                    {row.session_date ? row.session_date.slice(0, 10) : "N/A"}
-                  </TableCell>
-                  <TableCell>
-                    {row.start_at
-                      ? `${niceTime(row.start_at)}-${niceTime(row.end_at)}`
-                      : "N/A"}
-                  </TableCell>
-                  <TableCell>{row.unit_code ?? "N/A"}</TableCell>
-                  <TableCell>{row.location ?? "N/A"}</TableCell>
-                  <TableCell>
-                    {hoursBetween(row.start_at, row.end_at)}
-                  </TableCell>
-                  <TableCell>{row.status ?? "N/A"}</TableCell>
-                  <TableCell>
-                    <Box display="flex" justifyContent="center">
-                      <StyledButton
-                        onClick={() => {
-                          setSession(row);
-                          setOpen(true);
-                        }}
-                      >
-                        {row.actions ?? "View"}
-                      </StyledButton>
-                    </Box>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <TablePagination
-            component="div"
-            count={filteredSessions.length}
-            page={page}
-            onPageChange={(_e, newPage) => setPage(newPage)}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={(e) => {
-              setRowsPerPage(parseInt(e.target.value, 10));
-              setPage(0);
-            }}
-          />
-        </TableContainer>
-        <div className="justify-end items-center flex gap-5 mt-5">
-          <p>You can export the above data in CSV or JSON formats</p>
-          <StyledButton
-            size="medium"
-            onClick={() =>
-              exportCSV(
-                tutorSessions as unknown as Record<string, string | number>[],
-              )
-            }
-          >
-            Export as CSV
-          </StyledButton>
-          <StyledButton
-            size="medium"
-            onClick={() =>
-              exportJSON(
-                tutorSessions as unknown as Record<string, string | number>[],
-              )
-            }
-          >
-            Export as JSON
-          </StyledButton>
-        </div>
       </StyledBox>
 
       {/* ---------- Other sections (unchanged, no modals) ---------- */}

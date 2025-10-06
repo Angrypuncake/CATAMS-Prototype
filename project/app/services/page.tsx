@@ -15,7 +15,7 @@ import {
   // example: createSwapRequest, updateAllocationStatus, etc.
 } from "@/app/services/allocationService";
 
-import { getAllTutors, getTutorsByUnit } from "@/app/services/tutorService";
+import { getAllTutors, getTutorsByUnit } from "@/app/services/userService";
 
 // This is a simple “sandbox page” where you can test any service calls.
 export default function ServicesTestPage() {

@@ -29,9 +29,12 @@ export interface AllocationBase {
   start_at: string | null;
   end_at: string | null;
   unit_code: string | null;
-  location?: string | null;
+  location: string | null;
   status?: string | null;
   note?: string | null;
+  unit_name: string | null;
+  allocated_hours: number | string | null;
+  activity_name: string | null;
 }
 
 export interface TutorAllocationRow extends AllocationBase {
@@ -43,13 +46,10 @@ export interface AdminAllocationRow extends AllocationBase {
   first_name: string | null;
   last_name: string | null;
   email: string | null;
-  unit_name: string | null;
   activity_type: string | null;
-  activity_name: string | null;
   paycode_id?: string | null;
   teaching_role?: string | null;
   mode?: "scheduled" | "unscheduled" | string | null;
-  allocated_hours?: number | string | null;
   allocation_activity_id?: number | null;
 }
 

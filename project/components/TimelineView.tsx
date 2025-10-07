@@ -10,9 +10,9 @@ type CellValue = CellAllocation | CellAllocation[] | undefined;
 
 export interface ActivityRow {
     id: string;
-    name: string;
-    activityType?: string;
-    paycode?: string;
+    name: string;             // e.g. "COMP2022 – .../Tutorial-01"
+    activityType?: string;    // e.g. "Tutorial"
+    paycode?: string;         // e.g. "LAB2"
     flexTotal?: number;
     allocations: Record<WeekKey, CellValue>;
 }
@@ -44,18 +44,12 @@ export function buildWeeksRange(start: number, end: number, termLabel = "S1"): W
 
 /* ===================== Component ===================== */
 /**
- * Layout:
- * ┌───────────────────────────────────────────── container (bordered, full width)
- * │  grid: [ LEFT (fixed width) | RIGHT (fills, horizontal scroll) ]
- * │  ├─ LEFT
- * │  │   ├─ header (Activity + extra headers)
- * │  │   └─ rows (Activity stub + extra cells)
- * │  └─ RIGHT  (single overflow-x scroll div shared by header+rows)
- * │      ├─ weeks header (sticky within RIGHT)
- * │      └─ weeks rows
+ * Grid: [ LEFT rail (fixed width) | RIGHT weeks (fills, horizontal scroll) ]
+ * LEFT has its own header + rows (no empty block).
+ * RIGHT has a single overflow-x area with header + rows, always aligned.
  */
 export function TimelineView<A extends ActivityRow = ActivityRow>({
-    title = "Timeline",
+    title = "All Allocations — Timeline",
     weeks,
     activities,
     extraColumns = [],
@@ -63,18 +57,16 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
     onCellClick,
     className,
 }: TimelineViewProps<A>) {
-    // match table rhythm so toggling doesn't jump
-    const headerH = density === "compact" ? 40 : 44;
-    const rowH = density === "compact" ? 40 : 48;
+    // match your table rhythm so toggling doesn't jump
+    const headerH = density === "compact" ? 40 : 44; // px
+    const rowH = density === "compact" ? 40 : 48;    // px
 
     // widths
-    const COL_ACTIVITY = 360;         // fixed activity column
-    const COL_EXTRA = 140;            // each extra column (fixed with activity)
-    const COL_WEEK = 120;             // each week cell (scrollable area)
+    const COL_ACTIVITY = 360;  // left "Activity" column width
+    const COL_EXTRA = 140;     // each extra column width
+    const COL_WEEK = 120;      // each week column width
 
-    // left pane total width
-    const leftWidthPx =
-        COL_ACTIVITY + extraColumns.length * COL_EXTRA;
+    const leftWidthPx = COL_ACTIVITY + extraColumns.length * COL_EXTRA;
 
     const leftGridTemplate = useMemo(() => {
         const extras = extraColumns.map(() => `${COL_EXTRA}px`).join(" ");
@@ -101,6 +93,24 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
         [weeks, headerH]
     );
 
+    const tooltipContent = (act: ActivityRow, w: WeekDef, cellList: CellAllocation[]) => (
+        <div className="text-[12px] leading-5">
+            {cellList.map((c, i) => (
+                <div key={i} className="mb-1">
+                    <div className="font-semibold">
+                        {c.tutor} • {c.hours}h {c.role ? `• ${c.role}` : ""}
+                    </div>
+                    {c.notes && <div className="text-gray-700">{c.notes}</div>}
+                </div>
+            ))}
+            <div className="mt-1 border-t pt-1 text-[11px] text-gray-600">
+                <div>{act.activityType ? `${act.activityType}` : "Activity"}{act.paycode ? ` • Pay ${act.paycode}` : ""}</div>
+                <div className="truncate max-w-[260px]">{act.name}</div>
+                <div className="text-gray-500">— {w.label}</div>
+            </div>
+        </div>
+    );
+
     return (
         <div className={cx("w-full", className)}>
             <div className="mb-2 flex items-center justify-between">
@@ -108,55 +118,41 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
                 <div className="text-xs text-gray-500">Rows: activities • Columns: weeks</div>
             </div>
 
-            {/* Outer container fixed to page width — no horizontal zooming needed */}
+            {/* Outer container fixed to page width — only weeks scroll horizontally */}
             <div className="border rounded overflow-hidden">
-                <div
-                    className="grid"
-                    style={{ gridTemplateColumns: `${leftWidthPx}px 1fr` }}
-                >
-                    {/* LEFT HEADER (fixed) */}
-                    <div
-                        className="bg-gray-50 sticky top-0 z-30"
-                        style={{ height: headerH }}
-                    >
-                        <div
-                            className="grid"
-                            style={{ gridTemplateColumns: leftGridTemplate }}
-                        >
-                            <div className="border-b border-gray-200 px-4 flex items-center text-xs font-semibold">
-                                Activity
-                            </div>
-                            {extraColumns.map((col) => (
+                <div className="grid" style={{ gridTemplateColumns: `${leftWidthPx}px 1fr` }}>
+                    {/* LEFT rail: header + rows */}
+                    <div>
+                        {/* Left header */}
+                        <div className="bg-gray-50 sticky top-0 z-30">
+                            <div className="grid" style={{ gridTemplateColumns: leftGridTemplate }}>
                                 <div
-                                    key={col.key}
-                                    className="border-b border-gray-200 px-3 flex items-center text-xs font-semibold"
+                                    className="border-b border-gray-200 px-4 flex items-center text-xs font-semibold"
+                                    style={{ height: headerH }}
                                 >
-                                    {col.header}
+                                    Activity
                                 </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* RIGHT (shared horizontal scroll for header + rows) */}
-                    <div className="overflow-x-auto">
-                        {/* Weeks header inside the scrollable area */}
-                        <div
-                            className="grid bg-gray-50 sticky top-0 z-20"
-                            style={{ gridTemplateColumns: weeksTemplate, height: headerH }}
-                        >
-                            {WeekHeaderCells}
-                        </div>
-
-                        {/* BODY: render rows */}
-                        {activities.map((act, idx) => (
-                            <div key={act.id} className="grid" style={{ gridTemplateColumns: `${leftWidthPx}px 1fr` }}>
-                                {/* LEFT row: Activity + extra columns (fixed) */}
-                                <div className={cx("bg-white", idx % 2 === 1 && "bg-gray-50/40")}>
+                                {extraColumns.map((col) => (
                                     <div
-                                        className="grid"
-                                        style={{ gridTemplateColumns: leftGridTemplate }}
+                                        key={col.key}
+                                        className="border-b border-gray-200 px-3 flex items-center text-xs font-semibold"
+                                        style={{ height: headerH }}
                                     >
-                                        {/* Activity stub */}
+                                        {col.header}
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Left rows */}
+                        <div>
+                            {activities.map((act, idx) => (
+                                <div
+                                    key={act.id}
+                                    className={cx(idx % 2 === 1 && "bg-gray-50/40")}
+                                >
+                                    <div className="grid" style={{ gridTemplateColumns: leftGridTemplate }}>
+                                        {/* Activity cell */}
                                         <div
                                             className="border-t border-gray-200 px-4 flex items-center gap-3 text-sm"
                                             style={{ height: rowH }}
@@ -178,7 +174,7 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
                                             </div>
                                         </div>
 
-                                        {/* Extra column cells */}
+                                        {/* Extra columns */}
                                         {extraColumns.map((col) => (
                                             <div
                                                 key={col.key}
@@ -190,46 +186,41 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
                                         ))}
                                     </div>
                                 </div>
+                            ))}
+                        </div>
+                    </div>
 
-                                {/* RIGHT row: weeks cells inside the SAME scroll plane */}
-                                <div className={cx(idx % 2 === 1 && "bg-gray-50/40")}>
-                                    <div
-                                        className="grid"
-                                        style={{ gridTemplateColumns: weeksTemplate }}
-                                    >
+                    {/* RIGHT weeks: single horizontal scroller with header + rows */}
+                    <div className="overflow-x-auto">
+                        {/* Weeks header (inside the scroller) */}
+                        <div
+                            className="grid bg-gray-50 sticky top-0 z-20"
+                            style={{ gridTemplateColumns: weeksTemplate, height: headerH }}
+                        >
+                            {WeekHeaderCells}
+                        </div>
+
+                        {/* Weeks rows */}
+                        <div>
+                            {activities.map((act, idx) => (
+                                <div key={act.id} className={cx(idx % 2 === 1 && "bg-gray-50/40")}>
+                                    <div className="grid" style={{ gridTemplateColumns: weeksTemplate }}>
                                         {weeks.map((w) => {
                                             const raw = act.allocations[w.key];
                                             const items: CellAllocation[] = Array.isArray(raw) ? raw : raw ? [raw] : [];
 
-                                            const tooltip =
-                                                items.length === 0 ? (
-                                                    "No allocation"
-                                                ) : (
-                                                    <div>
-                                                        {items.map((c, i) => (
-                                                            <div key={i} className="mb-1">
-                                                                <div className="font-medium text-[12px] leading-4">
-                                                                    {c.tutor} • {c.hours}h {c.role ? `• ${c.role}` : ""}
-                                                                </div>
-                                                                {c.notes && (
-                                                                    <div className="text-[11px] text-gray-600">{c.notes}</div>
-                                                                )}
-                                                            </div>
-                                                        ))}
-                                                        <div className="text-[11px] text-gray-500 mt-1">
-                                                            {act.name} — {w.label}
-                                                        </div>
-                                                    </div>
-                                                );
-
                                             return (
                                                 <Tooltip
                                                     key={`${act.id}_${w.key}`}
-                                                    title={tooltip}
+                                                    title={
+                                                        items.length
+                                                            ? tooltipContent(act, w, items)
+                                                            : "No allocation"
+                                                    }
                                                     arrow
                                                     placement="top"
                                                     disableInteractive
-                                                    enterDelay={150}
+                                                    enterDelay={120}
                                                     componentsProps={{
                                                         tooltip: {
                                                             sx: {
@@ -239,8 +230,8 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
                                                                 borderColor: "divider",
                                                                 boxShadow: 4,
                                                                 fontSize: 12,
-                                                                p: 1,
-                                                                maxWidth: 280,
+                                                                p: 1.25,
+                                                                maxWidth: 320,
                                                             },
                                                         },
                                                         arrow: { sx: { color: "background.paper" } },
@@ -279,8 +270,8 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
                                         })}
                                     </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 </div>
             </div>

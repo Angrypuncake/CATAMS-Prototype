@@ -4,16 +4,23 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import {
   AllocationRow,
-  ApiResult,
-  TutorOption,
   PaycodeOption,
   OccurrenceRow,
-  SavePayload,
   PropagationPayload,
   STATUS_OPTIONS,
-  DOWS,
-  Dow,
 } from "./types";
+
+import { SaveAllocationPayload, Dow } from "@/app/_types/allocations";
+import { Tutor } from "@/app/_types/tutor";
+
+import {
+  getAdminAllocations,
+  patchAdminAllocation,
+} from "@/app/services/allocationService";
+
+import { getTutors } from "@/app/services/userService";
+
+import { getPaycodes } from "@/app/services/paycodeService";
 
 import {
   toDisplayTime,
@@ -44,15 +51,14 @@ function TutorCombo({
   valueId,
   onChange,
 }: {
-  options: TutorOption[];
+  options: Tutor[];
   valueId: number | null;
-  onChange: (opt: TutorOption | null) => void;
+  onChange: (opt: Tutor | null) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const boxRef = React.useRef<HTMLDivElement | null>(null);
   useOutsideClick(boxRef, () => setOpen(false));
-
   const selected = useMemo(
     () => options.find((t) => t.user_id === valueId) || null,
     [options, valueId],
@@ -228,7 +234,6 @@ function PropagationPanel({
     "overwrite",
   );
   const [moveDow, setMoveDow] = React.useState<boolean>(false);
-  console.log("PropagationPanel activityId", activityId);
 
   // Fetch occurrences for this activity
   React.useEffect(() => {
@@ -517,8 +522,8 @@ function Drawer({
   open: boolean;
   onClose: () => void;
   row: AllocationRow | null;
-  onSave: (updated: SavePayload) => void;
-  tutors: TutorOption[];
+  onSave: (updated: SaveAllocationPayload) => void;
+  tutors: Tutor[];
   paycodes: PaycodeOption[];
 }) {
   // If backend sends mode use it; otherwise infer from presence of session fields
@@ -933,7 +938,7 @@ export default function AdminAllAllocationsPage() {
   const [total, setTotal] = useState(0);
 
   // options
-  const [tutors, setTutors] = useState<TutorOption[]>([]);
+  const [tutors, setTutors] = useState<Tutor[]>([]);
   const [paycodes, setPaycodes] = useState<PaycodeOption[]>([]);
 
   // drawer
@@ -943,19 +948,15 @@ export default function AdminAllAllocationsPage() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const params = new URLSearchParams();
-      params.set("page", String(page));
-      params.set("limit", String(limit));
-      params.set("mode", tab); // fetch only the current tab
-      if (q) params.set("q", q);
-      if (unitCode) params.set("unit_code", unitCode);
-      if (activityType) params.set("activity_type", activityType);
-      if (status) params.set("status", status);
-
-      const url = `/api/admin/allocations?${params.toString()}`;
-      const r = await fetch(url);
-      if (!r.ok) throw new Error(`GET ${url} failed`);
-      const j = (await r.json()) as ApiResult;
+      const j = await getAdminAllocations({
+        page,
+        limit,
+        tab,
+        q,
+        unitCode,
+        activityType,
+        status,
+      });
       setRows(j.data || []);
       setTotal(j.total || 0);
     } catch (e) {
@@ -966,7 +967,6 @@ export default function AdminAllAllocationsPage() {
       setLoading(false);
     }
   }, [page, limit, tab, q, unitCode, activityType, status]);
-
   // Trigger reload when tab changes
   useEffect(() => {
     setPage(1);
@@ -976,12 +976,9 @@ export default function AdminAllAllocationsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const [t, p] = await Promise.all([
-          fetch("/api/admin/tutors").then((r) => r.json()),
-          fetch("/api/admin/paycodes").then((r) => r.json()),
-        ]);
-        setTutors(t.data || []);
-        setPaycodes(p.data || []);
+        const [t, p] = await Promise.all([getTutors(), getPaycodes()]);
+        setTutors(t || []);
+        setPaycodes(p || []);
       } catch (e) {
         console.error(e);
       }
@@ -1008,25 +1005,10 @@ export default function AdminAllAllocationsPage() {
     setDrawerOpen(true);
   }
 
-  async function onSave(updated: SavePayload) {
+  async function onSave(updated: SaveAllocationPayload) {
     if (!activeRow) return;
-
     try {
-      const res = await fetch(`/api/admin/allocations/${activeRow.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(updated),
-      });
-      console.log("onSave() called with", updated);
-
-      if (!res.ok) {
-        console.error("Failed to save allocation", await res.text());
-        return;
-      }
-
-      const saved = await res.json();
-
-      // Refresh the table from backend
+      await patchAdminAllocation(activeRow.id, updated);
       await fetchData();
     } catch (err) {
       console.error("Error saving allocation", err);

@@ -1,4 +1,5 @@
-import { AllocationRow, Dow } from "./types";
+import { AllocationRow } from "./types";
+import { Dow } from "@/app/_types/allocations";
 
 export function pad2(n: number) {
   return n.toString().padStart(2, "0");

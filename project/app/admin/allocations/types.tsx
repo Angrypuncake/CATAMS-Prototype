@@ -1,4 +1,8 @@
-import { AdminAllocationRow } from "@/app/_types/allocations";
+import {
+  AdminAllocationRow,
+  SaveAllocationPayload,
+  Dow,
+} from "@/app/_types/allocations";
 
 export type AllocationRow = AdminAllocationRow;
 
@@ -9,12 +13,12 @@ export type ApiResult = {
   data: AllocationRow[];
 };
 
-export type TutorOption = {
-  user_id: number;
-  first_name: string | null;
-  last_name: string | null;
-  email: string | null;
-};
+// export type TutorOption = {
+//   user_id: number;
+//   first_name: string | null;
+//   last_name: string | null;
+//   email: string | null;
+// };
 
 export type PaycodeOption = {
   code: string;
@@ -29,16 +33,7 @@ export type OccurrenceRow = {
   status?: string | null; // optional, if you return it
 };
 
-export type SavePayload = Partial<AllocationRow> & {
-  apply_all_for_activity?: boolean;
-  propagate_occurrence_ids?: number[] | null;
-
-  propagate_fields?: Array<
-    "tutor" | "paycode" | "start" | "end" | "note" | "status" | "location"
-  >;
-  propagate_notes_mode?: "overwrite" | "append";
-  propagate_dow?: Dow;
-};
+export type SavePayload = SaveAllocationPayload;
 
 export type PropagationPayload = {
   fields: Array<
@@ -59,6 +54,3 @@ export const STATUS_OPTIONS = [
   "Hours for Review",
   "Rejected by Approver",
 ] as const;
-
-export const DOWS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
-export type Dow = (typeof DOWS)[number];

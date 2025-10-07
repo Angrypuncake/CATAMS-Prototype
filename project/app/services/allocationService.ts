@@ -1,4 +1,5 @@
 import axios from "@/lib/axios";
+import type { SaveAllocationPayload } from "@/app/_types/allocations";
 
 export interface Allocation {
   id: string;
@@ -41,3 +42,34 @@ export async function getAllocationsByUnit(
 // Delete an allocation
 
 // Update allocation status
+
+/* ------------------ ADMIN ------------------ */
+export async function getAdminAllocations(params: {
+  page?: number;
+  limit?: number;
+  tab?: string;
+  q?: string;
+  unitCode?: string;
+  activityType?: string;
+  status?: string;
+}) {
+  const search = new URLSearchParams();
+  if (params.page) search.set("page", String(params.page));
+  if (params.limit) search.set("limit", String(params.limit));
+  if (params.tab) search.set("mode", params.tab);
+  if (params.q) search.set("q", params.q);
+  if (params.unitCode) search.set("unit_code", params.unitCode);
+  if (params.activityType) search.set("activity_type", params.activityType);
+  if (params.status) search.set("status", params.status);
+
+  const res = await axios.get(`/admin/allocations?${search.toString()}`);
+  return res.data;
+}
+
+export async function patchAdminAllocation(
+  id: string | number,
+  updated: SaveAllocationPayload,
+) {
+  const res = await axios.patch(`/admin/allocations/${id}`, updated);
+  return res.data;
+}

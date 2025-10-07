@@ -6,6 +6,8 @@ import React from "react";
  * - Blue bar: logo (left) + uppercase white title (right) — e.g., CATAMS / SYSTEM ADMIN
  * - Gold bar: NO menus — right side shows actions (e.g., HELP, Logout)
  * - Tailwind-only, accessible, responsive
+ *
+ * NOTE: If you don't pass logoSrc, it defaults to "/usyd_logo.png" (from /public).
  */
 
 export type NavAction = {
@@ -16,8 +18,8 @@ export type NavAction = {
 };
 
 export interface CatamsNavProps {
-    /** URL or data URL for the USYD/CATAMS logo */
-    logoSrc: string;
+    /** URL or path to the logo (optional). Defaults to "/usyd_logo.png". */
+    logoSrc?: string;
     /** Right-aligned title on the blue bar (e.g., "CATAMS", "SYSTEM ADMIN") */
     rightTitle: string;
     /** Right-side buttons on the gold bar (e.g., [{label: "HELP"}, {label: "Logout"}]) */
@@ -25,6 +27,8 @@ export interface CatamsNavProps {
     /** Container width class; defaults to max-w-6xl */
     maxWidthClass?: string;
     className?: string;
+    /** Optional alt text for the logo */
+    logoAlt?: string;
 }
 
 function cx(...xs: Array<string | false | null | undefined>) {
@@ -56,13 +60,20 @@ export default function CatamsNav({
     actions = [],
     maxWidthClass = "max-w-6xl",
     className,
+    logoAlt = "CATAMS",
 }: CatamsNavProps) {
+    // If no logoSrc provided, default to /usyd_logo.png under /public
+    // If you use a basePath and want to serve static assets under it,
+    // you can prefix via NEXT_PUBLIC_BASE_PATH if you like.
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
+    const computedLogoSrc = `${basePath}${logoSrc ?? "/usyd_logo.png"}`;
+
     return (
         <header className={cx("w-full shadow-sm", className)}>
             {/* Blue top bar */}
             <div className="bg-[#003366]">
                 <div className={cx(maxWidthClass, "mx-auto flex items-center justify-between px-4 py-3 gap-4")}>
-                    <img src={logoSrc} alt="University of Sydney" className="h-10 w-auto select-none" />
+                    <img src={computedLogoSrc} alt={logoAlt} className="h-10 w-auto select-none" />
                     <div className="text-white text-sm sm:text-base md:text-lg font-semibold tracking-wide uppercase">
                         {rightTitle}
                     </div>

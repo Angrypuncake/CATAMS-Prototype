@@ -4,40 +4,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { AdminAllocationRow } from "@/app/_types/allocations";
 
 /** ------------ Types that match /api/admin/allocations response ------------ */
-type AllocationRow = {
-  id: number;
-  user_id: number | null;
-  first_name: string | null;
-  last_name: string | null;
-  email: string | null;
-
-  unit_code: string | null;
-  unit_name: string | null;
-
-  session_date: string | null; // ISO "YYYY-MM-DD..." or null
-  start_at: string | null; // "HH:MM:SS" or null
-  end_at: string | null; // "HH:MM:SS" or null
-  location: string | null;
-
-  activity_type: string | null;
-  activity_name: string | null;
-
-  status: string | null;
-  note: string | null;
-
-  teaching_role?: string | null;
-  paycode_id?: string | null;
-
-  // NEW fields to support unscheduled allocations
-  mode?: "scheduled" | "unscheduled" | string | null;
-  allocated_hours?: number | string | null;
-  allocation_activity_id?: number | null; // a.activity_id alias
-};
-
-type UpdatedRow = Partial<AllocationRow> & {
-  apply_all_for_activity?: boolean;
-  propagate_occurrence_ids?: number[] | null;
-};
+type AllocationRow = AdminAllocationRow;
 
 type ApiResult = {
   page: number;

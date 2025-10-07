@@ -2,6 +2,15 @@
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
+/* ===== Timeline import (relative from app/admin/allocations/page.tsx) ===== */
+import {
+  TimelineView,
+  buildWeeksRange,
+  type WeekDef,
+  type ActivityRow as TLActivityRow,
+  type CellAllocation as TLCellAllocation,
+} from "../../../components/TimelineView";
+
 /** ------------ Types that match /api/admin/allocations response ------------ */
 type AllocationRow = {
   id: number;
@@ -502,7 +511,7 @@ function PropagationPanel({
             <label className="inline-flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
-                checked={fields.includes("status")}
+                checked={fields.includes("status" as const)}
                 onChange={() => toggleField("status" as const)}
               />
               Status
@@ -511,7 +520,7 @@ function PropagationPanel({
             <label className="inline-flex items-center gap-2 text-sm">
               <input
                 type="checkbox"
-                checked={fields.includes("location")}
+                checked={fields.includes("location" as const)}
                 onChange={() => toggleField("location" as const)}
               />
               Location
@@ -653,8 +662,6 @@ function Drawer({
     notesMode: "overwrite",
     occurrenceIds: [],
   });
-
-  // console.log("Drawer row", row);
 
   const [form, setForm] = useState({
     tutorId: null as number | null,
@@ -921,18 +928,6 @@ function Drawer({
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium mb-1">Notes</label>
-                <textarea
-                  className="w-full border rounded px-3 py-2 min-h-[84px]"
-                  value={form.note}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, note: e.target.value }))
-                  }
-                  placeholder="Internal note…"
-                />
-              </div>
-
               <div
                 className={`grid grid-cols-3 gap-3 ${form.manualHoursOnly ? "opacity-60 pointer-events-none" : ""}`}
               >
@@ -1037,6 +1032,83 @@ function Drawer({
   );
 }
 
+/* ======================= rows -> timeline helpers ======================= */
+function startOfWeekMonday(d: Date) {
+  const day = d.getDay(); // 0=Sun..6=Sat
+  const offset = (day + 6) % 7; // Mon=0
+  const out = new Date(d);
+  out.setHours(0, 0, 0, 0);
+  out.setDate(out.getDate() - offset);
+  return out;
+}
+function parseDateSafe(iso: string | null) {
+  if (!iso) return null;
+  const dt = new Date(iso.slice(0, 10)); // prevent TZ shifts
+  return isNaN(dt.getTime()) ? null : dt;
+}
+function hoursFromTimes(start_at: string | null, end_at: string | null) {
+  if (!start_at || !end_at) return 2; // fallback
+  const today = new Date().toISOString().slice(0, 10);
+  const s = new Date(`${today}T${start_at.slice(0, 8)}`);
+  const e = new Date(`${today}T${end_at.slice(0, 8)}`);
+  const ms = e.getTime() - s.getTime();
+  return ms > 0 ? Math.round((ms / 36e5) * 10) / 10 : 2;
+}
+function weekKeyFor(date: Date, termStart: Date) {
+  const diffDays = Math.floor((date.getTime() - termStart.getTime()) / 86400000);
+  const wk = Math.floor(diffDays / 7);
+  return `W${wk}`;
+}
+function activityKey(r: AllocationRow) {
+  return [r.unit_code ?? "", r.activity_type ?? "", r.activity_name ?? ""]
+    .filter(Boolean)
+    .join(" • ");
+}
+function activityName(r: AllocationRow) {
+  return [r.unit_code ?? "", r.activity_name ?? r.activity_type ?? "Activity"]
+    .filter(Boolean)
+    .join(" – ");
+}
+
+/** Convert table rows -> Timeline activities (scheduled rows only) */
+function rowsToTimelineActivities(
+  rows: AllocationRow[],
+  opts: { termStart: Date; termLabel: string }
+): TLActivityRow[] {
+  const map = new Map<string, TLActivityRow>();
+  for (const r of rows) {
+    const isScheduled = r.mode === "scheduled" || (r.mode == null && !!r.session_date);
+    if (!isScheduled) continue;
+    const date = parseDateSafe(r.session_date);
+    if (!date) continue;
+
+    const id = activityKey(r) || String(r.id);
+    if (!map.has(id)) {
+      map.set(id, {
+        id,
+        name: activityName(r) || id,
+        activityType: r.activity_type ?? undefined,
+        paycode: r.paycode_id ?? undefined,
+        allocations: {},
+      });
+    }
+    const act = map.get(id)!;
+    const wk = weekKeyFor(date, opts.termStart);
+
+    const cell: TLCellAllocation = {
+      tutor: labelName(r),
+      hours: hoursFromTimes(r.start_at, r.end_at),
+      role: r.teaching_role ?? undefined,
+      notes: r.location ?? r.note ?? undefined,
+    };
+
+    const existing = act.allocations[wk];
+    if (!existing) act.allocations[wk] = [cell];
+    else act.allocations[wk] = Array.isArray(existing) ? [...existing, cell] : [existing, cell];
+  }
+  return Array.from(map.values());
+}
+
 /** ------------------------------ Main Page ------------------------------ */
 export default function AdminAllAllocationsPage() {
   // Filters
@@ -1049,6 +1121,8 @@ export default function AdminAllAllocationsPage() {
 
   // scheduled toggle
   const [tab, setTab] = useState<"scheduled" | "unscheduled">("scheduled");
+  // view toggle
+  const [viewMode, setViewMode] = useState<"table" | "timeline">("table");
 
   // data
   const [loading, setLoading] = useState(false);
@@ -1126,6 +1200,22 @@ export default function AdminAllAllocationsPage() {
 
   const visible = tab === "scheduled" ? scheduledRows : unscheduledRows;
 
+  /* ------- Timeline derivations (only meaningful for scheduled tab) ------- */
+  const termStart = useMemo(() => {
+    // Use earliest visible session_date; fallback = today
+    const dts = visible
+      .map((r) => parseDateSafe(r.session_date))
+      .filter((d): d is Date => !!d);
+    const min = dts.length ? new Date(Math.min(...dts.map((d) => d.getTime()))) : new Date();
+    return startOfWeekMonday(min);
+  }, [visible]);
+
+  const weeks: WeekDef[] = useMemo(() => buildWeeksRange(-6, 13, "S1"), []);
+  const timelineActivities: TLActivityRow[] = useMemo(
+    () => rowsToTimelineActivities(visible, { termStart, termLabel: "S1" }),
+    [visible, termStart]
+  );
+
   function onEdit(row: AllocationRow) {
     setActiveRow(row);
     setDrawerOpen(true);
@@ -1147,9 +1237,6 @@ export default function AdminAllAllocationsPage() {
         return;
       }
 
-      const saved = await res.json();
-
-      // Refresh the table from backend
       await fetchData();
     } catch (err) {
       console.error("Error saving allocation", err);
@@ -1219,8 +1306,8 @@ export default function AdminAllAllocationsPage() {
         </button>
       </div>
 
-      {/* Scheduled / Unscheduled toggle */}
-      <div className="mb-3">
+      {/* Scheduled / Unscheduled + View toggle */}
+      <div className="mb-3 flex items-center justify-between">
         <div className="inline-flex rounded-full border overflow-hidden">
           <button
             className={`px-4 py-1 text-sm ${tab === "scheduled" ? "bg-blue-600 text-white" : "bg-white"}`}
@@ -1235,129 +1322,185 @@ export default function AdminAllAllocationsPage() {
             Unscheduled
           </button>
         </div>
+
+        <div className="inline-flex rounded-full border overflow-hidden">
+          <button
+            className={`px-4 py-1 text-sm ${viewMode === "table" ? "bg-blue-600 text-white" : "bg-white"}`}
+            onClick={() => setViewMode("table")}
+          >
+            Table
+          </button>
+          <button
+            className={`px-4 py-1 text-sm border-l ${viewMode === "timeline" ? "bg-blue-600 text-white" : "bg-white"}`}
+            onClick={() => setViewMode("timeline")}
+          >
+            Timeline
+          </button>
+        </div>
       </div>
 
-      {/* Table */}
-      <div className="overflow-auto border rounded">
-        <table className="min-w-[1100px] w-full text-sm">
-          <thead className="bg-gray-50">
-            {tab === "scheduled" ? (
-              <tr className="text-left">
-                <th className="px-3 py-2 w-[140px]">Date*</th>
-                <th className="px-3 py-2 w-[110px]">Start*</th>
-                <th className="px-3 py-2">Unit</th>
-                <th className="px-3 py-2">Activity</th>
-                <th className="px-3 py-2">Tutor</th>
-                <th className="px-3 py-2">Paycode</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2">Location</th>
-                <th className="px-3 py-2">Note</th>
-                <th className="px-3 py-2 w-[80px]">Edit</th>
-              </tr>
-            ) : (
-              <tr className="text-left">
-                <th className="px-3 py-2 w-[180px]">Allocated Hours*</th>
-                <th className="px-3 py-2">Unit</th>
-                <th className="px-3 py-2">Activity</th>
-                <th className="px-3 py-2">Tutor</th>
-                <th className="px-3 py-2">Paycode</th>
-                <th className="px-3 py-2">Status</th>
-                <th className="px-3 py-2">Note</th>
-                <th className="px-3 py-2 w-[80px]">Edit</th>
-              </tr>
-            )}
-          </thead>
-          <tbody>
-            {loading && (
-              <tr>
-                <td colSpan={8} className="px-3 py-6 text-center text-gray-500">
-                  Loading…
-                </td>
-              </tr>
-            )}
-            {!loading && visible.length === 0 && (
-              <tr>
-                <td colSpan={8} className="px-3 py-6 text-center text-gray-500">
-                  No rows
-                </td>
-              </tr>
-            )}
-            {!loading &&
-              visible.map((r) => (
-                <tr key={r.id} className="border-t">
-                  {tab === "scheduled" ? (
-                    <>
-                      <td className="px-3 py-2">
-                        <div className="text-gray-900">
-                          {toInputDate(r.session_date) || "—"}
-                        </div>
-                      </td>
-                      <td className="px-3 py-2">
-                        <div className="text-gray-900">
-                          {toDisplayTime(r.start_at) || "—"}
-                        </div>
-                        {r.end_at && (
-                          <div className="text-xs text-gray-500">
-                            End: {r.end_at?.slice(0, 8)}
-                          </div>
-                        )}
-                      </td>
-                    </>
-                  ) : (
-                    <td className="px-3 py-2">
-                      <div className="text-gray-900">
-                        {r.allocated_hours != null && r.allocated_hours !== ""
-                          ? String(r.allocated_hours)
-                          : "—"}
-                      </div>
-                    </td>
-                  )}
-                  <td className="px-3 py-2">
-                    <div className="font-medium">{r.unit_code ?? "—"}</div>
-                    <div className="text-xs text-gray-500">
-                      {r.unit_name ?? ""}
-                    </div>
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="font-medium">{r.activity_type ?? "—"}</div>
-                    <div className="text-xs text-gray-500">
-                      {r.activity_name ?? ""}
-                    </div>
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="font-medium">{labelName(r)}</div>
-                    <div className="text-xs text-gray-500">{r.email ?? ""}</div>
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="font-medium">{r.paycode_id ?? "—"}</div>
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="whitespace-pre-line">{r.status ?? "—"}</div>
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="whitespace-pre-line">
-                      {r.location ?? "—"}
-                    </div>
-                  </td>
-                  <td className="px-3 py-2">
-                    <div className="truncate max-w-[360px]">
-                      {r.note ?? "—"}
-                    </div>
-                  </td>
-                  <td className="px-3 py-2">
-                    <button
-                      onClick={() => onEdit(r)}
-                      className="px-3 py-1 rounded border hover:bg-gray-50"
-                      title="Edit"
-                    >
-                      Edit
-                    </button>
+      {/* Table or Timeline */}
+      {viewMode === "table" || tab === "unscheduled" ? (
+        /* Table (unchanged) */
+        <div className="overflow-auto border rounded">
+          <table className="min-w-[1100px] w-full text-sm">
+            <thead className="bg-gray-50">
+              {tab === "scheduled" ? (
+                <tr className="text-left">
+                  <th className="px-3 py-2 w-[140px]">Date*</th>
+                  <th className="px-3 py-2 w-[110px]">Start*</th>
+                  <th className="px-3 py-2">Unit</th>
+                  <th className="px-3 py-2">Activity</th>
+                  <th className="px-3 py-2">Tutor</th>
+                  <th className="px-3 py-2">Paycode</th>
+                  <th className="px-3 py-2">Status</th>
+                  <th className="px-3 py-2">Location</th>
+                  <th className="px-3 py-2">Note</th>
+                  <th className="px-3 py-2 w-[80px]">Edit</th>
+                </tr>
+              ) : (
+                <tr className="text-left">
+                  <th className="px-3 py-2 w-[180px]">Allocated Hours*</th>
+                  <th className="px-3 py-2">Unit</th>
+                  <th className="px-3 py-2">Activity</th>
+                  <th className="px-3 py-2">Tutor</th>
+                  <th className="px-3 py-2">Paycode</th>
+                  <th className="px-3 py-2">Status</th>
+                  <th className="px-3 py-2">Note</th>
+                  <th className="px-3 py-2 w-[80px]">Edit</th>
+                </tr>
+              )}
+            </thead>
+            <tbody>
+              {loading && (
+                <tr>
+                  <td colSpan={8} className="px-3 py-6 text-center text-gray-500">
+                    Loading…
                   </td>
                 </tr>
-              ))}
-          </tbody>
-        </table>
-      </div>
+              )}
+              {!loading && visible.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="px-3 py-6 text-center text-gray-500">
+                    No rows
+                  </td>
+                </tr>
+              )}
+              {!loading &&
+                visible.map((r) => (
+                  <tr key={r.id} className="border-t">
+                    {tab === "scheduled" ? (
+                      <>
+                        <td className="px-3 py-2">
+                          <div className="text-gray-900">
+                            {toInputDate(r.session_date) || "—"}
+                          </div>
+                        </td>
+                        <td className="px-3 py-2">
+                          <div className="text-gray-900">
+                            {toDisplayTime(r.start_at) || "—"}
+                          </div>
+                          {r.end_at && (
+                            <div className="text-xs text-gray-500">
+                              End: {r.end_at?.slice(0, 8)}
+                            </div>
+                          )}
+                        </td>
+                      </>
+                    ) : (
+                      <td className="px-3 py-2">
+                        <div className="text-gray-900">
+                          {r.allocated_hours != null && r.allocated_hours !== ""
+                            ? String(r.allocated_hours)
+                            : "—"}
+                        </div>
+                      </td>
+                    )}
+                    <td className="px-3 py-2">
+                      <div className="font-medium">{r.unit_code ?? "—"}</div>
+                      <div className="text-xs text-gray-500">
+                        {r.unit_name ?? ""}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="font-medium">{r.activity_type ?? "—"}</div>
+                      <div className="text-xs text-gray-500">
+                        {r.activity_name ?? ""}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="font-medium">{labelName(r)}</div>
+                      <div className="text-xs text-gray-500">{r.email ?? ""}</div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="font-medium">{r.paycode_id ?? "—"}</div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="whitespace-pre-line">{r.status ?? "—"}</div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="whitespace-pre-line">
+                        {r.location ?? "—"}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <div className="truncate max-w-[360px]">
+                        {r.note ?? "—"}
+                      </div>
+                    </td>
+                    <td className="px-3 py-2">
+                      <button
+                        onClick={() => onEdit(r)}
+                        className="px-3 py-1 rounded border hover:bg-gray-50"
+                        title="Edit"
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+            </tbody>
+          </table>
+        </div>
+      ) : (
+        /* Timeline (scheduled only) */
+        <div className="rounded border">
+          <div className="p-3">
+            <TimelineView
+              title="All Allocations — Timeline"
+              weeks={weeks}
+              activities={timelineActivities}
+              extraColumns={[
+                {
+                  key: "staffCount",
+                  header: "Staff",
+                  render: (a) => {
+                    const set = new Set(
+                      Object.values(a.allocations)
+                        .flatMap((v) => (Array.isArray(v) ? v : v ? [v] : []))
+                        .map((x) => x.tutor),
+                    );
+                    return <span className="text-xs">{set.size}</span>;
+                  },
+                },
+                {
+                  key: "hoursTotal",
+                  header: "Hours",
+                  render: (a) => {
+                    const sum = Object.values(a.allocations)
+                      .flatMap((v) => (Array.isArray(v) ? v : v ? [v] : []))
+                      .reduce((acc, x) => acc + (x.hours || 0), 0);
+                    return <span className="text-xs">{sum}</span>;
+                  },
+                },
+              ]}
+              onCellClick={() => {
+                /* optionally route to edit flow here */
+              }}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Pagination (simple) */}
       <div className="mt-3 flex items-center gap-2">

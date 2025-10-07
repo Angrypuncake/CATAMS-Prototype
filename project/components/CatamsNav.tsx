@@ -7,7 +7,7 @@ import React from "react";
  * - Gold bar: NO menus — right side shows actions (e.g., HELP, Logout)
  * - Tailwind-only, accessible, responsive
  *
- * NOTE: If you don't pass logoSrc, it defaults to "/usyd_logo.png" (from /public).
+ * If you don't pass logoSrc, it defaults to "/usyd_logo.png" (from /public).
  */
 
 export type NavAction = {
@@ -62,11 +62,8 @@ export default function CatamsNav({
     className,
     logoAlt = "CATAMS",
 }: CatamsNavProps) {
-    // If no logoSrc provided, default to /usyd_logo.png under /public
-    // If you use a basePath and want to serve static assets under it,
-    // you can prefix via NEXT_PUBLIC_BASE_PATH if you like.
-    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || "";
-    const computedLogoSrc = `${basePath}${logoSrc ?? "/usyd_logo.png"}`;
+    // Default to /usyd_logo.png under /public
+    const computedLogoSrc = logoSrc ?? "/usyd_logo.png";
 
     return (
         <header className={cx("w-full shadow-sm", className)}>

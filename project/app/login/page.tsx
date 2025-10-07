@@ -2,59 +2,62 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, TextField, Typography } from "@mui/material";
+import { Button, TextField, Typography, Alert } from "@mui/material";
 import axios from "axios";
+import CatamsNav from "@/components/CatamsNav";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [pending, setPending] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMsg(null);
+    setPending(true);
 
     try {
       const result = await axios.post(
         "/api/auth/login",
-        {
-          useremail: username,
-          password: password,
-        },
-        {
-          withCredentials: true,
-        },
+        { useremail: username, password },
+        { withCredentials: true },
       );
 
-      if (result.data.success) {
-        console.log("Login successful:", result.data);
+      if (result.data?.success) {
         router.push("/portal");
+        return;
       }
-    } catch (error) {
-      console.error("Login error:", error);
-      if (axios.isAxiosError(error) && error.response) {
-        alert(`Login failed: ${error.response.data.error}`);
+
+      setErrorMsg("Login failed. Please check your credentials and try again.");
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response?.data?.error) {
+        setErrorMsg(String(error.response.data.error));
       } else {
-        alert("Login failed: Network error");
+        setErrorMsg("Network error. Please try again.");
       }
+    } finally {
+      setPending(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex w-full items-center justify-center bg-gray-50">
-      <div className="max-w-lg w-full mx-4 space-y-8 bg-white p-8 rounded-lg shadow-lg flex flex-col gap-3">
-        <Typography
-          variant="h4"
-          component="h2"
-          align="center"
-          fontWeight="bold"
-        >
-          Sign in to your account
-        </Typography>
-        <form
-          className="mt-8 space-y-6 flex flex-col gap-3"
-          onSubmit={handleSubmit}
-        >
-          <div className="flex flex-col gap-2">
+    <>
+      {/* NAV: blue (logo + CATAMS), gold (HELP only). 
+          CatamsNav defaults to /usyd_logo.png in /public if logoSrc not provided. */}
+      <CatamsNav rightTitle="CATAMS" actions={[{ label: "HELP", href: "/help" }]} />
+
+      {/* Center the login card below the header */}
+      <div className="min-h-[calc(100vh-96px)] flex w-full items-center justify-center bg-gray-50 px-4 py-10">
+        <div className="max-w-lg w-full space-y-6 bg-white p-8 rounded-lg shadow-lg">
+          <Typography variant="h4" component="h1" align="center" fontWeight="bold">
+            Sign in to your account
+          </Typography>
+
+          {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
+
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <TextField
               name="username"
               type="text"
@@ -64,7 +67,10 @@ export default function LoginPage() {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               variant="outlined"
+              fullWidth
+              autoComplete="username"
             />
+
             <TextField
               name="password"
               type="password"
@@ -74,20 +80,29 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               variant="outlined"
+              fullWidth
+              autoComplete="current-password"
             />
-          </div>
-          <Button type="submit" variant="contained" fullWidth>
-            Sign in
-          </Button>
-          <Button
-            variant="outlined"
-            fullWidth
-            onClick={() => router.push("/portal")}
-          >
-            Go to Portal
-          </Button>
-        </form>
+
+            <Button
+              type="submit"
+              variant="contained"
+              fullWidth
+              disabled={pending}
+            >
+              {pending ? "Signing in…" : "Sign in"}
+            </Button>
+
+            <Button
+              variant="outlined"
+              fullWidth
+              onClick={() => router.push("/portal")}
+            >
+              Go to Portal
+            </Button>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 }

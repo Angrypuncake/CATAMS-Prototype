@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 // Import Components
-import { Drawer } from "./components/allocationDrawer";
+import { Drawer } from "./components/AllocationDrawer";
 import { AllocationsTable } from "./components/AllocationsTable";
 import { FilterControls } from "./components/FilterControls";
 

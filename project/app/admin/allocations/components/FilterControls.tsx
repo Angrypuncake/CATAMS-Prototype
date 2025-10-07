@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import { Button } from "@mui/material";
 
 interface FilterControlsProps {
   q: string;
@@ -81,12 +82,15 @@ export function FilterControls({
         />
       </div>
 
-      <button
+      <Button
+        variant="contained"
+        color="primary"
+        size="medium"
         onClick={onApply}
-        className="h-[38px] px-4 rounded bg-blue-600 text-white self-end"
+        sx={{ height: 38, alignSelf: "flex-end" }}
       >
         APPLY
-      </button>
+      </Button>
     </div>
   );
 }

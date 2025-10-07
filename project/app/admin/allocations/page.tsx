@@ -11,6 +11,7 @@ import { FilterControls } from "./components/FilterControls";
 import { AllocationRow, PaycodeOption } from "./types";
 import { SaveAllocationPayload } from "@/app/_types/allocations";
 import { Tutor } from "@/app/_types/tutor";
+import { Button, ButtonGroup } from "@mui/material";
 
 // Import services
 import {
@@ -141,20 +142,27 @@ export default function AdminAllAllocationsPage() {
       {/* Scheduled / Unscheduled toggle */}
       {/* Tab tells the backend which types of allocations to fetch */}
       <div className="mb-3">
-        <div className="inline-flex rounded-full border overflow-hidden">
-          <button
-            className={`px-4 py-1 text-sm ${tab === "scheduled" ? "bg-blue-600 text-white" : "bg-white"}`}
+        <ButtonGroup
+          variant="outlined"
+          sx={{ borderRadius: "1px", overflow: "hidden" }}
+        >
+          <Button
+            variant={tab === "scheduled" ? "contained" : "outlined"}
+            color="primary"
+            size="small"
             onClick={() => setTab("scheduled")}
           >
             Scheduled
-          </button>
-          <button
-            className={`px-4 py-1 text-sm border-l ${tab === "unscheduled" ? "bg-blue-600 text-white" : "bg-white"}`}
+          </Button>
+          <Button
+            variant={tab === "unscheduled" ? "contained" : "outlined"}
+            color="primary"
+            size="small"
             onClick={() => setTab("unscheduled")}
           >
             Unscheduled
-          </button>
-        </div>
+          </Button>
+        </ButtonGroup>
       </div>
 
       {/* Table */}

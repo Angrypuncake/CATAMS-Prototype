@@ -2,6 +2,8 @@
 import React from "react";
 import { AllocationRow } from "../types";
 import { toDisplayTime, toInputDate, labelName } from "../util";
+import { Button } from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
 
 interface AllocationsTableProps {
   tab: "scheduled" | "unscheduled";
@@ -116,12 +118,14 @@ export function AllocationsTable({
                     {r.note ?? "—"}
                   </td>
                   <td className="px-3 py-2">
-                    <button
+                    <Button
+                      variant="outlined"
+                      size="small"
+                      startIcon={<EditIcon />}
                       onClick={() => onEdit(r)}
-                      className="px-3 py-1 rounded border hover:bg-gray-50"
                     >
                       Edit
-                    </button>
+                    </Button>
                   </td>
                 </tr>
               ))}
@@ -131,23 +135,27 @@ export function AllocationsTable({
 
       {/* Pagination */}
       <div className="mt-3 flex items-center gap-2">
-        <button
-          className="px-3 py-1 rounded border disabled:opacity-50"
+        <Button
+          variant="outlined"
+          size="small"
           disabled={page <= 1}
           onClick={() => onPageChange(page - 1)}
         >
           PREV
-        </button>
+        </Button>
+
         <div className="text-sm text-gray-600">
           Page {page} of {Math.max(1, Math.ceil(total / limit))}
         </div>
-        <button
-          className="px-3 py-1 rounded border disabled:opacity-50"
+
+        <Button
+          variant="outlined"
+          size="small"
           disabled={page >= Math.ceil(total / limit)}
           onClick={() => onPageChange(page + 1)}
         >
           NEXT
-        </button>
+        </Button>
       </div>
     </div>
   );

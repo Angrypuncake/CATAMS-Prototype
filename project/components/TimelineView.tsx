@@ -45,8 +45,8 @@ export function buildWeeksRange(start: number, end: number, termLabel = "S1"): W
 /* ===================== Component ===================== */
 /**
  * Grid: [ LEFT rail (fixed width) | RIGHT weeks (fills, horizontal scroll) ]
- * LEFT has its own header + rows (no empty block).
- * RIGHT has a single overflow-x area with header + rows, always aligned.
+ * LEFT has its own header + rows (so no empty block). RIGHT is the only area that scrolls.
+ * Header/row heights match the table to avoid layout “bounce” when toggling views.
  */
 export function TimelineView<A extends ActivityRow = ActivityRow>({
     title = "All Allocations — Timeline",
@@ -104,7 +104,10 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
                 </div>
             ))}
             <div className="mt-1 border-t pt-1 text-[11px] text-gray-600">
-                <div>{act.activityType ? `${act.activityType}` : "Activity"}{act.paycode ? ` • Pay ${act.paycode}` : ""}</div>
+                <div>
+                    {act.activityType ? `${act.activityType}` : "Activity"}
+                    {act.paycode ? ` • Pay ${act.paycode}` : ""}
+                </div>
                 <div className="truncate max-w-[260px]">{act.name}</div>
                 <div className="text-gray-500">— {w.label}</div>
             </div>
@@ -248,19 +251,21 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
                                                         onClick={() => onCellClick?.({ activity: act as A, week: w, cell: raw })}
                                                     >
                                                         {items.length ? (
-                                                            <span className="inline-flex flex-wrap items-center gap-1">
+                                                            // STACKED, single-line badges (no wrapping). Two shown max; then "+N more".
+                                                            <div className="flex flex-col gap-1">
                                                                 {items.slice(0, 2).map((c, i) => (
                                                                     <span
                                                                         key={i}
-                                                                        className="inline-block rounded-md bg-indigo-600/10 px-1.5 py-0.5 text-[10px]"
+                                                                        className="inline-block rounded-md bg-indigo-600/10 px-1.5 text-[10px] h-5 leading-5 whitespace-nowrap overflow-hidden text-ellipsis"
+                                                                        title={`${c.tutor} • ${c.hours}h${c.role ? ` • ${c.role}` : ""}`}
                                                                     >
                                                                         {c.tutor} {c.hours}h
                                                                     </span>
                                                                 ))}
                                                                 {items.length > 2 && (
-                                                                    <span className="text-[10px]">+{items.length - 2} more</span>
+                                                                    <span className="text-[10px] text-gray-500">+{items.length - 2} more</span>
                                                                 )}
-                                                            </span>
+                                                            </div>
                                                         ) : (
                                                             <span>—</span>
                                                         )}

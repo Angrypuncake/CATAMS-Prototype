@@ -6,7 +6,7 @@ export default function DetailRow({
   value,
 }: {
   label: string;
-  value: string;
+  value: string | number | null;
 }) {
   return (
     <Stack direction="row" spacing={2} sx={{ py: 0.25 }}>

@@ -24,7 +24,7 @@ import DetailRow from "../_components/DetailRow";
 import RequestRow from "../_components/RequestRow";
 import CommentBubble from "../_components/CommentBubble";
 import type {
-  AllocationDetail,
+  TutorAllocationRow as AllocationDetail,
   RequestItem,
   CommentItem,
 } from "@/app/_types/allocations";
@@ -130,16 +130,14 @@ export default function AllocationPage() {
 
         const mapped: AllocationDetail = {
           id: a.allocation_id,
-          courseCode: a.unit_code ?? "—",
-          courseName: a.unit_name ?? "—",
+          unit_code: a.unit_code ?? "—",
+          unit_name: a.unit_name ?? "—",
           status: normalizeStatus(a.status),
-          date: toDDMMYYYY(a.session_date),
-          time:
-            a.start_at || a.end_at
-              ? `${toHHMM(a.start_at)} – ${toHHMM(a.end_at)}`
-              : "—",
+          session_date: toDDMMYYYY(a.session_date),
+          start_at: a.start_at,
+          end_at: a.end_at,
           location: a.location ?? "—",
-          hours:
+          allocated_hours:
             a.start_at && a.end_at
               ? (() => {
                   const [sh, sm] = a.start_at.split(":").map(Number);
@@ -152,8 +150,8 @@ export default function AllocationPage() {
                   return `${diff.toFixed(2)}h`;
                 })()
               : "—",
-          session: a.activity_name ?? "—",
-          notes: a.note ?? undefined,
+          activity_name: a.activity_name ?? "—",
+          note: a.note ?? undefined,
         };
 
         if (!cancelled) {
@@ -244,7 +242,7 @@ export default function AllocationPage() {
             sx={{ mb: 1 }}
           >
             <Typography variant="h6" fontWeight={700}>
-              {allocation.courseCode} – {allocation.courseName}
+              {allocation.unit_code} – {allocation.unit_name}
             </Typography>
             <Chip
               icon={<CheckCircleIcon fontSize="small" />}
@@ -259,15 +257,16 @@ export default function AllocationPage() {
 
           {/* Details grid */}
           <Box sx={{ my: 1 }}>
-            <DetailRow label="Date" value={allocation.date} />
-            <DetailRow label="Time" value={allocation.time} />
+            <DetailRow label="Date" value={allocation.session_date} />
+            <DetailRow label="Start at" value={allocation.start_at} />
+            <DetailRow label="End at" value={allocation.end_at} />
             <DetailRow label="Location" value={allocation.location} />
-            <DetailRow label="Hours" value={allocation.hours} />
-            <DetailRow label="Session" value={allocation.session} />
+            <DetailRow label="Hours" value={allocation.allocated_hours} />
+            <DetailRow label="Session" value={allocation.activity_name} />
           </Box>
 
           {/* Notes */}
-          {allocation.notes && (
+          {allocation.note && (
             <Box
               sx={{
                 mt: 2,
@@ -282,7 +281,7 @@ export default function AllocationPage() {
                 Notes
               </Typography>
               <Typography variant="body2" color="text.secondary">
-                {allocation.notes}
+                {allocation.note}
               </Typography>
             </Box>
           )}

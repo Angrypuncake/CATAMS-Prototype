@@ -3,7 +3,7 @@
 "use client";
 
 //  React imports
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import { Tutor } from "@/app/_types/tutor";
 
@@ -15,7 +15,7 @@ import {
   // example: createSwapRequest, updateAllocationStatus, etc.
 } from "@/app/services/allocationService";
 
-import { getAllTutors, getTutorsByUnit } from "@/app/services/userService";
+import { getTutors, getTutorsByUnit } from "@/app/services/userService";
 
 // This is a simple “sandbox page” where you can test any service calls.
 export default function ServicesTestPage() {
@@ -43,7 +43,7 @@ export default function ServicesTestPage() {
   };
 
   const handleFetchAllTutors = async () => {
-    const data = await getAllTutors();
+    const data = await getTutors();
     setTutorData(data);
   };
 

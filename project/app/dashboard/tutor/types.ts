@@ -1,14 +1,6 @@
-export type AllocationRow = {
-  id: string;
-  session_date: string | null;
-  start_at: string | null;
-  end_at?: string | null;
-  unit_code: string | null;
-  location?: string | null;
-  status?: string | null;
-  actions?: string | null;
-  note?: string | null;
-};
+import type { TutorAllocationRow } from "@/app/_types/allocations";
+
+export type AllocationRow = TutorAllocationRow;
 
 export type ActionRequiredRow = {
   session_date: string | null;

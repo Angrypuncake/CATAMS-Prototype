@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { AdminAllocationRow } from "@/app/_types/allocations";
 
 /** ------------ Types that match /api/admin/allocations response ------------ */
 type AllocationRow = {

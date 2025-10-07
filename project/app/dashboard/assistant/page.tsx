@@ -1,6 +1,6 @@
 "use client";
 import React, { ReactNode, useState } from "react";
-import { Button } from "@mui/material";
+import { Button, Typography } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DownloadIcon from "@mui/icons-material/Download";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -30,16 +30,6 @@ interface RequestData {
   session: string;
   type: "Swap" | "Correction";
   submitted: string;
-}
-
-interface ButtonProps {
-  variant?: "text" | "contained" | "outlined";
-  children: ReactNode;
-  className?: string;
-  startIcon?: ReactNode;
-  endIcon?: ReactNode;
-  size?: "small" | "medium";
-  onClick?: () => void;
 }
 
 const TeachingOperations: React.FC = () => {
@@ -114,9 +104,14 @@ const TeachingOperations: React.FC = () => {
     <div className="min-h-screen bg-gray-50 w-[80%]">
       <header className="bg-white border-b px-6 py-4">
         <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-bold text-gray-900">
+          <Typography
+            variant="h3"
+            component="h1"
+            fontWeight="bold"
+            color="text.primary"
+          >
             Teaching Operations
-          </h1>
+          </Typography>
           <div className="flex items-center gap-4">
             <SelectField
               value={termValue}
@@ -160,36 +155,86 @@ const TeachingOperations: React.FC = () => {
         <div className="flex-1 space-y-6">
           <section className="bg-white rounded-lg shadow-sm">
             <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-xl font-semibold">Allocations Overview</h2>
+              <Typography variant="h5" component="h2" fontWeight="600">
+                Allocations Overview
+              </Typography>
               <Button variant="text">Manage Allocations</Button>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 border-b">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Unit
+                    <th className="px-4 py-3 text-left">
+                      <Typography
+                        variant="body2"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Unit
+                      </Typography>
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Week
+                    <th className="px-4 py-3 text-left">
+                      <Typography
+                        variant="body2"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Week
+                      </Typography>
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Sessions
+                    <th className="px-4 py-3 text-left">
+                      <Typography
+                        variant="body2"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Sessions
+                      </Typography>
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Assigned
+                    <th className="px-4 py-3 text-left">
+                      <Typography
+                        variant="body2"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Assigned
+                      </Typography>
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Unassigned
+                    <th className="px-4 py-3 text-left">
+                      <Typography
+                        variant="body2"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Unassigned
+                      </Typography>
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Hours
+                    <th className="px-4 py-3 text-left">
+                      <Typography
+                        variant="body2"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Hours
+                      </Typography>
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Last Change
+                    <th className="px-4 py-3 text-left">
+                      <Typography
+                        variant="body2"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Last Change
+                      </Typography>
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">
-                      Status
+                    <th className="px-4 py-3 text-left">
+                      <Typography
+                        variant="body2"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Status
+                      </Typography>
                     </th>
                   </tr>
                 </thead>
@@ -226,7 +271,9 @@ const TeachingOperations: React.FC = () => {
 
           <section className="bg-white rounded-lg shadow-sm">
             <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-xl font-semibold">Needs Attention</h2>
+              <Typography variant="h5" component="h2" fontWeight="600">
+                Needs Attention
+              </Typography>
               <Button
                 variant="text"
                 endIcon={<ChevronRightIcon className="w-4 h-4" />}
@@ -304,7 +351,9 @@ const TeachingOperations: React.FC = () => {
         <div className="w-96 space-y-6">
           <div className="bg-white rounded-lg shadow-sm">
             <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-xl font-semibold">Claims Pending</h2>
+              <Typography variant="h5" component="h2" fontWeight="600">
+                Claims Pending
+              </Typography>
               <Button variant="text" className="text-sm">
                 View all claims
               </Button>
@@ -313,26 +362,61 @@ const TeachingOperations: React.FC = () => {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b">
                   <tr>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
-                      Tutor
+                    <th className="px-3 py-2 text-left">
+                      <Typography
+                        variant="caption"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Tutor
+                      </Typography>
                     </th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
-                      Session
-                      <br />
-                      <span className="font-normal">
-                        (Unit •<br />
-                        Date •<br />
-                        Time)
-                      </span>
+                    <th className="px-3 py-2 text-left">
+                      <Typography
+                        variant="caption"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Session
+                        <br />
+                        <Typography
+                          component="span"
+                          variant="caption"
+                          fontWeight="400"
+                          color="text.secondary"
+                        >
+                          (Unit •<br />
+                          Date •<br />
+                          Time)
+                        </Typography>
+                      </Typography>
                     </th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
-                      Diff
+                    <th className="px-3 py-2 text-left">
+                      <Typography
+                        variant="caption"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Diff
+                      </Typography>
                     </th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
-                      Submitted
+                    <th className="px-3 py-2 text-left">
+                      <Typography
+                        variant="caption"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Submitted
+                      </Typography>
                     </th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
-                      Action
+                    <th className="px-3 py-2 text-left">
+                      <Typography
+                        variant="caption"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Action
+                      </Typography>
                     </th>
                   </tr>
                 </thead>
@@ -361,7 +445,9 @@ const TeachingOperations: React.FC = () => {
 
           <div className="bg-white rounded-lg shadow-sm">
             <div className="flex justify-between items-center p-4 border-b">
-              <h2 className="text-xl font-semibold">Requests Pending</h2>
+              <Typography variant="h5" component="h2" fontWeight="600">
+                Requests Pending
+              </Typography>
               <Button variant="text" className="text-sm">
                 View all requests
               </Button>
@@ -370,26 +456,61 @@ const TeachingOperations: React.FC = () => {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b">
                   <tr>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
-                      Tutor
+                    <th className="px-3 py-2 text-left">
+                      <Typography
+                        variant="caption"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Tutor
+                      </Typography>
                     </th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
-                      Session
-                      <br />
-                      <span className="font-normal">
-                        (Unit •<br />
-                        Date •<br />
-                        Time)
-                      </span>
+                    <th className="px-3 py-2 text-left">
+                      <Typography
+                        variant="caption"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Session
+                        <br />
+                        <Typography
+                          component="span"
+                          variant="caption"
+                          fontWeight="400"
+                          color="text.secondary"
+                        >
+                          (Unit •<br />
+                          Date •<br />
+                          Time)
+                        </Typography>
+                      </Typography>
                     </th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
-                      Type
+                    <th className="px-3 py-2 text-left">
+                      <Typography
+                        variant="caption"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Type
+                      </Typography>
                     </th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
-                      Submitted
+                    <th className="px-3 py-2 text-left">
+                      <Typography
+                        variant="caption"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Submitted
+                      </Typography>
                     </th>
-                    <th className="px-3 py-2 text-left text-xs font-medium text-gray-700">
-                      Action
+                    <th className="px-3 py-2 text-left">
+                      <Typography
+                        variant="caption"
+                        fontWeight="500"
+                        color="text.secondary"
+                      >
+                        Action
+                      </Typography>
                     </th>
                   </tr>
                 </thead>

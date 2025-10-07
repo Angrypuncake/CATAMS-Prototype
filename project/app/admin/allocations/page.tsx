@@ -1,119 +1,28 @@
 "use client";
 
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { AdminAllocationRow } from "@/app/_types/allocations";
 
-/** ------------ Types that match /api/admin/allocations response ------------ */
-type AllocationRow = AdminAllocationRow;
+import {
+  AllocationRow,
+  ApiResult,
+  TutorOption,
+  PaycodeOption,
+  OccurrenceRow,
+  SavePayload,
+  PropagationPayload,
+  STATUS_OPTIONS,
+  DOWS,
+  Dow,
+} from "./types";
 
-type ApiResult = {
-  page: number;
-  limit: number;
-  total: number;
-  data: AllocationRow[];
-};
-
-type TutorOption = {
-  user_id: number;
-  first_name: string | null;
-  last_name: string | null;
-  email: string | null;
-};
-
-type PaycodeOption = {
-  code: string;
-  paycode_description: string | null;
-  amount: string | number;
-};
-
-// For the occurrences helper
-type OccurrenceRow = {
-  occurrence_id: number;
-  session_date: string; // "YYYY-MM-DD"
-  status?: string | null; // optional, if you return it
-};
-
-type SavePayload = Partial<AllocationRow> & {
-  apply_all_for_activity?: boolean;
-  propagate_occurrence_ids?: number[] | null;
-
-  propagate_fields?: Array<
-    "tutor" | "paycode" | "start" | "end" | "note" | "status" | "location"
-  >;
-  propagate_notes_mode?: "overwrite" | "append";
-  propagate_dow?: Dow;
-};
-
-type PropagationPayload = {
-  fields: Array<
-    "tutor" | "paycode" | "start" | "end" | "note" | "status" | "location"
-  >;
-  notesMode?: "overwrite" | "append";
-  dow?: Dow;
-  occurrenceIds: number[];
-};
-
-const STATUS_OPTIONS = [
-  "Academic Staff",
-  "Approved Allocation",
-  "Hours for Approval",
-  "Ignore class",
-  "Variation complete",
-  "Draft Casual",
-  "Hours for Review",
-  "Rejected by Approver",
-] as const;
-
-/** ------------------------- Utility formatting ------------------------- */
-function pad2(n: number) {
-  return n.toString().padStart(2, "0");
-}
-function toDisplayTime(hhmmss: string | null) {
-  if (!hhmmss) return "";
-  const [hh, mm] = hhmmss.split(":").map((t) => parseInt(t, 10));
-  const ampm = hh >= 12 ? "PM" : "AM";
-  const hr = ((hh + 11) % 12) + 1;
-  return `${pad2(hr)}:${pad2(mm)} ${ampm}`;
-}
-function toInputTime(hhmmss: string | null) {
-  if (!hhmmss) return "";
-  const [hh, mm] = hhmmss.split(":");
-  return `${hh}:${mm}`;
-}
-function fromInputTime(hhmm: string) {
-  if (!hhmm) return null;
-  const [hh, mm] = hhmm.split(":");
-  return `${pad2(parseInt(hh, 10))}:${pad2(parseInt(mm, 10))}:00`;
-}
-function toInputDate(isoDate: string | null) {
-  if (!isoDate) return "";
-  return isoDate.substring(0, 10);
-}
-function labelName(row: Pick<AllocationRow, "first_name" | "last_name">) {
-  const fn = row.first_name ?? "";
-  const ln = row.last_name ?? "";
-  return `${fn} ${ln}`.trim() || "—";
-}
-
-const DOWS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
-type Dow = (typeof DOWS)[number];
-
-function isoDateToDow(iso: string | null | undefined): Dow | "" {
-  if (!iso) return "";
-  const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
-  const js = new Date(y, m - 1, d).getDay(); // local, but using exact parts
-  const map: Record<number, Dow> = {
-    0: "Sun",
-    1: "Mon",
-    2: "Tue",
-    3: "Wed",
-    4: "Thu",
-    5: "Fri",
-    6: "Sat",
-  };
-  return map[js] ?? "";
-}
-
+import {
+  toDisplayTime,
+  toInputTime,
+  fromInputTime,
+  toInputDate,
+  isoDateToDow,
+  labelName,
+} from "./util";
 /** ----------------------- Small searchable comboboxes ---------------------- */
 function useOutsideClick<T extends HTMLElement>(
   ref: React.RefObject<T | null>, // allow null

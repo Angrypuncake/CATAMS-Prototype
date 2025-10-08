@@ -65,3 +65,44 @@ export interface SaveAllocationPayload extends Partial<AdminAllocationRow> {
   propagate_notes_mode?: "overwrite" | "append";
   propagate_dow?: Dow;
 }
+
+export type RollbackResponse = {
+  rolledBack: boolean;
+  runId: number;
+  deleted: {
+    d_alloc: number; // number of allocations deleted
+    d_sess: number; // number of session_occurrence deleted
+    d_teach: number; // number of teaching_activity deleted
+  };
+};
+
+export type CommitResponse = {
+  committed: true;
+  stagingId: number;
+  inserted: {
+    teaching_activity: number;
+    session_occurrence: number;
+    allocation: number;
+  };
+};
+
+export type DiscardResponse =
+  | {
+      discarded: true;
+      batchId: number;
+    }
+  | {
+      error: string;
+      detail?: string;
+      committedRuns?: number;
+    };
+
+export type PreviewResponse = {
+  stagingId: number;
+  preview: {
+    raw: unknown[];
+    issues: Record<string, unknown> | null;
+    timetable: Record<string, unknown>;
+  };
+  error: string;
+};

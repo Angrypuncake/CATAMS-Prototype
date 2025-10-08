@@ -1,5 +1,11 @@
 import axios from "@/lib/axios";
-import type { SaveAllocationPayload } from "@/app/_types/allocations";
+import type {
+  SaveAllocationPayload,
+  RollbackResponse,
+  CommitResponse,
+  DiscardResponse,
+  PreviewResponse,
+} from "@/app/_types/allocations";
 
 export interface Allocation {
   id: string;
@@ -71,5 +77,44 @@ export async function patchAdminAllocation(
   updated: SaveAllocationPayload,
 ) {
   const res = await axios.patch(`/admin/allocations/${id}`, updated);
+  return res.data;
+}
+
+// IMPORT pipeline
+
+export async function importAdminData(fd: FormData) {
+  const res = await axios.post("/admin/import", fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+}
+
+export async function rollbackRun(runId: number): Promise<RollbackResponse> {
+  const res = await axios.post<RollbackResponse>("/admin/rollback", { runId });
+  return res.data;
+}
+
+export async function commitImport(stagingId: number): Promise<CommitResponse> {
+  const res = await axios.post<CommitResponse>("/admin/import/commit", {
+    stagingId,
+  });
+  return res.data;
+}
+
+export async function discardImport(
+  stagingId: number,
+): Promise<DiscardResponse> {
+  const res = await axios.post<DiscardResponse>("/admin/discard", {
+    stagingId,
+  });
+  return res.data;
+}
+
+export async function getPreview(stagingId: number): Promise<PreviewResponse> {
+  const res = await axios.get<PreviewResponse>(`/admin/preview`, {
+    params: { stagingId },
+    // optional: disable cache via headers
+    headers: { "Cache-Control": "no-store" },
+  });
   return res.data;
 }

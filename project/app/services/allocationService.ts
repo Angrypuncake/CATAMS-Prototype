@@ -4,6 +4,7 @@ import type {
   RollbackResponse,
   CommitResponse,
   DiscardResponse,
+  PreviewResponse,
 } from "@/app/_types/allocations";
 
 export interface Allocation {
@@ -105,6 +106,15 @@ export async function discardImport(
 ): Promise<DiscardResponse> {
   const res = await axios.post<DiscardResponse>("/admin/discard", {
     stagingId,
+  });
+  return res.data;
+}
+
+export async function getPreview(stagingId: number): Promise<PreviewResponse> {
+  const res = await axios.get<PreviewResponse>(`/admin/preview`, {
+    params: { stagingId },
+    // optional: disable cache via headers
+    headers: { "Cache-Control": "no-store" },
   });
   return res.data;
 }

@@ -96,3 +96,13 @@ export type DiscardResponse =
       detail?: string;
       committedRuns?: number;
     };
+
+export type PreviewResponse = {
+  stagingId: number;
+  preview: {
+    raw: unknown[];
+    issues: Record<string, unknown> | null;
+    timetable: Record<string, unknown>;
+  };
+  error: string;
+};

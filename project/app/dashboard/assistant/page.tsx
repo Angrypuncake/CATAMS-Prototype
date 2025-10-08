@@ -144,7 +144,8 @@ const TeachingOperations: React.FC = () => {
             </div>
 
             <Button
-              variant="outlined"
+              variant="secondary"
+              color="blue"
               startIcon={<DownloadIcon className="w-4 h-4" />}
             >
               Export CSV
@@ -160,7 +161,9 @@ const TeachingOperations: React.FC = () => {
               <Typography variant="h5" component="h2" fontWeight="600">
                 Allocations Overview
               </Typography>
-              <Button variant="text">Manage Allocations</Button>
+              <Button variant="secondary" color="blue">
+                Manage Allocations
+              </Button>
             </div>
             <AllocationsTable data={allocationsData} />
           </section>
@@ -250,7 +253,7 @@ const TeachingOperations: React.FC = () => {
               <Typography variant="h5" component="h2" fontWeight="600">
                 Claims Pending
               </Typography>
-              <Button variant="text" className="text-sm">
+              <Button variant="secondary" color="blue">
                 View all claims
               </Button>
             </div>
@@ -262,7 +265,7 @@ const TeachingOperations: React.FC = () => {
               <Typography variant="h5" component="h2" fontWeight="600">
                 Requests Pending
               </Typography>
-              <Button variant="text" className="text-sm">
+              <Button variant="secondary" color="blue">
                 View all requests
               </Button>
             </div>

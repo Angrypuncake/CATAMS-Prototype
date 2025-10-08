@@ -242,7 +242,7 @@ export default function AllocationPage() {
             sx={{ mb: 1 }}
           >
             <Typography variant="h6" fontWeight={700}>
-              {allocation.unit_code} – {allocation.unit_name}
+              {allocation.unit_code} - {allocation.unit_name}
             </Typography>
             <Chip
               icon={<CheckCircleIcon fontSize="small" />}
@@ -310,7 +310,9 @@ export default function AllocationPage() {
                 <MenuItem onClick={() => router.push(`${id}/requests/swap`)}>
                   Swap
                 </MenuItem>
-                <MenuItem onClick={() => setAnchorEl(null)}>
+                <MenuItem
+                  onClick={() => router.push(`${id}/requests/correction`)}
+                >
                   Correction
                 </MenuItem>
                 <MenuItem onClick={() => setAnchorEl(null)}>

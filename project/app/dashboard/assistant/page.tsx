@@ -1,6 +1,15 @@
 "use client";
 import React, { ReactNode, useState } from "react";
 import { Button, Typography } from "@mui/material";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DownloadIcon from "@mui/icons-material/Download";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
@@ -160,97 +169,33 @@ const TeachingOperations: React.FC = () => {
               </Typography>
               <Button variant="text">Manage Allocations</Button>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    <th className="px-4 py-3 text-left">
-                      <Typography
-                        variant="body2"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Unit
-                      </Typography>
-                    </th>
-                    <th className="px-4 py-3 text-left">
-                      <Typography
-                        variant="body2"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Week
-                      </Typography>
-                    </th>
-                    <th className="px-4 py-3 text-left">
-                      <Typography
-                        variant="body2"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Sessions
-                      </Typography>
-                    </th>
-                    <th className="px-4 py-3 text-left">
-                      <Typography
-                        variant="body2"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Assigned
-                      </Typography>
-                    </th>
-                    <th className="px-4 py-3 text-left">
-                      <Typography
-                        variant="body2"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Unassigned
-                      </Typography>
-                    </th>
-                    <th className="px-4 py-3 text-left">
-                      <Typography
-                        variant="body2"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Hours
-                      </Typography>
-                    </th>
-                    <th className="px-4 py-3 text-left">
-                      <Typography
-                        variant="body2"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Last Change
-                      </Typography>
-                    </th>
-                    <th className="px-4 py-3 text-left">
-                      <Typography
-                        variant="body2"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Status
-                      </Typography>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Unit</TableCell>
+                    <TableCell>Week</TableCell>
+                    <TableCell>Sessions</TableCell>
+                    <TableCell>Assigned</TableCell>
+                    <TableCell>Unassigned</TableCell>
+                    <TableCell>Hours</TableCell>
+                    <TableCell>Last Change</TableCell>
+                    <TableCell>Status</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
                   {allocationsData.map((row: AllocationRow, idx: number) => (
-                    <tr key={idx} className="hover:bg-gray-50">
-                      <td className="px-4 py-3 font-medium">{row.unit}</td>
-                      <td className="px-4 py-3">{row.week}</td>
-                      <td className="px-4 py-3">{row.sessions}</td>
-                      <td className="px-4 py-3">{row.assigned}</td>
-                      <td className="px-4 py-3">{row.unassigned}</td>
-                      <td className="px-4 py-3">{row.hours}</td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {row.lastChange}
-                      </td>
-                      <td className="px-4 py-3">
+                    <TableRow key={idx}>
+                      <TableCell style={{ fontWeight: "bold" }}>
+                        {row.unit}
+                      </TableCell>
+                      <TableCell>{row.week}</TableCell>
+                      <TableCell>{row.sessions}</TableCell>
+                      <TableCell>{row.assigned}</TableCell>
+                      <TableCell>{row.unassigned}</TableCell>
+                      <TableCell>{row.hours}</TableCell>
+                      <TableCell>{row.lastChange}</TableCell>
+                      <TableCell>
                         <Chip
                           label={row.status}
                           size="small"
@@ -261,12 +206,12 @@ const TeachingOperations: React.FC = () => {
                             row.status === "Attention" ? "filled" : "outlined"
                           }
                         />
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </TableBody>
+              </Table>
+            </TableContainer>
           </section>
 
           <section className="bg-white rounded-lg shadow-sm">
@@ -358,89 +303,36 @@ const TeachingOperations: React.FC = () => {
                 View all claims
               </Button>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    <th className="px-3 py-2 text-left">
-                      <Typography
-                        variant="caption"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Tutor
-                      </Typography>
-                    </th>
-                    <th className="px-3 py-2 text-left">
-                      <Typography
-                        variant="caption"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Session
-                        <br />
-                        <Typography
-                          component="span"
-                          variant="caption"
-                          fontWeight="400"
-                          color="text.secondary"
-                        >
-                          (Unit •<br />
-                          Date •<br />
-                          Time)
-                        </Typography>
-                      </Typography>
-                    </th>
-                    <th className="px-3 py-2 text-left">
-                      <Typography
-                        variant="caption"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Diff
-                      </Typography>
-                    </th>
-                    <th className="px-3 py-2 text-left">
-                      <Typography
-                        variant="caption"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Submitted
-                      </Typography>
-                    </th>
-                    <th className="px-3 py-2 text-left">
-                      <Typography
-                        variant="caption"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Action
-                      </Typography>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Tutor</TableCell>
+                    <TableCell>Session</TableCell>
+                    <TableCell>Diff</TableCell>
+                    <TableCell>Submitted</TableCell>
+                    <TableCell>Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
                   {claimsData.map((claim: ClaimData, idx: number) => (
-                    <tr key={idx}>
-                      <td className="px-3 py-3 text-sm">{claim.tutor}</td>
-                      <td className="px-3 py-3 text-sm">{claim.session}</td>
-                      <td className="px-3 py-3 text-sm font-medium">
+                    <TableRow key={idx}>
+                      <TableCell>{claim.tutor}</TableCell>
+                      <TableCell>{claim.session}</TableCell>
+                      <TableCell style={{ fontWeight: "bold" }}>
                         {claim.diff}
-                      </td>
-                      <td className="px-3 py-3 text-sm text-gray-600">
-                        {claim.submitted}
-                      </td>
-                      <td className="px-3 py-3">
+                      </TableCell>
+                      <TableCell>{claim.submitted}</TableCell>
+                      <TableCell>
                         <Button variant="text" size="small">
                           Review
                         </Button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </TableBody>
+              </Table>
+            </TableContainer>
           </div>
 
           <div className="bg-white rounded-lg shadow-sm">
@@ -452,89 +344,36 @@ const TeachingOperations: React.FC = () => {
                 View all requests
               </Button>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b">
-                  <tr>
-                    <th className="px-3 py-2 text-left">
-                      <Typography
-                        variant="caption"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Tutor
-                      </Typography>
-                    </th>
-                    <th className="px-3 py-2 text-left">
-                      <Typography
-                        variant="caption"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Session
-                        <br />
-                        <Typography
-                          component="span"
-                          variant="caption"
-                          fontWeight="400"
-                          color="text.secondary"
-                        >
-                          (Unit •<br />
-                          Date •<br />
-                          Time)
-                        </Typography>
-                      </Typography>
-                    </th>
-                    <th className="px-3 py-2 text-left">
-                      <Typography
-                        variant="caption"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Type
-                      </Typography>
-                    </th>
-                    <th className="px-3 py-2 text-left">
-                      <Typography
-                        variant="caption"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Submitted
-                      </Typography>
-                    </th>
-                    <th className="px-3 py-2 text-left">
-                      <Typography
-                        variant="caption"
-                        fontWeight="500"
-                        color="text.secondary"
-                      >
-                        Action
-                      </Typography>
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
+            <TableContainer component={Paper}>
+              <Table size="small">
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Tutor</TableCell>
+                    <TableCell>Session</TableCell>
+                    <TableCell>Type</TableCell>
+                    <TableCell>Submitted</TableCell>
+                    <TableCell>Action</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
                   {requestsData.map((request: RequestData, idx: number) => (
-                    <tr key={idx}>
-                      <td className="px-3 py-3 text-sm">{request.tutor}</td>
-                      <td className="px-3 py-3 text-sm">{request.session}</td>
-                      <td className="px-3 py-3 text-sm font-medium">
+                    <TableRow key={idx}>
+                      <TableCell>{request.tutor}</TableCell>
+                      <TableCell>{request.session}</TableCell>
+                      <TableCell style={{ fontWeight: "bold" }}>
                         {request.type}
-                      </td>
-                      <td className="px-3 py-3 text-sm text-gray-600">
-                        {request.submitted}
-                      </td>
-                      <td className="px-3 py-3">
+                      </TableCell>
+                      <TableCell>{request.submitted}</TableCell>
+                      <TableCell>
                         <Button variant="text" size="small">
                           Review
                         </Button>
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   ))}
-                </tbody>
-              </table>
-            </div>
+                </TableBody>
+              </Table>
+            </TableContainer>
           </div>
         </div>
       </div>

@@ -181,7 +181,14 @@ export default function AllocationPage() {
                 <MenuItem onClick={() => setAnchorEl(null)}>
                   Correction
                 </MenuItem>
-                <MenuItem onClick={() => setAnchorEl(null)}>
+                <MenuItem
+                  onClick={() => {
+                    setAnchorEl(null);
+                    router.push(
+                      `/dashboard/tutor/allocations/${id}/requests/cancel`,
+                    );
+                  }}
+                >
                   Cancellation
                 </MenuItem>
                 <MenuItem

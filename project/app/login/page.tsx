@@ -2,107 +2,104 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, TextField, Typography, Alert } from "@mui/material";
+import { Button, TextField, Typography } from "@mui/material";
 import axios from "axios";
-import CatamsNav from "@/components/CatamsNav";
+import CatamsNav from "@/components/CatamsNav"; // adjust if your filename differs
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [pending, setPending] = useState(false);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMsg(null);
-    setPending(true);
-
     try {
       const result = await axios.post(
         "/api/auth/login",
         { useremail: username, password },
-        { withCredentials: true },
+        { withCredentials: true }
       );
-
-      if (result.data?.success) {
-        router.push("/portal");
-        return;
-      }
-
-      setErrorMsg("Login failed. Please check your credentials and try again.");
-    } catch (error: unknown) {
-      if (axios.isAxiosError(error) && error.response?.data?.error) {
-        setErrorMsg(String(error.response.data.error));
+      if (result.data.success) router.push("/portal");
+    } catch (error) {
+      console.error("Login error:", error);
+      if (axios.isAxiosError(error) && error.response) {
+        alert(`Login failed: ${error.response.data.error}`);
       } else {
-        setErrorMsg("Network error. Please try again.");
+        alert("Login failed: Network error");
       }
-    } finally {
-      setPending(false);
     }
   };
 
   return (
-    <>
-      {/* NAV: blue (logo + CATAMS), gold (HELP only). 
-          CatamsNav defaults to /usyd_logo.png in /public if logoSrc not provided. */}
-      <CatamsNav rightTitle="CATAMS" actions={[{ label: "HELP", href: "/help" }]} />
+    <div className="min-h-screen w-full bg-[#f4f5f7]">
+      {/* USYD-style nav with fixed side gutters */}
+      <CatamsNav
+        logoSrc="/usyd_logo.png"
+        rightTitle="CATAMS"
+        actions={[{ label: "HELP" }]}
+        containerClass="mx-[1cm]"
+        logoClass="h-12"
+      />
 
-      {/* Center the login card below the header */}
-      <div className="min-h-[calc(100vh-96px)] flex w-full items-center justify-center bg-gray-50 px-4 py-10">
-        <div className="max-w-lg w-full space-y-6 bg-white p-8 rounded-lg shadow-lg">
-          <Typography variant="h4" component="h1" align="center" fontWeight="bold">
+      {/* Login card */}
+      <main className="w-full flex justify-center">
+        <div className="mt-10 mb-16 w-full max-w-[520px] bg-white shadow-sm border border-gray-200 px-8 py-9">
+          <Typography
+            variant="h5"
+            component="h2"
+            align="center"
+            fontWeight="bold"
+            sx={{ mb: 4 }}
+          >
             Sign in to your account
           </Typography>
 
-          {errorMsg && <Alert severity="error">{errorMsg}</Alert>}
+          <form onSubmit={handleSubmit}>
+            {/* EXTRA space specifically between username & password */}
+            <div className="space-y-8">
+              <TextField
+                name="username"
+                type="text"
+                required
+                fullWidth
+                label="Username *"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+              />
+              <TextField
+                name="password"
+                type="password"
+                required
+                fullWidth
+                label="Password *"
+                placeholder="Enter your password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </div>
 
-          <form className="space-y-4" onSubmit={handleSubmit}>
-            <TextField
-              name="username"
-              type="text"
-              required
-              label="Username"
-              placeholder="Enter your username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              variant="outlined"
-              fullWidth
-              autoComplete="username"
-            />
-
-            <TextField
-              name="password"
-              type="password"
-              required
-              label="Password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              variant="outlined"
-              fullWidth
-              autoComplete="current-password"
-            />
-
+            {/* Keep button spacing as before */}
             <Button
               type="submit"
               variant="contained"
               fullWidth
-              disabled={pending}
+              sx={{ mt: 3.5, py: 1.3 }}
             >
-              {pending ? "Signing in…" : "Sign in"}
+              SIGN IN
             </Button>
 
             <Button
               variant="outlined"
               fullWidth
+              sx={{ mt: 2, py: 1.15 }}
               onClick={() => router.push("/portal")}
             >
-              Go to Portal
+              GO TO PORTAL
             </Button>
           </form>
         </div>
-      </div>
-    </>
+      </main>
+    </div>
   );
 }

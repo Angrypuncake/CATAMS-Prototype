@@ -40,6 +40,10 @@ const bubbleBaseStyle = ({ theme }: { theme: Theme }) => ({
 });
 
 const themeOptions: ThemeOptions = {
+  palette: {
+    primary: { main: "#003366" },   // USYD blue (nav top bar)
+    secondary: { main: "#f0b429", contrastText: "#0b3a74" }, // USYD gold (nav bottom bar)
+  },
   typography: {
     fontFamily: "Inter, Roboto, sans-serif",
     h1: { fontSize: "2.25rem", fontWeight: 700 }, // 36px

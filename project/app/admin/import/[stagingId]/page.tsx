@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { commitImport, discardImport } from "@/app/services/allocationService";
 
 /** ---------- Types ---------- */
 type TimetableRow = {
@@ -367,36 +368,28 @@ export default function PreviewPage() {
       setMsg(
         `❌ Cannot commit: ${conflictCount} timetable conflict${
           conflictCount > 1 ? "s" : ""
-        } detected. Resolve overlaps (same staff, same time) first.`,
+        } detected. Resolve overlaps first.`,
       );
       return;
     }
+
     setBusy(true);
     setMsg("");
-    try {
-      const res = await fetch("/api/admin/import/commit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stagingId: id }),
-      });
-      const ct = res.headers.get("content-type") || "";
-      const payload: unknown = ct.includes("application/json")
-        ? await res.json()
-        : await res.text();
 
-      if (!res.ok) {
-        if (typeof payload === "string" && payload.includes("<!DOCTYPE")) {
-          throw new Error(
-            "Request was redirected or failed (HTML response). Are you logged in?",
-          );
-        }
-        throw new Error(hasError(payload) ? payload.error : "Commit failed");
-      }
-      const inserted = hasInserted(payload) ? payload.inserted : payload;
-      setMsg(`✅ Committed. Inserted → ${JSON.stringify(inserted)}`);
+    try {
+      const data = await commitImport(id);
+
+      const { teaching_activity, session_occurrence, allocation } =
+        data.inserted;
+      setMsg(
+        `✅ Committed. 
+         Inserted → teaching_activity=${teaching_activity}, 
+         session_occurrence=${session_occurrence}, 
+         allocation=${allocation}`,
+      );
     } catch (e: unknown) {
-      const m = e instanceof Error ? e.message : String(e);
-      setMsg(`❌ ${m || "Commit failed"}`);
+      const message = e instanceof Error ? e.message : String(e);
+      setMsg(`❌ ${message || "Commit failed"}`);
     } finally {
       setBusy(false);
     }
@@ -406,19 +399,12 @@ export default function PreviewPage() {
     setBusy(true);
     setMsg("");
     try {
-      const res = await fetch(`/api/admin/discard`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stagingId: id }),
-      });
-      const ct = res.headers.get("content-type") || "";
-      const payload: unknown = ct.includes("application/json")
-        ? await res.json()
-        : await res.text();
-      if (!res.ok) {
-        throw new Error(hasError(payload) ? payload.error : "Discard failed");
+      const data = await discardImport(id);
+      if ("error" in data) {
+        setMsg(`❌ ${data.error}${data.detail ? ` – ${data.detail}` : ""}`);
+        return;
       }
-      setMsg("🗑️ Discarded.");
+      setMsg("🗑️ Discarded successfully.");
       router.push("/admin/import");
     } catch (e: unknown) {
       const m = e instanceof Error ? e.message : String(e);

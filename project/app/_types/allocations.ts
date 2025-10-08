@@ -75,3 +75,24 @@ export type RollbackResponse = {
     d_teach: number; // number of teaching_activity deleted
   };
 };
+
+export type CommitResponse = {
+  committed: true;
+  stagingId: number;
+  inserted: {
+    teaching_activity: number;
+    session_occurrence: number;
+    allocation: number;
+  };
+};
+
+export type DiscardResponse =
+  | {
+      discarded: true;
+      batchId: number;
+    }
+  | {
+      error: string;
+      detail?: string;
+      committedRuns?: number;
+    };

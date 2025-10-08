@@ -7,19 +7,13 @@ import {
   Stack,
   Button,
   TextField,
-  Checkbox,
-  FormControlLabel,
   Paper,
   CircularProgress,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import {
-  getAllocationById,
-  getAllocationsByUnit,
-  getFormattedAllocationById,
-} from "@/app/services/allocationService";
+import { getAllocationById } from "@/app/services/allocationService";
 import { TutorAllocationRow } from "@/app/_types/allocations";
 import React from "react";
 

@@ -109,11 +109,11 @@ export default function QueryRequestPage() {
         <Card variant="outlined" sx={{ borderRadius: 2, mb: 3 }}>
           <CardContent>
             <Typography fontWeight={700}>
-              {allocation.unit_code} – {allocation.unit_name}
+              {allocation.unit_code} - {allocation.unit_name}
             </Typography>
             <Typography>Date: {allocation.session_date}</Typography>
             <Typography>
-              Time: {allocation.start_at?.slice(0, 5)} –{" "}
+              Time: {allocation.start_at?.slice(0, 5)} -{" "}
               {allocation.end_at?.slice(0, 5)}
             </Typography>
             <Typography>Session: {allocation.activity_name}</Typography>

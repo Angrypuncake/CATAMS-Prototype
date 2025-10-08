@@ -11,10 +11,10 @@ import {
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DetailRow from "../../_components/DetailRow";
-import type { TutorAllocationRow as AllocationDetail } from "@/app/_types/allocations";
+import type { TutorAllocationRow } from "@/app/_types/allocations";
 
 interface Props {
-  allocation: AllocationDetail;
+  allocation: TutorAllocationRow;
 }
 
 export default function AllocationDetails({ allocation }: Props) {

@@ -33,7 +33,7 @@ import { getFormattedAllocationById } from "@/app/services/allocationService";
 import AllocationDetails from "./_components/AllocationDetails";
 
 // DB status → UI union type normalization
-type UIStatus = AllocationDetail["status"]; // "Confirmed" | "Pending" | "Cancelled"
+// type UIStatus = AllocationDetail["status"]; // "Confirmed" | "Pending" | "Cancelled"
 
 // ---------- Page ----------
 export default function AllocationPage() {

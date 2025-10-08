@@ -7,8 +7,8 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Chip,
 } from "@mui/material";
-import Chip from "./Chip";
 
 interface AllocationRow {
   unit: string;

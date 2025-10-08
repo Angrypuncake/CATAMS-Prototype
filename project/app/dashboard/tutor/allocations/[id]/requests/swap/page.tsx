@@ -142,7 +142,7 @@ const SwapRequestPage = () => {
           date: toDDMMYYYY(a.session_date),
           time:
             a.start_at || a.end_at
-              ? `${toHHMM(a.start_at)} – ${toHHMM(a.end_at)}`
+              ? `${toHHMM(a.start_at)} - ${toHHMM(a.end_at)}`
               : "—",
           location: a.location ?? "—",
           hours:

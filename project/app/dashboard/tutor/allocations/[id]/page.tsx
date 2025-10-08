@@ -178,7 +178,9 @@ export default function AllocationPage() {
                 <MenuItem onClick={() => router.push(`${id}/requests/swap`)}>
                   Swap
                 </MenuItem>
-                <MenuItem onClick={() => setAnchorEl(null)}>
+                <MenuItem
+                  onClick={() => router.push(`${id}/requests/correction`)}
+                >
                   Correction
                 </MenuItem>
                 <MenuItem

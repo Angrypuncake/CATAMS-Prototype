@@ -1,20 +1,13 @@
 "use client";
-import React, { ReactNode, useState } from "react";
+import React, { useState } from "react";
 import { Button, Typography } from "@mui/material";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-} from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import DownloadIcon from "@mui/icons-material/Download";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import SelectField from "./SelectField";
-import Chip from "./Chip";
+import AllocationsTable from "./AllocationsTable";
+import ClaimsTable from "./ClaimsTable";
+import RequestsTable from "./RequestsTable";
 
 interface AllocationRow {
   unit: string;
@@ -169,49 +162,7 @@ const TeachingOperations: React.FC = () => {
               </Typography>
               <Button variant="text">Manage Allocations</Button>
             </div>
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Unit</TableCell>
-                    <TableCell>Week</TableCell>
-                    <TableCell>Sessions</TableCell>
-                    <TableCell>Assigned</TableCell>
-                    <TableCell>Unassigned</TableCell>
-                    <TableCell>Hours</TableCell>
-                    <TableCell>Last Change</TableCell>
-                    <TableCell>Status</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {allocationsData.map((row: AllocationRow, idx: number) => (
-                    <TableRow key={idx}>
-                      <TableCell style={{ fontWeight: "bold" }}>
-                        {row.unit}
-                      </TableCell>
-                      <TableCell>{row.week}</TableCell>
-                      <TableCell>{row.sessions}</TableCell>
-                      <TableCell>{row.assigned}</TableCell>
-                      <TableCell>{row.unassigned}</TableCell>
-                      <TableCell>{row.hours}</TableCell>
-                      <TableCell>{row.lastChange}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={row.status}
-                          size="small"
-                          color={
-                            row.status === "Attention" ? "warning" : "success"
-                          }
-                          variant={
-                            row.status === "Attention" ? "filled" : "outlined"
-                          }
-                        />
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            <AllocationsTable data={allocationsData} />
           </section>
 
           <section className="bg-white rounded-lg shadow-sm">
@@ -303,36 +254,7 @@ const TeachingOperations: React.FC = () => {
                 View all claims
               </Button>
             </div>
-            <TableContainer component={Paper}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Tutor</TableCell>
-                    <TableCell>Session</TableCell>
-                    <TableCell>Diff</TableCell>
-                    <TableCell>Submitted</TableCell>
-                    <TableCell>Action</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {claimsData.map((claim: ClaimData, idx: number) => (
-                    <TableRow key={idx}>
-                      <TableCell>{claim.tutor}</TableCell>
-                      <TableCell>{claim.session}</TableCell>
-                      <TableCell style={{ fontWeight: "bold" }}>
-                        {claim.diff}
-                      </TableCell>
-                      <TableCell>{claim.submitted}</TableCell>
-                      <TableCell>
-                        <Button variant="text" size="small">
-                          Review
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            <ClaimsTable data={claimsData} />
           </div>
 
           <div className="bg-white rounded-lg shadow-sm">
@@ -344,36 +266,7 @@ const TeachingOperations: React.FC = () => {
                 View all requests
               </Button>
             </div>
-            <TableContainer component={Paper}>
-              <Table size="small">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Tutor</TableCell>
-                    <TableCell>Session</TableCell>
-                    <TableCell>Type</TableCell>
-                    <TableCell>Submitted</TableCell>
-                    <TableCell>Action</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {requestsData.map((request: RequestData, idx: number) => (
-                    <TableRow key={idx}>
-                      <TableCell>{request.tutor}</TableCell>
-                      <TableCell>{request.session}</TableCell>
-                      <TableCell style={{ fontWeight: "bold" }}>
-                        {request.type}
-                      </TableCell>
-                      <TableCell>{request.submitted}</TableCell>
-                      <TableCell>
-                        <Button variant="text" size="small">
-                          Review
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+            <RequestsTable data={requestsData} />
           </div>
         </div>
       </div>

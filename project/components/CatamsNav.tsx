@@ -2,7 +2,6 @@
 
 import React from "react";
 
-/** Minimal USYD-style CATAMS Nav (no menus on gold bar) */
 export type NavAction = {
     label: string;
     href?: string;
@@ -10,26 +9,15 @@ export type NavAction = {
 };
 
 export interface CatamsNavProps {
-    /** Logo image path (e.g. /usyd_logo.png in /public) */
     logoSrc: string;
-
-    /** Right-side title in the blue bar (e.g. "CATAMS", "SYSTEM ADMIN") */
     rightTitle: string;
-
-    /** Right-side buttons on the gold bar (e.g. Help, Logout) */
     actions?: NavAction[];
-
-    /**
-     * Class applied to the *colored bars container*.
-     * Use this to control side margins/width.  Examples:
-     *  - "mx-auto max-w-6xl" (default)
-     *  - "mx-[1cm]" (exactly 1cm gutters L/R)
-     */
-    containerClass?: string;
-
-    /** Tailwind height class for the logo image (e.g. "h-12"). Default: h-12 */
-    logoClass?: string;
-
+    /** Keeps content neat inside the blue/gold bars */
+    maxWidthClass?: string; // e.g. "max-w-screen-2xl"
+    /** Exact side gap in cm for the whole navbar block (default 1cm) */
+    edgeGapCm?: number;
+    /** Visual scale for the logo (does not affect bar height). 1 = normal */
+    logoScale?: number;
     className?: string;
 }
 
@@ -40,11 +28,14 @@ function cx(...xs: Array<string | false | null | undefined>) {
 function Action({ a }: { a: NavAction }) {
     const cls =
         "inline-flex items-center rounded-md bg-white px-3 py-1.5 text-sm font-medium text-[#0b3a74] shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#0b3a74]";
-    return a.href ? (
-        <a className={cls} href={a.href} onClick={a.onClick}>
-            {a.label}
-        </a>
-    ) : (
+    if (a.href) {
+        return (
+            <a className={cls} href={a.href} onClick={a.onClick}>
+                {a.label}
+            </a>
+        );
+    }
+    return (
         <button className={cls} onClick={a.onClick}>
             {a.label}
         </button>
@@ -55,29 +46,56 @@ export default function CatamsNav({
     logoSrc,
     rightTitle,
     actions = [],
-    containerClass = "mx-auto max-w-6xl",
-    logoClass = "h-12",
+    maxWidthClass = "max-w-screen-2xl",
+    edgeGapCm = 1,
+    logoScale = 1.25, // bump this up or down to taste
     className,
 }: CatamsNavProps) {
+    // Exact rectangle with e.g. 1cm gap on both sides
+    const outerStyle: React.CSSProperties = {
+        width: `min(100%, calc(100vw - ${edgeGapCm * 2}cm))`,
+        marginLeft: "auto",
+        marginRight: "auto",
+    };
+
     return (
-        <header className={cx("w-full", className)}>
-            {/* Blue top bar (width/margins controlled by containerClass) */}
-            <div className={cx("bg-[#003366]", containerClass)}>
-                <div className="flex items-center justify-between px-4 py-3 gap-4">
-                    <img
-                        src={logoSrc}
-                        alt="University of Sydney"
-                        className={cx("w-auto select-none", logoClass)}
-                    />
-                    <div className="text-white text-base md:text-lg font-semibold tracking-wide uppercase">
+        <header className={cx("shadow-sm", className)} style={outerStyle}>
+            {/* Blue bar */}
+            <div className="bg-[#003366]">
+                <div
+                    className={cx(
+                        maxWidthClass,
+                        // keep bar compact; let the logo scale visually without affecting height
+                        "mx-auto flex items-center justify-between px-4 py-3 gap-4 overflow-visible"
+                    )}
+                >
+                    {/* Fixed-height wrapper; scaled image inside doesn’t change layout height */}
+                    <div className="h-10 flex items-center overflow-visible">
+                        <img
+                            src={logoSrc}
+                            alt="University of Sydney"
+                            className="h-10 w-auto origin-left select-none"
+                            style={{
+                                transform: `scale(${logoScale})`,
+                                transformOrigin: "left center",
+                            }}
+                        />
+                    </div>
+
+                    <div className="text-white text-sm sm:text-base md:text-lg font-semibold tracking-wide uppercase">
                         {rightTitle}
                     </div>
                 </div>
             </div>
 
-            {/* Gold action bar (no menus) */}
-            <div className={cx("bg-[#f0b429]", containerClass)}>
-                <div className="px-4 py-2 flex items-center justify-end gap-2">
+            {/* Gold bar (right-aligned actions only) */}
+            <div className="bg-[#f0b429]">
+                <div
+                    className={cx(
+                        maxWidthClass,
+                        "mx-auto px-4 py-2 flex items-center justify-end gap-2"
+                    )}
+                >
                     {actions.map((a) => (
                         <Action key={a.label} a={a} />
                     ))}

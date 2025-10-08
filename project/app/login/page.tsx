@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button, TextField, Typography } from "@mui/material";
 import axios from "axios";
-import CatamsNav from "@/components/CatamsNav"; // adjust if your filename differs
+import { Button, TextField, Typography } from "@mui/material";
+import CatamsNav from "@/components/CatamsNav";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -13,14 +13,18 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
     try {
       const result = await axios.post(
         "/api/auth/login",
         { useremail: username, password },
         { withCredentials: true }
       );
-      if (result.data.success) router.push("/portal");
-    } catch (error) {
+
+      if (result.data?.success) {
+        router.push("/portal");
+      }
+    } catch (error: any) {
       console.error("Login error:", error);
       if (axios.isAxiosError(error) && error.response) {
         alert(`Login failed: ${error.response.data.error}`);
@@ -31,60 +35,60 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#f4f5f7]">
-      {/* USYD-style nav with fixed side gutters */}
+    <div className="min-h-screen w-full bg-[#f7f9fc]">
+      {/* EXACT 1cm gap on both sides */}
       <CatamsNav
         logoSrc="/usyd_logo.png"
         rightTitle="CATAMS"
-        actions={[{ label: "HELP" }]}
-        containerClass="mx-[1cm]"
-        logoClass="h-12"
+        actions={[{ label: "HELP", href: "/help" }]}
+        edgeGapCm={1}
+        maxWidthClass="max-w-screen-2xl"
       />
 
-      {/* Login card */}
-      <main className="w-full flex justify-center">
-        <div className="mt-10 mb-16 w-full max-w-[520px] bg-white shadow-sm border border-gray-200 px-8 py-9">
+      <main className="max-w-screen-2xl mx-auto px-4 py-30">
+        <div className="mx-auto w-full max-w-xl border border-gray-200 bg-white p-8 shadow-sm">
           <Typography
             variant="h5"
             component="h2"
             align="center"
             fontWeight="bold"
-            sx={{ mb: 4 }}
+            sx={{ mb: 3 }}
           >
             Sign in to your account
           </Typography>
 
-          <form onSubmit={handleSubmit}>
-            {/* EXTRA space specifically between username & password */}
-            <div className="space-y-8">
-              <TextField
-                name="username"
-                type="text"
-                required
-                fullWidth
-                label="Username *"
-                placeholder="Enter your username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-              />
-              <TextField
-                name="password"
-                type="password"
-                required
-                fullWidth
-                label="Password *"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
+          <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+            <TextField
+              name="username"
+              type="text"
+              required
+              fullWidth
+              label="Username * *"
+              placeholder="Enter your username"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              variant="outlined"
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 0 } }}
+            />
 
-            {/* Keep button spacing as before */}
+            <TextField
+              name="password"
+              type="password"
+              required
+              fullWidth
+              label="Password * *"
+              placeholder="Enter your password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              variant="outlined"
+              sx={{ "& .MuiOutlinedInput-root": { borderRadius: 0 } }}
+            />
+
             <Button
               type="submit"
               variant="contained"
               fullWidth
-              sx={{ mt: 3.5, py: 1.3 }}
+              sx={{ mt: 1, borderRadius: 0, py: 1.2 }}
             >
               SIGN IN
             </Button>
@@ -92,8 +96,8 @@ export default function LoginPage() {
             <Button
               variant="outlined"
               fullWidth
-              sx={{ mt: 2, py: 1.15 }}
               onClick={() => router.push("/portal")}
+              sx={{ borderRadius: 0, py: 1.1 }}
             >
               GO TO PORTAL
             </Button>

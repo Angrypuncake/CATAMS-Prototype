@@ -186,20 +186,6 @@ const CancelRequestPage = () => {
           )}
         />
 
-        {/* Timing */}
-        <TextField
-          select
-          fullWidth
-          label="Timing of Notification"
-          value={timing}
-          onChange={(e) => setTiming(e.target.value)}
-          sx={{ mb: 3 }}
-        >
-          <MenuItem value=">48h">More than 48 hours before session</MenuItem>
-          <MenuItem value="24-48h">Between 24–48 hours</MenuItem>
-          <MenuItem value="<24h">Less than 24 hours</MenuItem>
-        </TextField>
-
         {/* Acknowledgement */}
         <FormControlLabel
           control={

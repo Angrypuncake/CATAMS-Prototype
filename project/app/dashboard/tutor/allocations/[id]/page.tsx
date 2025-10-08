@@ -29,54 +29,10 @@ import type {
   CommentItem,
 } from "@/app/_types/allocations";
 import { useRouter } from "next/navigation";
-
-// ---------- Helpers ----------
-function toHHMM(hms?: string | null) {
-  if (!hms) return "—";
-  return hms.slice(0, 5); // assumes "HH:MM:SS"
-}
-function toDDMMYYYY(iso?: string | null) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  const dd = String(d.getUTCDate()).padStart(2, "0");
-  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const yyyy = d.getUTCFullYear();
-  return `${dd}/${mm}/${yyyy}`;
-}
+import { getFormattedAllocationById } from "@/app/services/allocationService";
 
 // DB status → UI union type normalization
 type UIStatus = AllocationDetail["status"]; // "Confirmed" | "Pending" | "Cancelled"
-function normalizeStatus(s?: string | null): UIStatus {
-  const v = (s ?? "").trim().toLowerCase();
-
-  // Treat as Confirmed
-  if (
-    v === "confirmed" ||
-    v === "approved" ||
-    v === "accepted" ||
-    v === "allocated" ||
-    v === "active" ||
-    v === "assigned"
-  ) {
-    return "Confirmed";
-  }
-
-  // Treat as Pending
-  if (
-    v === "pending" ||
-    v === "in_progress" ||
-    v === "requested" ||
-    v.includes("pending") ||
-    v.includes("review") ||
-    v.includes("await")
-  ) {
-    return "Pending";
-  }
-
-  // Fallback
-  return "Cancelled";
-}
 
 // ---------- Page ----------
 export default function AllocationPage() {
@@ -108,56 +64,13 @@ export default function AllocationPage() {
           setErr(null);
         }
 
-        const res = await fetch(
-          `/api/tutor/allocations/${encodeURIComponent(id)}`,
-          { cache: "no-store" },
-        );
-        if (!res.ok) throw new Error(`Failed to fetch allocation ${id}`);
-        const json = await res.json();
-
-        const a = json.data as {
-          allocation_id: string;
-          unit_code: string | null;
-          unit_name: string | null;
-          status: string | null;
-          session_date: string | null;
-          start_at: string | null;
-          end_at: string | null;
-          location: string | null;
-          activity_name: string | null;
-          note: string | null;
-        };
-
-        const mapped: AllocationDetail = {
-          id: a.allocation_id,
-          unit_code: a.unit_code ?? "—",
-          unit_name: a.unit_name ?? "—",
-          status: normalizeStatus(a.status),
-          session_date: toDDMMYYYY(a.session_date),
-          start_at: a.start_at,
-          end_at: a.end_at,
-          location: a.location ?? "—",
-          allocated_hours:
-            a.start_at && a.end_at
-              ? (() => {
-                  const [sh, sm] = a.start_at.split(":").map(Number);
-                  const [eh, em] = a.end_at.split(":").map(Number);
-                  const start = new Date(0, 0, 0, sh || 0, sm || 0, 0);
-                  const end = new Date(0, 0, 0, eh || 0, em || 0, 0);
-                  let diff =
-                    (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-                  if (diff < 0) diff += 24;
-                  return `${diff.toFixed(2)}h`;
-                })()
-              : "—",
-          activity_name: a.activity_name ?? "—",
-          note: a.note ?? undefined,
-        };
+        // fetch via service
+        const mapped = await getFormattedAllocationById(id);
 
         if (!cancelled) {
           setAllocation(mapped);
-          setRequests([]); // TODO: later wire to /requests
-          setComments([]); // TODO: later wire to /comments
+          setRequests([]); // future endpoint
+          setComments([]); // future endpoint
         }
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);

@@ -1,5 +1,8 @@
 import axios from "@/lib/axios";
-import type { SaveAllocationPayload } from "@/app/_types/allocations";
+import type {
+  SaveAllocationPayload,
+  RollbackResponse,
+} from "@/app/_types/allocations";
 
 export interface Allocation {
   id: string;
@@ -80,5 +83,10 @@ export async function importAdminData(fd: FormData) {
   const res = await axios.post("/admin/import", fd, {
     headers: { "Content-Type": "multipart/form-data" },
   });
+  return res.data;
+}
+
+export async function rollbackRun(runId: number): Promise<RollbackResponse> {
+  const res = await axios.post<RollbackResponse>("/admin/rollback", { runId });
   return res.data;
 }

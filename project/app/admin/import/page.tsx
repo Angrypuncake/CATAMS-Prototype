@@ -91,24 +91,23 @@ export default function ImportPage() {
       fd.append("hasHeaders", String(hasHeaders));
       fd.append("delimiter", delimiter);
 
-      const res = await importAdminData(fd);
+      const data = await importAdminData(fd);
 
       setStage("validating");
       appendLog("[server] Processing upload …");
 
-      const json = await res.json();
-      appendLog(JSON.stringify(json, null, 2));
+      appendLog(JSON.stringify(data, null, 2));
 
-      if (!res.ok) {
+      if (!("ok" in data) || !data.ok) {
         setStage("error");
-        throw new Error(json?.error || "Import failed");
+        throw new Error(data?.error || "Import failed");
       }
 
       setStage("staging");
       appendLog("[server] Staging complete. Redirecting to review page …");
 
       setStage("redirect");
-      router.push(`/admin/import/${json.stagingId}`);
+      router.push(`/admin/import/${data.stagingId}`);
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
       setStage("error");

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { rollbackRun } from "@/app/services/allocationService";
 
 type By = {
   id: number | null;
@@ -63,25 +64,16 @@ export default function ImportHistoryPage() {
   async function doRollback(runId: number) {
     setBusy(true);
     setMsg("");
+
     try {
-      const res = await fetch("/api/admin/rollback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ runId }),
-      });
-      const ct = res.headers.get("content-type") || "";
-      const payload = ct.includes("application/json")
-        ? await res.json()
-        : await res.text();
-      if (!res.ok)
-        throw new Error(
-          typeof payload === "string"
-            ? payload
-            : payload?.error || "Rollback failed",
-        );
+      const payload = await rollbackRun(runId);
+      const { d_alloc, d_sess, d_teach } = payload.deleted;
+
       setMsg(
-        `Rolled back run #${runId}. Deleted: ${JSON.stringify(payload.deleted)}`,
+        `Rolled back run #${payload.runId}. 
+         Deleted: allocations=${d_alloc}, sessions=${d_sess}, activities=${d_teach}`,
       );
+
       await load();
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);

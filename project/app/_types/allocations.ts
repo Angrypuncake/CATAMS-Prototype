@@ -36,6 +36,7 @@ export interface AllocationBase {
   allocated_hours: number | string | null;
   activity_name: string | null;
   activity_type: string | null;
+  paycode_id?: string | null;
 }
 
 export interface TutorAllocationRow extends AllocationBase {
@@ -47,7 +48,6 @@ export interface AdminAllocationRow extends AllocationBase {
   first_name: string | null;
   last_name: string | null;
   email: string | null;
-  paycode_id?: string | null;
   teaching_role?: string | null;
   mode?: "scheduled" | "unscheduled" | string | null;
   allocation_activity_id?: number | null;

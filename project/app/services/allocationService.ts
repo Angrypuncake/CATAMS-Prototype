@@ -104,7 +104,8 @@ export async function getAllocationById(
     location: row.location,
     status: row.status,
     note: row.note,
-    allocated_hours: row.allocated_hours ?? null,
+    allocated_hours: row.hours,
+    paycode_id: row.paycode_id,
   };
 }
 
@@ -129,6 +130,7 @@ export async function getFormattedAllocationById(
     activity_name: a.activity_name ?? "—",
     activity_type: a.activity_type ?? "—",
     note: a.note ?? undefined,
+    paycode_id: a.paycode_id ?? "—",
   };
 }
 

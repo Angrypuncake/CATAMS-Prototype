@@ -1,73 +1,128 @@
-// app/claim-request/[id]/page.tsx
-export default function ClaimRequestPage() {
+// components/ClaimForm.tsx
+"use client";
+import { useEffect, useState } from "react";
+import { getAllocationById } from "@/app/services/allocationService";
+import { TutorAllocationRow } from "@/app/_types/allocations";
+import { useParams } from "next/navigation";
+import { getPaycodes } from "@/app/services/paycodeService";
+import { Paycode } from "@/app/_types/paycode";
+
+export default function ClaimForm() {
+  const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
+  const [systemHours, setSystemHours] = useState<number>(0);
+  const [hours, setHours] = useState<number>(0);
+  const [payCode, setPayCode] = useState("");
+  const [comment, setComment] = useState("");
+  const [error, setError] = useState("");
+  const params = useParams<{ id: string }>();
+  const allocationId = Array.isArray(params?.id) ? params.id[0] : params?.id;
+
+  const [paycodes, setPaycodes] = useState<Paycode[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      const [allocData, paycodeList] = await Promise.all([
+        getAllocationById(allocationId),
+        getPaycodes(),
+      ]);
+
+      setAllocation(allocData);
+      setSystemHours(Number(allocData.allocated_hours ?? 0));
+      setHours(Number(allocData.allocated_hours ?? 0));
+      setPayCode(allocData.paycode_id ?? "");
+      setPaycodes(paycodeList);
+    })();
+  }, [allocationId]);
+
+  if (!allocation) return <div>Loading...</div>;
+  const hoursChanged = hours != systemHours;
+  const paycodeChanged = payCode !== allocation.paycode_id;
+
+  const handleSubmit = () => {
+    if ((paycodeChanged || hoursChanged) && !comment.trim()) {
+      setError("Comment required when claimed hours or pay code differ");
+      return;
+    }
+
+    setError("");
+    alert("Claim submitted");
+  };
+
   return (
-    <div className="p-6 space-y-6">
-      <header className="flex items-center justify-between">
+    <div className="p-6 border rounded-lg max-w-xl">
+      <h2 className="text-xl font-semibold mb-3">Claim Allocation</h2>
+      <p>
+        <strong>Unit:</strong> {allocation.unit_code} – {allocation.unit_name}
+      </p>
+      <p>
+        <strong>Date:</strong> {allocation.session_date} <strong>Time:</strong>{" "}
+        {allocation.start_at}
+      </p>
+
+      <div className="mt-4 grid grid-cols-2 gap-4">
         <div>
-          <h1 className="text-xl font-semibold">Claim Request #123</h1>
-          <p className="text-sm text-gray-500">
-            Submitted by Elvis Nguyen • 13/09/2025
-          </p>
+          <p className="font-medium">System Record</p>
+          <p>Hours: {allocation.allocated_hours}</p>
+          <p>Pay Code: {allocation.paycode_id}</p>
         </div>
-        <span className="px-3 py-1 rounded-full text-sm bg-yellow-100 text-yellow-800">
-          Pending Review
-        </span>
-      </header>
-
-      <section className="grid grid-cols-2 gap-6">
-        {/* System Record */}
-        <div className="rounded-lg border p-4 bg-gray-50">
-          <h2 className="font-semibold mb-3">System Record</h2>
-          <div className="space-y-2 text-sm">
-            <p>
-              Unit: <span className="font-medium">INFO1110</span>
-            </p>
-            <p>
-              Session: <span className="font-medium">TUT01</span>
-            </p>
-            <p>Hours: 2</p>
-            <p>Pay Code: TUT01</p>
-          </div>
+        <div>
+          <p className="font-medium">Tutor Claim</p>
+          <input
+            type="number"
+            min="0"
+            step="0.25"
+            className="border rounded w-full px-2 py-1"
+            value={hours}
+            onChange={(e) => setHours(Number(e.target.value))}
+          />
+          <select
+            className="border rounded w-full mt-2 px-2 py-1"
+            value={payCode}
+            onChange={(e) => setPayCode(e.target.value)}
+          >
+            {paycodes.map((p) => (
+              <option key={p.code} value={p.code}>
+                {p.code} – {p.paycode_description}
+              </option>
+            ))}
+          </select>
         </div>
+      </div>
 
-        {/* Tutor Claim */}
-        <div className="rounded-lg border p-4 bg-white">
-          <h2 className="font-semibold mb-3">Tutor Claim (Requested)</h2>
-          <div className="space-y-3">
-            <label className="block text-sm">
-              Claimed Hours
-              <input type="number" defaultValue={2} className="input" />
-            </label>
-            <label className="block text-sm">
-              Claimed Pay Code
-              <select className="input">
-                <option>TUT01</option>
-                <option>TU4</option>
-              </select>
-            </label>
-            <label className="block text-sm">
-              Comment
-              <textarea className="input" placeholder="Explain changes..." />
-            </label>
-          </div>
-        </div>
-      </section>
+      <div className="mt-4">
+        <label className="font-medium">
+          Comment {(hoursChanged || paycodeChanged) && "[Mandatory]"}
+        </label>
+        <textarea
+          className="border rounded w-full px-2 py-1 mt-1"
+          placeholder={
+            hoursChanged || paycodeChanged
+              ? "Explain reason for change..."
+              : "Optional comment"
+          }
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+        />
+      </div>
 
-      <section className="border-t pt-4">
-        <h2 className="font-semibold mb-2">History</h2>
-        <ul className="text-sm space-y-1 text-gray-600">
-          <li>5:40 PM – Request edited (changed paycode to TU4)</li>
-          <li>5:12 PM – Request created by Elvis</li>
-        </ul>
-      </section>
+      {error && <p className="text-red-600 mt-2">⚠ {error}</p>}
 
-      <footer className="flex justify-between pt-4 border-t">
-        <button className="btn-secondary">Back</button>
-        <div className="space-x-2">
-          <button className="btn-outline">Withdraw</button>
-          <button className="btn-primary">Submit Request</button>
-        </div>
-      </footer>
+      <button
+        onClick={handleSubmit}
+        className={`mt-4 px-4 py-2 rounded text-white ${
+          paycodeChanged || hoursChanged ? "bg-yellow-600" : "bg-blue-600"
+        }`}
+      >
+        {paycodeChanged || hoursChanged
+          ? "Submit Claim Request"
+          : "Submit Claim"}
+      </button>
+
+      {paycodeChanged && (
+        <p className="text-sm text-red-600 mt-2">
+          Entered Paycode is different
+        </p>
+      )}
     </div>
   );
 }

@@ -73,3 +73,12 @@ export async function patchAdminAllocation(
   const res = await axios.patch(`/admin/allocations/${id}`, updated);
   return res.data;
 }
+
+// IMPORT pipeline
+
+export async function importAdminData(fd: FormData) {
+  const res = await axios.post("/admin/import", fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+}

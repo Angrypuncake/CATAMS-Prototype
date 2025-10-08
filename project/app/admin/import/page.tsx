@@ -2,6 +2,7 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { importAdminData } from "@/app/services/allocationService";
 
 /**
  * Admin > Import Allocations
@@ -90,10 +91,7 @@ export default function ImportPage() {
       fd.append("hasHeaders", String(hasHeaders));
       fd.append("delimiter", delimiter);
 
-      const res = await fetch("/api/admin/import", {
-        method: "POST",
-        body: fd,
-      });
+      const res = await importAdminData(fd);
 
       setStage("validating");
       appendLog("[server] Processing upload …");

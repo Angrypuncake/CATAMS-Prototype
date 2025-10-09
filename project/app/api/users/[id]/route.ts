@@ -1,50 +1,19 @@
+// api/users/[id]
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
-export async function GET(req: Request) {
+export async function GET(_: Request, { params }: { params: { id: string } }) {
   try {
-    const { searchParams } = new URL(req.url);
-    const q = searchParams.get("q")?.trim();
-    const role = searchParams.get("role")?.trim();
-    const limit = Number(searchParams.get("limit")) || 1000;
-
-    const params: (string | number | boolean | null)[] = [];
-    const whereParts: string[] = [];
-
-    if (q) {
-      params.push(`%${q}%`);
-      whereParts.push(`
-        (u.first_name ILIKE $${params.length}
-        OR u.last_name ILIKE $${params.length}
-        OR u.email ILIKE $${params.length})
-      `);
-    }
-
-    if (role) {
-      params.push(role);
-      whereParts.push(`r.role_name = $${params.length}`);
-    }
-
-    const whereSQL = whereParts.length
-      ? `WHERE ${whereParts.join(" AND ")}`
-      : "";
-
+    const userId = Number(params.id);
     const sql = `
-      SELECT DISTINCT
-        u.user_id,
-        u.first_name,
-        u.last_name,
-        u.email
-      FROM users u
-      LEFT JOIN user_role ur ON ur.user_id = u.user_id
-      LEFT JOIN role r ON r.role_id = ur.role_id
-      ${whereSQL}
-      ORDER BY u.last_name NULLS LAST, u.first_name ASC
-      LIMIT ${limit};
+      SELECT user_id, first_name, last_name, email
+      FROM users
+      WHERE user_id = $1;
     `;
-
-    const { rows } = await query(sql, params);
-    return NextResponse.json({ data: rows });
+    const { rows } = await query(sql, [userId]);
+    if (!rows.length)
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    return NextResponse.json(rows[0]);
   } catch (e) {
     const message = e instanceof Error ? e.message : "Internal error";
     return NextResponse.json({ error: message }, { status: 500 });

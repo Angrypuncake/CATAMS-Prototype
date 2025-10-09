@@ -1,6 +1,5 @@
-// api/users/[id]
+//api/user/units
 
-// Get basic info just for this user
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
@@ -8,14 +7,19 @@ export async function GET(_: Request, { params }: { params: { id: string } }) {
   try {
     const userId = Number(params.id);
     const sql = `
-      SELECT user_id, first_name, last_name, email
-      FROM users
-      WHERE user_id = $1;
+      SELECT DISTINCT
+        cu.unit_code,
+        cu.unit_name,
+        uo.session_code,
+        uo.year
+      FROM user_role ur
+      JOIN unit_offering uo ON ur.unit_offering_id = uo.offering_id
+      JOIN course_unit cu ON cu.unit_code = uo.course_unit_id
+      WHERE ur.user_id = $1
+      ORDER BY uo.year DESC, uo.session_code;
     `;
     const { rows } = await query(sql, [userId]);
-    if (!rows.length)
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
-    return NextResponse.json(rows[0]);
+    return NextResponse.json({ data: rows });
   } catch (e) {
     const message = e instanceof Error ? e.message : "Internal error";
     return NextResponse.json({ error: message }, { status: 500 });

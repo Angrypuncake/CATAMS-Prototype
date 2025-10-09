@@ -29,9 +29,9 @@ export type EmptyDetails = null;
 export interface BaseRequest {
   requestId: number;
   requesterId: number;
+  reviewerId: number;
   requestDate: string;
   allocationId: number;
-  initiatorId: number;
   requestStatus: "pending" | "approved" | "rejected";
   requestReason: string | null;
   createdAt: string;

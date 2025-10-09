@@ -8,10 +8,10 @@ export async function getRequestById(id: string): Promise<TutorRequest> {
 
     const base = {
       requestId: Number(id),
-      requesterId: 1001,
+      requesterId: 6,
+      reviewerId: 10,
       requestDate: now,
       allocationId: 27,
-      initiatorId: 1001,
       requestStatus: "pending" as const,
       requestReason: null,
       createdAt: now,

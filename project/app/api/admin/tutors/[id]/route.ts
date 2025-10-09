@@ -4,24 +4,22 @@ import { query } from "@/lib/db";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { id: string } },
+  context: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { id } = params;
+    const { id } = await context.params;
     const sql = `
       SELECT 
-        u.user_id,
-        u.first_name,
-        u.last_name,
-        u.email,
-        u.role,
-        u.created_at,
-        COUNT(a.allocation_id) AS total_allocations
-      FROM users u
-      LEFT JOIN allocation a ON a.user_id = u.user_id
-      WHERE u.user_id = $1
-      GROUP BY u.user_id
-    `;
+      u.user_id,
+      u.first_name,
+      u.last_name,
+      u.email,
+      COUNT(a.allocation_id) AS total_allocations
+    FROM users u
+    LEFT JOIN allocation a ON a.user_id = u.user_id
+    WHERE u.user_id = $1
+    GROUP BY u.user_id
+      `;
     const { rows } = await query(sql, [id]);
     if (rows.length === 0)
       return NextResponse.json({ error: "Tutor not found" }, { status: 404 });

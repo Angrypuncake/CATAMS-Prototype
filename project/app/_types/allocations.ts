@@ -33,7 +33,7 @@ export interface AllocationBase {
   status?: string | null;
   note?: string | null;
   unit_name: string | null;
-  allocated_hours: number | string | null;
+  hours: number | string | null;
   activity_name: string | null;
   activity_type: string | null;
   paycode_id?: string | null;

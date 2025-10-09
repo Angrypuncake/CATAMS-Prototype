@@ -88,7 +88,7 @@ export async function GET(req: Request) {
       activity_name: "ta.activity_name",
       status: "a.status",
       mode: "ta.mode", // NEW
-      allocated_hours: "a.allocated_hours", // NEW
+      hours: "so.hours", // NEW
     };
     const orderBy = sortable[sort.replace(/^.*\./, "")] ?? "so.session_date";
 

@@ -96,7 +96,7 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
       }
     }
     loadEligible();
-  }, [allocationId, requesterId]);
+  }, [allocationId, requesterId, data]);
 
   // -------------------------------
   //  Event handlers
@@ -205,7 +205,7 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
                   <strong>Location:</strong> {sourceAllocation.location}
                 </Typography>
                 <Typography variant="body2">
-                  <strong>Hours:</strong> {sourceAllocation.allocated_hours}
+                  <strong>Hours:</strong> {sourceAllocation.hours}
                 </Typography>
                 <Typography variant="body2">
                   <strong>Session:</strong> {sourceAllocation.activity_name}
@@ -242,9 +242,33 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
           <Typography variant="subtitle1" fontWeight={600}>
             Suggested Tutor
           </Typography>
-          <Typography color="text.secondary">
-            ID: {details.suggested_tutor_id ?? "None"}
-          </Typography>
+
+          {details.suggested_tutor_id && suggestedTutor ? (
+            <>
+              <Typography color="text.secondary">
+                ID: {suggestedTutor.user_id}
+              </Typography>
+              <Typography color="text.secondary">
+                Name: {suggestedTutor.first_name} {suggestedTutor.last_name}
+              </Typography>
+              <Typography color="text.secondary">
+                Email: {suggestedTutor.email}
+              </Typography>
+
+              {suggestedTutor.units && suggestedTutor.units.length > 0 && (
+                <Box mt={1}>
+                  <Typography variant="body2" fontWeight={600}>
+                    Units:
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {suggestedTutor.units.join(", ")}
+                  </Typography>
+                </Box>
+              )}
+            </>
+          ) : (
+            <Typography color="text.disabled">No suggested tutor</Typography>
+          )}
         </Paper>
       </Box>
 
@@ -301,7 +325,7 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
                     <td className="px-3 py-2">{a.unit_code ?? "-"}</td>
                     <td className="px-3 py-2">{a.activity_name ?? "-"}</td>
                     <td className="px-3 py-2">{a.session_date ?? "-"}</td>
-                    <td className="px-3 py-2">{a.allocated_hours ?? "-"}</td>
+                    <td className="px-3 py-2">{a.hours ?? "-"}</td>
                     <td className="px-3 py-2">{a.location ?? "-"}</td>
                     <td className="px-3 py-2 text-right">
                       <Button

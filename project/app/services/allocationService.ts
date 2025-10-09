@@ -137,17 +137,20 @@ export async function getAllocationsByUnit(
 export async function getAllocationsByUnitAndActivityType(
   unitCode: string | null,
   activityType: string | null,
+  excludeUserId?: number | string | null, // optional param
   page = 1,
   limit = 50,
 ): Promise<AdminAllocationRow[]> {
   const res = await axios.get("/admin/allocations", {
     params: {
-      unit_code: unitCode,
-      activity_type: activityType,
+      unit_code: unitCode ?? undefined,
+      activity_type: activityType ?? undefined,
+      exclude_user_id: excludeUserId ?? undefined, // pass only if defined
       page,
       limit,
     },
   });
+
   return res.data.data;
 }
 

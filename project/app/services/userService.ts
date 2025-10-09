@@ -24,13 +24,20 @@ export async function getTutorById(id: string | number): Promise<Tutor> {
   return res.data.data as Tutor;
 }
 
-// Returns general user info by id, not tutor related
+// Returns general user info by id, not tutor related by user id
 export async function getUserById(id: number) {
   const res = await axios.get(`/api/users/${id}`);
   return res.data;
 }
 
+// Get all the roles details for this user  by user id
 export async function getUserRoles(id: number) {
   const res = await axios.get(`/api/users/${id}/roles`);
+  return res.data.data;
+}
+
+// Get all of the units that this user is in by user id
+export async function getUserUnits(id: number) {
+  const res = await axios.get(`/api/users/${id}/units`);
   return res.data.data;
 }

@@ -23,3 +23,9 @@ export async function getTutorById(id: string | number): Promise<Tutor> {
   const res = await axios.get(`/admin/tutors/${id}`);
   return res.data.data as Tutor;
 }
+
+// Returns general user info by id, not tutor related
+export async function getUserById(id: number) {
+  const res = await axios.get(`/api/users/${id}`);
+  return res.data;
+}

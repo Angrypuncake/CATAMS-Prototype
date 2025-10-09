@@ -41,3 +41,32 @@ export async function getUserUnits(id: number) {
   const res = await axios.get(`/api/users/${id}/units`);
   return res.data.data;
 }
+
+/**
+ * Fetches users with optional search and filtering.
+ *
+ * Usage:
+ * ------
+ * - `getUsers()` → fetches up to 1000 users (default limit)
+ * - `getUsers({ q: "nguyen" })` → searches by name or email
+ * - `getUsers({ role: "tutor" })` → filters by role
+ * - `getUsers({ q: "alex", role: "admin" })` → combines filters
+ *
+ * Returns:
+ * --------
+ * Array of user objects: [{ user_id, first_name, last_name, email }]
+ *
+ * Notes:
+ * ------
+ * - Mirrors the `/api/users` USERDF route.
+ * - Can be reused by admin dashboards, assignment modals, or autocomplete fields.
+ */
+export async function getUsers(filters?: Record<string, string | number>) {
+  const params = filters
+    ? new URLSearchParams(
+        Object.entries(filters).map(([k, v]) => [k, String(v)]),
+      )
+    : "";
+  const res = await axios.get(`/api/users${params ? "?" + params : ""}`);
+  return res.data.data;
+}

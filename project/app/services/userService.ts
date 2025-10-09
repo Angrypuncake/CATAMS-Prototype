@@ -1,8 +1,8 @@
-import api from "@/lib/axios";
+import axios from "@/lib/axios";
 import type { Tutor } from "@/app/_types/tutor";
 
 export async function getTutors(page = 1, limit = 50) {
-  const res = await api.get("/admin/tutors", { params: { page, limit } });
+  const res = await axios.get("/admin/tutors", { params: { page, limit } });
   return res.data.data as Tutor[];
 }
 
@@ -13,8 +13,13 @@ export async function getTutors(page = 1, limit = 50) {
  * @returns Array of Tutor objects
  */
 export async function getTutorsByUnit(unitCode: string): Promise<Tutor[]> {
-  const res = await api.get("/admin/tutors", {
+  const res = await axios.get("/admin/tutors", {
     params: { unit_code: unitCode },
   });
   return res.data.data as Tutor[];
+}
+
+export async function getTutorById(id: string | number): Promise<Tutor> {
+  const res = await axios.get(`/admin/tutors/${id}`);
+  return res.data.data as Tutor;
 }

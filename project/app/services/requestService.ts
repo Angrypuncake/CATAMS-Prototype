@@ -41,7 +41,7 @@ export async function getRequestById(id: string): Promise<TutorRequest> {
         return {
           ...base,
           requestType,
-          details: { suggested_tutor_id: 204 },
+          details: { suggested_tutor_id: 6 },
         } as TutorRequest;
       case "correction":
         return {

@@ -29,3 +29,8 @@ export async function getUserById(id: number) {
   const res = await axios.get(`/api/users/${id}`);
   return res.data;
 }
+
+export async function getUserRoles(id: number) {
+  const res = await axios.get(`/api/users/${id}/roles`);
+  return res.data.data;
+}

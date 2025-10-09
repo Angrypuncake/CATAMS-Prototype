@@ -6,6 +6,7 @@ import type {
   DiscardResponse,
   PreviewResponse,
   TutorAllocationRow,
+  AdminAllocationRow,
 } from "@/app/_types/allocations";
 
 export async function getTutorAllocations(
@@ -133,9 +134,24 @@ export async function getAllocationsByUnit(
   return res.data.data;
 }
 
-// Create a new allocation Admin, UnitCoordinator only
+export async function getAllocationsByUnitAndActivityType(
+  unitCode: string | null,
+  activityType: string | null,
+  page = 1,
+  limit = 50,
+): Promise<AdminAllocationRow[]> {
+  const res = await axios.get("/admin/allocations", {
+    params: {
+      unit_code: unitCode,
+      activity_type: activityType,
+      page,
+      limit,
+    },
+  });
+  return res.data.data;
+}
 
-// Update an existing allocation
+// Create a new allocation Admin, UnitCoordinator only
 
 // Delete an allocation
 

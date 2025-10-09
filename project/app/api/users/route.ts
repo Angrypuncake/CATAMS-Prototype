@@ -3,6 +3,28 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
+/**
+ * GET /api/users
+ *
+ * Retrieves users with optional search and filtering.
+ *
+ * Supported Query Parameters (all optional):
+ * -------------------------------------------
+ * - q:          Free-text search across first_name, last_name, and email.
+ * - role:       Filter by a specific role (e.g. "tutor", "admin", "ta").
+ * - limit:      Maximum number of results to return (default 1000).
+ *
+ * Behavior:
+ * ----------
+ * - Returns up to 1000 distinct users if no filters are applied.
+ * - Filters by role and/or keyword when provided.
+ *
+ * Notes:
+ * ------
+ * - USERDF (User-Defined Flexible): designed for reuse by any role context.
+ * - Extendable with pagination, faculty, status, or unit filters.
+ */
+
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);

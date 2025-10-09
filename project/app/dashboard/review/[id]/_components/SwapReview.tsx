@@ -25,6 +25,19 @@ import {
 } from "@/app/_types/allocations";
 import { Tutor } from "@/app/_types/tutor";
 import { getTutorById } from "@/app/services/userService";
+import AllocationDetails from "@/app/dashboard/tutor/allocations/[id]/_components/AllocationDetails";
+
+export function formatDate(isoString?: string | null): string {
+  if (!isoString) return "—";
+  const date = new Date(isoString);
+  if (isNaN(date.getTime())) return "Invalid date";
+
+  return date.toLocaleDateString("en-AU", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
 
 export default function SwapReview({ data }: { data: TutorRequest }) {
   // -------------------------------
@@ -35,6 +48,7 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
   const [loadingEligible, setLoadingEligible] = useState(true);
   const [comment, setComment] = useState("");
   const [sourceTutor, setSourcetutor] = useState<Tutor | null>(null);
+  const [suggestedTutor, setSuggestedTutor] = useState<Tutor | null>(null);
   const [sourceAllocation, setsourceAllocationAllocation] =
     useState<TutorAllocationRow | null>(null);
   const [eligibleAllocations, setEligibleAllocations] = useState<
@@ -54,6 +68,15 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
         const activityType = source.activity_type;
 
         const tutor = await getTutorById(String(requesterId));
+
+        if (details !== null && data.requestType === "swap") {
+          const { details } = data;
+          const suggestedTutor = await getTutorById(
+            String(details.suggested_tutor_id),
+          );
+          setSuggestedTutor(suggestedTutor);
+        }
+
         console.log(tutor);
 
         setSourcetutor(tutor);
@@ -63,6 +86,7 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
         const allocations = await getAllocationsByUnitAndActivityType(
           unitCode,
           activityType,
+          requesterId,
         );
         setEligibleAllocations(allocations);
       } catch (err) {
@@ -72,7 +96,7 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
       }
     }
     loadEligible();
-  }, [allocationId]);
+  }, [allocationId, requesterId]);
 
   // -------------------------------
   //  Event handlers
@@ -140,15 +164,68 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
         mb={3}
       >
         {/* Initiator */}
-        <Paper variant="outlined" sx={{ flex: 1, p: 2 }}>
-          <Typography variant="subtitle1" fontWeight={600}>
-            Initiator
+        <Paper variant="outlined" sx={{ p: 3, borderRadius: 2 }}>
+          <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+            INITIATOR
           </Typography>
+
           <Typography variant="body2" color="text.secondary">
             Tutor ID: {data.requesterId}
           </Typography>
-          <Divider sx={{ my: 1 }} />
-          <Typography variant="body2">Allocation ID: {allocationId}</Typography>
+          <Typography variant="body2" color="text.secondary" mb={2}>
+            Allocation ID: {allocationId}
+          </Typography>
+
+          {sourceAllocation && (
+            <Box sx={{ borderTop: "1px solid", borderColor: "divider", pt: 2 }}>
+              <Typography variant="subtitle1" fontWeight={600}>
+                {sourceAllocation.unit_code} – {sourceAllocation.unit_name}
+              </Typography>
+
+              <Typography
+                variant="caption"
+                color="success.main"
+                fontWeight={600}
+              >
+                Approved Allocation
+              </Typography>
+
+              <Box mt={1.5}>
+                <Typography variant="body2">
+                  <strong>Date:</strong>{" "}
+                  {formatDate(sourceAllocation.session_date)}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Start:</strong> {sourceAllocation.start_at}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>End:</strong> {sourceAllocation.end_at}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Location:</strong> {sourceAllocation.location}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Hours:</strong> {sourceAllocation.allocated_hours}
+                </Typography>
+                <Typography variant="body2">
+                  <strong>Session:</strong> {sourceAllocation.activity_name}
+                </Typography>
+              </Box>
+
+              {sourceAllocation.note && (
+                <Box
+                  mt={2}
+                  p={1.5}
+                  sx={{ bgcolor: "action.hover", borderRadius: 1 }}
+                >
+                  <Typography variant="subtitle2">Notes</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {sourceAllocation.note}
+                  </Typography>
+                </Box>
+              )}
+            </Box>
+          )}
         </Paper>
 
         <Box

@@ -3,9 +3,13 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
-export async function GET(_: Request, { params }: { params: { id: string } }) {
+export async function GET(
+  _: Request,
+  context: { params: Promise<{ id: string }> },
+) {
   try {
-    const userId = Number(params.id);
+    const { id } = await context.params;
+    const userId = Number(id);
     const sql = `
       SELECT r.role_name, cu.unit_code, cu.unit_name
       FROM user_role ur

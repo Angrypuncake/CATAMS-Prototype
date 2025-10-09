@@ -133,6 +133,10 @@ export default function UserServiceTester() {
             {loading ? "Loading..." : "Get Users"}
           </button>
         </div>
+        <p className="text-xs text-gray-500 mt-1">
+          🔍 You can search by <b>first name</b>, <b>last name</b>, or{" "}
+          <b>email substring</b>.
+        </p>
       </div>
 
       {/* Single User */}

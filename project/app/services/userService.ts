@@ -26,19 +26,19 @@ export async function getTutorById(id: string | number): Promise<Tutor> {
 
 // Returns general user info by id, not tutor related by user id
 export async function getUserById(id: number) {
-  const res = await axios.get(`/api/users/${id}`);
+  const res = await axios.get(`/users/${id}`);
   return res.data;
 }
 
 // Get all the roles details for this user  by user id
 export async function getUserRoles(id: number) {
-  const res = await axios.get(`/api/users/${id}/roles`);
+  const res = await axios.get(`/users/${id}/roles`);
   return res.data.data;
 }
 
 // Get all of the units that this user is in by user id
 export async function getUserUnits(id: number) {
-  const res = await axios.get(`/api/users/${id}/units`);
+  const res = await axios.get(`/users/${id}/units`);
   return res.data.data;
 }
 
@@ -67,6 +67,6 @@ export async function getUsers(filters?: Record<string, string | number>) {
         Object.entries(filters).map(([k, v]) => [k, String(v)]),
       )
     : "";
-  const res = await axios.get(`/api/users${params ? "?" + params : ""}`);
+  const res = await axios.get(`/users${params ? "?" + params : ""}`);
   return res.data.data;
 }

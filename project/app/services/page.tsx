@@ -22,6 +22,7 @@ import {
 } from "@/app/services/userService";
 import { getRequestById } from "./requestService";
 import { TutorRequest } from "../_types/request";
+import UserServiceTester from "./components/UserServiceTester";
 
 // This is a simple “sandbox page” where you can test any service calls.
 export default function ServicesTestPage() {
@@ -211,6 +212,10 @@ export default function ServicesTestPage() {
           {JSON.stringify(singleTutorData, null, 2)}
         </pre>
       </section>
+
+      <div className="p-10">
+        <UserServiceTester />
+      </div>
     </div>
   );
 }

@@ -53,6 +53,8 @@ export async function GET(req: Request) {
       ? `WHERE ${whereParts.join(" AND ")}`
       : "";
 
+    console.log(whereSQL);
+
     const sql = `
       SELECT DISTINCT
         u.user_id,

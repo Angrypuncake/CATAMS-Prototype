@@ -43,41 +43,91 @@ export default function QueryReview({ data }: { data: TutorRequest }) {
 
   return (
     <ReviewLayout title="Query Request Review" data={data}>
-      <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" fontWeight={600} gutterBottom>
-          Tutor Details
-        </Typography>
-        {tutor ? (
+      {/* Top Section — Tutor + Query Overview */}
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: { xs: "column", md: "row" },
+          gap: 3,
+          mb: 3,
+        }}
+      >
+        {/* Tutor Info */}
+        <Paper
+          variant="outlined"
+          sx={{
+            flex: 1,
+            p: 3,
+            minWidth: 280,
+          }}
+        >
+          <Typography variant="h6" fontWeight={600} gutterBottom>
+            Tutor Details
+          </Typography>
+          {tutor ? (
+            <Stack spacing={0.5}>
+              <Typography color="text.secondary">
+                <strong>ID:</strong> {tutor.user_id}
+              </Typography>
+              <Typography color="text.secondary">
+                <strong>Name:</strong> {tutor.first_name} {tutor.last_name}
+              </Typography>
+              <Typography color="text.secondary">
+                <strong>Email:</strong> {tutor.email}
+              </Typography>
+            </Stack>
+          ) : (
+            <Typography color="text.secondary">
+              Loading tutor info...
+            </Typography>
+          )}
+        </Paper>
+
+        {/* Query Block */}
+        <Paper
+          variant="outlined"
+          sx={{
+            flex: 2,
+            p: 3,
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+        >
           <Box>
-            <Typography color="text.secondary">
-              <strong>ID:</strong> {tutor.user_id}
+            <Typography variant="h6" fontWeight={600} gutterBottom>
+              Tutor Query
             </Typography>
-            <Typography color="text.secondary">
-              <strong>Name:</strong> {tutor.first_name} {tutor.last_name}
-            </Typography>
-            <Typography color="text.secondary">
-              <strong>Email:</strong> {tutor.email}
+            <Typography
+              color="text.secondary"
+              sx={{
+                whiteSpace: "pre-wrap",
+                lineHeight: 1.6,
+              }}
+            >
+              {requestReason || "No query message provided."}
             </Typography>
           </Box>
-        ) : (
-          <Typography color="text.secondary">Loading tutor info...</Typography>
-        )}
-      </Paper>
+          <Divider sx={{ my: 2 }} />
+          <Typography
+            variant="body2"
+            color="text.secondary"
+            sx={{ alignSelf: "flex-end" }}
+          >
+            Submitted on: {new Date(createdAt).toLocaleString()}
+          </Typography>
+        </Paper>
+      </Box>
 
-      <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" fontWeight={600} gutterBottom>
-          Tutor Query
-        </Typography>
-        <Typography color="text.secondary" sx={{ whiteSpace: "pre-wrap" }}>
-          {requestReason || "No query message provided."}
-        </Typography>
-        <Divider sx={{ my: 2 }} />
-        <Typography variant="body2" color="text.secondary">
-          Submitted on: {new Date(createdAt).toLocaleString()}
-        </Typography>
-      </Paper>
-
-      <Paper variant="outlined" sx={{ p: 3 }}>
+      {/* Reviewer Response Section */}
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 3,
+          display: "flex",
+          flexDirection: "column",
+        }}
+      >
         <Typography variant="h6" fontWeight={600} gutterBottom>
           Reviewer Response
         </Typography>
@@ -88,9 +138,17 @@ export default function QueryReview({ data }: { data: TutorRequest }) {
           placeholder="Write your response to the tutor..."
           value={response}
           onChange={(e) => setResponse(e.target.value)}
-          sx={{ mb: 2 }}
+          sx={{
+            mb: 3,
+            "& .MuiInputBase-root": { borderRadius: 2 },
+          }}
         />
-        <Stack direction="row" spacing={2}>
+        <Stack
+          direction="row"
+          spacing={2}
+          justifyContent="flex-end"
+          sx={{ mt: "auto" }}
+        >
           <Button
             variant="contained"
             color="primary"

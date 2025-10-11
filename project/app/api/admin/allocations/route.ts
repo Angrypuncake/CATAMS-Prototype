@@ -107,7 +107,7 @@ export async function GET(req: Request) {
 
         ta.mode,
        
-        a.allocated_hours,
+        so.hours as hours,
 
         cu.unit_code,
         cu.unit_name,

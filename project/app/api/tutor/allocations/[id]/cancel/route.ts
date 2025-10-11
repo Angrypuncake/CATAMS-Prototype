@@ -1,3 +1,7 @@
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { getAuthedUserRow } from "@/lib/auth";
@@ -17,11 +21,10 @@ export async function POST(req: Request, { params }: { params: { id: string } })
     const allocationId = Number(params.id);
     const body = (await req.json()) as Body;
 
-    if (!Number.isFinite(allocationId) || !body.reason || !body.ack) {
+    if (!Number.isFinite(allocationId) || !body.reason?.trim() || !body.ack) {
         return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // Store extra fields in details JSONB, keep request_reason in the first-class column
     const details = {
         replacement_mode: body.replacementMode,
         timing: body.timing,
@@ -31,20 +34,14 @@ export async function POST(req: Request, { params }: { params: { id: string } })
 
     const sql = `
     INSERT INTO public.request
-    (requester_id, allocation_id, request_type, request_status,
-    request_reason, details, created_at, updated_at)
+      (requester_id, allocation_id, request_type, request_status,
+       request_reason, details, created_at, updated_at)
     VALUES
-    ($1, $2, 'cancellation', 'pending_uc',
-    $3, $4, NOW(), NOW())
+      ($1, $2, 'cancellation', 'pending_uc',
+       $3, $4, NOW(), NOW())
     RETURNING request_id
-`;
+  `;
 
-    const { rows } = await query(sql, [
-        me.user_id,
-        allocationId,
-        body.reason,
-        details,
-    ]);
-
+    const { rows } = await query(sql, [me.user_id, allocationId, body.reason.trim(), details]);
     return NextResponse.json({ ok: true, requestId: rows[0].request_id });
 }

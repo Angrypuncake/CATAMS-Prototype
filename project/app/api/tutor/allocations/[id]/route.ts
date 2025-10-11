@@ -28,7 +28,9 @@ export async function GET(
       so.session_date,
       a.status,
       so.location,
-      so.note
+      so.note,
+      so.description,
+      so.hours
     FROM allocation a
     LEFT JOIN users u ON u.user_id = a.user_id
     JOIN session_occurrence so ON so.occurrence_id = a.session_id

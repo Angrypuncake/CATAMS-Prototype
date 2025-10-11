@@ -23,6 +23,7 @@ import {
   Checkbox,
   CircularProgress,
 } from "@mui/material";
+import DevLoginButton from "@/components/DevLoginButton"; // <— added
 
 // ---- Mock header data (keep until you have a header API) ----
 const header = {
@@ -53,9 +54,7 @@ export default function Page() {
   const [ack, setAck] = React.useState(false);
 
   // data state
-  const [eligibleTutors, setEligibleTutors] = React.useState<EligibleTutor[]>(
-    [],
-  );
+  const [eligibleTutors, setEligibleTutors] = React.useState<EligibleTutor[]>([]);
   const [loadingTutors, setLoadingTutors] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
   const [errors, setErrors] = React.useState<{ reason?: string; ack?: string; tutor?: string }>({});
@@ -67,9 +66,7 @@ export default function Page() {
       if (!allocationId) return;
       setLoadingTutors(true);
       try {
-        const res = await fetch(
-          `/api/tutor/allocations/${allocationId}/cancel/eligible`,
-        );
+        const res = await fetch(`/api/tutor/allocations/${allocationId}/cancel/eligible`);
         const j = await res.json();
         if (!res.ok) throw new Error(j?.error || "Failed to load tutors");
         if (!active) return;
@@ -110,7 +107,8 @@ export default function Page() {
           replacementMode,
           timing,
           ack,
-          suggestedUserId: replacementMode === "suggest" ? tutor?.userId ?? null : null,
+          suggestedUserId:
+            replacementMode === "suggest" ? tutor?.userId ?? null : null,
         }),
       });
       const j = await res.json();
@@ -127,6 +125,7 @@ export default function Page() {
 
   return (
     <Box sx={{ mx: "auto", width: "100%", maxWidth: 1000, p: { xs: 2, md: 3 } }}>
+      
       {/* Header / Allocation summary */}
       <Card sx={{ mb: 3 }}>
         <CardHeader
@@ -179,7 +178,10 @@ export default function Page() {
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 error={Boolean(errors.reason)}
-                helperText={errors.reason || "Examples: illness, exam clash, unexpected work/placement, personal emergency."}
+                helperText={
+                  errors.reason ||
+                  "Examples: illness, exam clash, unexpected work/placement, personal emergency."
+                }
               />
             </Stack>
             <Divider />
@@ -260,12 +262,7 @@ export default function Page() {
 
             {/* Acknowledgement */}
             <FormControlLabel
-              control={
-                <Checkbox
-                  checked={ack}
-                  onChange={(e) => setAck(e.target.checked)}
-                />
-              }
+              control={<Checkbox checked={ack} onChange={(e) => setAck(e.target.checked)} />}
               label={
                 <Typography variant="body2">
                   I understand this cancellation may leave the session unassigned and the
@@ -281,24 +278,13 @@ export default function Page() {
 
             {/* Actions */}
             <Stack direction="row" spacing={1.5} justifyContent="flex-end">
-              <Button
-                component={Link}
-                href={`/dashboard/tutor/allocations/${allocationId}`}
-                variant="text"
-              >
+              <Button component={Link} href={`/dashboard/tutor/allocations/${allocationId}`} variant="text">
                 Cancel
               </Button>
-              <Button
-                variant="outlined"
-                onClick={() => console.log("Saved draft (client-only).")}
-              >
+              <Button variant="outlined" onClick={() => console.log("Saved draft (client-only).")}>
                 Save Draft
               </Button>
-              <Button
-                variant="contained"
-                onClick={onSubmit}
-                disabled={submitting}
-              >
+              <Button variant="contained" onClick={onSubmit} disabled={submitting}>
                 {submitting ? "Submitting..." : "Submit Cancellation Request"}
               </Button>
             </Stack>

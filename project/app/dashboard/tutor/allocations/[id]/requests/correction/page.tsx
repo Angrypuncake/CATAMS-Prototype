@@ -17,6 +17,20 @@ import {
 } from "@mui/material";
 
 import { useState, ChangeEvent, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+
+type AllocationRow = {
+  unit_code: string | null;
+  unit_name: string | null;
+  session_date: string | null;
+  start_at: string | null; // "HH:MM:SS"
+  end_at: string | null;
+  activity_name: string | null;
+  location: string | null;
+  status: string | null;
+  description: string | null;
+  hours: string | null;
+};
 
 export default function CorrectionRequestPage() {
   const [corrections, setCorrections] = useState({
@@ -37,9 +51,33 @@ export default function CorrectionRequestPage() {
     justification: "",
   });
 
+  const [allocation, setAllocation] = useState<AllocationRow | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const params = useParams<{ id: string }>(); // gets id for query /api/tutor/allocations/{allocationID}
+  const allocationId = params.id;
+  const router = useRouter();
+
   useEffect(() => {
-    console.log("correctionsString updated:", correctionsString);
-  }, [correctionsString]);
+    console.log(correctionsString);
+    console.log(corrections);
+  }, [correctionsString, corrections]);
+
+  useEffect(() => {
+    async function fetchAllocation() {
+      try {
+        const res = await fetch(`/api/tutor/allocations/${allocationId}`);
+        if (!res.ok) throw new Error("Failed to fetch allocation");
+        const json = (await res.json()) as { data?: AllocationRow };
+        setAllocation(json.data ?? null);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setLoading(false);
+      }
+    }
+    if (allocationId) fetchAllocation();
+  }, [allocationId]);
 
   const textFieldCorrectionsUpdater = (
     event: ChangeEvent<HTMLInputElement>,
@@ -52,6 +90,8 @@ export default function CorrectionRequestPage() {
     const { name, value } = event.target;
     setCorrectionsString((prev) => ({ ...prev, [name]: value }));
   };
+
+  if (loading) return <p>Loading...</p>;
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -75,13 +115,17 @@ export default function CorrectionRequestPage() {
           alignItems="center"
         >
           <Typography variant="subtitle1">
-            INFO1110 - Programming Fundamentals
+            {allocation?.unit_code ?? "Missing Unit Code"}
           </Typography>
           <Chip label="Confirmed" color="success" size="small" />
         </Stack>
         <Typography variant="body2" sx={{ mt: 1 }}>
-          Date: 12/09/2025 • Time: 09:00 - 11:00 • Location: Room A • Hours:
-          2.0h • Session: Tutorial
+          Date: {allocation?.session_date ?? "Missing Date"} • Time:{" "}
+          {allocation?.start_at ?? "Missing Start Time"} -{" "}
+          {allocation?.end_at ?? "Missing End Time"} • Location:{" "}
+          {allocation?.location ?? "Missing Location"} • Hours:{" "}
+          {allocation?.hours ?? "Missing Hours"} • Session:{" "}
+          {allocation?.description ?? "Missing Description"}
         </Typography>
       </Paper>
 
@@ -275,11 +319,12 @@ export default function CorrectionRequestPage() {
 
       {/* Action Buttons */}
       <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end", gap: 2 }}>
-        <Button variant="outlined" color="inherit">
+        <Button
+          variant="outlined"
+          color="inherit"
+          onClick={() => router.back()}
+        >
           Cancel
-        </Button>
-        <Button variant="outlined" color="primary">
-          Save Draft
         </Button>
         <Button variant="contained" color="primary">
           Submit Correction Request

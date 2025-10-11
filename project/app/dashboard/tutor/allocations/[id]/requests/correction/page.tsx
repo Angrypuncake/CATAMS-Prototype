@@ -7,6 +7,7 @@ import {
   Chip,
   Container,
   FormControlLabel,
+  SelectChangeEvent,
   MenuItem,
   Paper,
   Select,
@@ -14,7 +15,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useState } from "react";
+
+import { useState, ChangeEvent, useEffect } from "react";
 
 export default function CorrectionRequestPage() {
   const [corrections, setCorrections] = useState({
@@ -24,6 +26,32 @@ export default function CorrectionRequestPage() {
     hours: false,
     session: false,
   });
+
+  const [correctionsString, setCorrectionsString] = useState({
+    date: "",
+    startTime: "",
+    endTime: "",
+    location: "",
+    hours: "",
+    session: "",
+    justification: "",
+  });
+
+  useEffect(() => {
+    console.log("correctionsString updated:", correctionsString);
+  }, [correctionsString]);
+
+  const textFieldCorrectionsUpdater = (
+    event: ChangeEvent<HTMLInputElement>,
+  ) => {
+    const { name, value } = event.target;
+    setCorrectionsString((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const selectFieldCorrectionsUpdater = (event: SelectChangeEvent) => {
+    const { name, value } = event.target;
+    setCorrectionsString((prev) => ({ ...prev, [name]: value }));
+  };
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
@@ -103,6 +131,9 @@ export default function CorrectionRequestPage() {
               fullWidth
               type="date"
               size="small"
+              name="date"
+              onChange={textFieldCorrectionsUpdater}
+              value={correctionsString.date}
               sx={{ mb: 2 }}
               disabled={!corrections.date}
             />
@@ -122,12 +153,18 @@ export default function CorrectionRequestPage() {
               <TextField
                 type="time"
                 size="small"
+                name="startTime"
+                onChange={textFieldCorrectionsUpdater}
+                value={correctionsString.startTime}
                 fullWidth
                 disabled={!corrections.time}
               />
               <TextField
                 type="time"
                 size="small"
+                name="endTime"
+                onChange={textFieldCorrectionsUpdater}
+                value={correctionsString.endTime}
                 fullWidth
                 disabled={!corrections.time}
               />
@@ -150,6 +187,9 @@ export default function CorrectionRequestPage() {
             <TextField
               fullWidth
               size="small"
+              name="location"
+              onChange={textFieldCorrectionsUpdater}
+              value={correctionsString.location}
               placeholder="Room A"
               sx={{ mb: 2 }}
               disabled={!corrections.location}
@@ -170,6 +210,9 @@ export default function CorrectionRequestPage() {
               fullWidth
               type="number"
               size="small"
+              name="hours"
+              onChange={textFieldCorrectionsUpdater}
+              value={correctionsString.hours}
               sx={{ mb: 2 }}
               disabled={!corrections.hours}
             />
@@ -191,7 +234,10 @@ export default function CorrectionRequestPage() {
             <Select
               fullWidth
               size="small"
+              name="session"
+              onChange={selectFieldCorrectionsUpdater}
               defaultValue="Tutorial"
+              value={correctionsString.session}
               disabled={!corrections.session}
               sx={{ mb: 2 }}
             >
@@ -205,14 +251,12 @@ export default function CorrectionRequestPage() {
               multiline
               rows={3}
               label="Justification"
+              name="justification"
+              value={correctionsString.justification}
+              onChange={textFieldCorrectionsUpdater}
               placeholder="Explain why the record is incorrect or what changed..."
               sx={{ mb: 2 }}
             />
-
-            <Button variant="outlined" component="label" fullWidth>
-              Choose File
-              <input type="file" hidden />
-            </Button>
           </Paper>
         </Box>
       </Stack>

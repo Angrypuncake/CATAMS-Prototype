@@ -21,17 +21,10 @@ import {
   TextField,
   Typography,
   Checkbox,
+  CircularProgress,
 } from "@mui/material";
 
-/**
- * NOTE:
- * - This page is FRONT-END ONLY. It does not upload or save anything.
- * - "Submit" will just noop (console.log) so nothing breaks while backend/DB is sorted.
- * - No third-party libs (zod/react-hook-form) to avoid new imports.
- * - If your project’s TS types for React aren’t ready, @ts-nocheck prevents red squiggles.
- */
-
-// ---- Mock header data (replace with real data later) ----
+// ---- Mock header data (keep until you have a header API) ----
 const header = {
   unitCode: "INFO1110",
   unitName: "Programming Fundamentals",
@@ -44,53 +37,96 @@ const header = {
   userRole: "Tutor",
 };
 
-// ---- Mock tutors for autocomplete (replace with API later) ----
-const eligibleTutors = [
-  { label: "Alice Rao", email: "alice.rao@uni.edu" },
-  { label: "Ben Li", email: "ben.li@uni.edu" },
-  { label: "Chirag Patel", email: "chirag.p@uni.edu" },
-];
+type EligibleTutor = { userId: number; label: string; email: string };
 
 export default function Page() {
-  const params = useParams();
+  const params = useParams<{ id: string }>();
   const router = useRouter();
+  const allocationId = String(params?.id || "");
 
-  // minimal state
+  // form state
   const [reason, setReason] = React.useState("");
-  const [file, setFile] = React.useState(null);
-  const [replacementMode, setReplacementMode] = React.useState(
-    "suggest" as "suggest" | "coordinator",
-  );
-  const [tutor, setTutor] = React.useState(
-    null as null | { label: string; email: string },
-  );
+  const [replacementMode, setReplacementMode] =
+    React.useState<"suggest" | "coordinator">("suggest");
+  const [tutor, setTutor] = React.useState<EligibleTutor | null>(null);
   const [timing, setTiming] = React.useState(">48h");
   const [ack, setAck] = React.useState(false);
+
+  // data state
+  const [eligibleTutors, setEligibleTutors] = React.useState<EligibleTutor[]>(
+    [],
+  );
+  const [loadingTutors, setLoadingTutors] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
+  const [errors, setErrors] = React.useState<{ reason?: string; ack?: string; tutor?: string }>({});
+
+  // load tutors for this allocation
+  React.useEffect(() => {
+    let active = true;
+    (async () => {
+      if (!allocationId) return;
+      setLoadingTutors(true);
+      try {
+        const res = await fetch(
+          `/api/tutor/allocations/${allocationId}/cancel/eligible`,
+        );
+        const j = await res.json();
+        if (!res.ok) throw new Error(j?.error || "Failed to load tutors");
+        if (!active) return;
+        setEligibleTutors(j.data ?? []);
+      } catch (e) {
+        console.error(e);
+        if (active) setEligibleTutors([]);
+      } finally {
+        active = false; // prevents a double setLoading race in React strict mode
+        setLoadingTutors(false);
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [allocationId]);
+
+  // simple client-side validation
+  const validate = () => {
+    const next: typeof errors = {};
+    if (!reason.trim()) next.reason = "Please provide a brief reason.";
+    if (!ack) next.ack = "You must acknowledge this statement.";
+    if (replacementMode === "suggest" && !tutor)
+      next.tutor = "Please pick a tutor or choose coordinator option.";
+    setErrors(next);
+    return Object.keys(next).length === 0;
+  };
 
   const onSubmit = async () => {
-    // FRONT-END ONLY: do nothing irreversible; just log and stay on page.
+    if (!validate()) return;
     setSubmitting(true);
     try {
-      console.log("Cancellation draft (NOT SENT):", {
-        allocationId: params?.id,
-        reason,
-        replacementMode,
-        tutor,
-        timing,
-        acknowledge: ack,
+      const res = await fetch(`/api/tutor/allocations/${allocationId}/cancel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          reason,
+          replacementMode,
+          timing,
+          ack,
+          suggestedUserId: replacementMode === "suggest" ? tutor?.userId ?? null : null,
+        }),
       });
-      // You can navigate back if you want instead:
-      // router.push(`/dashboard/tutor/allocations/${params?.id}`);
+      const j = await res.json();
+      if (!res.ok) throw new Error(j?.error || "Failed to submit cancellation");
+      // success → navigate back to allocation page (adjust route if needed)
+      router.push(`/dashboard/tutor/allocations/${allocationId}`);
+    } catch (e) {
+      console.error(e);
+      alert("Could not submit cancellation. Please try again.");
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Box
-      sx={{ mx: "auto", width: "100%", maxWidth: 1000, p: { xs: 2, md: 3 } }}
-    >
+    <Box sx={{ mx: "auto", width: "100%", maxWidth: 1000, p: { xs: 2, md: 3 } }}>
       {/* Header / Allocation summary */}
       <Card sx={{ mb: 3 }}>
         <CardHeader
@@ -124,7 +160,7 @@ export default function Page() {
         </CardContent>
       </Card>
 
-      {/* Form (WITHOUT the crossed-out Impact Preview) */}
+      {/* Cancellation form */}
       <Card>
         <CardHeader
           titleTypographyProps={{ variant: "h6" }}
@@ -142,11 +178,9 @@ export default function Page() {
                 multiline
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
+                error={Boolean(errors.reason)}
+                helperText={errors.reason || "Examples: illness, exam clash, unexpected work/placement, personal emergency."}
               />
-              <Typography variant="caption" color="text.secondary">
-                Examples: illness, exam clash, unexpected work/placement,
-                personal emergency.
-              </Typography>
             </Stack>
             <Divider />
 
@@ -157,9 +191,7 @@ export default function Page() {
                 row
                 value={replacementMode}
                 onChange={(e) =>
-                  setReplacementMode(
-                    e.target.value as "suggest" | "coordinator",
-                  )
+                  setReplacementMode(e.target.value as "suggest" | "coordinator")
                 }
               >
                 <FormControlLabel
@@ -174,9 +206,10 @@ export default function Page() {
                 />
               </RadioGroup>
 
-              {/* Find Tutor (enabled only when suggest) */}
+              {/* Find Tutor (only when suggest) */}
               <Autocomplete
                 options={eligibleTutors}
+                loading={loadingTutors}
                 getOptionLabel={(o) => `${o.label} (${o.email})`}
                 value={tutor}
                 onChange={(_, v) => setTutor(v)}
@@ -185,13 +218,25 @@ export default function Page() {
                     {...params}
                     label="Find Tutor"
                     placeholder="Type a name or email..."
+                    error={Boolean(errors.tutor)}
+                    helperText={errors.tutor || undefined}
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {loadingTutors ? (
+                            <CircularProgress size={18} sx={{ mr: 1 }} />
+                          ) : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
                   />
                 )}
                 disabled={replacementMode !== "suggest"}
               />
               <Typography variant="caption" color="text.secondary">
-                Search eligible tutors in this unit. Selecting a tutor will be
-                stored locally for now.
+                This lists tutors already teaching in the same unit offering (excluding you).
               </Typography>
             </Stack>
 
@@ -204,14 +249,12 @@ export default function Page() {
                 onChange={(e) => setTiming(e.target.value)}
                 sx={{ maxWidth: 360 }}
               >
-                <MenuItem value=">48h">
-                  More than 48 hours before session
-                </MenuItem>
+                <MenuItem value=">48h">More than 48 hours before session</MenuItem>
                 <MenuItem value="24-48h">Between 24–48 hours</MenuItem>
                 <MenuItem value="<24h">Less than 24 hours</MenuItem>
               </TextField>
               <Typography variant="caption" color="text.secondary">
-                Used to prioritise escalation and notifications (later).
+                Used to prioritise escalation and notifications.
               </Typography>
             </Stack>
 
@@ -225,18 +268,22 @@ export default function Page() {
               }
               label={
                 <Typography variant="body2">
-                  I understand this cancellation may leave the session
-                  unassigned and the coordinator may contact me for
-                  clarification.
+                  I understand this cancellation may leave the session unassigned and the
+                  coordinator may contact me for clarification.
                 </Typography>
               }
             />
+            {errors.ack ? (
+              <Typography variant="caption" color="error">
+                {errors.ack}
+              </Typography>
+            ) : null}
 
             {/* Actions */}
             <Stack direction="row" spacing={1.5} justifyContent="flex-end">
               <Button
                 component={Link}
-                href={`/dashboard/tutor/allocations/${params?.id}`}
+                href={`/dashboard/tutor/allocations/${allocationId}`}
                 variant="text"
               >
                 Cancel
@@ -252,7 +299,7 @@ export default function Page() {
                 onClick={onSubmit}
                 disabled={submitting}
               >
-                Submit Cancellation Request
+                {submitting ? "Submitting..." : "Submit Cancellation Request"}
               </Button>
             </Stack>
           </Stack>

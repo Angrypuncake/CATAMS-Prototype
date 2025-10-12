@@ -9,7 +9,6 @@ export interface UnitOffering {
   sessionCode: string;
   budget: number;
 }
-
 export async function getUnitOffering(
   offeringId: number,
 ): Promise<UnitOffering> {

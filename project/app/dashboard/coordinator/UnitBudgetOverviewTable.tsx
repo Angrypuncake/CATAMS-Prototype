@@ -34,8 +34,9 @@ const UnitBudgetOverviewTable = ({
             <TableCell>Unit</TableCell>
             <TableCell>Year</TableCell>
             <TableCell>Session</TableCell>
-            <TableCell>Allocated Amount (Budget) </TableCell>
-            <TableCell>Claimed Amount (Spent) </TableCell>
+            <TableCell>Total Course Budget </TableCell>
+            <TableCell>Allocated Amount</TableCell>
+            <TableCell>Claimed Amount</TableCell>
             <TableCell>% Used</TableCell>
             <TableCell>Forecast (Wk)</TableCell>
             <TableCell>Variance</TableCell>
@@ -49,7 +50,8 @@ const UnitBudgetOverviewTable = ({
               <TableCell>{row.year}</TableCell>
               <TableCell>{row.session}</TableCell>
               <TableCell>{AUD.format(row.budget)}</TableCell>
-              <TableCell>{AUD.format(row.spent)}</TableCell>
+              <TableCell>{AUD.format(row.allocated)}</TableCell>
+              <TableCell>{AUD.format(row.claimed)}</TableCell>
               <TableCell>{PCT(row.pctUsed)}</TableCell>
               <TableCell>---</TableCell>
               <TableCell>{AUD.format(row.variance)}</TableCell>

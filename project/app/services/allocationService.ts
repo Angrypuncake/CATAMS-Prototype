@@ -6,6 +6,7 @@ import type {
   DiscardResponse,
   PreviewResponse,
   TutorAllocationRow,
+  AdminAllocationRow,
 } from "@/app/_types/allocations";
 
 export async function getTutorAllocations(
@@ -92,7 +93,7 @@ export async function getAllocationById(
     location: row.location,
     status: row.status,
     note: row.note,
-    allocated_hours: row.hours,
+    hours: row.hours,
     paycode_id: row.paycode_id,
   };
 }
@@ -114,7 +115,7 @@ export async function getFormattedAllocationById(
     start_at: a.start_at,
     end_at: a.end_at,
     location: a.location ?? "—",
-    allocated_hours: computeHours(a.start_at, a.end_at),
+    hours: computeHours(a.start_at, a.end_at),
     activity_name: a.activity_name ?? "—",
     activity_type: a.activity_type ?? "—",
     note: a.note ?? undefined,
@@ -133,9 +134,27 @@ export async function getAllocationsByUnit(
   return res.data.data;
 }
 
-// Create a new allocation Admin, UnitCoordinator only
+export async function getAllocationsByUnitAndActivityType(
+  unitCode: string | null,
+  activityType: string | null,
+  excludeUserId?: number | string | null, // optional param
+  page = 1,
+  limit = 50,
+): Promise<AdminAllocationRow[]> {
+  const res = await axios.get("/admin/allocations", {
+    params: {
+      unit_code: unitCode ?? undefined,
+      activity_type: activityType ?? undefined,
+      exclude_user_id: excludeUserId ?? undefined, // pass only if defined
+      page,
+      limit,
+    },
+  });
 
-// Update an existing allocation
+  return res.data.data;
+}
+
+// Create a new allocation Admin, UnitCoordinator only
 
 // Delete an allocation
 

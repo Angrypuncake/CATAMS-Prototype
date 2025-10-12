@@ -6,6 +6,8 @@ import { TutorAllocationRow } from "@/app/_types/allocations";
 import { useParams } from "next/navigation";
 import { getPaycodes } from "@/app/services/paycodeService";
 import { Paycode } from "@/app/_types/paycode";
+import { createClaim } from "@/app/services/claimService";
+import { CreateClaimPayload } from "@/app/_types/claim";
 
 export default function ClaimForm() {
   const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
@@ -43,7 +45,6 @@ export default function ClaimForm() {
       setError("Comment required when claimed hours or pay code differ");
       return;
     }
-
     setError("");
     alert("Claim submitted");
   };

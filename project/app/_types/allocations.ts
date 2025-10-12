@@ -3,6 +3,18 @@
 export type RequestType = "Swap" | "Correction" | "Extension" | "Cancellation";
 export type RequestState = "Pending Review" | "Approved" | "Rejected";
 
+export type TimetableRow = {
+  date: string; // YYYY-MM-DD
+  start_time: string; // HH:MM(:SS)
+  end_time: string; // HH:MM(:SS)
+  activity_name: string;
+  activity_type: string;
+  activity_description: string | null;
+  staff_id: string | null;
+  staff_name: string | null;
+  row_count: number;
+  total_hours: number | null;
+};
 export interface RequestItem {
   id: string;
   type: RequestType;
@@ -102,7 +114,7 @@ export type PreviewResponse = {
   preview: {
     raw: unknown[];
     issues: Record<string, unknown> | null;
-    timetable: Record<string, unknown>;
+    timetable: TimetableRow[] | null; // Change this line
   };
   error: string;
 };

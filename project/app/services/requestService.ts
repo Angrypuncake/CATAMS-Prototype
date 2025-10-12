@@ -1,3 +1,4 @@
+import api from "@/lib/axios";
 import type { TutorRequest } from "@/app/_types/request";
 import axios from "@/lib/axios";
 
@@ -141,4 +142,32 @@ export async function approveSwap(requestId: number) {
  */
 export async function rejectSwap(requestId: number, reason?: string) {
   // UPDATE swap_request SET status = 'DECLINED', reason = $2 WHERE id = $1
+}
+
+//query request for an allocation
+export async function submitQueryRequest(
+  allocationId: string,
+  data: {
+    subject: string;
+    details: string;
+    attachment?: File;
+  },
+): Promise<void> {
+  const formData = new FormData();
+  formData.append("type", "query");
+  formData.append("subject", data.subject);
+  formData.append("details", data.details);
+  if (data.attachment) {
+    formData.append("attachment", data.attachment);
+  }
+
+  await api.post(
+    `/tutor/allocations/${allocationId}/requests/query`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
 }

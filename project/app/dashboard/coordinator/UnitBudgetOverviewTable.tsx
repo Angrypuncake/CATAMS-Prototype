@@ -38,7 +38,6 @@ const UnitBudgetOverviewTable = ({
             <TableCell>Allocated Amount</TableCell>
             <TableCell>Claimed Amount</TableCell>
             <TableCell>% Used</TableCell>
-            <TableCell>Forecast (Wk)</TableCell>
             <TableCell>Variance</TableCell>
             <TableCell>Status</TableCell>
           </TableRow>
@@ -53,7 +52,6 @@ const UnitBudgetOverviewTable = ({
               <TableCell>{AUD.format(row.allocated)}</TableCell>
               <TableCell>{AUD.format(row.claimed)}</TableCell>
               <TableCell>{PCT(row.pctUsed)}</TableCell>
-              <TableCell>---</TableCell>
               <TableCell>{AUD.format(row.variance)}</TableCell>
               <TableCell>
                 {" "}

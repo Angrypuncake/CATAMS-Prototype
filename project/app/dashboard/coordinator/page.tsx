@@ -21,7 +21,6 @@ const Page = () => {
     try {
       const { year, session } = getCurrentYearAndSession();
       const overview = await getUnitBudgetOverviews(year, session, threshold);
-      console.log(overview);
       setData(overview);
     } catch (e) {
       console.error("Failed to load budget overview:", e);

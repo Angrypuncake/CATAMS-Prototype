@@ -6,7 +6,7 @@ export interface UnitOffering {
   unitCode: string;
   unitName: string;
   year: number;
-  sessionCode: string;
+  session: string;
   budget: number;
 }
 export async function getUnitOffering(

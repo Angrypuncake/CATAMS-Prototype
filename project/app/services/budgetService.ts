@@ -54,7 +54,6 @@ export interface CoordinatorBudgetOverview {
 /** === Aggregated overview === */
 export async function getUnitBudgetRow(
   offeringId: number,
-  threshold = 0.9,
 ): Promise<UnitBudgetRow> {
   try {
     //  Fetch all data in parallel
@@ -65,8 +64,6 @@ export async function getUnitBudgetRow(
       getClaimedBudgetByOfferingId(offeringId),
     ]);
 
-    console.log(allocRes);
-
     // 2Extract numeric values
     const totalBudget = budgetRes.budget ?? offering.budget ?? 0;
 
@@ -76,8 +73,6 @@ export async function getUnitBudgetRow(
     // 3 Derive calculated metrics
     const pctUsed = totalBudget > 0 ? claimedAmount / totalBudget : 0;
     const variance = totalBudget - claimedAmount;
-    const status: "Healthy" | "Exceeding" =
-      pctUsed >= threshold ? "Exceeding" : "Healthy";
 
     // 4 Return unified object — fully satisfies UnitBudgetRow
     return {
@@ -85,7 +80,7 @@ export async function getUnitBudgetRow(
       unitCode: offering.unitCode,
       unitName: offering.unitName,
       year: offering.year,
-      session: offering.sessionCode,
+      session: offering.session,
       budget: totalBudget,
       allocated: allocatedAmount,
       claimed: claimedAmount,
@@ -112,10 +107,9 @@ export async function getUnitBudgetOverviews(
     const rawOfferings = await getCoordinatorUnits();
     const offeringIds = rawOfferings.map((r) => r.offering_id);
 
-    console.log(session);
     // 2 For each unit, fetch its budget row in parallel
     const rows = await Promise.all(
-      offeringIds.map((id) => getUnitBudgetRow(id, threshold)),
+      offeringIds.map((id) => getUnitBudgetRow(id)),
     );
 
     // 3Generate alert objects for rows exceeding threshold

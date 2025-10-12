@@ -8,25 +8,41 @@ export type RequestStatus =
   | "withdrawn"
   | "in_review";
 
-export interface Request {
-  id: string;
-  type: RequestType;
-  status: RequestStatus;
-  created_by: string; // user_id
-  created_at: string;
-  updated_at?: string;
-  reason?: string;
-  unit_code?: string;
-  related_allocation_id?: string;
-  replacement_tutor_id?: string;
-  approver_id?: string | null;
-  comment?: string | null;
+// types/request.ts
+export type ClaimDetails = {
+  hours: number;
+  paycode: string;
+};
+
+export type SwapDetails = {
+  suggested_tutor_id: number;
+};
+
+export type CorrectionDetails = {
+  corrected_hours: number;
+  note?: string;
+};
+
+// Cancellation and Query have no fields
+export type EmptyDetails = null;
+
+export interface BaseRequest {
+  requestId: number;
+  requesterId: number;
+  reviewerId: number;
+  requestDate: string;
+  allocationId: number;
+  requestStatus: "pending" | "approved" | "rejected";
+  requestReason: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface RequestPayload {
-  type: RequestType;
-  reason: string;
-  related_allocation_id?: string;
-  replacement_tutor_id?: string;
-  unit_code?: string;
-}
+export type TutorRequest =
+  | ({ requestType: "claim"; details: ClaimDetails } & BaseRequest)
+  | ({ requestType: "swap"; details: SwapDetails } & BaseRequest)
+  | ({ requestType: "correction"; details: CorrectionDetails } & BaseRequest)
+  | ({
+      requestType: "cancellation" | "query";
+      details: EmptyDetails;
+    } & BaseRequest);

@@ -6,16 +6,23 @@
 import { useState } from "react";
 
 import { Tutor } from "@/app/_types/tutor";
+import { TutorAllocationRow as Allocation } from "@/app/_types/allocations";
 
 // Import all your service functions here
 import {
   getTutorAllocations,
   getAllocationsByUnit,
-  Allocation,
   // example: createSwapRequest, updateAllocationStatus, etc.
 } from "@/app/services/allocationService";
 
-import { getTutors, getTutorsByUnit } from "@/app/services/userService";
+import {
+  getTutorById,
+  getTutors,
+  getTutorsByUnit,
+} from "@/app/services/userService";
+import { getRequestById } from "./requestService";
+import { TutorRequest } from "../_types/request";
+import UserServiceTester from "./components/UserServiceTester";
 
 // This is a simple “sandbox page” where you can test any service calls.
 export default function ServicesTestPage() {
@@ -26,9 +33,14 @@ export default function ServicesTestPage() {
   );
   const [unitData, setUnitData] = useState<Allocation[]>([]);
   const [tutorData, setTutorData] = useState<Tutor[]>([]);
+  const [requestData, setRequestData] = useState<TutorRequest | null>(null);
+  const [singleTutorData, setSingleTutorData] = useState<Tutor | null>(null);
+
   // --- 2 Optional input states for interactive testing ---
   const [userId, setUserId] = useState("10");
   const [unitCode, setUnitCode] = useState("COMP3419");
+  const [requestId, setRequestId] = useState("1");
+  const [tutorId, setTutorId] = useState("1");
 
   // --- 3 Example function: test getTutorAllocations() ---
   const handleFetchTutorAllocations = async () => {
@@ -50,6 +62,16 @@ export default function ServicesTestPage() {
   const handleFetchTutorsByUnit = async () => {
     const data = await getTutorsByUnit(unitCode);
     setTutorData(data);
+  };
+
+  const handleFetchRequestById = async () => {
+    const data = await getRequestById(requestId);
+    setRequestData(data as TutorRequest);
+  };
+
+  const handleFetchTutorById = async () => {
+    const data = await getTutorById(tutorId);
+    setSingleTutorData(data);
   };
 
   // --- 5 Template for adding new service tests ---
@@ -90,6 +112,23 @@ export default function ServicesTestPage() {
             className="border p-2 rounded"
           />
         </div>
+        <div>
+          <label className="block font-medium">Request Id:</label>
+          <input
+            value={requestId}
+            onChange={(e) => setRequestId(e.target.value)}
+            className="border p-2 rounded"
+          />
+        </div>
+
+        <div>
+          <label className="block font-medium">Tutor Id:</label>
+          <input
+            value={tutorId}
+            onChange={(e) => setTutorId(e.target.value)}
+            className="border p-2 rounded"
+          />
+        </div>
       </div>
 
       {/* --- Action Buttons --- */}
@@ -121,8 +160,22 @@ export default function ServicesTestPage() {
         >
           Handle fetch tutor by Unit
         </button>
+
+        <button
+          onClick={handleFetchRequestById}
+          className="bg-green-500 text-white px-4 py-2 rounded"
+        >
+          Handle fetch request by id
+        </button>
+
+        <button
+          onClick={handleFetchTutorById}
+          className="bg-green-500 text-white px-4 py-2 rounded"
+        >
+          Handle fetch tutor by id
+        </button>
         {/* Example: Add your own button for new function */}
-        {/* <button onClick={handleCreateSwapRequest}>Create Swap Request</button> */}
+        {/* <button onClick={handleCreateSwapRequest}>Create Swap TutorRequest</button> */}
       </div>
       {/* --- Result Output --- */}
       <section>
@@ -145,6 +198,24 @@ export default function ServicesTestPage() {
           {JSON.stringify(tutorData, null, 2)}
         </pre>
       </section>
+
+      <section>
+        <h2 className="text-lg font-semibold">Request</h2>
+        <pre className="bg-gray-100 p-3 rounded overflow-x-auto text-sm">
+          {JSON.stringify(requestData, null, 2)}
+        </pre>
+      </section>
+
+      <section>
+        <h2 className="text-lg font-semibold">One Tutor</h2>
+        <pre className="bg-gray-100 p-3 rounded overflow-x-auto text-sm">
+          {JSON.stringify(singleTutorData, null, 2)}
+        </pre>
+      </section>
+
+      <div className="p-10">
+        <UserServiceTester />
+      </div>
     </div>
   );
 }

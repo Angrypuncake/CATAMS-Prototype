@@ -37,6 +37,7 @@ export async function GET(req: Request) {
       const v = searchParams.get(key);
       if (v && v !== "") filters.push({ col, val: v });
     };
+
     pushFilter("unit_code", "cu.unit_code");
     pushFilter("unit_name", "cu.unit_name");
     pushFilter("activity_type", "ta.activity_type");
@@ -47,6 +48,12 @@ export async function GET(req: Request) {
 
     const whereParts: string[] = [];
     const params: unknown[] = [];
+
+    const excludeUserId = searchParams.get("exclude_user_id");
+    if (excludeUserId) {
+      params.push(excludeUserId);
+      whereParts.push(`a.user_id != $${params.length}`);
+    }
 
     // Free-text search across a few columns
     if (q) {
@@ -81,7 +88,7 @@ export async function GET(req: Request) {
       activity_name: "ta.activity_name",
       status: "a.status",
       mode: "ta.mode", // NEW
-      allocated_hours: "a.allocated_hours", // NEW
+      hours: "so.hours", // NEW
     };
     const orderBy = sortable[sort.replace(/^.*\./, "")] ?? "so.session_date";
 

@@ -76,7 +76,7 @@ export default function CorrectionRequestPage() {
         start_at: allocation.start_at || "",
         end_at: allocation.end_at || "",
         location: allocation.location || "",
-        hours: String(allocation.allocated_hours || ""),
+        hours: String(allocation.hours || ""),
         session: allocation.activity_type || "",
         justification: "",
       });
@@ -141,8 +141,7 @@ export default function CorrectionRequestPage() {
           : "—"}{" "}
         · {allocation.location}
         <Typography variant="body2">
-          Hours: {allocation.allocated_hours} · Session:{" "}
-          {allocation.activity_type}
+          Hours: {allocation.hours} · Session: {allocation.activity_type}
         </Typography>
       </Paper>
 
@@ -182,7 +181,7 @@ export default function CorrectionRequestPage() {
             <dd>{allocation.location}</dd>
 
             <dt>Hours:</dt>
-            <dd>{allocation.allocated_hours}</dd>
+            <dd>{allocation.hours}</dd>
 
             <dt>Session:</dt>
             <dd>{allocation.activity_type}</dd>

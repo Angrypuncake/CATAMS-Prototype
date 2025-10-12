@@ -1,4 +1,68 @@
 import api from "@/lib/axios";
+import type { TutorRequest } from "@/app/_types/request";
+import axios from "@/lib/axios";
+
+export async function getRequestById(id: string): Promise<TutorRequest> {
+  const mock = "true";
+  if (mock === "true") {
+    const now = new Date().toISOString();
+
+    const base = {
+      requestId: Number(id),
+      requesterId: 8,
+      reviewerId: 10,
+      requestDate: now,
+      allocationId: 21,
+      requestStatus: "pending" as const,
+      requestReason: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    // Rotate between types for demo
+    const typeIndex = Number(id) % 5;
+    const types: TutorRequest["requestType"][] = [
+      "claim",
+      "swap",
+      "cancellation",
+      "correction",
+      "query",
+    ];
+    const requestType = types[typeIndex];
+
+    // Assign details per type (TypeScript now enforces shape correctness)
+    switch (requestType) {
+      case "claim":
+        return {
+          ...base,
+          requestType,
+          details: { hours: 2, paycode: "TUT01" },
+        } as TutorRequest;
+      case "swap":
+        return {
+          ...base,
+          requestType,
+          details: { suggested_tutor_id: 10 },
+        } as TutorRequest;
+      case "correction":
+        return {
+          ...base,
+          requestType,
+          details: {
+            corrected_hours: 3,
+            note: "Adjusted session time after timetable update.",
+          },
+        } as TutorRequest;
+      case "cancellation":
+      case "query":
+        return { ...base, requestType, details: null } as TutorRequest;
+    }
+  }
+
+  // // Real backend call
+  const res = await axios.get(`/tutor/requests/${id}`);
+  return res.data as TutorRequest;
+}
 
 // ==========================================================
 // SWAP REQUEST SERVICE — handles full tutor → TA → UC workflow

@@ -27,8 +27,8 @@ export default function ClaimForm() {
       ]);
 
       setAllocation(allocData);
-      setSystemHours(Number(allocData.allocated_hours ?? 0));
-      setHours(Number(allocData.allocated_hours ?? 0));
+      setSystemHours(Number(allocData.hours ?? 0));
+      setHours(Number(allocData.hours ?? 0));
       setPayCode(allocData.paycode_id ?? "");
       setPaycodes(paycodeList);
     })();
@@ -62,7 +62,7 @@ export default function ClaimForm() {
       <div className="mt-4 grid grid-cols-2 gap-4">
         <div>
           <p className="font-medium">System Record</p>
-          <p>Hours: {allocation.allocated_hours}</p>
+          <p>Hours: {allocation.hours}</p>
           <p>Pay Code: {allocation.paycode_id}</p>
         </div>
         <div>

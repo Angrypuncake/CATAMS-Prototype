@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { getAllocationById } from "@/app/services/allocationService";
+import { TutorAllocationRow } from "@/app/_types/allocations";
 import Link from "next/link";
 import {
   Box,
@@ -13,21 +15,12 @@ import {
   Typography,
 } from "@mui/material";
 
-type AllocationRow = {
-  unit_code: string | null;
-  unit_name: string | null;
-  session_date: string | null;
-  start_at: string | null; // "HH:MM:SS"
-  end_at: string | null;
-  activity_name: string | null;
-};
-
 export default function QueryRequestPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const allocationId = Array.isArray(params?.id) ? params.id[0] : params?.id;
 
-  const [allocation, setAllocation] = useState<AllocationRow | null>(null);
+  const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [subject, setSubject] = useState("");
@@ -37,10 +30,8 @@ export default function QueryRequestPage() {
   useEffect(() => {
     async function fetchAllocation() {
       try {
-        const res = await fetch(`/api/tutor/allocations/${allocationId}`);
-        if (!res.ok) throw new Error("Failed to fetch allocation");
-        const json = (await res.json()) as { data?: AllocationRow };
-        setAllocation(json.data ?? null);
+        const allocationData = await getAllocationById(allocationId);
+        setAllocation(allocationData);
       } catch (e) {
         console.error(e);
       } finally {

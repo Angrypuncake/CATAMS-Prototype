@@ -142,7 +142,7 @@ type Dow = (typeof DOWS)[number];
 function isoDateToDow(iso: string | null | undefined): Dow | "" {
   if (!iso) return "";
   const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
-  const js = new Date(y, m - 1, d).getDay(); // local, but using exact parts
+  const js = new Date(y, m - 1, d).getDay();
   const map: Record<number, Dow> = {
     0: "Sun",
     1: "Mon",
@@ -210,7 +210,7 @@ function TutorCombo({
       >
         {selected
           ? `${selected.first_name ?? ""} ${selected.last_name ?? ""}`.trim() +
-            (selected.email ? ` (${selected.email})` : "")
+          (selected.email ? ` (${selected.email})` : "")
           : "Select tutor…"}
       </button>
       {open && (
@@ -295,9 +295,9 @@ function PaycodeCombo({
       >
         {selected
           ? `${selected.code}` +
-            (selected.paycode_description
-              ? ` — ${selected.paycode_description}`
-              : "")
+          (selected.paycode_description
+            ? ` — ${selected.paycode_description}`
+            : "")
           : "Select paycode…"}
       </button>
       {open && (
@@ -362,7 +362,6 @@ function PropagationPanel({
   const [moveDow, setMoveDow] = React.useState<boolean>(false);
   console.log("PropagationPanel activityId", activityId);
 
-  // Fetch occurrences for this activity
   React.useEffect(() => {
     if (!activityId) {
       setWeeks([]);
@@ -377,7 +376,7 @@ function PropagationPanel({
         if (!r.ok) throw new Error("Failed to load occurrences");
         const data = (await r.json()) as { data: OccurrenceRow[] };
         setWeeks(data.data || []);
-        setSelected(new Set()); // reset selection on activity change
+        setSelected(new Set());
       } catch (e) {
         console.error(e);
         setWeeks([]);
@@ -386,7 +385,6 @@ function PropagationPanel({
     })();
   }, [activityId]);
 
-  // Lift state up
   React.useEffect(() => {
     onChange({
       fields,
@@ -438,7 +436,6 @@ function PropagationPanel({
             Day of Week (derived)
           </label>
 
-          {/* NEW: checkbox to include/exclude DOW propagation */}
           <label className="inline-flex items-center gap-2 mb-1 text-sm">
             <input
               type="checkbox"
@@ -466,67 +463,16 @@ function PropagationPanel({
         <div className="col-span-3">
           <div className="text-sm font-medium mb-1">Fields to propagate</div>
           <div className="flex flex-wrap gap-x-6 gap-y-2 items-center">
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={fields.includes("tutor")}
-                onChange={() => toggleField("tutor")}
-              />
-              Tutor
-            </label>
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={fields.includes("paycode")}
-                onChange={() => toggleField("paycode")}
-              />
-              Paycode
-            </label>
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={fields.includes("start")}
-                onChange={() => toggleField("start")}
-              />
-              Start
-            </label>
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={fields.includes("end")}
-                onChange={() => toggleField("end")}
-              />
-              End
-            </label>
-
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={fields.includes("note")}
-                onChange={() => toggleField("note")}
-              />
-              Notes
-            </label>
-
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={fields.includes("status" as const)}
-                onChange={() => toggleField("status" as const)}
-              />
-              Status
-            </label>
-
-            <label className="inline-flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={fields.includes("location" as const)}
-                onChange={() => toggleField("location" as const)}
-              />
-              Location
-            </label>
-
-            {/* Notes mode */}
+            {(["tutor", "paycode", "start", "end", "note", "status", "location"] as const).map((f) => (
+              <label key={f} className="inline-flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={fields.includes(f)}
+                  onChange={() => toggleField(f)}
+                />
+                {f.charAt(0).toUpperCase() + f.slice(1)}
+              </label>
+            ))}
             {fields.includes("note") && (
               <div className="flex items-center gap-3 text-xs">
                 <label className="inline-flex items-center gap-1">
@@ -627,7 +573,6 @@ function PropagationPanel({
         </div>
       </div>
 
-      {/* Tiny summary */}
       <div className="mt-3 text-xs text-gray-600">
         {selected.size > 0
           ? `Will apply to ${selected.size} occurrence(s).`
@@ -653,7 +598,6 @@ function Drawer({
   tutors: TutorOption[];
   paycodes: PaycodeOption[];
 }) {
-  // If backend sends mode use it; otherwise infer from presence of session fields
   const isScheduled =
     row?.mode === "scheduled" || (row?.mode == null && !!row?.session_date);
 
@@ -672,16 +616,13 @@ function Drawer({
     note: "",
     status: "",
     location: "",
-    // Unscheduled UX
     allocatedHours: "" as string,
     manualHoursOnly: false,
-    // Smart propagation (scheduled)
     applyAllForActivity: false,
   });
 
   const [weeksForActivity, setWeeksForActivity] = useState<OccurrenceRow[]>([]);
 
-  // Hydrate Drawer from the row
   useEffect(() => {
     if (!row) return;
     setForm((f) => ({
@@ -701,7 +642,6 @@ function Drawer({
     }));
   }, [row]);
 
-  // Load occurrences for this activity when opening a scheduled allocation
   useEffect(() => {
     const activityId = row?.allocation_activity_id ?? null;
     const inferredScheduled = row
@@ -728,6 +668,7 @@ function Drawer({
       }
     })();
   }, [open, row]);
+
   const derivedDow = React.useMemo(() => {
     const dateFromForm = form.date?.trim();
     const fallbackDate = toInputDate(row?.session_date ?? null);
@@ -738,13 +679,11 @@ function Drawer({
 
   return (
     <div>
-      {/* Backdrop */}
       <div
         className="fixed inset-0 bg-black/40 z-40"
         onClick={onClose}
         aria-hidden="true"
       />
-      {/* Panel */}
       <aside
         className="fixed right-0 top-0 h-full w-[480px] max-w-[95vw] bg-white shadow-2xl z-50 overflow-y-auto"
         role="dialog"
@@ -763,29 +702,28 @@ function Drawer({
         </div>
 
         <div className="p-5 space-y-5">
-          {/* Tutor */}
           <div>
             <label className="block text-sm font-medium mb-1">Tutor</label>
             <TutorCombo
               options={tutors}
               valueId={form.tutorId}
               onChange={(sel) =>
-                setForm((f) => ({ ...f, tutorId: sel ? sel.user_id : null }))}
+                setForm((f) => ({ ...f, tutorId: sel ? sel.user_id : null }))
+              }
             />
           </div>
 
-          {/* Paycode */}
           <div>
             <label className="block text-sm font-medium mb-1">Paycode</label>
             <PaycodeCombo
               options={paycodes}
               valueCode={form.paycode}
               onChange={(sel) =>
-                setForm((f) => ({ ...f, paycode: sel ? sel.code : null }))}
+                setForm((f) => ({ ...f, paycode: sel ? sel.code : null }))
+              }
             />
           </div>
 
-          {/* Status */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium mb-1">Status</label>
@@ -793,7 +731,8 @@ function Drawer({
                 className="w-full border rounded px-3 py-2"
                 value={form.status}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, status: e.target.value }))}
+                  setForm((f) => ({ ...f, status: e.target.value }))
+                }
               >
                 <option value="">— Select status —</option>
                 {STATUS_OPTIONS.map((s) => (
@@ -805,18 +744,17 @@ function Drawer({
             </div>
           </div>
 
-          {/* {location} */}
           <div>
             <label className="block text-sm font-medium mb-1">Location</label>
             <textarea
               className="w-full border rounded px-3 py-2 min-h-[20px]"
               value={form.location}
               onChange={(e) =>
-                setForm((f) => ({ ...f, location: e.target.value }))}
+                setForm((f) => ({ ...f, location: e.target.value }))
+              }
             />
           </div>
 
-          {/* Scheduled vs Unscheduled */}
           {isScheduled ? (
             <>
               <div className="grid grid-cols-3 gap-3">
@@ -842,7 +780,8 @@ function Drawer({
                     className="w-full border rounded px-3 py-2"
                     value={form.start}
                     onChange={(e) =>
-                      setForm((f) => ({ ...f, start: e.target.value }))}
+                      setForm((f) => ({ ...f, start: e.target.value }))
+                    }
                   />
                 </div>
                 <div>
@@ -852,12 +791,12 @@ function Drawer({
                     className="w-full border rounded px-3 py-2"
                     value={form.end}
                     onChange={(e) =>
-                      setForm((f) => ({ ...f, end: e.target.value }))}
+                      setForm((f) => ({ ...f, end: e.target.value }))
+                    }
                   />
                 </div>
               </div>
 
-              {/* Notes (this session) */}
               <div>
                 <label className="block text-sm font-medium mb-1">
                   Notes (this session)
@@ -866,7 +805,8 @@ function Drawer({
                   className="w-full border rounded px-3 py-2 min-h-[84px]"
                   value={form.note}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, note: e.target.value }))}
+                    setForm((f) => ({ ...f, note: e.target.value }))
+                  }
                   placeholder="Anything specific about this occurrence…"
                 />
                 <div className="text-xs text-gray-500 mt-1">
@@ -930,7 +870,8 @@ function Drawer({
                     className="w-full border rounded px-3 py-2"
                     value={form.date}
                     onChange={(e) =>
-                      setForm((f) => ({ ...f, date: e.target.value }))}
+                      setForm((f) => ({ ...f, date: e.target.value }))
+                    }
                     disabled={form.manualHoursOnly}
                   />
                 </div>
@@ -943,7 +884,8 @@ function Drawer({
                     className="w-full border rounded px-3 py-2"
                     value={form.start}
                     onChange={(e) =>
-                      setForm((f) => ({ ...f, start: e.target.value }))}
+                      setForm((f) => ({ ...f, start: e.target.value }))
+                    }
                     disabled={form.manualHoursOnly}
                   />
                 </div>
@@ -954,7 +896,8 @@ function Drawer({
                     className="w-full border rounded px-3 py-2"
                     value={form.end}
                     onChange={(e) =>
-                      setForm((f) => ({ ...f, end: e.target.value }))}
+                      setForm((f) => ({ ...f, end: e.target.value }))
+                    }
                     disabled={form.manualHoursOnly}
                   />
                 </div>
@@ -982,7 +925,6 @@ function Drawer({
                   start_at: fromInputTime(form.start),
                   end_at: fromInputTime(form.end),
                   location: form.location,
-                  // Smart propagation intent for backend write-path
                   propagate_fields: propPayload.fields,
                   propagate_notes_mode: propPayload.fields.includes("note")
                     ? propPayload.notesMode
@@ -1021,8 +963,8 @@ function Drawer({
 
 /* ======================= rows -> timeline helpers ======================= */
 function startOfWeekMonday(d: Date) {
-  const day = d.getDay(); // 0=Sun..6=Sat
-  const offset = (day + 6) % 7; // Mon=0
+  const day = d.getDay();
+  const offset = (day + 6) % 7;
   const out = new Date(d);
   out.setHours(0, 0, 0, 0);
   out.setDate(out.getDate() - offset);
@@ -1030,11 +972,11 @@ function startOfWeekMonday(d: Date) {
 }
 function parseDateSafe(iso: string | null) {
   if (!iso) return null;
-  const dt = new Date(iso.slice(0, 10)); // prevent TZ shifts
+  const dt = new Date(iso.slice(0, 10));
   return isNaN(dt.getTime()) ? null : dt;
 }
 function hoursFromTimes(start_at: string | null, end_at: string | null) {
-  if (!start_at || !end_at) return 2; // fallback
+  if (!start_at || !end_at) return 2;
   const today = new Date().toISOString().slice(0, 10);
   const s = new Date(`${today}T${start_at.slice(0, 8)}`);
   const e = new Date(`${today}T${end_at.slice(0, 8)}`);
@@ -1057,17 +999,14 @@ function activityName(r: AllocationRow) {
     .join(" – ");
 }
 
-/** Convert table rows -> Timeline activities (scheduled rows only)
- *  ⬇️ Inject `allocationId` so the hover Edit can open the correct Drawer.
- */
+/** Convert table rows -> Timeline activities (scheduled rows only) */
 function rowsToTimelineActivities(
   rows: AllocationRow[],
   opts: { termStart: Date; termLabel: string }
 ): TLActivityRow[] {
   const map = new Map<string, TLActivityRow>();
   for (const r of rows) {
-    const isScheduled =
-      r.mode === "scheduled" || (r.mode == null && !!r.session_date);
+    const isScheduled = r.mode === "scheduled" || (r.mode == null && !!r.session_date);
     if (!isScheduled) continue;
     const date = parseDateSafe(r.session_date);
     if (!date) continue;
@@ -1090,15 +1029,11 @@ function rowsToTimelineActivities(
       hours: hoursFromTimes(r.start_at, r.end_at),
       role: r.teaching_role ?? undefined,
       notes: r.location ?? r.note ?? undefined,
-      allocationId: r.id, // <-- IMPORTANT
     };
 
     const existing = act.allocations[wk];
     if (!existing) act.allocations[wk] = [cell];
-    else
-      act.allocations[wk] = Array.isArray(existing)
-        ? [...existing, cell]
-        : [existing, cell];
+    else act.allocations[wk] = Array.isArray(existing) ? [...existing, cell] : [existing, cell];
   }
   return Array.from(map.values());
 }
@@ -1137,7 +1072,7 @@ export default function AdminAllAllocationsPage() {
       const params = new URLSearchParams();
       params.set("page", String(page));
       params.set("limit", String(limit));
-      params.set("mode", tab); // fetch only the current tab
+      params.set("mode", tab);
       if (q) params.set("q", q);
       if (unitCode) params.set("unit_code", unitCode);
       if (activityType) params.set("activity_type", activityType);
@@ -1158,7 +1093,6 @@ export default function AdminAllAllocationsPage() {
     }
   }, [page, limit, tab, q, unitCode, activityType, status]);
 
-  // Trigger reload when tab changes
   useEffect(() => {
     setPage(1);
     fetchData();
@@ -1179,7 +1113,6 @@ export default function AdminAllAllocationsPage() {
     })();
   }, []);
 
-  // Prefer 'mode' to split rows; fall back to session_date
   const { scheduledRows, unscheduledRows } = useMemo(() => {
     const sched: AllocationRow[] = [];
     const unsched: AllocationRow[] = [];
@@ -1199,9 +1132,7 @@ export default function AdminAllAllocationsPage() {
     const dts = visible
       .map((r) => parseDateSafe(r.session_date))
       .filter((d): d is Date => !!d);
-    const min = dts.length
-      ? new Date(Math.min(...dts.map((d) => d.getTime())))
-      : new Date();
+    const min = dts.length ? new Date(Math.min(...dts.map((d) => d.getTime()))) : new Date();
     return startOfWeekMonday(min);
   }, [visible]);
 
@@ -1234,6 +1165,42 @@ export default function AdminAllAllocationsPage() {
       await fetchData();
     } catch (err) {
       console.error("Error saving allocation", err);
+    }
+  }
+
+  /** ========= NEW: map tooltip “Edit this allocation” -> open Drawer ========= */
+  function handleTimelineCellEdit(args: {
+    activity: TLActivityRow;
+    week: WeekDef;
+    cell: TLCellAllocation[];
+  }) {
+    // pick the first tutor in the cell stack
+    const first = args.cell[0];
+    const tutorName = (first?.tutor || "").trim();
+
+    // Find a matching scheduled row by (activityKey, weekKey, tutor display name)
+    // activity.name is built via activityName(); activityKey() uses unit+type+name joined by " • "
+    const match = scheduledRows.find((r) => {
+      const actKey = activityKey(r);
+      const wk = r.session_date ? weekKeyFor(new Date(r.session_date.slice(0, 10)), termStart) : "";
+      return (
+        wk === args.week.key &&
+        (labelName(r) === tutorName || tutorName === "") &&
+        // Loose match: activity label prefix (unit – activity_name) equals activity.name
+        activityName(r) === args.activity.name
+      );
+    });
+
+    if (match) {
+      onEdit(match);
+    } else {
+      // Fallback: open the first row of that activity in that week (if any)
+      const fallback = scheduledRows.find((r) => {
+        const wk = r.session_date ? weekKeyFor(new Date(r.session_date.slice(0, 10)), termStart) : "";
+        return wk === args.week.key && activityName(r) === args.activity.name;
+      });
+      if (fallback) onEdit(fallback);
+      else console.warn("No matching row found for timeline cell edit:", args);
     }
   }
 
@@ -1285,8 +1252,7 @@ export default function AdminAllAllocationsPage() {
             min={1}
             max={200}
             value={limit}
-            onChange={(e) =>
-              setLimit(parseInt(e.target.value || "25", 10))}
+            onChange={(e) => setLimit(parseInt(e.target.value || "25", 10))}
             className="w-full border rounded px-3 py-2"
           />
         </div>
@@ -1336,7 +1302,6 @@ export default function AdminAllAllocationsPage() {
 
       {/* Table or Timeline */}
       {viewMode === "table" || tab === "unscheduled" ? (
-        /* Table (unchanged) */
         <div className="overflow-auto border rounded">
           <table className="min-w-[1100px] w-full text-sm">
             <thead className="bg-gray-50">
@@ -1490,17 +1455,9 @@ export default function AdminAllAllocationsPage() {
                 },
               ]}
               onCellClick={() => {
-                /* optional no-op */
+                /* optional click behaviour */
               }}
-              /* ⬇️ Hover Edit → open right-hand Drawer for the first allocation in the cell (or the clicked badge) */
-              onCellEdit={({ allocations, clicked }) => {
-                const allocId = clicked?.allocationId ?? allocations[0]?.allocationId;
-                if (!allocId) return;
-                const row = visible.find(r => r.id === allocId);
-                if (!row) return;
-                setActiveRow(row);
-                setDrawerOpen(true);
-              }}
+              onCellEdit={handleTimelineCellEdit}
             />
           </div>
         </div>

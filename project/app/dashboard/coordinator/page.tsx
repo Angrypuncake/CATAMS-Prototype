@@ -9,7 +9,6 @@ import AlertBox from "@/components/AlertBox";
 import Link from "next/link";
 import axios from "axios";
 import { pendingRequests } from "./mock";
-import { getUnitBudgetOverview } from "@/app/services/budgetService";
 
 const Page = () => {
   // State for dropdown
@@ -26,8 +25,6 @@ const Page = () => {
         },
       );
       setData(json);
-      const res = await getUnitBudgetOverview(1);
-      console.log("overview details", res);
     } catch (e: unknown) {
       console.error("Failed to load budget overview:", e);
     }

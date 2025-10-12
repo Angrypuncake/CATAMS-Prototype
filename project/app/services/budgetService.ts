@@ -23,27 +23,11 @@ export interface UnitBudgetRow {
   unitName: string;
   year: number;
   session: string;
-
-  /** Total funding available for the offering (from getBudgetByOfferingId) */
-  totalBudget: number;
-
-  /** Sum of all allocated hours × rates (from getAllocationsByOfferingId) */
-  allocatedAmount: number;
-
-  /** Sum of all finalised tutor claims (from getClaimsByOfferingId) */
-  claimedAmount: number;
-
-  /** Ratio of claimed amount over total budget (claimedAmount / totalBudget) */
+  budget: number;
+  allocated: number;
+  claimed: number;
   pctUsed: number;
-
-  /** Remaining balance = totalBudget - claimedAmount */
   variance: number;
-
-  /** Optional forecast column, if you later model projection */
-  forecast?: number | null;
-
-  /** Derived status (Healthy / Exceeding) based on threshold */
-  status: "Healthy" | "Exceeding";
 }
 
 /** Represents the full Unit Coordinator budget summary table */
@@ -67,7 +51,7 @@ export interface CoordinatorBudgetOverview {
 }
 
 /** === Aggregated overview === */
-export async function getUnitBudgetOverview(
+export async function getUnitBudgetRow(
   offeringId: number,
   threshold = 0.9,
 ): Promise<UnitBudgetRow> {
@@ -101,12 +85,11 @@ export async function getUnitBudgetOverview(
       unitName: offering.unitName,
       year: offering.year,
       session: offering.sessionCode,
-      totalBudget,
-      allocatedAmount,
-      claimedAmount,
+      budget: totalBudget,
+      allocated: allocatedAmount,
+      claimed: claimedAmount,
       pctUsed,
       variance,
-      status,
     };
   } catch (err) {
     console.error(

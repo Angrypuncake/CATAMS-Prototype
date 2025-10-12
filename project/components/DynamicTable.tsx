@@ -18,6 +18,7 @@ import {
   Box,
   IconButton,
   TableSortLabel,
+  Button,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -32,19 +33,35 @@ type ColumnRenderer<T = Record<string, unknown>> = (
   key: keyof T & string,
 ) => React.ReactNode;
 
+export type ActionButton<T = Record<string, unknown>> = {
+  label: string;
+  onClick: (row: TableRowData<T>) => void;
+  color?: "primary" | "secondary" | "error" | "warning" | "info" | "success";
+  variant?: "text" | "outlined" | "contained";
+  disabled?: (row: TableRowData<T>) => boolean;
+  icon?: React.ReactNode;
+};
+
 type DynamicTableProps<T = Record<string, unknown>> = {
   rows: TableRowData<T>[];
   columns?: { key: keyof T & string; label?: string }[];
   columnRenderers?: Partial<Record<keyof T, ColumnRenderer<T>>>;
   maxChips?: number;
 
+  /** Action buttons props */
+  actions?: ActionButton<T>[];
+  actionsLabel?: string;
+
+  /** Search/filter props */
   enableSearch?: boolean;
   searchPlaceholder?: string;
 
+  /** Sorting props */
   enableSorting?: boolean;
   defaultSortColumn?: keyof T & string;
   defaultSortDirection?: "asc" | "desc";
 
+  /** Optional pagination props */
   enablePagination?: boolean;
   rowsPerPageOptions?: number[];
   defaultRowsPerPage?: number;
@@ -172,6 +189,8 @@ function DynamicTable<T = Record<string, unknown>>({
   columns,
   columnRenderers,
   maxChips = 4,
+  actions,
+  actionsLabel = "Actions",
   enableSearch = true,
   searchPlaceholder = "Search across all fields...",
   enableSorting = true,
@@ -331,6 +350,11 @@ function DynamicTable<T = Record<string, unknown>>({
                   )}
                 </TableCell>
               ))}
+              {actions && actions.length > 0 && (
+                <TableCell sx={{ fontWeight: 600 }} align="right">
+                  {actionsLabel}
+                </TableCell>
+              )}
             </TableRow>
           </TableHead>
           <TableBody>
@@ -347,6 +371,32 @@ function DynamicTable<T = Record<string, unknown>>({
                     </TableCell>
                   );
                 })}
+                {actions && actions.length > 0 && (
+                  <TableCell align="right">
+                    <Stack
+                      direction="row"
+                      spacing={1}
+                      justifyContent="flex-end"
+                    >
+                      {actions.map((action, actionIdx) => {
+                        const isDisabled = action.disabled?.(row) ?? false;
+                        return (
+                          <Button
+                            key={actionIdx}
+                            size="small"
+                            variant={action.variant ?? "text"}
+                            color={action.color ?? "primary"}
+                            onClick={() => action.onClick(row)}
+                            disabled={isDisabled}
+                            startIcon={action.icon}
+                          >
+                            {action.label}
+                          </Button>
+                        );
+                      })}
+                    </Stack>
+                  </TableCell>
+                )}
               </TableRow>
             ))}
           </TableBody>

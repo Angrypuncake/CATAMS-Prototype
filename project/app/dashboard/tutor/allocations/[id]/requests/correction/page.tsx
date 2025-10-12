@@ -1,246 +1,261 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   Box,
-  Button,
-  Checkbox,
-  Chip,
-  Container,
-  FormControlLabel,
-  MenuItem,
-  Paper,
-  Select,
-  Stack,
-  TextField,
   Typography,
+  Stack,
+  Button,
+  TextField,
+  Paper,
+  CircularProgress,
 } from "@mui/material";
-import { useState } from "react";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import Link from "next/link";
+import { useParams, useRouter } from "next/navigation";
+import { getAllocationById } from "@/app/services/allocationService";
+import { TutorAllocationRow } from "@/app/_types/allocations";
+import React from "react";
 
 export default function CorrectionRequestPage() {
-  const [corrections, setCorrections] = useState({
-    date: false,
-    time: false,
-    location: false,
-    hours: false,
-    session: false,
+  const router = useRouter();
+  const params = useParams<{ id: string }>();
+  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
+
+  const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [form, setForm] = useState({
+    date: "",
+    start_at: "",
+    end_at: "",
+    location: "",
+    hours: "",
+    session: "",
+    justification: "",
   });
 
+  // Fetch allocation
+  React.useEffect(() => {
+    if (!id) return; // wait until router provides id
+    let cancelled = false;
+
+    async function run() {
+      try {
+        if (!cancelled) {
+          setLoading(true);
+          setError(null);
+        }
+
+        // fetch via service
+        const mapped = await getAllocationById(id);
+
+        if (!cancelled) {
+          setAllocation(mapped);
+        }
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!cancelled) setError(msg || "Unknown error");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+    run();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    if (allocation) {
+      setForm({
+        date: allocation.session_date
+          ? new Date(allocation.session_date).toISOString().split("T")[0]
+          : "",
+        start_at: allocation.start_at || "",
+        end_at: allocation.end_at || "",
+        location: allocation.location || "",
+        hours: String(allocation.hours || ""),
+        session: allocation.activity_type || "",
+        justification: "",
+      });
+    }
+  }, [allocation]);
+
+  if (loading) {
+    return (
+      <Box sx={{ p: 3, maxWidth: 1000, mx: "auto" }}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <CircularProgress size={20} />
+          <Typography variant="body2">Loading allocations¦</Typography>
+        </Stack>
+      </Box>
+    );
+  }
+
+  const handleChange = (key: keyof typeof form, value: string) => {
+    setForm({ ...form, [key]: value });
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log("Submitted Correction:", form);
+    // TODO: hook up to backend route /api/tutor/corrections
+  };
+
+  if (error) return <p className="p-6 text-red-500">Error: {error}</p>;
+  if (!allocation) return <p>No allocation found</p>;
+
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
+    <Box sx={{ p: 3, maxWidth: 960, mx: "auto" }}>
       {/* Header */}
-      <Typography variant="h4" gutterBottom>
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+        <Link
+          href="/dashboard/tutor/"
+          className="flex items-center gap-1 text-sm text-blue-600 hover:underline"
+        >
+          <ArrowBackIcon fontSize="small" /> Back to Allocation
+        </Link>
+      </Stack>
+
+      <Typography variant="h5" fontWeight={700} sx={{ mb: 1 }}>
         Correction Request
       </Typography>
-      <Typography variant="body1" gutterBottom>
+      <Typography variant="body2" sx={{ mb: 3, color: "text.secondary" }}>
         Use this when allocation details are incorrect (date, time, location,
         hours, or session type).
       </Typography>
 
-      {/* Course Summary Box */}
-      <Paper
-        variant="outlined"
-        sx={{ p: 2, mt: 3, backgroundColor: "#f5f5f5" }}
-      >
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-        >
-          <Typography variant="subtitle1">
-            INFO1110 - Programming Fundamentals
-          </Typography>
-          <Chip label="Confirmed" color="success" size="small" />
-        </Stack>
-        <Typography variant="body2" sx={{ mt: 1 }}>
-          Date: 12/09/2025 • Time: 09:00 - 11:00 • Location: Room A • Hours:
-          2.0h • Session: Tutorial
+      {/* Summary */}
+      <Paper sx={{ p: 2, mb: 3 }}>
+        <Typography fontWeight={600}>
+          {allocation.unit_code} – {allocation.unit_name}
+        </Typography>
+        {allocation.session_date
+          ? new Date(allocation.session_date).toLocaleDateString("en-AU", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+            })
+          : "—"}{" "}
+        · {allocation.location}
+        <Typography variant="body2">
+          Hours: {allocation.hours} · Session: {allocation.activity_type}
         </Typography>
       </Paper>
 
-      {/* Responsive Stack for Form Sections */}
       <Stack
         direction={{ xs: "column", md: "row" }}
         spacing={3}
-        sx={{ mt: 3 }}
         alignItems="stretch"
       >
-        {/* System Record */}
-        <Box flex={1}>
-          <Paper variant="outlined" sx={{ p: 2, height: "100%" }}>
-            <Typography variant="subtitle1" gutterBottom>
-              System Record
-            </Typography>
-            <Typography variant="body2">Date: 2025-09-12</Typography>
-            <Typography variant="body2">Start / End: 09:00 — 11:00</Typography>
-            <Typography variant="body2">Location: Room A</Typography>
-            <Typography variant="body2">Hours: 2.0</Typography>
-            <Typography variant="body2">Session: Tutorial</Typography>
-            <Typography variant="caption" color="text.secondary">
-              Snapshot of current allocation (immutable).
-            </Typography>
-          </Paper>
-        </Box>
+        {/* Left column - System Record */}
+        <Paper variant="outlined" sx={{ p: 2, flex: 1 }}>
+          <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+            System Record
+          </Typography>
 
-        {/* Proposed Correction */}
-        <Box flex={1}>
-          <Paper variant="outlined" sx={{ p: 2, height: "100%" }}>
-            <Typography variant="subtitle1" gutterBottom>
-              Proposed Correction
-            </Typography>
+          <dl className="grid grid-cols-2 text-sm gap-y-1">
+            <dt>Date:</dt>
+            <dd>
+              {allocation.session_date
+                ? new Date(allocation.session_date).toLocaleDateString(
+                    "en-AU",
+                    {
+                      day: "2-digit",
+                      month: "short",
+                      year: "numeric",
+                    },
+                  )
+                : "—"}
+            </dd>
 
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={corrections.date}
-                  onChange={(e) =>
-                    setCorrections({ ...corrections, date: e.target.checked })
-                  }
-                />
-              }
-              label="Date"
-            />
-            <TextField
-              fullWidth
-              type="date"
-              size="small"
-              sx={{ mb: 2 }}
-              disabled={!corrections.date}
-            />
+            <dt>Start Time:</dt>
+            <dd>{allocation.start_at}</dd>
 
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={corrections.time}
-                  onChange={(e) =>
-                    setCorrections({ ...corrections, time: e.target.checked })
-                  }
-                />
-              }
-              label="Start / End"
-            />
-            <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+            <dt>End Time:</dt>
+            <dd>{allocation.end_at}</dd>
+
+            <dt>Location:</dt>
+            <dd>{allocation.location}</dd>
+
+            <dt>Hours:</dt>
+            <dd>{allocation.hours}</dd>
+
+            <dt>Session:</dt>
+            <dd>{allocation.activity_type}</dd>
+          </dl>
+        </Paper>
+        {/* Right column - Proposed Correction */}
+        <Paper variant="outlined" sx={{ p: 2, flex: 1 }}>
+          <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
+            Proposed Correction
+          </Typography>
+          <form onSubmit={handleSubmit}>
+            <Stack spacing={2}>
               <TextField
-                type="time"
+                type="date"
                 size="small"
-                fullWidth
-                disabled={!corrections.time}
+                value={form.date}
+                onChange={(e) => handleChange("date", e.target.value)}
               />
+
+              <Stack direction="row" spacing={1}>
+                <TextField
+                  type="time"
+                  size="small"
+                  value={form.end_at}
+                  onChange={(e) => handleChange("end_at", e.target.value)}
+                />
+              </Stack>
+
               <TextField
-                type="time"
                 size="small"
-                fullWidth
-                disabled={!corrections.time}
+                value={form.location}
+                onChange={(e) => handleChange("location", e.target.value)}
               />
+
+              <TextField
+                size="small"
+                type="number"
+                inputProps={{ step: "0.1" }}
+                value={form.hours}
+                onChange={(e) => handleChange("hours", e.target.value)}
+              />
+
+              <TextField
+                size="small"
+                value={form.session}
+                onChange={(e) => handleChange("session", e.target.value)}
+              />
+
+              <TextField
+                label="Justification"
+                multiline
+                rows={3}
+                value={form.justification}
+                required
+                onChange={(e) => handleChange("justification", e.target.value)}
+                placeholder="Explain why the record is incorrect or what changed (e.g., room change, session overran, timetable conflict)"
+              />
+
+              <Stack direction="row" spacing={2} sx={{ pt: 2 }}>
+                <Button
+                  type="button"
+                  variant="outlined"
+                  onClick={() => router.back()}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" variant="contained">
+                  Submit Correction Request
+                </Button>
+              </Stack>
             </Stack>
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={corrections.location}
-                  onChange={(e) =>
-                    setCorrections({
-                      ...corrections,
-                      location: e.target.checked,
-                    })
-                  }
-                />
-              }
-              label="Location"
-            />
-            <TextField
-              fullWidth
-              size="small"
-              placeholder="Room A"
-              sx={{ mb: 2 }}
-              disabled={!corrections.location}
-            />
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={corrections.hours}
-                  onChange={(e) =>
-                    setCorrections({ ...corrections, hours: e.target.checked })
-                  }
-                />
-              }
-              label="Hours"
-            />
-            <TextField
-              fullWidth
-              type="number"
-              size="small"
-              sx={{ mb: 2 }}
-              disabled={!corrections.hours}
-            />
-
-            <FormControlLabel
-              control={
-                <Checkbox
-                  checked={corrections.session}
-                  onChange={(e) =>
-                    setCorrections({
-                      ...corrections,
-                      session: e.target.checked,
-                    })
-                  }
-                />
-              }
-              label="Session"
-            />
-            <Select
-              fullWidth
-              size="small"
-              defaultValue="Tutorial"
-              disabled={!corrections.session}
-              sx={{ mb: 2 }}
-            >
-              <MenuItem value="Tutorial">Tutorial</MenuItem>
-              <MenuItem value="Lecture">Lecture</MenuItem>
-              <MenuItem value="Lab">Lab</MenuItem>
-            </Select>
-
-            <TextField
-              fullWidth
-              multiline
-              rows={3}
-              label="Justification"
-              placeholder="Explain why the record is incorrect or what changed..."
-              sx={{ mb: 2 }}
-            />
-
-            <Button variant="outlined" component="label" fullWidth>
-              Choose File
-              <input type="file" hidden />
-            </Button>
-          </Paper>
-        </Box>
+          </form>
+        </Paper>
       </Stack>
-
-      {/* Review Summary */}
-      <Box sx={{ mt: 3 }}>
-        <Typography variant="subtitle1" gutterBottom>
-          Review Summary
-        </Typography>
-        <Stack direction="row" spacing={1} flexWrap="wrap">
-          <Chip label="No changes selected" variant="outlined" />
-          <Chip label="Route: Coordinator" variant="outlined" />
-          <Chip label="ETA: 1-2 business days" variant="outlined" />
-        </Stack>
-      </Box>
-
-      {/* Action Buttons */}
-      <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end", gap: 2 }}>
-        <Button variant="outlined" color="inherit">
-          Cancel
-        </Button>
-        <Button variant="outlined" color="primary">
-          Save Draft
-        </Button>
-        <Button variant="contained" color="primary">
-          Submit Correction Request
-        </Button>
-      </Box>
-    </Container>
+    </Box>
   );
 }

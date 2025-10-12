@@ -1,98 +1,52 @@
+// app/dashboard/tutor/allocations/[id]/cancel/page.tsx
 "use client";
 
-// pages/swap-request.tsx
 import React, { useEffect, useState } from "react";
-import axios from "axios";
-
 import {
   Container,
   Typography,
-  Paper,
-  Radio,
+  FormControl,
+  FormLabel,
   RadioGroup,
   FormControlLabel,
+  Radio,
   TextField,
   Button,
   Box,
-  FormLabel,
-  FormControl,
+  MenuItem,
+  Autocomplete,
+  Checkbox,
   Stack,
   CircularProgress,
-  Autocomplete,
 } from "@mui/material";
+import { useParams, useRouter } from "next/navigation";
 
-import { useParams } from "next/navigation";
-import { useRouter } from "next/navigation";
-
-import type { AllocationBase } from "@/app/_types/allocations";
 import { getFormattedAllocationById } from "@/app/services/allocationService";
-import type { TutorAllocationRow } from "@/app/_types/allocations";
-import AllocationDetails from "../../_components/AllocationDetails";
-import { Tutor } from "@/app/_types/tutor";
 import { getTutorsByUnit } from "@/app/services/userService";
+import { TutorAllocationRow } from "@/app/_types/allocations";
+import { Tutor } from "@/app/_types/tutor";
+import AllocationDetails from "../../_components/AllocationDetails";
 
-const SwapRequestPage = () => {
+const CancelRequestPage = () => {
   const params = useParams<{ id: string }>();
   const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
-
-  const [swapType, setSwapType] = useState("suggest");
-  const [findTutor, setFindTutor] = useState("");
-  const [tutors, setTutors] = useState<Tutor[]>([]);
-  const [reason, setReason] = useState("");
-  const [attachments, setAttachments] = useState<FileList | null>(null);
-  const [allocation, setAllocation] = React.useState<AllocationBase | null>(
-    null,
-  );
-  const [tutAllocation, setTutAllocation] =
-    React.useState<TutorAllocationRow | null>(null);
-
-  const [loading, setLoading] = React.useState(true);
-  const [err, setErr] = React.useState<string | null>(null);
-
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log({
-      swapType,
-      findTutor,
-      reason,
-    });
+  const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
+  const [tutors, setTutors] = useState<Tutor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
 
-    try {
-      const sessionUser = await axios.get("/api/auth/me", {
-        withCredentials: true,
-      });
+  const [cancelType, setCancelType] = useState<"suggest" | "coordinator">(
+    "suggest",
+  );
+  const [findTutor, setFindTutor] = useState("");
+  const [reason, setReason] = useState("");
+  const [timing, setTiming] = useState(">48h");
+  const [ack, setAck] = useState(false);
 
-      //{requester_id, allocation_id, details, request_reason}
-      const res = await fetch(
-        `/api/tutor/allocations/${encodeURIComponent(id)}/requests/swap`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            requester_id: sessionUser.data.userId,
-            allocation_id: id,
-            details: {
-              ack: true,
-              timing: ">48h",
-              replacement_mode: findTutor,
-              suggested_user_id: 14,
-            }, // Example details; adapt as needed
-            request_reason: reason,
-          }),
-        },
-      );
-    } catch (err) {
-      console.error("Error fetching user data:", err);
-      router.push(`/dashboard/tutor/allocations/${id}?success=false`);
-      return;
-    }
-    router.push(`/dashboard/tutor/allocations/${id}?success=true`);
-  };
-
-  React.useEffect(() => {
-    if (!id) return; // wait until router provides id
+  useEffect(() => {
+    if (!id) return;
     let cancelled = false;
 
     async function run() {
@@ -103,18 +57,15 @@ const SwapRequestPage = () => {
         }
 
         const mapped = await getFormattedAllocationById(id);
-
         let tutorsForUnit: Tutor[] = [];
+
         if (mapped?.unit_code) {
           tutorsForUnit = await getTutorsByUnit(mapped.unit_code);
-          setTutors(tutorsForUnit);
         }
 
         if (!cancelled) {
           setAllocation(mapped);
-
-          //setRequests([]); // TODO: later wire to /requests
-          //setComments([]); // TODO: later wire to /comments
+          setTutors(tutorsForUnit);
         }
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
@@ -129,6 +80,19 @@ const SwapRequestPage = () => {
       cancelled = true;
     };
   }, [id]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    console.log({
+      cancelType,
+      findTutor,
+      reason,
+      timing,
+      acknowledge: ack,
+      allocationId: id,
+    });
+    // TODO: integrate with /api/tutor/cancel when ready
+  };
 
   if (loading) {
     return (
@@ -152,22 +116,38 @@ const SwapRequestPage = () => {
   return (
     <Container maxWidth="sm" sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>
-        Swap Request
+        Cancellation Request
       </Typography>
 
       <AllocationDetails allocation={allocation} />
 
       <form onSubmit={handleSubmit}>
+        {/* Reason */}
+        <TextField
+          fullWidth
+          multiline
+          rows={4}
+          label="Reason for Cancellation"
+          placeholder="e.g., Illness, timetable clash, or personal emergency."
+          value={reason}
+          onChange={(e) => setReason(e.target.value)}
+          sx={{ mb: 3 }}
+          required
+        />
+
+        {/* Replacement option */}
         <FormControl component="fieldset" sx={{ mb: 3 }}>
-          <FormLabel component="legend">Swap Type</FormLabel>
+          <FormLabel>Replacement Option</FormLabel>
           <RadioGroup
-            value={swapType}
-            onChange={(e) => setSwapType(e.target.value)}
+            value={cancelType}
+            onChange={(e) =>
+              setCancelType(e.target.value as "suggest" | "coordinator")
+            }
           >
             <FormControlLabel
               value="suggest"
               control={<Radio />}
-              label="Suggest another tutor to swap with"
+              label="I will suggest a tutor"
             />
             <FormControlLabel
               value="coordinator"
@@ -177,8 +157,9 @@ const SwapRequestPage = () => {
           </RadioGroup>
         </FormControl>
 
+        {/* Tutor Autocomplete */}
         <Autocomplete
-          disabled={swapType !== "suggest"}
+          disabled={cancelType !== "suggest"}
           options={tutors}
           getOptionLabel={(tutor) =>
             `${tutor.first_name} ${tutor.last_name} (${tutor.email})`
@@ -199,37 +180,40 @@ const SwapRequestPage = () => {
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Find Tutor to Swap With"
+              label="Find Tutor (if suggesting)"
               sx={{ mb: 3 }}
             />
           )}
         />
 
-        <TextField
-          fullWidth
-          multiline
-          rows={4}
-          label="Reason for Swap"
-          placeholder="e.g., Clashes with INF01910 lab I am teaching."
-          value={reason}
-          onChange={(e) => setReason(e.target.value)}
+        {/* Acknowledgement */}
+        <FormControlLabel
+          control={
+            <Checkbox
+              checked={ack}
+              onChange={(e) => setAck(e.target.checked)}
+            />
+          }
+          label="I understand this cancellation may impact coordination and scheduling."
           sx={{ mb: 3 }}
         />
 
+        {/* Actions */}
         <Box display="flex" justifyContent="flex-end" gap={2}>
           <Button
             variant="outlined"
             color="inherit"
-            onClick={() => router.push(`../`)}
+            onClick={() => router.push("../")}
           >
             Cancel
           </Button>
           <Button variant="contained" color="primary" type="submit">
-            Submit Swap Request
+            Submit Cancellation
           </Button>
         </Box>
       </form>
     </Container>
   );
 };
-export default SwapRequestPage;
+
+export default CancelRequestPage;

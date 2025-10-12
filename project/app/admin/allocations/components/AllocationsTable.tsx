@@ -91,7 +91,7 @@ export function AllocationsTable({
                       </td>
                     </>
                   ) : (
-                    <td className="px-3 py-2">{r.allocated_hours ?? "—"}</td>
+                    <td className="px-3 py-2">{r.hours ?? "—"}</td>
                   )}
                   <td className="px-3 py-2">
                     <div className="font-medium">{r.unit_code ?? "—"}</div>

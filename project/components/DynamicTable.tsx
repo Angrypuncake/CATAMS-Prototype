@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -8,6 +8,7 @@ import {
   TableContainer,
   TableHead,
   TableRow,
+  TablePagination,
   Paper,
   Chip,
   Stack,
@@ -29,6 +30,9 @@ type DynamicTableProps<T = Record<string, unknown>> = {
   columns?: { key: keyof T & string; label?: string }[];
   columnRenderers?: Partial<Record<keyof T, ColumnRenderer<T>>>;
   maxChips?: number;
+  enablePagination?: boolean;
+  rowsPerPageOptions?: number[];
+  defaultRowsPerPage?: number;
 };
 
 const isPrimitive = (v: unknown) =>
@@ -107,7 +111,13 @@ function DynamicTable<T = Record<string, unknown>>({
   columns,
   columnRenderers,
   maxChips = 4,
+  enablePagination = true,
+  rowsPerPageOptions = [5, 10, 25, 50],
+  defaultRowsPerPage = 5,
 }: DynamicTableProps<T>) {
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(defaultRowsPerPage);
+
   const inferredColumns = useMemo(() => {
     if (!rows || rows.length === 0) return [];
     return (
@@ -123,7 +133,23 @@ function DynamicTable<T = Record<string, unknown>>({
     );
   }, [rows, columns]);
 
+  const paginatedRows = useMemo(() => {
+    return enablePagination
+      ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+      : rows;
+  }, [rows, enablePagination, page, rowsPerPage]);
+
   if (!rows || rows.length === 0) return null;
+
+  const handleChangePage = (_event: unknown, newPage: number) =>
+    setPage(newPage);
+
+  const handleChangeRowsPerPage = (
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
+  };
 
   return (
     <Paper>
@@ -139,7 +165,7 @@ function DynamicTable<T = Record<string, unknown>>({
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((row, rIdx) => (
+            {paginatedRows.map((row, rIdx) => (
               <TableRow key={(row.id as React.Key) ?? rIdx}>
                 {inferredColumns.map((col) => {
                   const value = row[col.key];
@@ -157,6 +183,18 @@ function DynamicTable<T = Record<string, unknown>>({
           </TableBody>
         </Table>
       </TableContainer>
+
+      {enablePagination && (
+        <TablePagination
+          rowsPerPageOptions={rowsPerPageOptions}
+          component="div"
+          count={rows.length}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+        />
+      )}
     </Paper>
   );
 }

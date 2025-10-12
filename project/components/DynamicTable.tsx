@@ -13,7 +13,13 @@ import {
   Chip,
   Stack,
   Typography,
+  TextField,
+  InputAdornment,
+  Box,
+  IconButton,
 } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import ClearIcon from "@mui/icons-material/Clear";
 
 export type TableRowData<T = Record<string, unknown>> = T & {
   id?: string | number | null;
@@ -30,6 +36,12 @@ type DynamicTableProps<T = Record<string, unknown>> = {
   columns?: { key: keyof T & string; label?: string }[];
   columnRenderers?: Partial<Record<keyof T, ColumnRenderer<T>>>;
   maxChips?: number;
+
+  /** Search/filter props */
+  enableSearch?: boolean;
+  searchPlaceholder?: string;
+
+  /** Optional pagination props */
   enablePagination?: boolean;
   rowsPerPageOptions?: number[];
   defaultRowsPerPage?: number;
@@ -42,6 +54,30 @@ const isPrimitive = (v: unknown) =>
 
 const truncate = (s: string, n = 80) =>
   s.length > n ? s.slice(0, n) + "…" : s;
+
+const searchInValue = (value: unknown, searchTerm: string): boolean => {
+  if (value === null || value === undefined) return false;
+
+  const lowerSearch = searchTerm.toLowerCase();
+
+  if (
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return String(value).toLowerCase().includes(lowerSearch);
+  }
+
+  if (Array.isArray(value)) {
+    return value.some((item) => searchInValue(item, searchTerm));
+  }
+
+  if (typeof value === "object") {
+    return Object.values(value).some((v) => searchInValue(v, searchTerm));
+  }
+
+  return false;
+};
 
 const DefaultArrayRenderer = ({
   arr,
@@ -111,12 +147,15 @@ function DynamicTable<T = Record<string, unknown>>({
   columns,
   columnRenderers,
   maxChips = 4,
+  enableSearch = true,
+  searchPlaceholder = "Search across all fields...",
   enablePagination = true,
   rowsPerPageOptions = [5, 10, 25, 50],
   defaultRowsPerPage = 5,
 }: DynamicTableProps<T>) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(defaultRowsPerPage);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const inferredColumns = useMemo(() => {
     if (!rows || rows.length === 0) return [];
@@ -133,11 +172,24 @@ function DynamicTable<T = Record<string, unknown>>({
     );
   }, [rows, columns]);
 
+  // Filter rows based on search term
+  const filteredRows = useMemo(() => {
+    if (!rows || rows.length === 0) return [];
+    if (!searchTerm.trim()) return rows;
+
+    return rows.filter((row) => {
+      return inferredColumns.some((col) => {
+        const value = row[col.key];
+        return searchInValue(value, searchTerm);
+      });
+    });
+  }, [rows, searchTerm, inferredColumns]);
+
   const paginatedRows = useMemo(() => {
     return enablePagination
-      ? rows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-      : rows;
-  }, [rows, enablePagination, page, rowsPerPage]);
+      ? filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+      : filteredRows;
+  }, [filteredRows, enablePagination, page, rowsPerPage]);
 
   if (!rows || rows.length === 0) return null;
 
@@ -151,8 +203,59 @@ function DynamicTable<T = Record<string, unknown>>({
     setPage(0);
   };
 
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+    setPage(0); // Reset to first page when searching
+  };
+
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setPage(0);
+  };
+
   return (
     <Paper>
+      {enableSearch && (
+        <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
+          <TextField
+            fullWidth
+            size="small"
+            placeholder={searchPlaceholder}
+            value={searchTerm}
+            onChange={handleSearchChange}
+            slotProps={{
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+                endAdornment: searchTerm && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={handleClearSearch}
+                      edge="end"
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+          {searchTerm && (
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ mt: 1, display: "block" }}
+            >
+              Found {filteredRows.length} of {rows.length} results
+            </Typography>
+          )}
+        </Box>
+      )}
+
       <TableContainer>
         <Table size="small" stickyHeader>
           <TableHead>
@@ -188,7 +291,7 @@ function DynamicTable<T = Record<string, unknown>>({
         <TablePagination
           rowsPerPageOptions={rowsPerPageOptions}
           component="div"
-          count={rows.length}
+          count={filteredRows.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}

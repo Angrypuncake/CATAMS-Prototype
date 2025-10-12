@@ -1,3 +1,4 @@
+// components/TimelineView.tsx
 "use client";
 import React, { useMemo } from "react";
 import Tooltip from "@mui/material/Tooltip";
@@ -5,14 +6,22 @@ import Tooltip from "@mui/material/Tooltip";
 /* ===================== Types ===================== */
 export type WeekKey = string;
 export interface WeekDef { key: WeekKey; label: string; }
-export interface CellAllocation { tutor: string; hours: number; role?: string; notes?: string; }
+
+/** ⬇️ NEW: carry the row id so admin page can open the right Drawer */
+export interface CellAllocation {
+    tutor: string;
+    hours: number;
+    role?: string;
+    notes?: string;
+    allocationId?: number;  // <-- NEW
+}
 type CellValue = CellAllocation | CellAllocation[] | undefined;
 
 export interface ActivityRow {
     id: string;
-    name: string;             // e.g. "COMP2022 – .../Tutorial-01"
-    activityType?: string;    // e.g. "Tutorial"
-    paycode?: string;         // e.g. "LAB2"
+    name: string;
+    activityType?: string;
+    paycode?: string;
     flexTotal?: number;
     allocations: Record<WeekKey, CellValue>;
 }
@@ -31,6 +40,15 @@ export interface TimelineViewProps<A extends ActivityRow = ActivityRow> {
     extraColumns?: ExtraColumn<A>[];
     density?: "regular" | "compact";
     onCellClick?: (args: { activity: A; week: WeekDef; cell?: CellValue }) => void;
+
+    /** ⬇️ NEW: called when user clicks the hover Edit button in a cell */
+    onCellEdit?: (args: {
+        activity: A;
+        week: WeekDef;
+        allocations: CellAllocation[];          // the list in that cell
+        clicked?: CellAllocation;               // the badge’s allocation if you want it
+    }) => void;
+
     className?: string;
 }
 
@@ -43,11 +61,6 @@ export function buildWeeksRange(start: number, end: number, termLabel = "S1"): W
 }
 
 /* ===================== Component ===================== */
-/**
- * Grid: [ LEFT rail (fixed width) | RIGHT weeks (fills, horizontal scroll) ]
- * LEFT has its own header + rows (so no empty block). RIGHT is the only area that scrolls.
- * Header/row heights match the table to avoid layout “bounce” when toggling views.
- */
 export function TimelineView<A extends ActivityRow = ActivityRow>({
     title = "All Allocations — Timeline",
     weeks,
@@ -55,16 +68,15 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
     extraColumns = [],
     density = "regular",
     onCellClick,
+    onCellEdit,                  // <-- NEW
     className,
 }: TimelineViewProps<A>) {
-    // match your table rhythm so toggling doesn't jump
-    const headerH = density === "compact" ? 40 : 44; // px
-    const rowH = density === "compact" ? 40 : 48;    // px
+    const headerH = density === "compact" ? 40 : 44;
+    const rowH = density === "compact" ? 40 : 48;
 
-    // widths
-    const COL_ACTIVITY = 360;  // left "Activity" column width
-    const COL_EXTRA = 140;     // each extra column width
-    const COL_WEEK = 120;      // each week column width
+    const COL_ACTIVITY = 360;
+    const COL_EXTRA = 140;
+    const COL_WEEK = 120;
 
     const leftWidthPx = COL_ACTIVITY + extraColumns.length * COL_EXTRA;
 
@@ -121,52 +133,33 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
                 <div className="text-xs text-gray-500">Rows: activities • Columns: weeks</div>
             </div>
 
-            {/* Outer container fixed to page width — only weeks scroll horizontally */}
             <div className="border rounded overflow-hidden">
                 <div className="grid" style={{ gridTemplateColumns: `${leftWidthPx}px 1fr` }}>
-                    {/* LEFT rail: header + rows */}
+                    {/* LEFT rail (unchanged) */}
                     <div>
-                        {/* Left header */}
                         <div className="bg-gray-50 sticky top-0 z-30">
                             <div className="grid" style={{ gridTemplateColumns: leftGridTemplate }}>
-                                <div
-                                    className="border-b border-gray-200 px-4 flex items-center text-xs font-semibold"
-                                    style={{ height: headerH }}
-                                >
+                                <div className="border-b border-gray-200 px-4 flex items-center text-xs font-semibold" style={{ height: headerH }}>
                                     Activity
                                 </div>
                                 {extraColumns.map((col) => (
-                                    <div
-                                        key={col.key}
-                                        className="border-b border-gray-200 px-3 flex items-center text-xs font-semibold"
-                                        style={{ height: headerH }}
-                                    >
+                                    <div key={col.key} className="border-b border-gray-200 px-3 flex items-center text-xs font-semibold" style={{ height: headerH }}>
                                         {col.header}
                                     </div>
                                 ))}
                             </div>
                         </div>
 
-                        {/* Left rows */}
                         <div>
                             {activities.map((act, idx) => (
-                                <div
-                                    key={act.id}
-                                    className={cx(idx % 2 === 1 && "bg-gray-50/40")}
-                                >
+                                <div key={act.id} className={cx(idx % 2 === 1 && "bg-gray-50/40")}>
                                     <div className="grid" style={{ gridTemplateColumns: leftGridTemplate }}>
-                                        {/* Activity cell */}
-                                        <div
-                                            className="border-t border-gray-200 px-4 flex items-center gap-3 text-sm"
-                                            style={{ height: rowH }}
-                                        >
+                                        <div className="border-t border-gray-200 px-4 flex items-center gap-3 text-sm" style={{ height: rowH }}>
                                             <span className="shrink-0 rounded-xl bg-indigo-100 text-indigo-700 px-2 py-0.5 text-[10px] font-semibold">
                                                 {act.activityType ?? "Activity"}
                                             </span>
                                             <div className="min-w-0">
-                                                <div className="truncate font-medium" title={act.name}>
-                                                    {act.name}
-                                                </div>
+                                                <div className="truncate font-medium" title={act.name}>{act.name}</div>
                                                 {act.paycode || act.flexTotal !== undefined ? (
                                                     <div className="truncate text-xs text-gray-500">
                                                         {act.paycode ? `Pay ${act.paycode}` : ""}
@@ -177,13 +170,8 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
                                             </div>
                                         </div>
 
-                                        {/* Extra columns */}
                                         {extraColumns.map((col) => (
-                                            <div
-                                                key={col.key}
-                                                className="border-t border-gray-200 px-3 flex items-center text-xs text-gray-700"
-                                                style={{ height: rowH }}
-                                            >
+                                            <div key={col.key} className="border-t border-gray-200 px-3 flex items-center text-xs text-gray-700" style={{ height: rowH }}>
                                                 {col.render(act as any)}
                                             </div>
                                         ))}
@@ -193,17 +181,12 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
                         </div>
                     </div>
 
-                    {/* RIGHT weeks: single horizontal scroller with header + rows */}
+                    {/* RIGHT weeks (with hover Edit) */}
                     <div className="overflow-x-auto">
-                        {/* Weeks header (inside the scroller) */}
-                        <div
-                            className="grid bg-gray-50 sticky top-0 z-20"
-                            style={{ gridTemplateColumns: weeksTemplate, height: headerH }}
-                        >
+                        <div className="grid bg-gray-50 sticky top-0 z-20" style={{ gridTemplateColumns: weeksTemplate, height: headerH }}>
                             {WeekHeaderCells}
                         </div>
 
-                        {/* Weeks rows */}
                         <div>
                             {activities.map((act, idx) => (
                                 <div key={act.id} className={cx(idx % 2 === 1 && "bg-gray-50/40")}>
@@ -215,11 +198,7 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
                                             return (
                                                 <Tooltip
                                                     key={`${act.id}_${w.key}`}
-                                                    title={
-                                                        items.length
-                                                            ? tooltipContent(act, w, items)
-                                                            : "No allocation"
-                                                    }
+                                                    title={items.length ? tooltipContent(act, w, items) : "No allocation"}
                                                     arrow
                                                     placement="top"
                                                     disableInteractive
@@ -240,36 +219,58 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
                                                         arrow: { sx: { color: "background.paper" } },
                                                     }}
                                                 >
-                                                    <button
-                                                        data-grid-cell="1"
-                                                        className={cx(
-                                                            "w-full border-t border-l border-gray-200 px-2 text-xs text-left outline-none bg-white",
-                                                            items.length ? "font-medium text-gray-900" : "text-gray-400",
-                                                            "focus-visible:ring-2 focus-visible:ring-indigo-500"
+                                                    {/* make cell relative so we can place the hover Edit */}
+                                                    <div className="relative">
+                                                        <button
+                                                            data-grid-cell="1"
+                                                            className={cx(
+                                                                "w-full border-t border-l border-gray-200 px-2 text-xs text-left outline-none bg-white group",
+                                                                items.length ? "font-medium text-gray-900" : "text-gray-400",
+                                                                "focus-visible:ring-2 focus-visible:ring-indigo-500"
+                                                            )}
+                                                            style={{ height: rowH }}
+                                                            onClick={() => onCellClick?.({ activity: act as A, week: w, cell: raw })}
+                                                        >
+                                                            {items.length ? (
+                                                                <div className="flex flex-col gap-1">
+                                                                    {items.slice(0, 2).map((c, i) => (
+                                                                        <span
+                                                                            key={i}
+                                                                            className="inline-block rounded-md bg-indigo-600/10 px-1.5 text-[10px] h-5 leading-5 whitespace-nowrap overflow-hidden text-ellipsis"
+                                                                            title={`${c.tutor} • ${c.hours}h${c.role ? ` • ${c.role}` : ""}`}
+                                                                            onClick={(e) => {
+                                                                                // let the badge be clickable for edit too (doesn’t open cell)
+                                                                                e.stopPropagation();
+                                                                                onCellEdit?.({ activity: act as A, week: w, allocations: items, clicked: c });
+                                                                            }}
+                                                                        >
+                                                                            {c.tutor} {c.hours}h
+                                                                        </span>
+                                                                    ))}
+                                                                    {items.length > 2 && (
+                                                                        <span className="text-[10px] text-gray-500">+{items.length - 2} more</span>
+                                                                    )}
+                                                                </div>
+                                                            ) : (
+                                                                <span>—</span>
+                                                            )}
+                                                        </button>
+
+                                                        {/* ⬇️ HOVER EDIT BUTTON — only when the cell has allocations */}
+                                                        {items.length > 0 && (
+                                                            <button
+                                                                type="button"
+                                                                className="absolute right-1 top-1 opacity-0 group-hover:opacity-100 transition-opacity text-[11px] px-2 py-0.5 rounded border bg-white hover:bg-gray-50"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    onCellEdit?.({ activity: act as A, week: w, allocations: items });
+                                                                }}
+                                                                title="Edit"
+                                                            >
+                                                                Edit
+                                                            </button>
                                                         )}
-                                                        style={{ height: rowH }}
-                                                        onClick={() => onCellClick?.({ activity: act as A, week: w, cell: raw })}
-                                                    >
-                                                        {items.length ? (
-                                                            // STACKED, single-line badges (no wrapping). Two shown max; then "+N more".
-                                                            <div className="flex flex-col gap-1">
-                                                                {items.slice(0, 2).map((c, i) => (
-                                                                    <span
-                                                                        key={i}
-                                                                        className="inline-block rounded-md bg-indigo-600/10 px-1.5 text-[10px] h-5 leading-5 whitespace-nowrap overflow-hidden text-ellipsis"
-                                                                        title={`${c.tutor} • ${c.hours}h${c.role ? ` • ${c.role}` : ""}`}
-                                                                    >
-                                                                        {c.tutor} {c.hours}h
-                                                                    </span>
-                                                                ))}
-                                                                {items.length > 2 && (
-                                                                    <span className="text-[10px] text-gray-500">+{items.length - 2} more</span>
-                                                                )}
-                                                            </div>
-                                                        ) : (
-                                                            <span>—</span>
-                                                        )}
-                                                    </button>
+                                                    </div>
                                                 </Tooltip>
                                             );
                                         })}
@@ -281,14 +282,13 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
                 </div>
             </div>
 
-            {/* Legend */}
             <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-gray-600">
                 <span className="inline-flex items-center gap-2">
                     <span className="rounded-md bg-indigo-600/10 px-1.5 py-0.5 text-[10px] text-indigo-700">Tutor</span>
                     Allocated staff
                 </span>
                 <span>•</span>
-                <span>Hover for details • Click to open your edit flow</span>
+                <span>Hover the cell to reveal <strong>Edit</strong>. Click a badge or Edit to open the edit flow.</span>
             </div>
         </div>
     );

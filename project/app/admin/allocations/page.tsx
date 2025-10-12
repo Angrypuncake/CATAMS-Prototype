@@ -157,7 +157,7 @@ function isoDateToDow(iso: string | null | undefined): Dow | "" {
 
 /** ----------------------- Small searchable comboboxes ---------------------- */
 function useOutsideClick<T extends HTMLElement>(
-  ref: React.RefObject<T | null>, // allow null
+  ref: React.RefObject<T | null>,
   onClickAway: () => void,
 ) {
   React.useEffect(() => {
@@ -391,7 +391,7 @@ function PropagationPanel({
     onChange({
       fields,
       notesMode: fields.includes("note") ? notesMode : undefined,
-      dow: moveDow && derivedDow ? derivedDow : undefined, // <-- only when checked
+      dow: moveDow && derivedDow ? derivedDow : undefined,
       occurrenceIds: Array.from(selected),
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -444,7 +444,7 @@ function PropagationPanel({
               type="checkbox"
               checked={moveDow}
               onChange={(e) => setMoveDow(e.target.checked)}
-              disabled={!derivedDow} // if no date selected yet
+              disabled={!derivedDow}
             />
             Move to this weekday
           </label>
@@ -770,8 +770,7 @@ function Drawer({
               options={tutors}
               valueId={form.tutorId}
               onChange={(sel) =>
-                setForm((f) => ({ ...f, tutorId: sel ? sel.user_id : null }))
-              }
+                setForm((f) => ({ ...f, tutorId: sel ? sel.user_id : null }))}
             />
           </div>
 
@@ -782,8 +781,7 @@ function Drawer({
               options={paycodes}
               valueCode={form.paycode}
               onChange={(sel) =>
-                setForm((f) => ({ ...f, paycode: sel ? sel.code : null }))
-              }
+                setForm((f) => ({ ...f, paycode: sel ? sel.code : null }))}
             />
           </div>
 
@@ -795,8 +793,7 @@ function Drawer({
                 className="w-full border rounded px-3 py-2"
                 value={form.status}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, status: e.target.value }))
-                }
+                  setForm((f) => ({ ...f, status: e.target.value }))}
               >
                 <option value="">— Select status —</option>
                 {STATUS_OPTIONS.map((s) => (
@@ -815,12 +812,11 @@ function Drawer({
               className="w-full border rounded px-3 py-2 min-h-[20px]"
               value={form.location}
               onChange={(e) =>
-                setForm((f) => ({ ...f, location: e.target.value }))
-              }
+                setForm((f) => ({ ...f, location: e.target.value }))}
             />
           </div>
 
-          {/* Scheduled: Date/Start/End; Unscheduled: Allocated Hours (+ optional time inputs) */}
+          {/* Scheduled vs Unscheduled */}
           {isScheduled ? (
             <>
               <div className="grid grid-cols-3 gap-3">
@@ -846,8 +842,7 @@ function Drawer({
                     className="w-full border rounded px-3 py-2"
                     value={form.start}
                     onChange={(e) =>
-                      setForm((f) => ({ ...f, start: e.target.value }))
-                    }
+                      setForm((f) => ({ ...f, start: e.target.value }))}
                   />
                 </div>
                 <div>
@@ -857,8 +852,7 @@ function Drawer({
                     className="w-full border rounded px-3 py-2"
                     value={form.end}
                     onChange={(e) =>
-                      setForm((f) => ({ ...f, end: e.target.value }))
-                    }
+                      setForm((f) => ({ ...f, end: e.target.value }))}
                   />
                 </div>
               </div>
@@ -872,8 +866,7 @@ function Drawer({
                   className="w-full border rounded px-3 py-2 min-h-[84px]"
                   value={form.note}
                   onChange={(e) =>
-                    setForm((f) => ({ ...f, note: e.target.value }))
-                  }
+                    setForm((f) => ({ ...f, note: e.target.value }))}
                   placeholder="Anything specific about this occurrence…"
                 />
                 <div className="text-xs text-gray-500 mt-1">
@@ -883,7 +876,6 @@ function Drawer({
                 </div>
               </div>
 
-              {/* NEW: Propagation Panel */}
               <PropagationPanel
                 activityId={row.allocation_activity_id ?? 0}
                 derivedDow={derivedDow}
@@ -938,8 +930,7 @@ function Drawer({
                     className="w-full border rounded px-3 py-2"
                     value={form.date}
                     onChange={(e) =>
-                      setForm((f) => ({ ...f, date: e.target.value }))
-                    }
+                      setForm((f) => ({ ...f, date: e.target.value }))}
                     disabled={form.manualHoursOnly}
                   />
                 </div>
@@ -952,8 +943,7 @@ function Drawer({
                     className="w-full border rounded px-3 py-2"
                     value={form.start}
                     onChange={(e) =>
-                      setForm((f) => ({ ...f, start: e.target.value }))
-                    }
+                      setForm((f) => ({ ...f, start: e.target.value }))}
                     disabled={form.manualHoursOnly}
                   />
                 </div>
@@ -964,8 +954,7 @@ function Drawer({
                     className="w-full border rounded px-3 py-2"
                     value={form.end}
                     onChange={(e) =>
-                      setForm((f) => ({ ...f, end: e.target.value }))
-                    }
+                      setForm((f) => ({ ...f, end: e.target.value }))}
                     disabled={form.manualHoursOnly}
                   />
                 </div>
@@ -998,13 +987,11 @@ function Drawer({
                   propagate_notes_mode: propPayload.fields.includes("note")
                     ? propPayload.notesMode
                     : undefined,
-                  propagate_dow: propPayload.dow || undefined, // keep current
+                  propagate_dow: propPayload.dow || undefined,
                   propagate_occurrence_ids: propPayload.occurrenceIds.length
                     ? propPayload.occurrenceIds
                     : undefined,
                 });
-                console.log("prop payload", propPayload);
-                console.log("propagate fields", propPayload.fields);
               } else {
                 onSave({
                   user_id: form.tutorId,
@@ -1070,14 +1057,17 @@ function activityName(r: AllocationRow) {
     .join(" – ");
 }
 
-/** Convert table rows -> Timeline activities (scheduled rows only) */
+/** Convert table rows -> Timeline activities (scheduled rows only)
+ *  ⬇️ Inject `allocationId` so the hover Edit can open the correct Drawer.
+ */
 function rowsToTimelineActivities(
   rows: AllocationRow[],
   opts: { termStart: Date; termLabel: string }
 ): TLActivityRow[] {
   const map = new Map<string, TLActivityRow>();
   for (const r of rows) {
-    const isScheduled = r.mode === "scheduled" || (r.mode == null && !!r.session_date);
+    const isScheduled =
+      r.mode === "scheduled" || (r.mode == null && !!r.session_date);
     if (!isScheduled) continue;
     const date = parseDateSafe(r.session_date);
     if (!date) continue;
@@ -1100,11 +1090,15 @@ function rowsToTimelineActivities(
       hours: hoursFromTimes(r.start_at, r.end_at),
       role: r.teaching_role ?? undefined,
       notes: r.location ?? r.note ?? undefined,
+      allocationId: r.id, // <-- IMPORTANT
     };
 
     const existing = act.allocations[wk];
     if (!existing) act.allocations[wk] = [cell];
-    else act.allocations[wk] = Array.isArray(existing) ? [...existing, cell] : [existing, cell];
+    else
+      act.allocations[wk] = Array.isArray(existing)
+        ? [...existing, cell]
+        : [existing, cell];
   }
   return Array.from(map.values());
 }
@@ -1202,11 +1196,12 @@ export default function AdminAllAllocationsPage() {
 
   /* ------- Timeline derivations (only meaningful for scheduled tab) ------- */
   const termStart = useMemo(() => {
-    // Use earliest visible session_date; fallback = today
     const dts = visible
       .map((r) => parseDateSafe(r.session_date))
       .filter((d): d is Date => !!d);
-    const min = dts.length ? new Date(Math.min(...dts.map((d) => d.getTime()))) : new Date();
+    const min = dts.length
+      ? new Date(Math.min(...dts.map((d) => d.getTime())))
+      : new Date();
     return startOfWeekMonday(min);
   }, [visible]);
 
@@ -1230,7 +1225,6 @@ export default function AdminAllAllocationsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updated),
       });
-      console.log("onSave() called with", updated);
 
       if (!res.ok) {
         console.error("Failed to save allocation", await res.text());
@@ -1291,7 +1285,8 @@ export default function AdminAllAllocationsPage() {
             min={1}
             max={200}
             value={limit}
-            onChange={(e) => setLimit(parseInt(e.target.value || "25", 10))}
+            onChange={(e) =>
+              setLimit(parseInt(e.target.value || "25", 10))}
             className="w-full border rounded px-3 py-2"
           />
         </div>
@@ -1495,7 +1490,16 @@ export default function AdminAllAllocationsPage() {
                 },
               ]}
               onCellClick={() => {
-                /* optionally route to edit flow here */
+                /* optional no-op */
+              }}
+              /* ⬇️ Hover Edit → open right-hand Drawer for the first allocation in the cell (or the clicked badge) */
+              onCellEdit={({ allocations, clicked }) => {
+                const allocId = clicked?.allocationId ?? allocations[0]?.allocationId;
+                if (!allocId) return;
+                const row = visible.find(r => r.id === allocId);
+                if (!row) return;
+                setActiveRow(row);
+                setDrawerOpen(true);
               }}
             />
           </div>

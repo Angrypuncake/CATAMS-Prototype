@@ -1,12 +1,12 @@
 import axios from "@/lib/axios";
 
 export async function getBudgetByOfferingId(offeringId: number) {
-  const res = await axios.get("/budget/${offeringId}/total");
+  const res = await axios.get("/offerings/${offeringId}/budget/total");
   return res;
 }
 
 export async function getAllocatedBudgetByOfferingId(offeringId: number) {
-  const res = await axios.get("/budget/${offeringId}/allocations");
+  const res = await axios.get("/offerings/${offeringId}/budget/allocations");
   return res;
 }
 

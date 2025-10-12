@@ -5,6 +5,11 @@ export async function getBudgetByOfferingId(offeringId: number) {
   return res;
 }
 
+export async function getAllocatedBudgetByOfferingId(offeringId: number) {
+  const res = await axios.get("/budget/${offeringId}/allocations");
+  return res;
+}
+
 /** Represents a single unit offering's financial breakdown */
 export interface UnitBudgetRow {
   offeringId: number;

@@ -1,7 +1,6 @@
-// components/DynamicTable.tsx
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -12,35 +11,23 @@ import {
   Paper,
   Chip,
   Stack,
-  Tooltip,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  Button,
   Typography,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
 
-export type TableRowData = {
+export type TableRowData<T = Record<string, unknown>> = T & {
   id?: string | number | null;
-  [key: string]: unknown;
 };
 
-type ColumnRenderer = (
-  value: unknown,
-  row: TableRowData,
-  key: string,
+type ColumnRenderer<T = Record<string, unknown>> = (
+  value: T[keyof T],
+  row: TableRowData<T>,
+  key: keyof T & string,
 ) => React.ReactNode;
 
-type DynamicTableProps = {
-  rows: TableRowData[];
-  // Optional: force column order / labels
-  columns?: { key: string; label?: string }[];
-  // Optional: override renderers per column key
-  columnRenderers?: Record<string, ColumnRenderer>;
-  // Optional: max chips to show before "+N more"
+type DynamicTableProps<T = Record<string, unknown>> = {
+  rows: TableRowData<T>[];
+  columns?: { key: keyof T & string; label?: string }[];
+  columnRenderers?: Partial<Record<keyof T, ColumnRenderer<T>>>;
   maxChips?: number;
 };
 
@@ -84,55 +71,14 @@ const DefaultArrayRenderer = ({
   );
 };
 
-const InspectButton = ({ value }: { value: unknown }) => {
-  const [open, setOpen] = useState(false);
-  const stringified = useMemo(() => {
-    try {
-      return JSON.stringify(value, null, 2);
-    } catch {
-      return String(value);
-    }
-  }, [value]);
-
-  return (
-    <>
-      <Tooltip title="Expand">
-        <IconButton size="small" onClick={() => setOpen(true)}>
-          <SearchIcon fontSize="inherit" />
-        </IconButton>
-      </Tooltip>
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Cell details</DialogTitle>
-        <DialogContent dividers>
-          <pre
-            style={{
-              margin: 0,
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-              fontSize: 12,
-            }}
-          >
-            {stringified}
-          </pre>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
-    </>
-  );
-};
-
 const defaultRender = (value: unknown, maxChips?: number): React.ReactNode => {
-  // Primitive
+  // Handle null/undefined
+  if (value === null || value === undefined) {
+    return <Typography color="text.secondary">—</Typography>;
+  }
+
+  // Handle primitives
   if (isPrimitive(value)) {
-    if (value === null || value === undefined)
-      return <Typography color="text.secondary">—</Typography>;
     if (typeof value === "boolean")
       return <Chip size="small" label={value ? "True" : "False"} />;
     if (typeof value === "string")
@@ -140,104 +86,79 @@ const defaultRender = (value: unknown, maxChips?: number): React.ReactNode => {
     return String(value);
   }
 
-  // Array
+  // Handle arrays
   if (Array.isArray(value)) {
-    // If array of primitives → chips
     const allPrim = value.every(isPrimitive);
     if (allPrim)
       return <DefaultArrayRenderer arr={value} maxChips={maxChips} />;
-    // Mixed/objects → short preview + expand
-    const preview = truncate(
-      (() => {
-        try {
-          return JSON.stringify(value);
-        } catch {
-          return String(value);
-        }
-      })(),
-      80,
-    );
-    return (
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <Typography variant="body2">{preview}</Typography>
-        <InspectButton value={value} />
-      </Stack>
-    );
+    return truncate(JSON.stringify(value), 80);
   }
 
-  // Object
+  // Handle objects
   if (typeof value === "object") {
-    const preview = truncate(
-      (() => {
-        try {
-          return JSON.stringify(value);
-        } catch {
-          return String(value);
-        }
-      })(),
-      80,
-    );
-    return (
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <Typography variant="body2">{preview}</Typography>
-        <InspectButton value={value} />
-      </Stack>
-    );
+    return truncate(JSON.stringify(value), 80);
   }
 
-  // Fallback
   return String(value);
 };
 
-const DynamicTable: React.FC<DynamicTableProps> = ({
+function DynamicTable<T = Record<string, unknown>>({
   rows,
   columns,
   columnRenderers,
   maxChips = 4,
-}) => {
+}: DynamicTableProps<T>) {
+  const inferredColumns = useMemo(() => {
+    if (!rows || rows.length === 0) return [];
+    return (
+      columns ??
+      (Object.keys(rows[0])
+        .filter((k) => k !== "id")
+        .map((key) => ({
+          key: key as keyof T & string,
+          label: key
+            .replace(/_/g, " ")
+            .replace(/\b\w/g, (c) => c.toUpperCase()),
+        })) as { key: keyof T & string; label?: string }[])
+    );
+  }, [rows, columns]);
+
   if (!rows || rows.length === 0) return null;
 
-  const inferredColumns =
-    columns ??
-    Object.keys(rows[0])
-      .filter((k) => k !== "id")
-      .map((key) => ({
-        key,
-        label: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
-      }));
-
   return (
-    <TableContainer component={Paper} sx={{ height: "100%", overflow: "auto" }}>
-      <Table size="small" stickyHeader>
-        <TableHead>
-          <TableRow>
-            {inferredColumns.map((col) => (
-              <TableCell key={col.key} sx={{ fontWeight: 600 }}>
-                {col.label ?? col.key}
-              </TableCell>
-            ))}
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {rows.map((row, rIdx) => (
-            <TableRow key={(row.id as React.Key) ?? rIdx}>
-              {inferredColumns.map((col) => {
-                const value = (row as Record<string, unknown>)[col.key];
-                const custom = columnRenderers?.[col.key];
-                return (
-                  <TableCell key={col.key}>
-                    {custom
-                      ? custom(value, row, col.key)
-                      : defaultRender(value, maxChips)}
-                  </TableCell>
-                );
-              })}
+    <Paper>
+      <TableContainer>
+        <Table size="small" stickyHeader>
+          <TableHead>
+            <TableRow>
+              {inferredColumns.map((col) => (
+                <TableCell key={col.key} sx={{ fontWeight: 600 }}>
+                  {col.label ?? col.key}
+                </TableCell>
+              ))}
             </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+          </TableHead>
+          <TableBody>
+            {rows.map((row, rIdx) => (
+              <TableRow key={(row.id as React.Key) ?? rIdx}>
+                {inferredColumns.map((col) => {
+                  const value = row[col.key];
+                  const custom = columnRenderers?.[col.key];
+                  return (
+                    <TableCell key={String(col.key)}>
+                      {custom
+                        ? custom(value, row, col.key)
+                        : defaultRender(value, maxChips)}
+                    </TableCell>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </TableContainer>
+    </Paper>
   );
-};
+}
 
 export default DynamicTable;

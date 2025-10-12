@@ -107,7 +107,6 @@ export async function getUnitBudgetRow(
 
 /** === Aggregated overview for all UC units === */
 export async function getUnitBudgetOverviews(
-  userId: number, // optional: only if you still want to explicitly pass
   year: number,
   session: string,
   threshold = 0.9,

@@ -19,6 +19,11 @@ import {
   IconButton,
   TableSortLabel,
   Button,
+  Tooltip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -146,6 +151,50 @@ const compareValues = (
   return 0;
 };
 
+const InspectButton = ({ value }: { value: unknown }) => {
+  const [open, setOpen] = useState(false);
+  const stringified = useMemo(() => {
+    try {
+      return JSON.stringify(value, null, 2);
+    } catch {
+      return String(value);
+    }
+  }, [value]);
+
+  return (
+    <>
+      <Tooltip title="Expand">
+        <IconButton size="small" onClick={() => setOpen(true)}>
+          <SearchIcon fontSize="inherit" />
+        </IconButton>
+      </Tooltip>
+      <Dialog
+        open={open}
+        onClose={() => setOpen(false)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Cell details</DialogTitle>
+        <DialogContent dividers>
+          <pre
+            style={{
+              margin: 0,
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              fontSize: 12,
+            }}
+          >
+            {stringified}
+          </pre>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
+    </>
+  );
+};
+
 const DefaultArrayRenderer = ({
   arr,
   maxChips = 4,
@@ -204,12 +253,24 @@ const defaultRender = (value: unknown, maxChips?: number): React.ReactNode => {
     const allPrim = value.every(isPrimitive);
     if (allPrim)
       return <DefaultArrayRenderer arr={value} maxChips={maxChips} />;
-    return truncate(JSON.stringify(value), 80);
+    const preview = truncate(JSON.stringify(value), 80);
+    return (
+      <Stack direction="row" alignItems="center" spacing={1}>
+        <Typography variant="body2">{preview}</Typography>
+        <InspectButton value={value} />
+      </Stack>
+    );
   }
 
   // Handle objects
   if (typeof value === "object") {
-    return truncate(JSON.stringify(value), 80);
+    const preview = truncate(JSON.stringify(value), 80);
+    return (
+      <Stack direction="row" alignItems="center" spacing={1}>
+        <Typography variant="body2">{preview}</Typography>
+        <InspectButton value={value} />
+      </Stack>
+    );
   }
 
   return String(value);

@@ -8,6 +8,37 @@ import type {
   TutorAllocationRow,
 } from "@/app/_types/allocations";
 
+type By = {
+  id: number | null;
+  name: string | null;
+  email: string | null;
+} | null;
+
+export type Staged = {
+  batch_id: number;
+  created_at: string;
+  status: string;
+  row_count: number | null;
+  issues: Record<string, number> | null;
+  by: By;
+};
+
+export type Run = {
+  run_id: number;
+  batch_id: number;
+  started_at: string;
+  finished_at: string | null;
+  status: "committed" | "rolled_back" | "failed";
+  counts: {
+    teaching_activity?: number;
+    session_occurrence?: number;
+    allocation?: number;
+  } | null;
+  staged_rows: number | null;
+  batch_created_at: string;
+  by: By;
+};
+
 export async function getTutorAllocations(
   userId: string,
   page = 1,
@@ -206,6 +237,17 @@ export async function getPreview(stagingId: number): Promise<PreviewResponse> {
   const res = await axios.get<PreviewResponse>(`/admin/preview`, {
     params: { stagingId },
     // optional: disable cache via headers
+    headers: { "Cache-Control": "no-store" },
+  });
+  return res.data;
+}
+
+export async function getImportHistory(limit = 100): Promise<{
+  staged: Staged[];
+  runs: Run[];
+}> {
+  const res = await axios.get(`/admin/history`, {
+    params: { limit },
     headers: { "Cache-Control": "no-store" },
   });
   return res.data;

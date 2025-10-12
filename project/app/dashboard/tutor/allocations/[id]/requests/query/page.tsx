@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { getAllocationById } from "@/app/services/allocationService";
 import { TutorAllocationRow } from "@/app/_types/allocations";
+import { submitQueryRequest } from "@/app/services/requestService";
 import Link from "next/link";
 import {
   Box,
@@ -43,26 +44,11 @@ export default function QueryRequestPage() {
 
   const handleSubmit = async () => {
     try {
-      const formData = new FormData();
-      formData.append("type", "query");
-      formData.append("subject", subject);
-      formData.append("details", details);
-      if (file) formData.append("attachment", file);
-
-      const res = await fetch(
-        `/api/tutor/allocations/${allocationId}/requests/query`,
-        {
-          method: "POST",
-          body: formData,
-          credentials: "include",
-        },
-      );
-
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("Submit failed:", res.status, text);
-        throw new Error("Failed to submit query");
-      }
+      await submitQueryRequest(allocationId!, {
+        subject,
+        details,
+        attachment: file || undefined,
+      });
 
       alert("Query submitted!");
       router.push(`/dashboard/tutor/allocations/${allocationId}`);

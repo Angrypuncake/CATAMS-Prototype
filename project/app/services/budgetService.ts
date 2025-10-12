@@ -100,10 +100,6 @@ export async function getUnitBudgetRow(
     throw err;
   }
 }
-// This function takes in a userid, threshold,  getUnitBudgetRow and  getCoordinatorUnits() which returns a row of numbers of offering_id
-// We return a shape that fulfils CoordinatorBudgetOverview
-
-// export async function getUnitBudgetOverviews(
 
 /** === Aggregated overview for all UC units === */
 export async function getUnitBudgetOverviews(
@@ -113,8 +109,10 @@ export async function getUnitBudgetOverviews(
 ): Promise<CoordinatorBudgetOverview> {
   try {
     // 1 Get all unit offering IDs for this UC
-    const offeringIds = await getCoordinatorUnits(); // already scoped to logged-in UC
+    const rawOfferings = await getCoordinatorUnits();
+    const offeringIds = rawOfferings.map((r) => r.offering_id);
 
+    console.log(session);
     // 2 For each unit, fetch its budget row in parallel
     const rows = await Promise.all(
       offeringIds.map((id) => getUnitBudgetRow(id, threshold)),

@@ -19,6 +19,7 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
+import { useSearchParams } from "next/navigation";
 import NewCommentBox from "../_components/NewCommentBox";
 import DetailRow from "../_components/DetailRow";
 import RequestRow from "../_components/RequestRow";
@@ -95,6 +96,17 @@ export default function AllocationPage() {
   const [comments, setComments] = React.useState<CommentItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [err, setErr] = React.useState<string | null>(null);
+  const [requestToast, setRequestToast] = React.useState(false);
+  const searchParams = useSearchParams();
+
+  // Toast/feedback for "request created"
+  React.useEffect(() => {
+    if (searchParams.get("success") === "true") {
+      setRequestToast(true);
+      const timer = setTimeout(() => setRequestToast(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
   // fetch allocation detail from DB
   React.useEffect(() => {
@@ -216,6 +228,11 @@ export default function AllocationPage() {
 
   return (
     <Box sx={{ p: 3, maxWidth: 960, mx: "auto" }}>
+      {requestToast && (
+        <div className="fixed top-4 right-4 bg-green-500 text-white p-3 rounded shadow-lg">
+          Request Submitted.
+        </div>
+      )}
       {/* Header & Back */}
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
         <IconButton

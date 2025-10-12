@@ -2,6 +2,8 @@
 
 // pages/swap-request.tsx
 import React, { useEffect, useState } from "react";
+import axios from "axios";
+
 import {
   Container,
   Typography,
@@ -21,7 +23,7 @@ import {
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 
-import type { AllocationDetail } from "@/app/_types/allocations";
+import type { AllocationBase } from "@/app/_types/allocations";
 
 const SwapRequestPage = () => {
   const params = useParams<{ id: string }>();
@@ -32,7 +34,7 @@ const SwapRequestPage = () => {
   const [manualTutor, setManualTutor] = useState("");
   const [reason, setReason] = useState("");
   const [attachments, setAttachments] = useState<FileList | null>(null);
-  const [allocation, setAllocation] = React.useState<AllocationDetail | null>(
+  const [allocation, setAllocation] = React.useState<AllocationBase | null>(
     null,
   );
 
@@ -57,7 +59,7 @@ const SwapRequestPage = () => {
   }
 
   // DB status → UI union type normalization
-  type UIStatus = AllocationDetail["status"]; // "Confirmed" | "Pending" | "Cancelled"
+  type UIStatus = AllocationBase["status"]; // "Confirmed" | "Pending" | "Cancelled"
   function normalizeStatus(s?: string | null): UIStatus {
     const v = (s ?? "").trim().toLowerCase();
 
@@ -91,16 +93,45 @@ const SwapRequestPage = () => {
 
   // ---
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log({
       swapType,
       findTutor,
       manualTutor,
       reason,
-      attachments,
     });
-    // Here you can send data to your API route
+
+    try {
+      const sessionUser = await axios.get("/api/auth/me", {
+        withCredentials: true,
+      });
+
+      //{requester_id, allocation_id, details, request_reason}
+      const res = await fetch(
+        `/api/tutor/allocations/${encodeURIComponent(id)}/requests/swap`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            requester_id: sessionUser.data.userId,
+            allocation_id: id,
+            details: {
+              ack: true,
+              timing: ">48h",
+              replacement_mode: findTutor,
+              suggested_user_id: 14,
+            }, // Example details; adapt as needed
+            request_reason: reason,
+          }),
+        },
+      );
+    } catch (err) {
+      console.error("Error fetching user data:", err);
+      router.push(`/dashboard/tutor/allocations/${id}?success=false`);
+      return;
+    }
+    router.push(`/dashboard/tutor/allocations/${id}?success=true`);
   };
 
   React.useEffect(() => {
@@ -134,18 +165,16 @@ const SwapRequestPage = () => {
           note: string | null;
         };
 
-        const mapped: AllocationDetail = {
+        const mapped: AllocationBase = {
           id: a.allocation_id,
-          courseCode: a.unit_code ?? "—",
-          courseName: a.unit_name ?? "—",
+          unit_code: a.unit_code ?? "—",
+          unit_name: a.unit_name ?? "—",
+          start_at: a.start_at,
+          end_at: a.end_at,
           status: normalizeStatus(a.status),
-          date: toDDMMYYYY(a.session_date),
-          time:
-            a.start_at || a.end_at
-              ? `${toHHMM(a.start_at)} - ${toHHMM(a.end_at)}`
-              : "—",
+          session_date: toDDMMYYYY(a.session_date),
           location: a.location ?? "—",
-          hours:
+          allocated_hours:
             a.start_at && a.end_at
               ? (() => {
                   const [sh, sm] = a.start_at.split(":").map(Number);
@@ -158,8 +187,8 @@ const SwapRequestPage = () => {
                   return `${diff.toFixed(2)}h`;
                 })()
               : "—",
-          session: a.activity_name ?? "—",
-          notes: a.note ?? undefined,
+          activity_name: a.activity_name ?? "—",
+          note: a.note ?? undefined,
         };
 
         if (!cancelled) {
@@ -203,11 +232,12 @@ const SwapRequestPage = () => {
         sx={{ p: 2, mb: 4, backgroundColor: "#f5f5f5" }}
       >
         <Typography variant="subtitle1">
-          {allocation?.courseCode} - {allocation?.courseName}{" "}
+          {allocation?.unit_code} - {allocation?.unit_name}{" "}
         </Typography>
         <Typography variant="body2">
-          {allocation?.date} • {allocation?.time} • {allocation?.location} •{" "}
-          {allocation?.hours}
+          {allocation?.session_date} • {allocation?.start_at} -{" "}
+          {allocation?.end_at} • {allocation?.location} •{" "}
+          {allocation?.allocated_hours}
         </Typography>
         <Typography
           variant="body2"
@@ -275,15 +305,6 @@ const SwapRequestPage = () => {
           sx={{ mb: 3 }}
         />
 
-        <Button variant="outlined" component="label" sx={{ mb: 3 }}>
-          Choose Files
-          <input
-            type="file"
-            hidden
-            onChange={(e) => setAttachments(e.target.files)}
-          />
-        </Button>
-
         <Box display="flex" justifyContent="flex-end" gap={2}>
           <Button
             variant="outlined"
@@ -300,5 +321,4 @@ const SwapRequestPage = () => {
     </Container>
   );
 };
-
 export default SwapRequestPage;

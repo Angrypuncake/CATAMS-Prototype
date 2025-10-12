@@ -1,13 +1,19 @@
 import axios from "@/lib/axios";
+import { getUnitOffering } from "./unitService";
 
 export async function getBudgetByOfferingId(offeringId: number) {
-  const res = await axios.get("/offerings/${offeringId}/budget/total");
-  return res;
+  const res = await axios.get(`/offerings/${offeringId}/budget/total`);
+  return res.data as { budget: number };
 }
 
 export async function getAllocatedBudgetByOfferingId(offeringId: number) {
-  const res = await axios.get("/offerings/${offeringId}/budget/allocations");
-  return res;
+  const res = await axios.get(`/offerings/${offeringId}/budget/allocations`);
+  return res.data as { totalAllocated: number };
+}
+
+export async function getClaimedBudgetByOfferingId(offeringId: number) {
+  const res = await axios.get(`/offerings/${offeringId}/budget/claims`);
+  return res.data as { totalClaimed: number };
 }
 
 /** Represents a single unit offering's financial breakdown */
@@ -60,34 +66,50 @@ export interface CoordinatorBudgetOverview {
   }[];
 }
 
-// app/services/budgetService.ts
-// import { getClaimsByOfferingId } from "./claimService";
+/** === Aggregated overview === */
+export async function getUnitBudgetOverview(
+  offeringId: number,
+  threshold = 0.9,
+): Promise<UnitBudgetRow> {
+  try {
+    //  Fetch all data in parallel
+    const [offering, budgetRes, allocRes, claimRes] = await Promise.all([
+      getUnitOffering(offeringId),
+      getBudgetByOfferingId(offeringId),
+      getAllocatedBudgetByOfferingId(offeringId),
+      getClaimedBudgetByOfferingId(offeringId),
+    ]);
 
-// export async function getUnitBudgetOverview(offeringId: number) {
-//   try {
-//     const [budgetRes, allocRes, claimRes] = await Promise.all([
-//       getBudgetByOfferingId(offeringId),
-//     //   getAllocationsByOfferingId(offeringId),
-//     //   getClaimsByOfferingId(offeringId),
-//     ]);
+    // 2Extract numeric values
+    const totalBudget = budgetRes.budget ?? offering.budget ?? 0;
+    const allocatedAmount = allocRes.totalAllocated ?? 0;
+    const claimedAmount = claimRes.totalClaimed ?? 0;
 
-//     const budget = budgetRes.data.budget;
-//     const allocated = allocRes.data.totalAllocated;
-//     const claimed = claimRes.data.totalClaimed;
+    // 3 Derive calculated metrics
+    const pctUsed = totalBudget > 0 ? claimedAmount / totalBudget : 0;
+    const variance = totalBudget - claimedAmount;
+    const status: "Healthy" | "Exceeding" =
+      pctUsed >= threshold ? "Exceeding" : "Healthy";
 
-//     const spent = claimed; // or combine with allocated if you want total usage
-//     const pctUsed = spent / budget;
-//     const variance = budget - spent;
-
-//     return {
-//       offeringId,
-//       budget,
-//       spent,
-//       pctUsed,
-//       variance,
-//     };
-//   } catch (err) {
-//     console.error(`Failed to assemble budget overview for offering ${offeringId}`, err);
-//     throw err;
-//   }
-// }
+    // 4 Return unified object — fully satisfies UnitBudgetRow
+    return {
+      offeringId: offering.offeringId,
+      unitCode: offering.unitCode,
+      unitName: offering.unitName,
+      year: offering.year,
+      session: offering.sessionCode,
+      totalBudget,
+      allocatedAmount,
+      claimedAmount,
+      pctUsed,
+      variance,
+      status,
+    };
+  } catch (err) {
+    console.error(
+      `Failed to assemble budget overview for offering ${offeringId}`,
+      err,
+    );
+    throw err;
+  }
+}

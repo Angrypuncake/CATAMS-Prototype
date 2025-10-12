@@ -450,47 +450,64 @@ function DynamicTable<T = Record<string, unknown>>({
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedRows.map((row, rIdx) => (
-              <TableRow key={(row.id as React.Key) ?? rIdx}>
-                {inferredColumns.map((col) => {
-                  const value = row[col.key];
-                  const custom = columnRenderers?.[col.key];
-                  return (
-                    <TableCell key={String(col.key)}>
-                      {custom
-                        ? custom(value, row, col.key)
-                        : defaultRender(value, maxChips)}
+            {paginatedRows.length > 0 ? (
+              paginatedRows.map((row, rIdx) => (
+                <TableRow key={(row.id as React.Key) ?? rIdx}>
+                  {inferredColumns.map((col) => {
+                    const value = row[col.key];
+                    const custom = columnRenderers?.[col.key];
+                    return (
+                      <TableCell key={String(col.key)}>
+                        {custom
+                          ? custom(value, row, col.key)
+                          : defaultRender(value, maxChips)}
+                      </TableCell>
+                    );
+                  })}
+                  {actions && actions.length > 0 && (
+                    <TableCell align="right">
+                      <Stack
+                        direction="row"
+                        spacing={1}
+                        justifyContent="flex-end"
+                      >
+                        {actions.map((action, actionIdx) => {
+                          const isDisabled = action.disabled?.(row) ?? false;
+                          return (
+                            <Button
+                              key={actionIdx}
+                              size="small"
+                              variant={action.variant ?? "text"}
+                              color={action.color ?? "primary"}
+                              onClick={() => action.onClick(row)}
+                              disabled={isDisabled}
+                              startIcon={action.icon}
+                            >
+                              {action.label}
+                            </Button>
+                          );
+                        })}
+                      </Stack>
                     </TableCell>
-                  );
-                })}
-                {actions && actions.length > 0 && (
-                  <TableCell align="right">
-                    <Stack
-                      direction="row"
-                      spacing={1}
-                      justifyContent="flex-end"
-                    >
-                      {actions.map((action, actionIdx) => {
-                        const isDisabled = action.disabled?.(row) ?? false;
-                        return (
-                          <Button
-                            key={actionIdx}
-                            size="small"
-                            variant={action.variant ?? "text"}
-                            color={action.color ?? "primary"}
-                            onClick={() => action.onClick(row)}
-                            disabled={isDisabled}
-                            startIcon={action.icon}
-                          >
-                            {action.label}
-                          </Button>
-                        );
-                      })}
-                    </Stack>
-                  </TableCell>
-                )}
+                  )}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={
+                    inferredColumns.length +
+                    (actions && actions.length > 0 ? 1 : 0)
+                  }
+                  align="center"
+                  sx={{ py: 4 }}
+                >
+                  <Typography color="text.secondary">
+                    {searchTerm ? "No results found" : "No data available"}
+                  </Typography>
+                </TableCell>
               </TableRow>
-            ))}
+            )}
           </TableBody>
         </Table>
       </TableContainer>

@@ -9,6 +9,7 @@ import {
   OccurrenceRow,
 } from "@/app/admin/allocations/types";
 import { SaveAllocationPayload } from "@/app/_types/allocations";
+import { getActivityOccurrences } from "@/app/services/activityService";
 import { Tutor } from "@/app/_types/tutor";
 import {
   fromInputTime,
@@ -101,12 +102,8 @@ export function Drawer({
 
     (async () => {
       try {
-        const r = await fetch(
-          `/api/admin/activities/${activityId}/occurrences`,
-        );
-        if (!r.ok) throw new Error("Failed to load occurrences");
-        const data = (await r.json()) as { data: OccurrenceRow[] };
-        setWeeksForActivity(data.data || []);
+        const occurrences = await getActivityOccurrences(activityId);
+        setWeeksForActivity(occurrences);
       } catch (e) {
         console.error(e);
         setWeeksForActivity([]);

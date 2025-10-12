@@ -8,7 +8,7 @@ export async function getBudgetByOfferingId(offeringId: number) {
 
 export async function getAllocatedBudgetByOfferingId(offeringId: number) {
   const res = await axios.get(`/offerings/${offeringId}/budget/allocations`);
-  return res.data as { totalAllocated: number };
+  return res.data as { allocatedAmount: number };
 }
 
 export async function getClaimedBudgetByOfferingId(offeringId: number) {
@@ -80,9 +80,12 @@ export async function getUnitBudgetOverview(
       getClaimedBudgetByOfferingId(offeringId),
     ]);
 
+    console.log(allocRes);
+
     // 2Extract numeric values
     const totalBudget = budgetRes.budget ?? offering.budget ?? 0;
-    const allocatedAmount = allocRes.totalAllocated ?? 0;
+
+    const allocatedAmount = allocRes.allocatedAmount ?? 0;
     const claimedAmount = claimRes.totalClaimed ?? 0;
 
     // 3 Derive calculated metrics

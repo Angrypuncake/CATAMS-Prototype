@@ -3,10 +3,11 @@ import { query } from "@/lib/db";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { offeringId: string } },
+  context: { params: Promise<{ offeringId: string }> },
 ) {
-  const offeringId = Number(params.offeringId);
-  if (isNaN(offeringId)) {
+  const { offeringId } = await context.params;
+  const id = Number(offeringId);
+  if (isNaN(id)) {
     return NextResponse.json({ error: "Invalid offeringId" }, { status: 400 });
   }
 
@@ -22,7 +23,7 @@ export async function GET(
       JOIN unit_offering u ON t.unit_offering_id = u.offering_id
       WHERE u.offering_id = $1;
       `,
-      [offeringId],
+      [id],
     );
 
     const totalClaimed = Number(result.rows[0]?.total_claimed ?? 0);

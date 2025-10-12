@@ -3,10 +3,11 @@ import { query } from "@/lib/db";
 
 export async function GET(
   _req: Request,
-  { params }: { params: { offeringId: string } },
+  context: { params: Promise<{ offeringId: string }> },
 ) {
-  const offeringId = Number(params.offeringId);
-  if (isNaN(offeringId)) {
+  const { offeringId } = await context.params;
+  const id = Number(offeringId);
+  if (isNaN(id)) {
     return NextResponse.json({ error: "Invalid offeringId" }, { status: 400 });
   }
 
@@ -27,7 +28,7 @@ export async function GET(
         WHERE u.offering_id = $1
         LIMIT 1;
       `,
-      [offeringId],
+      [id],
     );
 
     // Extract single row

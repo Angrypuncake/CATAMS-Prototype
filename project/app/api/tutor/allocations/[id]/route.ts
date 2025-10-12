@@ -23,14 +23,19 @@ export async function GET(
       cu.unit_name,
       so.start_at,
       so.end_at,
+      so.hours,
       ta.activity_type,
       ta.activity_name,
       so.session_date,
       a.status,
       so.location,
       so.note,
+<<<<<<< HEAD
       so.description,
       so.hours
+=======
+      a.paycode_id
+>>>>>>> main
     FROM allocation a
     LEFT JOIN users u ON u.user_id = a.user_id
     JOIN session_occurrence so ON so.occurrence_id = a.session_id

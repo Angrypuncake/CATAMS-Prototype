@@ -43,11 +43,27 @@ export async function getTutorAllocations(
   userId: string,
   page = 1,
   limit = 10,
-): Promise<TutorAllocationRow[]> {
+): Promise<{
+  data: TutorAllocationRow[];
+  total: number;
+  page: number;
+  limit: number;
+}> {
   const res = await axios.get("/tutor/allocations", {
     params: { userId, page, limit },
   });
-  return res.data.data;
+  return res.data;
+}
+
+export async function getCurrentUser(): Promise<{
+  userId: string;
+  email: string;
+  roles: string[];
+}> {
+  const res = await axios.get("/auth/me", {
+    withCredentials: true,
+  });
+  return res.data;
 }
 
 function toDDMMYYYY(iso?: string | null) {

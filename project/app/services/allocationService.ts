@@ -233,11 +233,14 @@ export async function discardImport(
   return res.data;
 }
 
-export async function getPreview(stagingId: number): Promise<PreviewResponse> {
+export async function getPreview(
+  stagingId: number,
+  signal?: AbortSignal,
+): Promise<PreviewResponse> {
   const res = await axios.get<PreviewResponse>(`/admin/preview`, {
     params: { stagingId },
-    // optional: disable cache via headers
     headers: { "Cache-Control": "no-store" },
+    signal,
   });
   return res.data;
 }

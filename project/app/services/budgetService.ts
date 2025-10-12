@@ -1,5 +1,6 @@
 import axios from "@/lib/axios";
 import { getUnitOffering } from "./unitService";
+import { getCoordinatorUnits } from "./userService";
 
 export async function getBudgetByOfferingId(offeringId: number) {
   const res = await axios.get(`/offerings/${offeringId}/budget/total`);
@@ -96,6 +97,50 @@ export async function getUnitBudgetRow(
       `Failed to assemble budget overview for offering ${offeringId}`,
       err,
     );
+    throw err;
+  }
+}
+// This function takes in a userid, threshold,  getUnitBudgetRow and  getCoordinatorUnits() which returns a row of numbers of offering_id
+// We return a shape that fulfils CoordinatorBudgetOverview
+
+// export async function getUnitBudgetOverviews(
+
+/** === Aggregated overview for all UC units === */
+export async function getUnitBudgetOverviews(
+  userId: number, // optional: only if you still want to explicitly pass
+  year: number,
+  session: string,
+  threshold = 0.9,
+): Promise<CoordinatorBudgetOverview> {
+  try {
+    // 1 Get all unit offering IDs for this UC
+    const offeringIds = await getCoordinatorUnits(); // already scoped to logged-in UC
+
+    // 2 For each unit, fetch its budget row in parallel
+    const rows = await Promise.all(
+      offeringIds.map((id) => getUnitBudgetRow(id, threshold)),
+    );
+
+    // 3Generate alert objects for rows exceeding threshold
+    const alerts = rows
+      .filter((r) => r.pctUsed >= threshold)
+      .map((r) => ({
+        offeringId: r.offeringId,
+        unitCode: r.unitCode,
+        pctUsed: r.pctUsed,
+        message: `⚠️ ${r.unitCode} is at ${(r.pctUsed * 100).toFixed(1)}% of budget.`,
+      }));
+
+    // 4 Return fully typed CoordinatorBudgetOverview object
+    return {
+      year,
+      session,
+      threshold,
+      rows,
+      alerts: alerts.length > 0 ? alerts : undefined,
+    };
+  } catch (err) {
+    console.error("Failed to compile UC budget overview:", err);
     throw err;
   }
 }

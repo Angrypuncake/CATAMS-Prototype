@@ -17,6 +17,7 @@ import {
   InputAdornment,
   Box,
   IconButton,
+  TableSortLabel,
 } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -37,11 +38,13 @@ type DynamicTableProps<T = Record<string, unknown>> = {
   columnRenderers?: Partial<Record<keyof T, ColumnRenderer<T>>>;
   maxChips?: number;
 
-  /** Search/filter props */
   enableSearch?: boolean;
   searchPlaceholder?: string;
 
-  /** Optional pagination props */
+  enableSorting?: boolean;
+  defaultSortColumn?: keyof T & string;
+  defaultSortDirection?: "asc" | "desc";
+
   enablePagination?: boolean;
   rowsPerPageOptions?: number[];
   defaultRowsPerPage?: number;
@@ -79,6 +82,32 @@ const searchInValue = (value: unknown, searchTerm: string): boolean => {
   return false;
 };
 
+const compareValues = (
+  a: unknown,
+  b: unknown,
+  direction: "asc" | "desc",
+): number => {
+  if (a === null || a === undefined) return direction === "asc" ? 1 : -1;
+  if (b === null || b === undefined) return direction === "asc" ? -1 : 1;
+
+  if (typeof a === "number" && typeof b === "number") {
+    return direction === "asc" ? a - b : b - a;
+  }
+
+  if (typeof a === "boolean" && typeof b === "boolean") {
+    const aVal = a ? 1 : 0;
+    const bVal = b ? 1 : 0;
+    return direction === "asc" ? aVal - bVal : bVal - aVal;
+  }
+
+  const aStr = String(a).toLowerCase();
+  const bStr = String(b).toLowerCase();
+
+  if (aStr < bStr) return direction === "asc" ? -1 : 1;
+  if (aStr > bStr) return direction === "asc" ? 1 : -1;
+  return 0;
+};
+
 const DefaultArrayRenderer = ({
   arr,
   maxChips = 4,
@@ -112,12 +141,10 @@ const DefaultArrayRenderer = ({
 };
 
 const defaultRender = (value: unknown, maxChips?: number): React.ReactNode => {
-  // Handle null/undefined
   if (value === null || value === undefined) {
     return <Typography color="text.secondary">—</Typography>;
   }
 
-  // Handle primitives
   if (isPrimitive(value)) {
     if (typeof value === "boolean")
       return <Chip size="small" label={value ? "True" : "False"} />;
@@ -126,7 +153,6 @@ const defaultRender = (value: unknown, maxChips?: number): React.ReactNode => {
     return String(value);
   }
 
-  // Handle arrays
   if (Array.isArray(value)) {
     const allPrim = value.every(isPrimitive);
     if (allPrim)
@@ -134,7 +160,6 @@ const defaultRender = (value: unknown, maxChips?: number): React.ReactNode => {
     return truncate(JSON.stringify(value), 80);
   }
 
-  // Handle objects
   if (typeof value === "object") {
     return truncate(JSON.stringify(value), 80);
   }
@@ -149,6 +174,9 @@ function DynamicTable<T = Record<string, unknown>>({
   maxChips = 4,
   enableSearch = true,
   searchPlaceholder = "Search across all fields...",
+  enableSorting = true,
+  defaultSortColumn,
+  defaultSortDirection = "asc",
   enablePagination = true,
   rowsPerPageOptions = [5, 10, 25, 50],
   defaultRowsPerPage = 5,
@@ -156,6 +184,12 @@ function DynamicTable<T = Record<string, unknown>>({
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(defaultRowsPerPage);
   const [searchTerm, setSearchTerm] = useState("");
+  const [sortColumn, setSortColumn] = useState<(keyof T & string) | null>(
+    defaultSortColumn ?? null,
+  );
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(
+    defaultSortDirection,
+  );
 
   const inferredColumns = useMemo(() => {
     if (!rows || rows.length === 0) return [];
@@ -172,7 +206,6 @@ function DynamicTable<T = Record<string, unknown>>({
     );
   }, [rows, columns]);
 
-  // Filter rows based on search term
   const filteredRows = useMemo(() => {
     if (!rows || rows.length === 0) return [];
     if (!searchTerm.trim()) return rows;
@@ -185,11 +218,22 @@ function DynamicTable<T = Record<string, unknown>>({
     });
   }, [rows, searchTerm, inferredColumns]);
 
+  // Sort rows
+  const sortedRows = useMemo(() => {
+    if (!sortColumn) return filteredRows;
+
+    return [...filteredRows].sort((a, b) => {
+      const aValue = a[sortColumn];
+      const bValue = b[sortColumn];
+      return compareValues(aValue, bValue, sortDirection);
+    });
+  }, [filteredRows, sortColumn, sortDirection]);
+
   const paginatedRows = useMemo(() => {
     return enablePagination
-      ? filteredRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
-      : filteredRows;
-  }, [filteredRows, enablePagination, page, rowsPerPage]);
+      ? sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+      : sortedRows;
+  }, [sortedRows, enablePagination, page, rowsPerPage]);
 
   if (!rows || rows.length === 0) return null;
 
@@ -211,6 +255,18 @@ function DynamicTable<T = Record<string, unknown>>({
   const handleClearSearch = () => {
     setSearchTerm("");
     setPage(0);
+  };
+
+  const handleSort = (column: keyof T & string) => {
+    if (sortColumn === column) {
+      // Toggle direction if same column
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // New column, start with ascending
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+    setPage(0); // Reset to first page when sorting
   };
 
   return (
@@ -261,8 +317,18 @@ function DynamicTable<T = Record<string, unknown>>({
           <TableHead>
             <TableRow>
               {inferredColumns.map((col) => (
-                <TableCell key={col.key} sx={{ fontWeight: 600 }}>
-                  {col.label ?? col.key}
+                <TableCell key={String(col.key)} sx={{ fontWeight: 600 }}>
+                  {enableSorting ? (
+                    <TableSortLabel
+                      active={sortColumn === col.key}
+                      direction={sortColumn === col.key ? sortDirection : "asc"}
+                      onClick={() => handleSort(col.key)}
+                    >
+                      {col.label ?? String(col.key)}
+                    </TableSortLabel>
+                  ) : (
+                    (col.label ?? String(col.key))
+                  )}
                 </TableCell>
               ))}
             </TableRow>
@@ -291,7 +357,7 @@ function DynamicTable<T = Record<string, unknown>>({
         <TablePagination
           rowsPerPageOptions={rowsPerPageOptions}
           component="div"
-          count={filteredRows.length}
+          count={sortedRows.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}

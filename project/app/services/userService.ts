@@ -42,6 +42,11 @@ export async function getUserUnits(id: number) {
   return res.data.data;
 }
 
+// Get all of the units that the currently logged in user is a unit coordinator in
+export async function getCoordinatorUnits(): Promise<number[]> {
+  const res = await axios.get(`/uc/units`);
+  return res.data.data;
+}
 /**
  * Fetches users with optional search and filtering.
  *

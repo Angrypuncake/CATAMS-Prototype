@@ -75,10 +75,21 @@ const isPrimitive = (v: unknown) =>
 const truncate = (s: string, n = 80) =>
   s.length > n ? s.slice(0, n) + "…" : s;
 
+const isDate = (v: unknown): v is Date =>
+  v instanceof Date && !isNaN(v.getTime());
+
+const formatDate = (date: Date): string => {
+  return date.toLocaleString();
+};
+
 const searchInValue = (value: unknown, searchTerm: string): boolean => {
   if (value === null || value === undefined) return false;
 
   const lowerSearch = searchTerm.toLowerCase();
+
+  if (isDate(value)) {
+    return formatDate(value).toLowerCase().includes(lowerSearch);
+  }
 
   if (
     typeof value === "string" ||
@@ -104,19 +115,29 @@ const compareValues = (
   b: unknown,
   direction: "asc" | "desc",
 ): number => {
+  // Handle null/undefined
   if (a === null || a === undefined) return direction === "asc" ? 1 : -1;
   if (b === null || b === undefined) return direction === "asc" ? -1 : 1;
 
+  // Handle dates
+  if (isDate(a) && isDate(b)) {
+    const comparison = a.getTime() - b.getTime();
+    return direction === "asc" ? comparison : -comparison;
+  }
+
+  // Handle numbers
   if (typeof a === "number" && typeof b === "number") {
     return direction === "asc" ? a - b : b - a;
   }
 
+  // Handle booleans
   if (typeof a === "boolean" && typeof b === "boolean") {
     const aVal = a ? 1 : 0;
     const bVal = b ? 1 : 0;
     return direction === "asc" ? aVal - bVal : bVal - aVal;
   }
 
+  // Handle strings (default)
   const aStr = String(a).toLowerCase();
   const bStr = String(b).toLowerCase();
 
@@ -158,10 +179,18 @@ const DefaultArrayRenderer = ({
 };
 
 const defaultRender = (value: unknown, maxChips?: number): React.ReactNode => {
+  // Handle null/undefined
   if (value === null || value === undefined) {
     return <Typography color="text.secondary">—</Typography>;
   }
 
+  // Handle Date objects
+  if (isDate(value)) {
+    const formatted = formatDate(value);
+    return <span title={value.toISOString()}>{formatted}</span>;
+  }
+
+  // Handle primitives
   if (isPrimitive(value)) {
     if (typeof value === "boolean")
       return <Chip size="small" label={value ? "True" : "False"} />;
@@ -170,6 +199,7 @@ const defaultRender = (value: unknown, maxChips?: number): React.ReactNode => {
     return String(value);
   }
 
+  // Handle arrays
   if (Array.isArray(value)) {
     const allPrim = value.every(isPrimitive);
     if (allPrim)
@@ -177,6 +207,7 @@ const defaultRender = (value: unknown, maxChips?: number): React.ReactNode => {
     return truncate(JSON.stringify(value), 80);
   }
 
+  // Handle objects
   if (typeof value === "object") {
     return truncate(JSON.stringify(value), 80);
   }

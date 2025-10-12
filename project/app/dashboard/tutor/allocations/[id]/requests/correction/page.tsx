@@ -14,6 +14,8 @@ import {
   Stack,
   TextField,
   Typography,
+  Alert,
+  Snackbar,
 } from "@mui/material";
 
 import { useState, ChangeEvent, useEffect } from "react";
@@ -41,6 +43,16 @@ export default function CorrectionRequestPage() {
     session: false,
   });
 
+  const ddmmyyyyFormatter = (origDate: string): string => {
+    const newDate = new Date(origDate);
+
+    const day = String(newDate.getUTCDate()).padStart(2, "0");
+    const month = String(newDate.getUTCMonth() + 1).padStart(2, "0");
+    const year = String(newDate.getUTCFullYear());
+
+    return `${day}-${month}-${year}`;
+  };
+
   const [correctionsString, setCorrectionsString] = useState({
     date: "",
     startTime: "",
@@ -51,17 +63,32 @@ export default function CorrectionRequestPage() {
     justification: "",
   });
 
+  const sessionTypeMap: Record<string, string> = {
+    "Workshop session": "Lab",
+    "Tutorial session": "Tutorial",
+    "Lecture session": "Lecture",
+  };
+
+  const statusMap: {
+    [key: string]: { label: string; color: "success" | "warning" | "default" };
+  } = {
+    "Approved Allocation": { label: "Approved", color: "success" },
+    "Hours for Review": { label: "Pending", color: "warning" },
+    "Ignore class": { label: "Cancelled", color: "default" },
+  };
+
+  const sessionTypeFormatter = (text: string): string => {
+    return sessionTypeMap[text] ?? "Missing Session Type";
+  };
+
   const [allocation, setAllocation] = useState<AllocationRow | null>(null);
   const [loading, setLoading] = useState(true);
+  const [success, setSuccess] = useState(false);
+  const [error, setError] = useState("");
 
   const params = useParams<{ id: string }>(); // gets id for query /api/tutor/allocations/{allocationID}
   const allocationId = params.id;
   const router = useRouter();
-
-  useEffect(() => {
-    console.log(correctionsString);
-    console.log(corrections);
-  }, [correctionsString, corrections]);
 
   useEffect(() => {
     async function fetchAllocation() {
@@ -91,10 +118,101 @@ export default function CorrectionRequestPage() {
     setCorrectionsString((prev) => ({ ...prev, [name]: value }));
   };
 
+  const submitHandler = async () => {
+    setSuccess(false);
+    setError("");
+
+    const formJson: Record<string, string> = {};
+    formJson["allocation_id"] = allocationId;
+    corrections.date
+      ? (formJson["date"] = correctionsString.date)
+      : (formJson["date"] = allocation?.session_date ?? "No Date");
+    corrections.hours
+      ? (formJson["hours"] = correctionsString.hours)
+      : (formJson["hours"] = String(allocation?.hours) ?? "No Hours");
+    corrections.location
+      ? (formJson["location"] = correctionsString.location)
+      : (allocation?.location ?? "No Location");
+    corrections.session
+      ? (formJson["session_type"] = correctionsString.session)
+      : (allocation?.description ?? "No Session Type");
+    corrections.time
+      ? ((formJson["start_at"] = correctionsString.startTime),
+        (formJson["end_at"] = correctionsString.endTime))
+      : ((formJson["start_at"] = allocation?.start_at ?? "No Start Time"),
+        (formJson["end_at"] = allocation?.end_at ?? "No End Time"));
+
+    formJson["justification"] = correctionsString.justification;
+
+    console.log(formJson);
+
+    try {
+      const res = await fetch(
+        `/api/tutor/allocations/${allocationId}/requests/correction`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formJson),
+        },
+      );
+
+      if (!res.ok) throw new Error("Failed to submit correction");
+
+      const data = await res.json();
+
+      setSuccess(true);
+
+      setTimeout(() => {
+        router.back();
+      }, 2000);
+    } catch (error) {
+      console.error("Submit error:", error);
+      setError("Something went wrong while submitting.");
+    }
+  };
+  // If correction not made on specific catagory possibly fill json with current values unchanged
+  // Also might need to change hours in json form to 24 hour time if thats what the allocation has
+
   if (loading) return <p>Loading...</p>;
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
+      <Snackbar
+        open={success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        sx={{ zIndex: 1400 }}
+      >
+        <Alert
+          onClose={() => setSuccess(false)}
+          severity="success"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          Correction submitted successfully.
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!error}
+        autoHideDuration={4000}
+        onClose={() => setError("")}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        sx={{ zIndex: 1400 }}
+      >
+        <Alert
+          onClose={() => setError("")}
+          severity="error"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {error}
+        </Alert>
+      </Snackbar>
+
       {/* Header */}
       <Typography variant="h4" gutterBottom>
         Correction Request
@@ -117,15 +235,19 @@ export default function CorrectionRequestPage() {
           <Typography variant="subtitle1">
             {allocation?.unit_code ?? "Missing Unit Code"}
           </Typography>
-          <Chip label="Confirmed" color="success" size="small" />
+          <Chip
+            label={statusMap[allocation?.status ?? "None"]?.label ?? "Unknown"}
+            color={statusMap[allocation?.status ?? "None"]?.color ?? "default"}
+            size="small"
+          />
         </Stack>
         <Typography variant="body2" sx={{ mt: 1 }}>
-          Date: {allocation?.session_date ?? "Missing Date"} • Time:{" "}
+          Date: {ddmmyyyyFormatter(allocation?.session_date ?? "None")} • Time:{" "}
           {allocation?.start_at ?? "Missing Start Time"} -{" "}
           {allocation?.end_at ?? "Missing End Time"} • Location:{" "}
           {allocation?.location ?? "Missing Location"} • Hours:{" "}
           {allocation?.hours ?? "Missing Hours"} • Session:{" "}
-          {allocation?.description ?? "Missing Description"}
+          {sessionTypeFormatter(allocation?.description ?? "None")}
         </Typography>
       </Paper>
 
@@ -142,11 +264,22 @@ export default function CorrectionRequestPage() {
             <Typography variant="subtitle1" gutterBottom>
               System Record
             </Typography>
-            <Typography variant="body2">Date: 2025-09-12</Typography>
-            <Typography variant="body2">Start / End: 09:00 — 11:00</Typography>
-            <Typography variant="body2">Location: Room A</Typography>
-            <Typography variant="body2">Hours: 2.0</Typography>
-            <Typography variant="body2">Session: Tutorial</Typography>
+            <Typography variant="body2">
+              Date: {ddmmyyyyFormatter(allocation?.session_date ?? "None")}
+            </Typography>
+            <Typography variant="body2">
+              Start / End: {allocation?.start_at ?? "Missing Start Time"} —{" "}
+              {allocation?.end_at ?? "Missing End Time"}
+            </Typography>
+            <Typography variant="body2">
+              Location: {allocation?.location ?? "Missing Location"}
+            </Typography>
+            <Typography variant="body2">
+              Hours: {allocation?.hours ?? "Missing Hours"}
+            </Typography>
+            <Typography variant="body2">
+              Session: {sessionTypeFormatter(allocation?.description ?? "None")}
+            </Typography>
             <Typography variant="caption" color="text.secondary">
               Snapshot of current allocation (immutable).
             </Typography>
@@ -326,7 +459,7 @@ export default function CorrectionRequestPage() {
         >
           Cancel
         </Button>
-        <Button variant="contained" color="primary">
+        <Button variant="contained" color="primary" onClick={submitHandler}>
           Submit Correction Request
         </Button>
       </Box>

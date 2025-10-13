@@ -89,3 +89,19 @@ export type BasicRequest = {
   requestReason: string | null;
   createdAt: string;
 };
+
+export interface RequestRow {
+  requestId: number;
+  type: "claim" | "swap" | "correction" | "cancellation" | "query";
+  status: string;
+  reason: string | null;
+  createdAt: string;
+  relatedSession: string;
+  actions: string;
+}
+export interface PaginatedRequests {
+  page: number;
+  limit: number;
+  total: number;
+  data: RequestRow[];
+}

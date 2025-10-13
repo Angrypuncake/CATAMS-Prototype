@@ -12,14 +12,6 @@ export type ActionRequiredRow = {
   actions: string | null;
 };
 
-export type RequestRow = {
-  requestID: string | null;
-  type: string | null;
-  relatedSession: string | null;
-  status: string | null;
-  actions: string | null;
-};
-
 export type NoticeRow = {
   session_date: string | null;
   type: string | null;
@@ -45,5 +37,5 @@ export interface AllocationTableRow {
   location?: string | null;
   status?: string | null;
   unit_code?: string | null;
-  [key: string]: unknown;
+  [key: string]: string | number | null | undefined;
 }

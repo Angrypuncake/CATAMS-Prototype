@@ -1,6 +1,7 @@
 import type {
   BasicRequest,
   CreateRequestPayload,
+  PaginatedRequests,
   TutorCorrectionPayload,
   TutorRequest,
 } from "@/app/_types/request";
@@ -254,4 +255,15 @@ export async function getRequestsByAllocation(
     }));
 
   return normalized;
+}
+
+export async function getTutorRequests(
+  page = 1,
+  limit = 50,
+  userId?: number,
+): Promise<PaginatedRequests> {
+  const response = await axios.get<PaginatedRequests>("/tutor/requests", {
+    params: { page, limit },
+  });
+  return response.data;
 }

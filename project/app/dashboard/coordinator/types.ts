@@ -22,13 +22,3 @@ export interface CoordinatorBudgetOverview {
     pctUsed: number;
   }[];
 }
-
-export interface TutorRequestRow {
-  requestID: string;
-  type: string;
-  relatedSession: string;
-  status: string;
-  creator: string;
-  creatorRole: string;
-  user_id: number;
-}

@@ -1,12 +1,11 @@
 "use client";
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { Typography } from "@mui/material";
 import StyledBox from "./components";
 import AllocationsTable from "./AllocationsTable";
 import ActionRequiredTable from "./ActionRequiredTable";
 import RequestsTable from "./RequestsTable";
 import NoticesTable from "./NoticesTable";
-import { TutorAllocationRow } from "@/app/_types/allocations";
 import {
   getTutorAllocations,
   getCurrentUser,
@@ -15,12 +14,13 @@ import AllocationQuickviewModal from "./AllocationQuickviewModal";
 import type {
   AllocationRow,
   ActionRequiredRow,
-  RequestRow,
   NoticeRow,
   SortableColumns,
 } from "./types";
-import { useColumnSorter } from "./utils";
-import { actions, request, notices } from "./mockData";
+import { mapToRequestRow, useColumnSorter } from "./utils";
+import { actions, notices } from "./mockData";
+import { getTutorRequests } from "@/app/services/requestService";
+import { RequestRow } from "@/app/_types/request";
 
 /* ========= Page ========= */
 const Page = () => {
@@ -48,6 +48,39 @@ const Page = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [search, setSearch] = useState("");
+  const [tutorRequests, setTutorRequests] = useState<RequestRow[]>([]);
+  const [totalRequests, setTotalRequests] = useState(0);
+
+  // Get requests
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const sessionUser = await getCurrentUser();
+
+        // 1 Allocations
+        const allocationsData = await getTutorAllocations(
+          sessionUser.userId,
+          page + 1,
+          rowsPerPage,
+        );
+        setTutorSessions(allocationsData.data);
+        setTotalSessions(allocationsData.total);
+
+        // 2 Requests (real API)
+        const requestsData = await getTutorRequests(page + 1, rowsPerPage);
+        const mappedRequests: RequestRow[] =
+          requestsData.data.map(mapToRequestRow);
+        setTutorRequests(mappedRequests);
+        setTotalRequests(requestsData.total);
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [page, rowsPerPage]);
 
   const sortedSessions: AllocationRow[] = useColumnSorter<AllocationRow>(
     tutorSessions,
@@ -58,10 +91,7 @@ const Page = () => {
     actions,
     sortActionsConfig,
   );
-  const sortedRequests: RequestRow[] = useColumnSorter<RequestRow>(
-    request,
-    sortRequestsConfig,
-  );
+  const sortedRequests: RequestRow[] = tutorRequests; // bypass sorter
   const sortedNotices: NoticeRow[] = useColumnSorter<NoticeRow>(
     notices,
     sortNoticesConfig,

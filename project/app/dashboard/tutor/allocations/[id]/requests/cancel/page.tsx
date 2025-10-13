@@ -27,6 +27,7 @@ import { createRequestService } from "@/app/services/requestService";
 import { TutorAllocationRow } from "@/app/_types/allocations";
 import { Tutor } from "@/app/_types/tutor";
 import AllocationDetails from "../../_components/AllocationDetails";
+import { getUserFromAuth } from "@/app/services/authService";
 
 export default function CancelRequestPage() {
   const params = useParams<{ id: string }>();
@@ -38,7 +39,7 @@ export default function CancelRequestPage() {
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [userId, setUserId] = useState(0);
 
   // --- Form state ---
   const [cancelType, setCancelType] = useState<"suggest" | "coordinator">(
@@ -92,17 +93,9 @@ export default function CancelRequestPage() {
    *  ============================ */
   useEffect(() => {
     async function fetchUser() {
-      try {
-        const res = await fetch("/api/auth/me");
-        if (!res.ok) throw new Error("Failed to get user");
-        const data = await res.json();
-        console.log("Current user:", data);
-        setUserId(data.userId);
-      } catch (err) {
-        console.error(err);
-      }
+      const data = await getUserFromAuth();
+      setUserId(data.userId);
     }
-
     fetchUser();
   }, []);
 
@@ -135,7 +128,7 @@ export default function CancelRequestPage() {
         requestType: "cancellation" as const,
         requestReason: reason,
         details: {
-          suggestedUserId:
+          suggested_tutor_id:
             cancelType === "suggest" ? (selectedTutor?.user_id ?? null) : null,
         },
       };

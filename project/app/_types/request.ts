@@ -60,7 +60,7 @@ export type TutorCorrectionPayload = Extract<
 export type RequestType = TutorRequest["requestType"];
 
 export interface CancellationDetails {
-  suggestedUserId: number | null;
+  suggested_tutor_id: number | null;
 }
 
 export type RequestDetailsMap = {

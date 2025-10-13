@@ -6,157 +6,18 @@ import {
   TableBody,
   TableCell,
   TableContainer,
-  TableHead,
   TableRow,
   TablePagination,
   Paper,
-  Chip,
-  Stack,
   Typography,
-  TextField,
-  InputAdornment,
-  Box,
-  IconButton,
-  TableSortLabel,
-  Button,
-  Tooltip,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import ClearIcon from "@mui/icons-material/Clear";
 import type { TableRowData, ActionButton, DynamicTableProps } from "./types";
-import {
-  isPrimitive,
-  isDate,
-  formatDate,
-  truncate,
-  searchInValue,
-  compareValues,
-} from "./utils";
+import { searchInValue, compareValues, defaultRender } from "./utils";
+import { SearchBar } from "./components/SearchBar";
+import { TableHeader } from "./components/TableHeader";
+import { ActionButtons } from "./components/ActionButtons";
 
 export type { TableRowData, ActionButton };
-
-const InspectButton = ({ value }: { value: unknown }) => {
-  const [open, setOpen] = useState(false);
-  const stringified = useMemo(() => {
-    try {
-      return JSON.stringify(value, null, 2);
-    } catch {
-      return String(value);
-    }
-  }, [value]);
-
-  return (
-    <>
-      <Tooltip title="Expand">
-        <IconButton size="small" onClick={() => setOpen(true)}>
-          <SearchIcon fontSize="inherit" />
-        </IconButton>
-      </Tooltip>
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Cell details</DialogTitle>
-        <DialogContent dividers>
-          <pre
-            style={{
-              margin: 0,
-              whiteSpace: "pre-wrap",
-              wordBreak: "break-word",
-              fontSize: 12,
-            }}
-          >
-            {stringified}
-          </pre>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>Close</Button>
-        </DialogActions>
-      </Dialog>
-    </>
-  );
-};
-
-const DefaultArrayRenderer = ({
-  arr,
-  maxChips = 4,
-}: {
-  arr: unknown[];
-  maxChips?: number;
-}) => {
-  const chips = arr.slice(0, maxChips);
-  const remaining = arr.length - chips.length;
-  return (
-    <Stack direction="row" spacing={0.5} flexWrap="wrap">
-      {chips.map((item, idx) => (
-        <Chip
-          key={idx}
-          size="small"
-          label={
-            isPrimitive(item)
-              ? String(item)
-              : typeof item === "object"
-                ? JSON.stringify(item)
-                : String(item)
-          }
-          sx={{ maxWidth: 180 }}
-        />
-      ))}
-      {remaining > 0 && (
-        <Chip size="small" variant="outlined" label={`+${remaining} more`} />
-      )}
-    </Stack>
-  );
-};
-const defaultRender = (value: unknown, maxChips?: number): React.ReactNode => {
-  if (value === null || value === undefined) {
-    return <Typography color="text.secondary">—</Typography>;
-  }
-
-  if (isDate(value)) {
-    const formatted = formatDate(value);
-    return <span title={(value as Date).toISOString()}>{formatted}</span>;
-  }
-
-  if (isPrimitive(value)) {
-    if (typeof value === "boolean")
-      return <Chip size="small" label={value ? "True" : "False"} />;
-    if (typeof value === "string")
-      return <span title={value}>{truncate(value)}</span>;
-    return String(value);
-  }
-
-  if (Array.isArray(value)) {
-    const allPrim = value.every(isPrimitive);
-    if (allPrim)
-      return <DefaultArrayRenderer arr={value} maxChips={maxChips} />;
-    const preview = truncate(JSON.stringify(value), 80);
-    return (
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <Typography variant="body2">{preview}</Typography>
-        <InspectButton value={value} />
-      </Stack>
-    );
-  }
-
-  if (typeof value === "object") {
-    const preview = truncate(JSON.stringify(value), 80);
-    return (
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <Typography variant="body2">{preview}</Typography>
-        <InspectButton value={value} />
-      </Stack>
-    );
-  }
-
-  return String(value);
-};
 
 function DynamicTable<T = Record<string, unknown>>({
   rows,
@@ -264,72 +125,27 @@ function DynamicTable<T = Record<string, unknown>>({
   return (
     <Paper>
       {enableSearch && (
-        <Box sx={{ p: 2, borderBottom: 1, borderColor: "divider" }}>
-          <TextField
-            fullWidth
-            size="small"
-            placeholder={searchPlaceholder}
-            value={searchTerm}
-            onChange={handleSearchChange}
-            slotProps={{
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon fontSize="small" />
-                  </InputAdornment>
-                ),
-                endAdornment: searchTerm && (
-                  <InputAdornment position="end">
-                    <IconButton
-                      size="small"
-                      onClick={handleClearSearch}
-                      edge="end"
-                    >
-                      <ClearIcon fontSize="small" />
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
-          {searchTerm && (
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ mt: 1, display: "block" }}
-            >
-              Found {filteredRows.length} of {rows.length} results
-            </Typography>
-          )}
-        </Box>
+        <SearchBar
+          searchTerm={searchTerm}
+          searchPlaceholder={searchPlaceholder}
+          onSearchChange={handleSearchChange}
+          onClearSearch={handleClearSearch}
+          filteredCount={filteredRows.length}
+          totalCount={rows.length}
+        />
       )}
 
       <TableContainer>
         <Table size="small" stickyHeader>
-          <TableHead>
-            <TableRow>
-              {inferredColumns.map((col) => (
-                <TableCell key={String(col.key)} sx={{ fontWeight: 600 }}>
-                  {enableSorting ? (
-                    <TableSortLabel
-                      active={sortColumn === col.key}
-                      direction={sortColumn === col.key ? sortDirection : "asc"}
-                      onClick={() => handleSort(col.key)}
-                    >
-                      {col.label ?? String(col.key)}
-                    </TableSortLabel>
-                  ) : (
-                    (col.label ?? String(col.key))
-                  )}
-                </TableCell>
-              ))}
-              {actions && actions.length > 0 && (
-                <TableCell sx={{ fontWeight: 600 }} align="right">
-                  {actionsLabel}
-                </TableCell>
-              )}
-            </TableRow>
-          </TableHead>
+          <TableHeader
+            columns={inferredColumns}
+            enableSorting={enableSorting}
+            sortColumn={sortColumn}
+            sortDirection={sortDirection}
+            onSort={handleSort}
+            hasActions={!!(actions && actions.length > 0)}
+            actionsLabel={actionsLabel}
+          />
           <TableBody>
             {paginatedRows.length > 0 ? (
               paginatedRows.map((row, rIdx) => (
@@ -346,30 +162,7 @@ function DynamicTable<T = Record<string, unknown>>({
                     );
                   })}
                   {actions && actions.length > 0 && (
-                    <TableCell align="right">
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        justifyContent="flex-end"
-                      >
-                        {actions.map((action, actionIdx) => {
-                          const isDisabled = action.disabled?.(row) ?? false;
-                          return (
-                            <Button
-                              key={actionIdx}
-                              size="small"
-                              variant={action.variant ?? "text"}
-                              color={action.color ?? "primary"}
-                              onClick={() => action.onClick(row)}
-                              disabled={isDisabled}
-                              startIcon={action.icon}
-                            >
-                              {action.label}
-                            </Button>
-                          );
-                        })}
-                      </Stack>
-                    </TableCell>
+                    <ActionButtons actions={actions} row={row} />
                   )}
                 </TableRow>
               ))

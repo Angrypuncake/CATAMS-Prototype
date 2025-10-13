@@ -2,6 +2,8 @@
 
 // pages/swap-request.tsx
 import React, { useEffect, useState } from "react";
+import axios from "axios";
+
 import {
   Container,
   Typography,
@@ -22,6 +24,7 @@ import {
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 
+import type { AllocationBase } from "@/app/_types/allocations";
 import { getFormattedAllocationById } from "@/app/services/allocationService";
 import type { TutorAllocationRow } from "@/app/_types/allocations";
 import AllocationDetails from "../../_components/AllocationDetails";
@@ -36,23 +39,56 @@ const SwapRequestPage = () => {
   const [findTutor, setFindTutor] = useState("");
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [reason, setReason] = useState("");
-  const [allocation, setAllocation] = React.useState<TutorAllocationRow | null>(
+  const [attachments, setAttachments] = useState<FileList | null>(null);
+  const [allocation, setAllocation] = React.useState<AllocationBase | null>(
     null,
   );
+  const [tutAllocation, setTutAllocation] =
+    React.useState<TutorAllocationRow | null>(null);
 
   const [loading, setLoading] = React.useState(true);
   const [err, setErr] = React.useState<string | null>(null);
 
   const router = useRouter();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log({
       swapType,
       findTutor,
       reason,
     });
-    // Here you can send data to your API route
+
+    try {
+      const sessionUser = await axios.get("/api/auth/me", {
+        withCredentials: true,
+      });
+
+      //{requester_id, allocation_id, details, request_reason}
+      const res = await fetch(
+        `/api/tutor/allocations/${encodeURIComponent(id)}/requests/swap`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            requester_id: sessionUser.data.userId,
+            allocation_id: id,
+            details: {
+              ack: true,
+              timing: ">48h",
+              replacement_mode: findTutor,
+              suggested_user_id: 14,
+            }, // Example details; adapt as needed
+            request_reason: reason,
+          }),
+        },
+      );
+    } catch (err) {
+      console.error("Error fetching user data:", err);
+      router.push(`/dashboard/tutor/allocations/${id}?success=false`);
+      return;
+    }
+    router.push(`/dashboard/tutor/allocations/${id}?success=true`);
   };
 
   React.useEffect(() => {
@@ -196,5 +232,4 @@ const SwapRequestPage = () => {
     </Container>
   );
 };
-
 export default SwapRequestPage;

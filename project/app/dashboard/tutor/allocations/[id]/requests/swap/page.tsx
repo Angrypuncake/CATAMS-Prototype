@@ -16,6 +16,7 @@ import {
   Stack,
   CircularProgress,
   Autocomplete,
+  Tooltip,
 } from "@mui/material";
 import { useParams, useRouter } from "next/navigation";
 
@@ -30,6 +31,7 @@ import { getTutorsByUnit } from "@/app/services/userService";
 import { createRequestService } from "@/app/services/requestService";
 import type { CreateRequestPayload } from "@/app/_types/request";
 import { getUserFromAuth } from "@/app/services/authService";
+import { Snackbar, Alert } from "@mui/material";
 
 export default function SwapRequestPage() {
   const params = useParams<{ id: string }>();
@@ -43,6 +45,7 @@ export default function SwapRequestPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState<string | null>(null);
 
   const router = useRouter();
 
@@ -108,11 +111,12 @@ export default function SwapRequestPage() {
       };
 
       await createRequestService(payload);
-      router.push(`/dashboard/tutor/allocations/${id}?success=true`);
+      setSuccess("Swap request submitted successfully!"); // ← show banner or snackbar
+      setTimeout(() => router.push(`/dashboard/tutor/allocations/${id}`), 2000);
     } catch (error) {
       console.error("Error submitting swap request:", error);
       setErr("Something went wrong while submitting.");
-      router.push(`/dashboard/tutor/allocations/${id}?success=false`);
+      setTimeout(() => router.push(`/dashboard/tutor/allocations/${id}`), 2000);
     } finally {
       setSubmitting(false);
     }
@@ -137,6 +141,9 @@ export default function SwapRequestPage() {
       </Box>
     );
   }
+
+  // check if the submission reason is set
+  const isSubmitDisabled = !reason.trim();
 
   /* -------------------------------- Render Form -------------------------------- */
   return (
@@ -193,7 +200,15 @@ export default function SwapRequestPage() {
           sx={{ mb: 3 }}
         />
 
-        <Box display="flex" justifyContent="flex-end" gap={2}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            gap: 2,
+            mt: 3,
+          }}
+        >
           <Button
             variant="outlined"
             color="inherit"
@@ -202,16 +217,58 @@ export default function SwapRequestPage() {
           >
             Cancel
           </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            type="submit"
-            disabled={submitting}
+
+          <Tooltip
+            title={
+              isSubmitDisabled
+                ? "Please enter a justification to enable submission"
+                : ""
+            }
+            placement="top"
           >
-            {submitting ? "Submitting…" : "Submit Swap Request"}
-          </Button>
+            {/* span is required because disabled buttons don't trigger tooltips */}
+            <span>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={handleSubmit}
+                disabled={isSubmitDisabled || submitting}
+              >
+                Submit Swap Request
+              </Button>
+            </span>
+          </Tooltip>
         </Box>
       </form>
+      <Snackbar
+        open={!!success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSuccess(null)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          {success}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!err}
+        autoHideDuration={4000}
+        onClose={() => setErr(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setErr(null)}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {err}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }

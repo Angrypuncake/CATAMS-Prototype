@@ -24,101 +24,22 @@ import {
   TimelineView,
   buildWeeksRange,
   type WeekDef,
-  type ActivityRow as TLActivityRow,
+  type ActivityRow,
   type CellAllocation as TLCellAllocation,
 } from "./components/TimelineView";
+import {
+  activityKey,
+  activityName,
+  labelName,
+  parseDateSafe,
+  rowsToTimelineActivities,
+  startOfWeekMonday,
+  weekKeyFor,
+} from "./util";
 
 /** -------
 
-  
-/* ======================= rows -> timeline helpers ======================= */
-function startOfWeekMonday(d: Date) {
-  const day = d.getDay();
-  const offset = (day + 6) % 7;
-  const out = new Date(d);
-  out.setHours(0, 0, 0, 0);
-  out.setDate(out.getDate() - offset);
-  return out;
-}
-function parseDateSafe(iso: string | null) {
-  if (!iso) return null;
-  const dt = new Date(iso.slice(0, 10));
-  return isNaN(dt.getTime()) ? null : dt;
-}
-function hoursFromTimes(start_at: string | null, end_at: string | null) {
-  if (!start_at || !end_at) return 2;
-  const today = new Date().toISOString().slice(0, 10);
-  const s = new Date(`${today}T${start_at.slice(0, 8)}`);
-  const e = new Date(`${today}T${end_at.slice(0, 8)}`);
-  const ms = e.getTime() - s.getTime();
-  return ms > 0 ? Math.round((ms / 36e5) * 10) / 10 : 2;
-}
-function weekKeyFor(date: Date, termStart: Date) {
-  const diffDays = Math.floor(
-    (date.getTime() - termStart.getTime()) / 86400000,
-  );
-  const wk = Math.floor(diffDays / 7);
-  return `W${wk}`;
-}
-function activityKey(r: AllocationRow) {
-  return [r.unit_code ?? "", r.activity_type ?? "", r.activity_name ?? ""]
-    .filter(Boolean)
-    .join(" • ");
-}
-function activityName(r: AllocationRow) {
-  return [r.unit_code ?? "", r.activity_name ?? r.activity_type ?? "Activity"]
-    .filter(Boolean)
-    .join(" – ");
-}
 
-function labelName(row: Pick<AllocationRow, "first_name" | "last_name">) {
-  const fn = row.first_name ?? "";
-  const ln = row.last_name ?? "";
-  return `${fn} ${ln}`.trim() || "—";
-}
-
-/** Convert table rows -> Timeline activities (scheduled rows only) */
-function rowsToTimelineActivities(
-  rows: AllocationRow[],
-  opts: { termStart: Date; termLabel: string },
-): TLActivityRow[] {
-  const map = new Map<string, TLActivityRow>();
-  for (const r of rows) {
-    const isScheduled =
-      r.mode === "scheduled" || (r.mode == null && !!r.session_date);
-    if (!isScheduled) continue;
-    const date = parseDateSafe(r.session_date);
-    if (!date) continue;
-
-    const id = activityKey(r) || String(r.id);
-    if (!map.has(id)) {
-      map.set(id, {
-        id,
-        name: activityName(r) || id,
-        activityType: r.activity_type ?? undefined,
-        paycode: r.paycode_id ?? undefined,
-        allocations: {},
-      });
-    }
-    const act = map.get(id)!;
-    const wk = weekKeyFor(date, opts.termStart);
-
-    const cell: TLCellAllocation = {
-      tutor: labelName(r),
-      hours: hoursFromTimes(r.start_at, r.end_at),
-      role: r.teaching_role ?? undefined,
-      notes: r.location ?? r.note ?? undefined,
-    };
-
-    const existing = act.allocations[wk];
-    if (!existing) act.allocations[wk] = [cell];
-    else
-      act.allocations[wk] = Array.isArray(existing)
-        ? [...existing, cell]
-        : [existing, cell];
-  }
-  return Array.from(map.values());
-}
 
 /** ------------------------------ Main Page ------------------------------ */
 export default function AdminAllAllocationsPage() {
@@ -214,14 +135,14 @@ export default function AdminAllAllocationsPage() {
   }, [visible]);
 
   const weeks: WeekDef[] = useMemo(() => buildWeeksRange(-6, 13, "S1"), []);
-  const timelineActivities: TLActivityRow[] = useMemo(
+  const timelineActivities: ActivityRow[] = useMemo(
     () => rowsToTimelineActivities(visible, { termStart, termLabel: "S1" }),
     [visible, termStart],
   );
 
   /** ========= NEW: map tooltip “Edit this allocation” -> open Drawer ========= */
   function handleTimelineCellEdit(args: {
-    activity: TLActivityRow;
+    activity: ActivityRow;
     week: WeekDef;
     cell: TLCellAllocation[];
   }) {

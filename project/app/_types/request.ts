@@ -78,3 +78,14 @@ export type CreateRequestPayload<T extends RequestType = RequestType> = {
   requestReason?: string | null;
   details: RequestDetailsMap[T];
 };
+
+// This is a read only type that excludes the details field
+export type BasicRequest = {
+  requestId: number;
+  requesterId: number;
+  allocationId: number;
+  requestType: "claim" | "swap" | "correction" | "cancellation" | "query";
+  requestStatus: string;
+  requestReason: string | null;
+  createdAt: string;
+};

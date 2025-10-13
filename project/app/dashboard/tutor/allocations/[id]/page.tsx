@@ -7,8 +7,6 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
-  Divider,
   IconButton,
   Menu,
   MenuItem,
@@ -26,13 +24,18 @@ import RequestRow from "../_components/RequestRow";
 import CommentBubble from "../_components/CommentBubble";
 import type {
   TutorAllocationRow as AllocationDetail,
-  RequestItem,
   CommentItem,
 } from "@/app/_types/allocations";
 import { useRouter } from "next/navigation";
 import { getFormattedAllocationById } from "@/app/services/allocationService";
 import AllocationDetails from "./_components/AllocationDetails";
-import { getOpenRequestTypes } from "@/app/services/requestService";
+import {
+  getOpenRequestTypes,
+  getRequestsByAllocation,
+} from "@/app/services/requestService";
+import { getUserFromAuth } from "@/app/services/authService";
+import { BasicRequest } from "@/app/_types/request";
+import { useEffect } from "react";
 
 // DB status → UI union type normalization
 // type UIStatus = AllocationDetail["status"]; // "Confirmed" | "Pending" | "Cancelled"
@@ -50,7 +53,7 @@ export default function AllocationPage() {
   const [allocation, setAllocation] = React.useState<AllocationDetail | null>(
     null,
   );
-  const [requests, setRequests] = React.useState<RequestItem[]>([]);
+  const [requests, setRequests] = React.useState<BasicRequest[]>([]);
   const [comments, setComments] = React.useState<CommentItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [err, setErr] = React.useState<string | null>(null);
@@ -60,7 +63,7 @@ export default function AllocationPage() {
   const [loadingRequests, setLoadingRequests] = React.useState(false);
 
   // Toast/feedback for "request created"
-  React.useEffect(() => {
+  useEffect(() => {
     if (searchParams.get("success") === "true") {
       setRequestToast(true);
       const timer = setTimeout(() => setRequestToast(false), 5000);
@@ -69,7 +72,7 @@ export default function AllocationPage() {
   }, [searchParams]);
 
   // fetch allocation detail from DB
-  React.useEffect(() => {
+  useEffect(() => {
     if (!id) return; // wait until router provides id
     let cancelled = false;
 
@@ -85,7 +88,6 @@ export default function AllocationPage() {
 
         if (!cancelled) {
           setAllocation(mapped);
-          setRequests([]); // future endpoint
           setComments([]); // future endpoint
         }
       } catch (e: unknown) {
@@ -102,7 +104,32 @@ export default function AllocationPage() {
     };
   }, [id]);
 
-  React.useEffect(() => {
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const user = await getUserFromAuth();
+        const list = await getRequestsByAllocation(Number(id), user?.userId);
+        console.log(list);
+        if (!cancelled) setRequests(list);
+      } catch (err) {
+        console.error("Error fetching requests:", err);
+        if (!cancelled) setRequests([]);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    console.log("Requests updated:", requests);
+  }, [requests]);
+
+  useEffect(() => {
     if (!id) return;
     let cancelled = false;
 
@@ -283,7 +310,7 @@ export default function AllocationPage() {
                 No requests yet.
               </Typography>
             ) : (
-              requests.map((r) => <RequestRow key={r.id} req={r} />)
+              requests.map((r) => <RequestRow key={r.requestId} req={r} />)
             )}
           </Stack>
 

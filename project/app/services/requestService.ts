@@ -1,4 +1,5 @@
 import type {
+  BasicRequest,
   CreateRequestPayload,
   TutorCorrectionPayload,
   TutorRequest,
@@ -220,21 +221,37 @@ export async function getOpenRequestTypes(
 }
 
 /**
- * Fetch all requests for a given allocation.
- * Optionally filters to a specific user if the backend reads x-user-id.
+ * Fetch all requests for a given allocation and normalize to camelCase.
  */
 export async function getRequestsByAllocation(
   allocationId: number,
   userId?: number,
-): Promise<TutorRequest[]> {
+): Promise<BasicRequest[]> {
   const config = userId
     ? { headers: { "x-user-id": String(userId) } }
     : undefined;
 
-  const response = await axios.get<{ data: TutorRequest[] }>(
+  const response = await axios.get<{ data: RawRequestRow[] }>(
     `/requests?allocationId=${allocationId}`,
     config,
   );
 
-  return response.data.data;
+  const normalized: BasicRequest[] = response.data.data
+    .filter((r) => r.request_type !== null)
+    .map((r) => ({
+      requestId: r.request_id,
+      requesterId: r.requester_id,
+      allocationId: r.allocation_id,
+      requestType: r.request_type as
+        | "claim"
+        | "swap"
+        | "correction"
+        | "cancellation"
+        | "query",
+      requestStatus: r.request_status,
+      requestReason: r.request_reason,
+      createdAt: r.created_at,
+    }));
+
+  return normalized;
 }

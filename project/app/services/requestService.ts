@@ -191,3 +191,15 @@ export async function createRequestService(payload: CreateRequestPayload) {
  * Fetches all open requests for a specific allocation.
  * Returns an array of open request types (e.g. ["query", "swap"]).
  */
+export async function getOpenRequestTypes(
+  allocationId: number,
+): Promise<string[]> {
+  const response = await axios.get<{ data: TutorRequest[] }>(
+    `/requests?allocationId=${allocationId}`,
+  );
+  // Extract unique request types (case-insensitive)
+  const openTypes = Array.from(
+    new Set(response.data.data.map((r) => r.requestType.toLowerCase())),
+  );
+  return openTypes;
+}

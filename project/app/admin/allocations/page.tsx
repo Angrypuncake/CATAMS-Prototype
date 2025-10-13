@@ -20,6 +20,22 @@ import {
 } from "@/app/services/allocationService";
 import { getTutors } from "@/app/services/userService";
 import { getPaycodes } from "@/app/services/paycodeService";
+import {
+  TimelineView,
+  buildWeeksRange,
+  type WeekDef,
+  type ActivityRow,
+  type CellAllocation as TLCellAllocation,
+} from "./components/TimelineView";
+import {
+  activityKey,
+  activityName,
+  labelName,
+  parseDateSafe,
+  rowsToTimelineActivities,
+  startOfWeekMonday,
+  weekKeyFor,
+} from "./util";
 
 /** ------------------------------ Main Page ------------------------------ */
 export default function AdminAllAllocationsPage() {
@@ -33,6 +49,7 @@ export default function AdminAllAllocationsPage() {
 
   // scheduled toggle
   const [tab, setTab] = useState<"scheduled" | "unscheduled">("scheduled");
+  const [viewMode, setViewMode] = useState<"table" | "timeline">("table");
 
   // data
   const [loading, setLoading] = useState(false);
@@ -102,6 +119,63 @@ export default function AdminAllAllocationsPage() {
 
   const visible = tab === "scheduled" ? scheduledRows : unscheduledRows;
 
+  /* ------- Timeline derivations (only meaningful for scheduled tab) ------- */
+  const termStart = useMemo(() => {
+    const dts = visible
+      .map((r) => parseDateSafe(r.session_date))
+      .filter((d): d is Date => !!d);
+    const min = dts.length
+      ? new Date(Math.min(...dts.map((d) => d.getTime())))
+      : new Date();
+    return startOfWeekMonday(min);
+  }, [visible]);
+
+  const weeks: WeekDef[] = useMemo(() => buildWeeksRange(-6, 13, "S1"), []);
+  const timelineActivities: ActivityRow[] = useMemo(
+    () => rowsToTimelineActivities(visible, { termStart, termLabel: "S1" }),
+    [visible, termStart],
+  );
+
+  /** ========= NEW: map tooltip “Edit this allocation” -> open Drawer ========= */
+  function handleTimelineCellEdit(args: {
+    activity: ActivityRow;
+    week: WeekDef;
+    cell: TLCellAllocation[];
+  }) {
+    // pick the first tutor in the cell stack
+    const first = args.cell[0];
+    const tutorName = (first?.tutor || "").trim();
+
+    // Find a matching scheduled row by (activityKey, weekKey, tutor display name)
+    // activity.name is built via activityName(); activityKey() uses unit+type+name joined by " • "
+    const match = scheduledRows.find((r) => {
+      const actKey = activityKey(r);
+      const wk = r.session_date
+        ? weekKeyFor(new Date(r.session_date.slice(0, 10)), termStart)
+        : "";
+      return (
+        wk === args.week.key &&
+        (labelName(r) === tutorName || tutorName === "") &&
+        // Loose match: activity label prefix (unit – activity_name) equals activity.name
+        activityName(r) === args.activity.name
+      );
+    });
+
+    if (match) {
+      onEdit(match);
+    } else {
+      // Fallback: open the first row of that activity in that week (if any)
+      const fallback = scheduledRows.find((r) => {
+        const wk = r.session_date
+          ? weekKeyFor(new Date(r.session_date.slice(0, 10)), termStart)
+          : "";
+        return wk === args.week.key && activityName(r) === args.activity.name;
+      });
+      if (fallback) onEdit(fallback);
+      else console.warn("No matching row found for timeline cell edit:", args);
+    }
+  }
+
   function onEdit(row: AllocationRow) {
     setActiveRow(row);
     setDrawerOpen(true);
@@ -165,17 +239,73 @@ export default function AdminAllAllocationsPage() {
         </ButtonGroup>
       </div>
 
+      <ButtonGroup variant="outlined" sx={{ borderRadius: 1 }}>
+        <Button
+          variant={viewMode === "table" ? "contained" : "outlined"}
+          onClick={() => setViewMode("table")}
+        >
+          Table
+        </Button>
+        <Button
+          variant={viewMode === "timeline" ? "contained" : "outlined"}
+          onClick={() => setViewMode("timeline")}
+        >
+          Timeline
+        </Button>
+      </ButtonGroup>
+
       {/* Table */}
-      <AllocationsTable
-        tab={tab}
-        loading={loading}
-        visible={visible}
-        page={page}
-        limit={limit}
-        total={total}
-        onEdit={onEdit}
-        onPageChange={(newPage) => setPage(newPage)}
-      />
+      {viewMode === "table" || tab === "unscheduled" ? (
+        <AllocationsTable
+          tab={tab}
+          loading={loading}
+          visible={visible}
+          page={page}
+          limit={limit}
+          total={total}
+          onEdit={onEdit}
+          onPageChange={(newPage) => setPage(newPage)}
+        />
+      ) : (
+        /* Timeline (scheduled only) */
+        <div className="rounded border">
+          <div className="p-3">
+            <TimelineView
+              title="All Allocations — Timeline"
+              weeks={weeks}
+              activities={timelineActivities}
+              extraColumns={[
+                {
+                  key: "staffCount",
+                  header: "Staff",
+                  render: (a) => {
+                    const set = new Set(
+                      Object.values(a.allocations)
+                        .flatMap((v) => (Array.isArray(v) ? v : v ? [v] : []))
+                        .map((x) => x.tutor),
+                    );
+                    return <span className="text-xs">{set.size}</span>;
+                  },
+                },
+                {
+                  key: "hoursTotal",
+                  header: "Hours",
+                  render: (a) => {
+                    const sum = Object.values(a.allocations)
+                      .flatMap((v) => (Array.isArray(v) ? v : v ? [v] : []))
+                      .reduce((acc, x) => acc + (x.hours || 0), 0);
+                    return <span className="text-xs">{sum}</span>;
+                  },
+                },
+              ]}
+              onCellClick={() => {
+                /* optional click behaviour */
+              }}
+              onCellEdit={handleTimelineCellEdit}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Right-side Edit Drawer */}
       <Drawer

@@ -19,8 +19,13 @@ export type SwapDetails = {
 };
 
 export type CorrectionDetails = {
-  corrected_hours: number;
-  note?: string;
+  date: string;
+  start_at: string;
+  end_at: string;
+  location: string;
+  hours: string;
+  session_type: string;
+  justification: string;
 };
 
 // Cancellation and Query have no fields
@@ -46,3 +51,10 @@ export type TutorRequest =
       requestType: "cancellation" | "query";
       details: EmptyDetails;
     } & BaseRequest);
+
+export type TutorCorrectionPayload = Extract<
+  TutorRequest,
+  { requestType: "correction" }
+>["details"] & {
+  allocation_id: string | number;
+};

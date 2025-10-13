@@ -19,6 +19,21 @@ export async function getTutorsByUnit(unitCode: string): Promise<Tutor[]> {
   return res.data.data as Tutor[];
 }
 
+export async function getAdminOverview() {
+  const res = await axios.get("/admin/overview");
+  return res.data;
+}
+
+export async function getBudgetOverview(
+  year: number,
+  session: string,
+  threshold: number,
+) {
+  const res = await axios.get("/uc/overview", {
+    params: { year, session, threshold },
+  });
+  return res.data;
+}
 export async function getTutorById(id: string | number): Promise<Tutor> {
   const res = await axios.get(`/admin/tutors/${id}`);
   return res.data.data as Tutor;

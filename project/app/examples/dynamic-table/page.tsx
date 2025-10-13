@@ -14,7 +14,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import DynamicTable, { TableRowData } from "@/components/DynamicTable";
+import DynamicTable, {
+  TableRowData,
+} from "@/components/DynamicTable/DynamicTable";
 
 // Table 1: Student Performance Data
 interface StudentPerformance {

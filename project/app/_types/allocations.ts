@@ -41,6 +41,7 @@ export interface AllocationBase {
 
 export interface TutorAllocationRow extends AllocationBase {
   actions?: string | null;
+  [key: string]: unknown;
 }
 
 export interface AdminAllocationRow extends AllocationBase {

@@ -76,3 +76,5 @@ export const compareValues = (
   if (aStr > bStr) return direction === "asc" ? 1 : -1;
   return 0;
 };
+
+export { defaultRender } from "./renderUtils";

@@ -8,7 +8,7 @@ import {
   Chip, // NEW
   Stack, // NEW
 } from "@mui/material";
-import DynamicTable from "../../../components/DynamicTable";
+import DynamicTable from "../../../components/DynamicTable/DynamicTable";
 import AdminInfoBox from "./AdminInfoBox";
 import AdminBudgetBox from "./AdminBudgetBox";
 import AdminPagination from "./AdminPagination";

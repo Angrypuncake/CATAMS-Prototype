@@ -3,7 +3,7 @@
  * This file demonstrates how to use DynamicTable with strongly-typed data
  */
 
-import DynamicTable, { TableRowData } from "./DynamicTable";
+import DynamicTable, { TableRowData } from "./DynamicTable/DynamicTable";
 
 interface UserData {
   name: string;

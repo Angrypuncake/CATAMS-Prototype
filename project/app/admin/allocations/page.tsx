@@ -37,10 +37,6 @@ import {
   weekKeyFor,
 } from "./util";
 
-/** -------
-
-
-
 /** ------------------------------ Main Page ------------------------------ */
 export default function AdminAllAllocationsPage() {
   // Filters
@@ -243,20 +239,20 @@ export default function AdminAllAllocationsPage() {
         </ButtonGroup>
       </div>
 
-      <div className="inline-flex rounded-full border overflow-hidden">
-        <button
-          className={`px-4 py-1 text-sm ${viewMode === "table" ? "bg-blue-600 text-white" : "bg-white"}`}
+      <ButtonGroup variant="outlined" sx={{ borderRadius: 1 }}>
+        <Button
+          variant={viewMode === "table" ? "contained" : "outlined"}
           onClick={() => setViewMode("table")}
         >
           Table
-        </button>
-        <button
-          className={`px-4 py-1 text-sm border-l ${viewMode === "timeline" ? "bg-blue-600 text-white" : "bg-white"}`}
+        </Button>
+        <Button
+          variant={viewMode === "timeline" ? "contained" : "outlined"}
           onClick={() => setViewMode("timeline")}
         >
           Timeline
-        </button>
-      </div>
+        </Button>
+      </ButtonGroup>
 
       {/* Table */}
       {viewMode === "table" || tab === "unscheduled" ? (

@@ -1,5 +1,7 @@
-import api from "@/lib/axios";
-import type { TutorRequest } from "@/app/_types/request";
+import type {
+  TutorCorrectionPayload,
+  TutorRequest,
+} from "@/app/_types/request";
 import axios from "@/lib/axios";
 
 export async function getRequestById(id: string): Promise<TutorRequest> {
@@ -30,38 +32,60 @@ export async function getRequestById(id: string): Promise<TutorRequest> {
     ];
     const requestType = types[typeIndex];
 
-    // Assign details per type (TypeScript now enforces shape correctness)
     switch (requestType) {
       case "claim":
         return {
           ...base,
           requestType,
           details: { hours: 2, paycode: "TUT01" },
-        } as TutorRequest;
+        };
+
       case "swap":
         return {
           ...base,
           requestType,
           details: { suggested_tutor_id: 10 },
-        } as TutorRequest;
+        };
+
       case "correction":
         return {
           ...base,
           requestType,
           details: {
-            corrected_hours: 3,
-            note: "Adjusted session time after timetable update.",
+            date: "2025-10-12",
+            start_at: "09:00",
+            end_at: "11:00",
+            location: "Room 302, Engineering Building",
+            hours: "2",
+            session_type: "Tutorial",
+            justification:
+              "Adjusted session time after timetable update and room change.",
           },
-        } as TutorRequest;
+        };
+
       case "cancellation":
       case "query":
-        return { ...base, requestType, details: null } as TutorRequest;
+        return {
+          ...base,
+          requestType,
+          details: null,
+        };
     }
   }
 
-  // // Real backend call
-  const res = await axios.get(`/tutor/requests/${id}`);
-  return res.data as TutorRequest;
+  // fallback in case mock disabled
+  throw new Error("Real API not implemented for getRequestById");
+}
+
+export async function postCorrectionRequest(
+  allocationId: string | number,
+  payload: TutorCorrectionPayload,
+) {
+  const res = await axios.post(
+    `/tutor/allocations/${allocationId}/requests/correction`,
+    payload,
+  );
+  return res.data;
 }
 
 // ==========================================================
@@ -161,7 +185,7 @@ export async function submitQueryRequest(
     formData.append("attachment", data.attachment);
   }
 
-  await api.post(
+  await axios.post(
     `/tutor/allocations/${allocationId}/requests/query`,
     formData,
     {

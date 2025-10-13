@@ -406,7 +406,7 @@ export async function PATCH(
              so.session_date, so.start_at, so.end_at, so.note AS note,
              ta.activity_type, ta.activity_name,
              a.status, a.paycode_id, so.activity_id AS allocation_activity_id,
-             ta.mode, a.allocated_hours
+             ta.mode, so.hours
         FROM allocation a
    LEFT JOIN users u             ON u.user_id = a.user_id
    LEFT JOIN session_occurrence so ON so.occurrence_id = a.session_id

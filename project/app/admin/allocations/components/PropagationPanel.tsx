@@ -1,6 +1,7 @@
 // components/admin/PropagationPanel.tsx
 "use client";
 import React from "react";
+import { getActivityOccurrences } from "@/app/services/activityService";
 import {
   OccurrenceRow,
   PropagationPayload,
@@ -26,7 +27,6 @@ export function PropagationPanel({
   );
   const [moveDow, setMoveDow] = React.useState<boolean>(false);
 
-  // Fetch occurrences for this activity
   React.useEffect(() => {
     if (!activityId) {
       setWeeks([]);
@@ -35,13 +35,9 @@ export function PropagationPanel({
     }
     (async () => {
       try {
-        const r = await fetch(
-          `/api/admin/activities/${activityId}/occurrences`,
-        );
-        if (!r.ok) throw new Error("Failed to load occurrences");
-        const data = (await r.json()) as { data: OccurrenceRow[] };
-        setWeeks(data.data || []);
-        setSelected(new Set()); // reset selection on activity change
+        const occurrences = await getActivityOccurrences(activityId);
+        setWeeks(occurrences);
+        setSelected(new Set());
       } catch (e) {
         console.error(e);
         setWeeks([]);

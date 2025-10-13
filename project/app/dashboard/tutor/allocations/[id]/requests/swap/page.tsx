@@ -2,6 +2,8 @@
 
 // pages/swap-request.tsx
 import React, { useEffect, useState } from "react";
+import axios from "axios";
+
 import {
   Container,
   Typography,
@@ -16,12 +18,18 @@ import {
   FormControl,
   Stack,
   CircularProgress,
+  Autocomplete,
 } from "@mui/material";
 
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 
-import type { AllocationDetail } from "@/app/_types/allocations";
+import type { AllocationBase } from "@/app/_types/allocations";
+import { getFormattedAllocationById } from "@/app/services/allocationService";
+import type { TutorAllocationRow } from "@/app/_types/allocations";
+import AllocationDetails from "../../_components/AllocationDetails";
+import { Tutor } from "@/app/_types/tutor";
+import { getTutorsByUnit } from "@/app/services/userService";
 
 const SwapRequestPage = () => {
   const params = useParams<{ id: string }>();
@@ -29,78 +37,58 @@ const SwapRequestPage = () => {
 
   const [swapType, setSwapType] = useState("suggest");
   const [findTutor, setFindTutor] = useState("");
-  const [manualTutor, setManualTutor] = useState("");
+  const [tutors, setTutors] = useState<Tutor[]>([]);
   const [reason, setReason] = useState("");
   const [attachments, setAttachments] = useState<FileList | null>(null);
-  const [allocation, setAllocation] = React.useState<AllocationDetail | null>(
+  const [allocation, setAllocation] = React.useState<AllocationBase | null>(
     null,
   );
+  const [tutAllocation, setTutAllocation] =
+    React.useState<TutorAllocationRow | null>(null);
 
   const [loading, setLoading] = React.useState(true);
   const [err, setErr] = React.useState<string | null>(null);
 
   const router = useRouter();
 
-  //Helper functions
-  function toHHMM(hms?: string | null) {
-    if (!hms) return "—";
-    return hms.slice(0, 5); // assumes "HH:MM:SS"
-  }
-  function toDDMMYYYY(iso?: string | null) {
-    if (!iso) return "—";
-    const d = new Date(iso);
-    if (Number.isNaN(d.getTime())) return "—";
-    const dd = String(d.getUTCDate()).padStart(2, "0");
-    const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-    const yyyy = d.getUTCFullYear();
-    return `${dd}/${mm}/${yyyy}`;
-  }
-
-  // DB status → UI union type normalization
-  type UIStatus = AllocationDetail["status"]; // "Confirmed" | "Pending" | "Cancelled"
-  function normalizeStatus(s?: string | null): UIStatus {
-    const v = (s ?? "").trim().toLowerCase();
-
-    // Treat as Confirmed
-    if (
-      v === "confirmed" ||
-      v === "approved" ||
-      v === "accepted" ||
-      v === "allocated" ||
-      v === "active" ||
-      v === "assigned"
-    ) {
-      return "Confirmed";
-    }
-
-    // Treat as Pending
-    if (
-      v === "pending" ||
-      v === "in_progress" ||
-      v === "requested" ||
-      v.includes("pending") ||
-      v.includes("review") ||
-      v.includes("await")
-    ) {
-      return "Pending";
-    }
-
-    // Fallback
-    return "Cancelled";
-  }
-
-  // ---
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log({
       swapType,
       findTutor,
-      manualTutor,
       reason,
-      attachments,
     });
-    // Here you can send data to your API route
+
+    try {
+      const sessionUser = await axios.get("/api/auth/me", {
+        withCredentials: true,
+      });
+
+      //{requester_id, allocation_id, details, request_reason}
+      const res = await fetch(
+        `/api/tutor/allocations/${encodeURIComponent(id)}/requests/swap`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            requester_id: sessionUser.data.userId,
+            allocation_id: id,
+            details: {
+              ack: true,
+              timing: ">48h",
+              replacement_mode: findTutor,
+              suggested_user_id: 14,
+            }, // Example details; adapt as needed
+            request_reason: reason,
+          }),
+        },
+      );
+    } catch (err) {
+      console.error("Error fetching user data:", err);
+      router.push(`/dashboard/tutor/allocations/${id}?success=false`);
+      return;
+    }
+    router.push(`/dashboard/tutor/allocations/${id}?success=true`);
   };
 
   React.useEffect(() => {
@@ -114,56 +102,17 @@ const SwapRequestPage = () => {
           setErr(null);
         }
 
-        const res = await fetch(
-          `/api/tutor/allocations/${encodeURIComponent(id)}`,
-          { cache: "no-store" },
-        );
-        if (!res.ok) throw new Error(`Failed to fetch allocation ${id}`);
-        const json = await res.json();
+        const mapped = await getFormattedAllocationById(id);
 
-        const a = json.data as {
-          allocation_id: string;
-          unit_code: string | null;
-          unit_name: string | null;
-          status: string | null;
-          session_date: string | null;
-          start_at: string | null;
-          end_at: string | null;
-          location: string | null;
-          activity_name: string | null;
-          note: string | null;
-        };
-
-        const mapped: AllocationDetail = {
-          id: a.allocation_id,
-          courseCode: a.unit_code ?? "—",
-          courseName: a.unit_name ?? "—",
-          status: normalizeStatus(a.status),
-          date: toDDMMYYYY(a.session_date),
-          time:
-            a.start_at || a.end_at
-              ? `${toHHMM(a.start_at)} - ${toHHMM(a.end_at)}`
-              : "—",
-          location: a.location ?? "—",
-          hours:
-            a.start_at && a.end_at
-              ? (() => {
-                  const [sh, sm] = a.start_at.split(":").map(Number);
-                  const [eh, em] = a.end_at.split(":").map(Number);
-                  const start = new Date(0, 0, 0, sh || 0, sm || 0, 0);
-                  const end = new Date(0, 0, 0, eh || 0, em || 0, 0);
-                  let diff =
-                    (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-                  if (diff < 0) diff += 24;
-                  return `${diff.toFixed(2)}h`;
-                })()
-              : "—",
-          session: a.activity_name ?? "—",
-          notes: a.note ?? undefined,
-        };
+        let tutorsForUnit: Tutor[] = [];
+        if (mapped?.unit_code) {
+          tutorsForUnit = await getTutorsByUnit(mapped.unit_code);
+          setTutors(tutorsForUnit);
+        }
 
         if (!cancelled) {
           setAllocation(mapped);
+
           //setRequests([]); // TODO: later wire to /requests
           //setComments([]); // TODO: later wire to /comments
         }
@@ -192,37 +141,21 @@ const SwapRequestPage = () => {
     );
   }
 
+  if (err || !allocation) {
+    return (
+      <Box p={3}>
+        <Typography color="error">{err ?? "Allocation not found"}</Typography>
+      </Box>
+    );
+  }
+
   return (
     <Container maxWidth="sm" sx={{ mt: 4 }}>
       <Typography variant="h4" gutterBottom>
         Swap Request
       </Typography>
 
-      <Paper
-        variant="outlined"
-        sx={{ p: 2, mb: 4, backgroundColor: "#f5f5f5" }}
-      >
-        <Typography variant="subtitle1">
-          {allocation?.courseCode} - {allocation?.courseName}{" "}
-        </Typography>
-        <Typography variant="body2">
-          {allocation?.date} • {allocation?.time} • {allocation?.location} •{" "}
-          {allocation?.hours}
-        </Typography>
-        <Typography
-          variant="body2"
-          sx={{
-            color:
-              allocation?.status === "Confirmed"
-                ? "green"
-                : allocation?.status === "Pending"
-                  ? "orange"
-                  : "red",
-          }}
-        >
-          Status: {allocation?.status}
-        </Typography>
-      </Paper>
+      <AllocationDetails allocation={allocation} />
 
       <form onSubmit={handleSubmit}>
         <FormControl component="fieldset" sx={{ mb: 3 }}>
@@ -244,24 +177,32 @@ const SwapRequestPage = () => {
           </RadioGroup>
         </FormControl>
 
-        <TextField
+        <Autocomplete
           disabled={swapType !== "suggest"}
-          fullWidth
-          label="Find Tutor to Swap With"
-          placeholder="Type a name or email..."
-          value={findTutor}
-          onChange={(e) => setFindTutor(e.target.value)}
-          sx={{ mb: 3 }}
-        />
-
-        <TextField
-          disabled={swapType !== "suggest"}
-          fullWidth
-          label="Or enter tutor name manually"
-          placeholder="Type tutor's full name or email..."
-          value={manualTutor}
-          onChange={(e) => setManualTutor(e.target.value)}
-          sx={{ mb: 3 }}
+          options={tutors}
+          getOptionLabel={(tutor) =>
+            `${tutor.first_name} ${tutor.last_name} (${tutor.email})`
+          }
+          value={
+            tutors.find(
+              (t) =>
+                `${t.first_name} ${t.last_name} (${t.email})` === findTutor,
+            ) || null
+          }
+          onChange={(e, newValue) =>
+            setFindTutor(
+              newValue
+                ? `${newValue.first_name} ${newValue.last_name} (${newValue.email})`
+                : "",
+            )
+          }
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Find Tutor to Swap With"
+              sx={{ mb: 3 }}
+            />
+          )}
         />
 
         <TextField
@@ -274,15 +215,6 @@ const SwapRequestPage = () => {
           onChange={(e) => setReason(e.target.value)}
           sx={{ mb: 3 }}
         />
-
-        <Button variant="outlined" component="label" sx={{ mb: 3 }}>
-          Choose Files
-          <input
-            type="file"
-            hidden
-            onChange={(e) => setAttachments(e.target.files)}
-          />
-        </Button>
 
         <Box display="flex" justifyContent="flex-end" gap={2}>
           <Button
@@ -300,5 +232,4 @@ const SwapRequestPage = () => {
     </Container>
   );
 };
-
 export default SwapRequestPage;

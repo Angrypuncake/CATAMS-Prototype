@@ -2,7 +2,12 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { commitImport, discardImport } from "@/app/services/allocationService";
+import {
+  commitImport,
+  discardImport,
+  getPreview,
+} from "@/app/services/allocationService";
+import type { PreviewResponse } from "@/app/_types/allocations";
 
 /** ---------- Types ---------- */
 type TimetableRow = {
@@ -18,14 +23,7 @@ type TimetableRow = {
   total_hours: number | null;
 };
 
-type PreviewPayload = {
-  stagingId: number;
-  preview: {
-    raw: unknown[];
-    issues: Record<string, number>;
-    timetable: TimetableRow[];
-  };
-};
+type PreviewPayload = PreviewResponse;
 
 type ErrorResponse = { error: string };
 type CommitResponse = { inserted: unknown };
@@ -196,28 +194,12 @@ export default function PreviewPage() {
   useEffect(() => {
     if (!id || Number.isNaN(id)) return;
     const ctrl = new AbortController();
+
     const run = async () => {
       setLoading(true);
       setMsg("");
       try {
-        const res = await fetch(`/api/admin/preview?stagingId=${id}`, {
-          cache: "no-store",
-          signal: ctrl.signal,
-        });
-        const ct = res.headers.get("content-type") || "";
-        const payload: unknown = ct.includes("application/json")
-          ? await res.json()
-          : await res.text();
-
-        if (!res.ok) {
-          const message =
-            typeof payload === "string"
-              ? payload
-              : hasError(payload)
-                ? payload.error
-                : "Failed to load preview";
-          throw new Error(message);
-        }
+        const payload = await getPreview(id, ctrl.signal);
 
         if (mountedRef.current) {
           if (isPreviewPayload(payload)) {
@@ -228,12 +210,14 @@ export default function PreviewPage() {
         }
       } catch (e: unknown) {
         const m = e instanceof Error ? e.message : String(e);
-        if (m !== "AbortError" && mountedRef.current)
+        if (m !== "AbortError" && mountedRef.current) {
           setMsg(m || "Failed to load preview");
+        }
       } finally {
         if (mountedRef.current) setLoading(false);
       }
     };
+
     run();
     return () => ctrl.abort();
   }, [id]);
@@ -260,14 +244,13 @@ export default function PreviewPage() {
     return a > b ? 1 : -1;
   }
 
-  // scrub invalid time rows once here so all views are safer
   const cleanTimetable: TimetableRow[] = useMemo(() => {
     if (!data) return [];
-    return data.preview.timetable.filter(
-      (r) =>
-        Number.isFinite(timeToMinutes(r.start_time)) &&
-        Number.isFinite(timeToMinutes(r.end_time)),
-    );
+    return (data.preview.timetable || []).filter((r: TimetableRow) => {
+      const startTime = timeToMinutes(r.start_time);
+      const endTime = timeToMinutes(r.end_time);
+      return Number.isFinite(startTime) && Number.isFinite(endTime);
+    });
   }, [data]);
 
   const filteredTimetable = useMemo<TimetableRow[]>(() => {

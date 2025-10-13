@@ -1,4 +1,3 @@
-// app/dashboard/tutor/allocations/[id]/cancel/page.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -13,38 +12,45 @@ import {
   TextField,
   Button,
   Box,
-  MenuItem,
   Autocomplete,
-  Checkbox,
   Stack,
   CircularProgress,
 } from "@mui/material";
 import { useParams, useRouter } from "next/navigation";
 
+// --- Services ---
 import { getFormattedAllocationById } from "@/app/services/allocationService";
 import { getTutorsByUnit } from "@/app/services/userService";
+import { createRequestService } from "@/app/services/requestService";
+
+// --- Types ---
 import { TutorAllocationRow } from "@/app/_types/allocations";
 import { Tutor } from "@/app/_types/tutor";
 import AllocationDetails from "../../_components/AllocationDetails";
 
-const CancelRequestPage = () => {
+export default function CancelRequestPage() {
   const params = useParams<{ id: string }>();
   const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
   const router = useRouter();
 
+  // --- Data state ---
   const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
 
+  // --- Form state ---
   const [cancelType, setCancelType] = useState<"suggest" | "coordinator">(
     "suggest",
   );
-  const [findTutor, setFindTutor] = useState("");
+  const [selectedTutor, setSelectedTutor] = useState<Tutor | null>(null);
   const [reason, setReason] = useState("");
-  const [timing, setTiming] = useState(">48h");
-  const [ack, setAck] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
+  /** ============================
+   *  Load allocation + tutors
+   *  ============================ */
   useEffect(() => {
     if (!id) return;
     let cancelled = false;
@@ -56,15 +62,15 @@ const CancelRequestPage = () => {
           setErr(null);
         }
 
-        const mapped = await getFormattedAllocationById(id);
+        const alloc = await getFormattedAllocationById(id);
         let tutorsForUnit: Tutor[] = [];
 
-        if (mapped?.unit_code) {
-          tutorsForUnit = await getTutorsByUnit(mapped.unit_code);
+        if (alloc?.unit_code) {
+          tutorsForUnit = await getTutorsByUnit(alloc.unit_code);
         }
 
         if (!cancelled) {
-          setAllocation(mapped);
+          setAllocation(alloc);
           setTutors(tutorsForUnit);
         }
       } catch (e: unknown) {
@@ -81,19 +87,76 @@ const CancelRequestPage = () => {
     };
   }, [id]);
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log({
-      cancelType,
-      findTutor,
-      reason,
-      timing,
-      acknowledge: ack,
-      allocationId: id,
-    });
-    // TODO: integrate with /api/tutor/cancel when ready
-  };
+  /** ============================
+   *  Fetch current user (from headers)
+   *  ============================ */
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (!res.ok) throw new Error("Failed to get user");
+        const data = await res.json();
+        console.log("Current user:", data);
+        setUserId(data.userId);
+      } catch (err) {
+        console.error(err);
+      }
+    }
 
+    fetchUser();
+  }, []);
+
+  /** ============================
+   *  Submit handler
+   *  ============================ */
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    // --- Validation ---
+    if (!reason.trim()) {
+      alert("Please provide a reason for cancellation.");
+      return;
+    }
+    if (!allocation) {
+      alert("Missing allocation data.");
+      return;
+    }
+    if (!userId) {
+      alert("Could not resolve user ID. Please re-login.");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const payload = {
+        requesterId: Number(userId),
+        allocationId: Number(allocation.id),
+        requestType: "cancellation" as const,
+        requestReason: reason,
+        details: {
+          suggestedUserId:
+            cancelType === "suggest" ? (selectedTutor?.user_id ?? null) : null,
+        },
+      };
+
+      const response = await createRequestService(payload);
+      console.log("Cancellation request created:", response);
+
+      // Optional: toast / snackbar notification
+      // enqueueSnackbar("Cancellation submitted successfully", { variant: "success" });
+
+      router.push(`/dashboard/tutor/allocations/${allocation.id}`);
+    } catch (err) {
+      console.error("Failed to submit cancellation:", err);
+      alert("Failed to submit cancellation request. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+  /** ============================
+   *  Render
+   *  ============================ */
   if (loading) {
     return (
       <Box sx={{ p: 3, maxWidth: 960, mx: "auto" }}>
@@ -164,19 +227,8 @@ const CancelRequestPage = () => {
           getOptionLabel={(tutor) =>
             `${tutor.first_name} ${tutor.last_name} (${tutor.email})`
           }
-          value={
-            tutors.find(
-              (t) =>
-                `${t.first_name} ${t.last_name} (${t.email})` === findTutor,
-            ) || null
-          }
-          onChange={(e, newValue) =>
-            setFindTutor(
-              newValue
-                ? `${newValue.first_name} ${newValue.last_name} (${newValue.email})`
-                : "",
-            )
-          }
+          value={selectedTutor}
+          onChange={(e, newValue) => setSelectedTutor(newValue)}
           renderInput={(params) => (
             <TextField
               {...params}
@@ -184,18 +236,6 @@ const CancelRequestPage = () => {
               sx={{ mb: 3 }}
             />
           )}
-        />
-
-        {/* Acknowledgement */}
-        <FormControlLabel
-          control={
-            <Checkbox
-              checked={ack}
-              onChange={(e) => setAck(e.target.checked)}
-            />
-          }
-          label="I understand this cancellation may impact coordination and scheduling."
-          sx={{ mb: 3 }}
         />
 
         {/* Actions */}
@@ -207,13 +247,16 @@ const CancelRequestPage = () => {
           >
             Cancel
           </Button>
-          <Button variant="contained" color="primary" type="submit">
-            Submit Cancellation
+          <Button
+            variant="contained"
+            color="primary"
+            type="submit"
+            disabled={submitting}
+          >
+            {submitting ? "Submitting..." : "Submit Cancellation"}
           </Button>
         </Box>
       </form>
     </Container>
   );
-};
-
-export default CancelRequestPage;
+}

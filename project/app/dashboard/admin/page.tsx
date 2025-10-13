@@ -11,7 +11,6 @@ import {
 import DynamicTable from "../../../components/DynamicTable/DynamicTable";
 import AdminInfoBox from "./AdminInfoBox";
 import AdminBudgetBox from "./AdminBudgetBox";
-import AdminPagination from "./AdminPagination";
 import axios from "axios";
 
 // Allow non-primitives in rows (arrays/objects)
@@ -76,7 +75,6 @@ const AdminDashboard = () => {
     numUsers: 0,
     numAllocations: 0,
   });
-  const [tutorPage, setTutorPage] = useState(1);
   const [tutorRows, setTutorRows] = useState<TableRowData[]>([]);
   const [tutorTotal, setTutorTotal] = useState(0);
   const [historyRows, setHistoryRows] = useState<HistoryState>({
@@ -87,7 +85,6 @@ const AdminDashboard = () => {
     staged: 0,
     runs: 0,
   });
-  const [historyPage, setHistoryPage] = useState(1);
   const [alignment, setAlignment] = React.useState<"staged" | "runs">("staged");
 
   const handleChange = (
@@ -96,7 +93,6 @@ const AdminDashboard = () => {
   ) => {
     if (!next) return;
     setAlignment(next);
-    setHistoryPage(1);
   };
 
   const loadOverview = useCallback(async () => {
@@ -206,12 +202,6 @@ const AdminDashboard = () => {
               <Typography variant="subtitle1">
                 User & Role Management
               </Typography>
-              <AdminPagination
-                page={tutorPage}
-                setPage={setTutorPage}
-                itemTotal={tutorTotal}
-                itemLimit={4}
-              />
             </div>
 
             <DynamicTable
@@ -281,16 +271,6 @@ const AdminDashboard = () => {
                   <ToggleButton value="runs">Runs</ToggleButton>
                 </ToggleButtonGroup>
               </div>
-              <AdminPagination
-                page={historyPage}
-                setPage={setHistoryPage}
-                itemTotal={
-                  alignment === "staged"
-                    ? historyTotals.staged
-                    : historyTotals.runs
-                }
-                itemLimit={5}
-              />
             </div>
 
             <DynamicTable

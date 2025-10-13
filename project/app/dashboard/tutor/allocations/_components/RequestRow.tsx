@@ -1,8 +1,30 @@
 "use client";
 import { Button, Divider, Stack, Typography } from "@mui/material";
-import type { RequestItem } from "@/app/_types/allocations";
+import { format } from "date-fns"; // optional, for nice date formatting
 
-export default function RequestRow({ req }: { req: RequestItem }) {
+type RequestRowProps = {
+  req: {
+    requestId: number;
+    requestType: string;
+    requestStatus: string;
+    requestReason?: string | null;
+    createdAt?: string;
+  };
+};
+
+export default function RequestRow({ req }: RequestRowProps) {
+  // Optional: pretty date formatting
+  const formattedDate = req.createdAt
+    ? format(new Date(req.createdAt), "dd MMM yyyy")
+    : "";
+
+  // Optional: make statuses more readable
+  const statusLabel = req.requestStatus
+    .replace("pending_uc", "Pending (UC)")
+    .replace("pending_ta", "Pending (TA)")
+    .replace("_", " ")
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+
   return (
     <Stack
       direction={{ xs: "column", sm: "row" }}
@@ -15,27 +37,40 @@ export default function RequestRow({ req }: { req: RequestItem }) {
         borderRadius: 1.5,
       }}
     >
-      <Typography variant="body2" sx={{ minWidth: 56 }}>
-        #{req.id}
+      {/* Request ID */}
+      <Typography variant="body2" sx={{ minWidth: 56, fontWeight: 500 }}>
+        #{req.requestId}
       </Typography>
+
       <Divider
         orientation="vertical"
         flexItem
         sx={{ display: { xs: "none", sm: "block" } }}
       />
-      <Typography variant="body2" sx={{ minWidth: 90 }}>
-        {req.type}
+
+      {/* Request Type */}
+      <Typography
+        variant="body2"
+        sx={{ minWidth: 100, textTransform: "capitalize" }}
+      >
+        {req.requestType}
       </Typography>
+
       <Divider
         orientation="vertical"
         flexItem
         sx={{ display: { xs: "none", sm: "block" } }}
       />
+
+      {/* Status */}
       <Typography variant="body2" sx={{ color: "text.secondary", flexGrow: 1 }}>
-        {req.state}
+        {statusLabel}
+        {formattedDate && ` • ${formattedDate}`}
       </Typography>
+
+      {/* View/Edit Button */}
       <Button size="small" variant="outlined">
-        View/Edit Request
+        View / Edit
       </Button>
     </Stack>
   );

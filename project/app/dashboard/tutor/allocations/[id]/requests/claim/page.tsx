@@ -6,8 +6,13 @@ import { TutorAllocationRow } from "@/app/_types/allocations";
 import { useParams } from "next/navigation";
 import { getPaycodes } from "@/app/services/paycodeService";
 import { Paycode } from "@/app/_types/paycode";
+import { createClaim } from "@/app/services/claimService";
+import { CreateClaimPayload } from "@/app/_types/claim";
+import { getUserFromAuth } from "@/app/services/authService";
+import { useRouter } from "next/navigation";
 
 export default function ClaimForm() {
+  const router = useRouter();
   const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
   const [systemHours, setSystemHours] = useState<number>(0);
   const [hours, setHours] = useState<number>(0);
@@ -16,6 +21,7 @@ export default function ClaimForm() {
   const [error, setError] = useState("");
   const params = useParams<{ id: string }>();
   const allocationId = Array.isArray(params?.id) ? params.id[0] : params?.id;
+  const [userId, setUserId] = useState(0);
 
   const [paycodes, setPaycodes] = useState<Paycode[]>([]);
 
@@ -26,11 +32,14 @@ export default function ClaimForm() {
         getPaycodes(),
       ]);
 
+      const { userId } = await getUserFromAuth();
+
       setAllocation(allocData);
       setSystemHours(Number(allocData.hours ?? 0));
       setHours(Number(allocData.hours ?? 0));
       setPayCode(allocData.paycode_id ?? "");
       setPaycodes(paycodeList);
+      setUserId(userId);
     })();
   }, [allocationId]);
 
@@ -38,14 +47,29 @@ export default function ClaimForm() {
   const hoursChanged = hours != systemHours;
   const paycodeChanged = payCode !== allocation.paycode_id;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if ((paycodeChanged || hoursChanged) && !comment.trim()) {
       setError("Comment required when claimed hours or pay code differ");
       return;
     }
 
     setError("");
-    alert("Claim submitted");
+
+    const payload: CreateClaimPayload = {
+      allocation_id: Number(allocationId), // ensure numeric
+      requester_id: userId,
+      paycode: payCode,
+      claimed_hours: hours, // ← use the current edited hours, not systemHours
+    };
+
+    try {
+      await createClaim(payload);
+      alert("Claim submitted");
+      router.push(`/dashboard/tutor/allocations/${allocationId}`);
+    } catch (err: unknown) {
+      console.error("Claim submission failed:", err);
+      setError("Failed to submit claim. Please try again.");
+    }
   };
 
   return (

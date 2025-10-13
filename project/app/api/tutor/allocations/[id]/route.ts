@@ -30,6 +30,8 @@ export async function GET(
       a.status,
       so.location,
       so.note,
+      so.description,
+      so.hours,
       a.paycode_id
     FROM allocation a
     LEFT JOIN users u ON u.user_id = a.user_id

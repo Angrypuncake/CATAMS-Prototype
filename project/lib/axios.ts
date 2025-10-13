@@ -22,14 +22,35 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    console.error("API Error:", {
-      url: error.config?.url,
-      method: error.config?.method,
-      status: error.response?.status,
-      data: error.response?.data,
+    const isAxiosError = !!error.isAxiosError;
+
+    const details = {
       message: error.message,
-    });
-    return Promise.reject(error); // keep the error for the caller
+      url: error.config?.url ?? "(no URL)",
+      method: error.config?.method ?? "(no method)",
+      status: error.response?.status ?? "(no status)",
+      data: error.response?.data ?? "(no response data)",
+      stack: process.env.NODE_ENV === "development" ? error.stack : undefined,
+      axios: isAxiosError,
+    };
+
+    console.groupCollapsed(
+      `%c[API ERROR] ${details.method?.toUpperCase()} ${details.url}`,
+      "color: #ff4d4d; font-weight: bold;",
+    );
+    try {
+      console.error(JSON.stringify(details, null, 2));
+    } catch {
+      console.error("Non-serializable error details:", {
+        message: error.message,
+        url: error.config?.url,
+        method: error.config?.method,
+        status: error.response?.status,
+      });
+    }
+    console.groupEnd();
+    // You can optionally normalize or rethrow custom error object
+    return Promise.reject(error);
   },
 );
 

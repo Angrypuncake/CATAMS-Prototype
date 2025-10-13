@@ -7,37 +7,9 @@ import UnitBudgetOverviewTable from "./UnitBudgetOverviewTable";
 import CoordinatorApprovalTable from "./CoordinatorApprovalTable";
 import AlertBox from "@/components/AlertBox";
 import Link from "next/link";
-import axios from "axios";
-
-const pendingRequests = [
-  {
-    requestID: "REQ001",
-    type: "Swap",
-    relatedSession: "CS101 - 2025-09-10 2:00 PM",
-    status: "Pending",
-    creator: "John Doe",
-    creatorRole: "Tutor",
-    user_id: 123,
-  },
-  {
-    requestID: "REQ003",
-    type: "Swap",
-    relatedSession: "BIO105 - 2025-09-14 1:00 PM",
-    status: "Pending",
-    creator: "Jane Smith",
-    creatorRole: "TA",
-    user_id: 456,
-  },
-  {
-    requestID: "REQ005",
-    type: "Swap",
-    relatedSession: "PHYS110 - 2025-09-13 10:00 AM",
-    status: "Pending",
-    creator: "Alice Johnson",
-    creatorRole: "Tutor",
-    user_id: 789,
-  },
-];
+import { pendingRequests } from "./mock";
+import { getUnitBudgetOverviews } from "@/app/services/budgetService";
+import { getCurrentYearAndSession } from "@/app/utils/dateHelpers";
 
 const Page = () => {
   // State for dropdown
@@ -47,17 +19,14 @@ const Page = () => {
 
   async function fetchBudgetOverview() {
     try {
-      const { data: json } = await axios.get<CoordinatorBudgetOverview>(
-        `/api/uc/overview`,
-        {
-          params: { year: 2025, session: "S2", threshold },
-        },
-      );
-      setData(json);
-    } catch (e: unknown) {
+      const { year, session } = getCurrentYearAndSession();
+      const overview = await getUnitBudgetOverviews(year, session, threshold);
+      setData(overview);
+    } catch (e) {
       console.error("Failed to load budget overview:", e);
     }
   }
+
   useEffect(() => {
     fetchBudgetOverview();
   }, []);

@@ -148,9 +148,9 @@ const AllocationQuickviewModal: React.FC<AllocationQuickviewModalProps> = ({
           )}
 
           {/* All statuses → Create Request */}
-          <Button variant="outlined" onClick={() => setOpen(false)}>
+          {/* <Button variant="outlined" onClick={() => setOpen(false)}>
             Create Request
-          </Button>
+          </Button> */}
 
           {/* All statuses → View details */}
           <Button

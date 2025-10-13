@@ -6,7 +6,7 @@
 import { useState } from "react";
 
 import { Tutor } from "@/app/_types/tutor";
-import { TutorAllocationRow as Allocation } from "@/app/_types/allocations";
+import { TutorAllocationRow } from "@/app/_types/allocations";
 
 // Import all your service functions here
 import {
@@ -28,10 +28,10 @@ import UserServiceTester from "./components/UserServiceTester";
 export default function ServicesTestPage() {
   // --- 1️⃣ Local React state variables ---
   // These hold data from your API calls or any errors/loading info.
-  const [tutorAllocationData, setTutorAllocationData] = useState<Allocation[]>(
-    [],
-  );
-  const [unitData, setUnitData] = useState<Allocation[]>([]);
+  const [tutorAllocationData, setTutorAllocationData] = useState<
+    TutorAllocationRow[]
+  >([]);
+  const [unitData, setUnitData] = useState<TutorAllocationRow[]>([]);
   const [tutorData, setTutorData] = useState<Tutor[]>([]);
   const [requestData, setRequestData] = useState<TutorRequest | null>(null);
   const [singleTutorData, setSingleTutorData] = useState<Tutor | null>(null);
@@ -45,7 +45,7 @@ export default function ServicesTestPage() {
   // --- 3 Example function: test getTutorAllocations() ---
   const handleFetchTutorAllocations = async () => {
     const data = await getTutorAllocations(userId);
-    setTutorAllocationData(data);
+    setTutorAllocationData(data.data);
   };
 
   // --- 4 Example function: test getAllocationsByUnit() ---

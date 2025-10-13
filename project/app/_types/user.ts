@@ -4,3 +4,9 @@ export interface User {
   last_name: string;
   email: string;
 }
+
+export interface CurrentUser {
+  userId: number;
+  email: string;
+  roles: string[];
+}

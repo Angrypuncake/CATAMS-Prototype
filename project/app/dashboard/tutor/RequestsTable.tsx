@@ -13,8 +13,9 @@ import {
 } from "@mui/material";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
-import type { RequestRow, SortableColumns } from "./types";
+import type { SortableColumns } from "./types";
 import StyledButton from "./StyledButton";
+import { RequestRow } from "@/app/_types/request";
 
 interface RequestsTableProps {
   requests: RequestRow[];
@@ -64,7 +65,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({
           <TableBody>
             {requests.map((row, index) => (
               <TableRow key={index}>
-                <TableCell>{row.requestID}</TableCell>
+                <TableCell>{row.requestId}</TableCell>
                 <TableCell>{row.type}</TableCell>
                 <TableCell>{row.relatedSession}</TableCell>
                 <TableCell>{row.status}</TableCell>

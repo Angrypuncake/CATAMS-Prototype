@@ -19,6 +19,21 @@ export async function getTutorsByUnit(unitCode: string): Promise<Tutor[]> {
   return res.data.data as Tutor[];
 }
 
+export async function getAdminOverview() {
+  const res = await axios.get("/admin/overview");
+  return res.data;
+}
+
+export async function getBudgetOverview(
+  year: number,
+  session: string,
+  threshold: number,
+) {
+  const res = await axios.get("/uc/overview", {
+    params: { year, session, threshold },
+  });
+  return res.data;
+}
 export async function getTutorById(id: string | number): Promise<Tutor> {
   const res = await axios.get(`/admin/tutors/${id}`);
   return res.data.data as Tutor;
@@ -41,7 +56,14 @@ export async function getUserUnits(id: number) {
   const res = await axios.get(`/users/${id}/units`);
   return res.data.data;
 }
-
+interface RawCoordinatorUnit {
+  offering_id: number;
+}
+// Get all of the units that the currently logged in user is a unit coordinator in
+export async function getCoordinatorUnits(): Promise<RawCoordinatorUnit[]> {
+  const res = await axios.get(`/uc/units`);
+  return res.data.data;
+}
 /**
  * Fetches users with optional search and filtering.
  *

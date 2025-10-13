@@ -34,6 +34,7 @@ function DynamicTable<T = Record<string, unknown>>({
   enablePagination = true,
   rowsPerPageOptions = [5, 10, 25, 50],
   defaultRowsPerPage = 5,
+  totalCount,
 }: DynamicTableProps<T>) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(defaultRowsPerPage);
@@ -190,7 +191,7 @@ function DynamicTable<T = Record<string, unknown>>({
         <TablePagination
           rowsPerPageOptions={rowsPerPageOptions}
           component="div"
-          count={sortedRows.length}
+          count={totalCount ?? 0}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}

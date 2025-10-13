@@ -42,4 +42,5 @@ export type DynamicTableProps<T = Record<string, unknown>> = {
   enablePagination?: boolean;
   rowsPerPageOptions?: number[];
   defaultRowsPerPage?: number;
+  totalCount?: number;
 };

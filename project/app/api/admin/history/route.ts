@@ -7,8 +7,10 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(Number(url.searchParams.get("limit") || 50), 200);
 
     // ---- STAGED BATCHES (not yet committed/discarded) ----
-    const { rows: staged } = await query(
-      `
+    const [stagedResult, stagedCountResult, runsResult, runsCountResult] =
+      await Promise.all([
+        query(
+          `
       SELECT
         b.batch_id,
         b.created_at,
@@ -26,13 +28,17 @@ export async function GET(req: NextRequest) {
       ORDER BY b.batch_id DESC
       LIMIT $1
       `,
-      [limit],
-    );
-
-    // ---- RECENT RUNS (commit/rollback history) ----
-    // import_run itself doesn’t have a creator; use the batch’s creator as "by"
-    const { rows: runs } = await query(
-      `
+          [limit],
+        ),
+        query(
+          `
+      SELECT COUNT(*)::int AS total
+      FROM public.import_batch
+      WHERE status = 'staged'
+      `,
+        ),
+        query(
+          `
       SELECT
         r.run_id,
         r.batch_id,
@@ -53,10 +59,22 @@ export async function GET(req: NextRequest) {
       ORDER BY r.run_id DESC
       LIMIT $1
       `,
-      [limit],
-    );
+          [limit],
+        ),
+        query(
+          `
+      SELECT COUNT(*)::int AS total
+      FROM public.import_run
+      `,
+        ),
+      ]);
 
-    return NextResponse.json({ staged, runs });
+    return NextResponse.json({
+      staged: stagedResult.rows,
+      stagedTotal: Number(stagedCountResult.rows[0].total),
+      runs: runsResult.rows,
+      runsTotal: Number(runsCountResult.rows[0].total),
+    });
   } catch (e) {
     console.error("history error", e);
     return NextResponse.json(

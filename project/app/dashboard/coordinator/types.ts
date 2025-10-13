@@ -5,7 +5,8 @@ export interface UnitBudgetRow {
   year: number;
   session: string;
   budget: number;
-  spent: number;
+  allocated: number;
+  claimed: number;
   pctUsed: number;
   variance: number;
 }

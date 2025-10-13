@@ -1,8 +1,5 @@
 import type {
-  ClaimDetails,
-  CorrectionDetails,
-  EmptyDetails,
-  SwapDetails,
+  CreateRequestPayload,
   TutorCorrectionPayload,
   TutorRequest,
 } from "@/app/_types/request";
@@ -62,8 +59,6 @@ export async function getRequestById(id: string): Promise<TutorRequest> {
             location: "Room 302, Engineering Building",
             hours: "2",
             session_type: "Tutorial",
-            justification:
-              "Adjusted session time after timetable update and room change.",
           },
         };
 
@@ -91,28 +86,6 @@ export async function postCorrectionRequest(
   );
   return res.data;
 }
-
-export type RequestType = TutorRequest["requestType"];
-
-export interface CancellationDetails {
-  suggestedUserId: number | null;
-}
-
-export type RequestDetailsMap = {
-  claim: ClaimDetails;
-  swap: SwapDetails;
-  correction: CorrectionDetails;
-  cancellation: CancellationDetails;
-  query: EmptyDetails;
-};
-
-export type CreateRequestPayload<T extends RequestType = RequestType> = {
-  requesterId: number;
-  allocationId: number;
-  requestType: T;
-  requestReason?: string | null;
-  details: RequestDetailsMap[T];
-};
 
 export async function createRequestService(payload: CreateRequestPayload) {
   const res = await axios.post("/requests", payload);

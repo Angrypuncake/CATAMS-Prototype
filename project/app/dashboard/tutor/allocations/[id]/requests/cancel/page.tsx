@@ -38,6 +38,7 @@ export default function CancelRequestPage() {
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // --- Form state ---
   const [cancelType, setCancelType] = useState<"suggest" | "coordinator">(
@@ -46,7 +47,6 @@ export default function CancelRequestPage() {
   const [selectedTutor, setSelectedTutor] = useState<Tutor | null>(null);
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
 
   /** ============================
    *  Load allocation + tutors

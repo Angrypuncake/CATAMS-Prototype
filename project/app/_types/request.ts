@@ -1,6 +1,5 @@
 // types/request.ts
 
-export type RequestType = "swap" | "correction" | "cancellation" | "general";
 export type RequestStatus =
   | "pending"
   | "approved"
@@ -25,7 +24,6 @@ export type CorrectionDetails = {
   location: string;
   hours: string;
   session_type: string;
-  justification: string;
 };
 
 // Cancellation and Query have no fields
@@ -57,4 +55,26 @@ export type TutorCorrectionPayload = Extract<
   { requestType: "correction" }
 >["details"] & {
   allocation_id: string | number;
+};
+
+export type RequestType = TutorRequest["requestType"];
+
+export interface CancellationDetails {
+  suggestedUserId: number | null;
+}
+
+export type RequestDetailsMap = {
+  claim: ClaimDetails;
+  swap: SwapDetails;
+  correction: CorrectionDetails;
+  cancellation: CancellationDetails;
+  query: EmptyDetails;
+};
+
+export type CreateRequestPayload<T extends RequestType = RequestType> = {
+  requesterId: number;
+  allocationId: number;
+  requestType: T;
+  requestReason?: string | null;
+  details: RequestDetailsMap[T];
 };

@@ -74,8 +74,6 @@ const SwapRequestPage = () => {
             requester_id: sessionUser.data.userId,
             allocation_id: id,
             details: {
-              ack: true,
-              timing: ">48h",
               replacement_mode: findTutor,
               suggested_user_id: 14,
             }, // Example details; adapt as needed
@@ -91,7 +89,7 @@ const SwapRequestPage = () => {
     router.push(`/dashboard/tutor/allocations/${id}?success=true`);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (!id) return; // wait until router provides id
     let cancelled = false;
 

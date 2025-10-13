@@ -24,9 +24,9 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { getAllocationById } from "@/app/services/allocationService";
 import { TutorAllocationRow } from "@/app/_types/allocations";
-import { postCorrectionRequest } from "@/app/services/requestService"; // new service wrapper
-import { TutorCorrectionPayload } from "@/app/_types/request";
 import { Tooltip } from "@mui/material";
+import { CreateRequestPayload } from "@/app/_types/request";
+import { createRequestService } from "@/app/services/requestService";
 
 export default function CorrectionRequestPage() {
   const router = useRouter();
@@ -37,6 +37,7 @@ export default function CorrectionRequestPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   /** Correction toggles + input state */
   const [corrections, setCorrections] = useState({
@@ -80,6 +81,24 @@ export default function CorrectionRequestPage() {
       d.getMonth() + 1,
     ).padStart(2, "0")}-${d.getFullYear()}`;
   };
+
+  // Fetch the current logged in user
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch("/api/auth/me");
+        if (!res.ok) throw new Error("Failed to get user");
+        const data = await res.json();
+        console.log("Current user:", data);
+        setUserId(data.userId);
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    fetchUser();
+  }, []);
 
   /** Fetch allocation */
   useEffect(() => {
@@ -125,32 +144,37 @@ export default function CorrectionRequestPage() {
     setCorrections((prev) => ({ ...prev, [key]: checked }));
   };
 
-  /** Submit handler */
   const handleSubmit = async () => {
     if (!form.justification.trim()) {
       setError("Please provide a justification before submitting.");
       return;
     }
 
-    if (!allocationId || !allocation) return;
+    if (!allocationId || !allocation || !userId) return;
 
-    const payload: TutorCorrectionPayload = {
-      allocation_id: allocationId,
-      date: corrections.date ? form.date : (allocation.session_date ?? ""),
-      start_at: corrections.time ? form.startTime : (allocation.start_at ?? ""),
-      end_at: corrections.time ? form.endTime : (allocation.end_at ?? ""),
-      location: corrections.location
-        ? form.location
-        : (allocation.location ?? ""),
-      hours: corrections.hours ? form.hours : String(allocation.hours ?? ""),
-      session_type: corrections.session
-        ? form.session
-        : (allocation.activity_type ?? ""),
-      justification: form.justification.trim(),
+    const payload: CreateRequestPayload<"correction"> = {
+      requesterId: Number(userId),
+      allocationId,
+      requestType: "correction",
+      requestReason: form.justification.trim(),
+      details: {
+        date: corrections.date ? form.date : (allocation.session_date ?? ""),
+        start_at: corrections.time
+          ? form.startTime
+          : (allocation.start_at ?? ""),
+        end_at: corrections.time ? form.endTime : (allocation.end_at ?? ""),
+        location: corrections.location
+          ? form.location
+          : (allocation.location ?? ""),
+        hours: corrections.hours ? form.hours : String(allocation.hours ?? ""),
+        session_type: corrections.session
+          ? form.session
+          : (allocation.activity_type ?? ""),
+      },
     };
 
     try {
-      await postCorrectionRequest(allocationId, payload);
+      await createRequestService(payload);
       setSuccess(true);
       setTimeout(() => router.back(), 2000);
     } catch (e) {

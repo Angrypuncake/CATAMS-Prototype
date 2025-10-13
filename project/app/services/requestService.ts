@@ -187,4 +187,7 @@ export async function createRequestService(payload: CreateRequestPayload) {
  * for a unified and maintainable workflow.
  */
 
-//query request for an allocation
+/**
+ * Fetches all open requests for a specific allocation.
+ * Returns an array of open request types (e.g. ["query", "swap"]).
+ */

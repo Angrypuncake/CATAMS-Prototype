@@ -93,3 +93,53 @@ export async function POST(req: Request) {
     );
   }
 }
+
+// Define which statuses count as "open"
+
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const allocationId = searchParams.get("allocationId");
+    const requesterId = req.headers.get("x-user-id"); // optional filtering
+
+    if (!allocationId) {
+      return NextResponse.json(
+        { error: "Missing allocationId query parameter" },
+        { status: 400 },
+      );
+    }
+
+    // Define which statuses count as "open"
+    const OPEN_STATUSES = ["pending_uc", "pending_ta"];
+
+    // Base SQL
+    let sql = `
+      SELECT request_id, requester_id, allocation_id, request_type, request_status, request_reason, created_at
+      FROM request
+      WHERE allocation_id = $1
+        AND request_status = ANY($2)
+    `;
+    const params: (string | readonly string[])[] = [
+      allocationId,
+      OPEN_STATUSES,
+    ];
+
+    // Optionally scope to current user (frontend header: x-user-id)
+    if (requesterId) {
+      sql += " AND requester_id = $3";
+      params.push(requesterId);
+    }
+
+    sql += " ORDER BY created_at DESC";
+
+    const { rows } = await query(sql, params);
+
+    return NextResponse.json({ data: rows });
+  } catch (error) {
+    console.error("Error fetching open requests:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
+  }
+}

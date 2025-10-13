@@ -191,15 +191,50 @@ export async function createRequestService(payload: CreateRequestPayload) {
  * Fetches all open requests for a specific allocation.
  * Returns an array of open request types (e.g. ["query", "swap"]).
  */
+export interface RawRequestRow {
+  request_id: number;
+  requester_id: number;
+  allocation_id: number;
+  request_type: string | null;
+  request_status: string;
+  request_reason: string | null;
+  created_at: string;
+}
+
 export async function getOpenRequestTypes(
   allocationId: number,
 ): Promise<string[]> {
-  const response = await axios.get<{ data: TutorRequest[] }>(
+  const response = await axios.get<{ data: RawRequestRow[] }>(
     `/requests?allocationId=${allocationId}`,
   );
-  // Extract unique request types (case-insensitive)
+
   const openTypes = Array.from(
-    new Set(response.data.data.map((r) => r.requestType.toLowerCase())),
+    new Set(
+      response.data.data
+        .map((r) => r.request_type?.toLowerCase())
+        .filter((v): v is string => Boolean(v)),
+    ),
   );
+
   return openTypes;
+}
+
+/**
+ * Fetch all requests for a given allocation.
+ * Optionally filters to a specific user if the backend reads x-user-id.
+ */
+export async function getRequestsByAllocation(
+  allocationId: number,
+  userId?: number,
+): Promise<TutorRequest[]> {
+  const config = userId
+    ? { headers: { "x-user-id": String(userId) } }
+    : undefined;
+
+  const response = await axios.get<{ data: TutorRequest[] }>(
+    `/requests?allocationId=${allocationId}`,
+    config,
+  );
+
+  return response.data.data;
 }

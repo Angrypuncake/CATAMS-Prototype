@@ -32,6 +32,7 @@ import type {
 import { useRouter } from "next/navigation";
 import { getFormattedAllocationById } from "@/app/services/allocationService";
 import AllocationDetails from "./_components/AllocationDetails";
+import { getOpenRequestTypes } from "@/app/services/requestService";
 
 // DB status → UI union type normalization
 // type UIStatus = AllocationDetail["status"]; // "Confirmed" | "Pending" | "Cancelled"
@@ -55,6 +56,8 @@ export default function AllocationPage() {
   const [err, setErr] = React.useState<string | null>(null);
   const [requestToast, setRequestToast] = React.useState(false);
   const searchParams = useSearchParams();
+  const [openRequestTypes, setOpenRequestTypes] = React.useState<string[]>([]);
+  const [loadingRequests, setLoadingRequests] = React.useState(false);
 
   // Toast/feedback for "request created"
   React.useEffect(() => {
@@ -99,6 +102,27 @@ export default function AllocationPage() {
     };
   }, [id]);
 
+  React.useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        setLoadingRequests(true);
+        const types = await getOpenRequestTypes(Number(id));
+        if (!cancelled) setOpenRequestTypes(types);
+      } catch (err) {
+        console.error("Error fetching open request types:", err);
+      } finally {
+        if (!cancelled) setLoadingRequests(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
   if (loading) {
     return (
       <Box sx={{ p: 3, maxWidth: 960, mx: "auto" }}>
@@ -132,6 +156,10 @@ export default function AllocationPage() {
       </Box>
     );
   }
+
+  // helper function to determine if this request type already has a request to grey out buttons
+
+  const hasOpen = (type: string) => openRequestTypes.includes(type);
 
   const statusColor: "success" | "warning" | "default" =
     allocation.status === "Confirmed"
@@ -174,10 +202,17 @@ export default function AllocationPage() {
           >
             <Button
               variant="contained"
+              disabled={hasOpen("claim")}
               onClick={() => router.push(`${id}/requests/claim`)}
+              title={
+                hasOpen("claim")
+                  ? "You already have a pending claim request."
+                  : ""
+              }
             >
               Submit Claim
             </Button>
+
             <div>
               <Button
                 variant="outlined"
@@ -192,31 +227,38 @@ export default function AllocationPage() {
                 open={open}
                 onClose={() => setAnchorEl(null)}
               >
-                <MenuItem onClick={() => router.push(`${id}/requests/swap`)}>
+                <MenuItem
+                  disabled={hasOpen("swap")}
+                  onClick={() => router.push(`${id}/requests/swap`)}
+                >
                   Swap
                 </MenuItem>
+
                 <MenuItem
+                  disabled={hasOpen("correction")}
                   onClick={() => router.push(`${id}/requests/correction`)}
                 >
                   Correction
                 </MenuItem>
+
                 <MenuItem
-                  onClick={() => {
-                    setAnchorEl(null);
+                  disabled={hasOpen("cancellation")}
+                  onClick={() =>
                     router.push(
                       `/dashboard/tutor/allocations/${id}/requests/cancel`,
-                    );
-                  }}
+                    )
+                  }
                 >
                   Cancellation
                 </MenuItem>
+
                 <MenuItem
-                  onClick={() => {
-                    setAnchorEl(null);
+                  disabled={hasOpen("query")}
+                  onClick={() =>
                     router.push(
                       `/dashboard/tutor/allocations/${id}/requests/query`,
-                    );
-                  }}
+                    )
+                  }
                 >
                   Query
                 </MenuItem>

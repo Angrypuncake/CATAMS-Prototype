@@ -169,6 +169,9 @@ export default function CorrectionRequestPage() {
   if (error) return <p className="p-6 text-red-500">Error: {error}</p>;
   if (!allocation) return <p>No allocation found</p>;
 
+  // Detect whether the justification text is filled out, if it isnt we're going to prevent clicking on submission
+  const isSubmitDisabled = !form.justification.trim();
+
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>
       {/* Snackbars */}
@@ -417,7 +420,11 @@ export default function CorrectionRequestPage() {
         <Button variant="outlined" onClick={() => router.back()}>
           Cancel
         </Button>
-        <Button variant="contained" onClick={handleSubmit}>
+        <Button
+          variant="contained"
+          onClick={handleSubmit}
+          disabled={isSubmitDisabled}
+        >
           Submit Correction Request
         </Button>
       </Box>

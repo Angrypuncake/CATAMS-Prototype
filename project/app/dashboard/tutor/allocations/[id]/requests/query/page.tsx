@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { getAllocationById } from "@/app/services/allocationService";
+import { TutorAllocationRow } from "@/app/_types/allocations";
+import { submitQueryRequest } from "@/app/services/requestService";
 import Link from "next/link";
 import {
   Box,
@@ -13,21 +16,12 @@ import {
   Typography,
 } from "@mui/material";
 
-type AllocationRow = {
-  unit_code: string | null;
-  unit_name: string | null;
-  session_date: string | null;
-  start_at: string | null; // "HH:MM:SS"
-  end_at: string | null;
-  activity_name: string | null;
-};
-
 export default function QueryRequestPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const allocationId = Array.isArray(params?.id) ? params.id[0] : params?.id;
 
-  const [allocation, setAllocation] = useState<AllocationRow | null>(null);
+  const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
   const [loading, setLoading] = useState(true);
 
   const [subject, setSubject] = useState("");
@@ -37,10 +31,8 @@ export default function QueryRequestPage() {
   useEffect(() => {
     async function fetchAllocation() {
       try {
-        const res = await fetch(`/api/tutor/allocations/${allocationId}`);
-        if (!res.ok) throw new Error("Failed to fetch allocation");
-        const json = (await res.json()) as { data?: AllocationRow };
-        setAllocation(json.data ?? null);
+        const allocationData = await getAllocationById(allocationId);
+        setAllocation(allocationData);
       } catch (e) {
         console.error(e);
       } finally {
@@ -52,26 +44,11 @@ export default function QueryRequestPage() {
 
   const handleSubmit = async () => {
     try {
-      const formData = new FormData();
-      formData.append("type", "query");
-      formData.append("subject", subject);
-      formData.append("details", details);
-      if (file) formData.append("attachment", file);
-
-      const res = await fetch(
-        `/api/tutor/allocations/${allocationId}/requests/query`,
-        {
-          method: "POST",
-          body: formData,
-          credentials: "include",
-        },
-      );
-
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("Submit failed:", res.status, text);
-        throw new Error("Failed to submit query");
-      }
+      await submitQueryRequest(allocationId!, {
+        subject,
+        details,
+        attachment: file || undefined,
+      });
 
       alert("Query submitted!");
       router.push(`/dashboard/tutor/allocations/${allocationId}`);
@@ -109,11 +86,11 @@ export default function QueryRequestPage() {
         <Card variant="outlined" sx={{ borderRadius: 2, mb: 3 }}>
           <CardContent>
             <Typography fontWeight={700}>
-              {allocation.unit_code} – {allocation.unit_name}
+              {allocation.unit_code} - {allocation.unit_name}
             </Typography>
             <Typography>Date: {allocation.session_date}</Typography>
             <Typography>
-              Time: {allocation.start_at?.slice(0, 5)} –{" "}
+              Time: {allocation.start_at?.slice(0, 5)} -{" "}
               {allocation.end_at?.slice(0, 5)}
             </Typography>
             <Typography>Session: {allocation.activity_name}</Typography>

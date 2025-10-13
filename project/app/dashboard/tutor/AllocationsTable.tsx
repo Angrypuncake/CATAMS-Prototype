@@ -1,0 +1,208 @@
+"use client";
+import React, { useMemo } from "react";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Box,
+  TablePagination,
+  Typography,
+} from "@mui/material";
+import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
+import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
+import type { AllocationRow, SortableColumns } from "./types";
+import { exportJSON, exportCSV, hoursBetween, niceTime } from "./utils";
+import StyledButton from "./StyledButton";
+
+interface AllocationsTableProps {
+  sessions: AllocationRow[];
+  totalCount: number;
+  sortConfig: {
+    column: SortableColumns;
+    direction: "asc" | "desc";
+  } | null;
+  onSort: (column: SortableColumns) => void;
+  onRowClick: (row: AllocationRow) => void;
+  page: number;
+  rowsPerPage: number;
+  onPageChange: (event: unknown, newPage: number) => void;
+  onRowsPerPageChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  search: string;
+  onSearchChange: (value: string) => void;
+}
+
+const AllocationsTable: React.FC<AllocationsTableProps> = ({
+  sessions,
+  totalCount,
+  sortConfig,
+  onSort,
+  onRowClick,
+  page,
+  rowsPerPage,
+  onPageChange,
+  onRowsPerPageChange,
+  search,
+  onSearchChange,
+}) => {
+  return (
+    <>
+      <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
+        My Allocations
+      </Typography>
+
+      {/* search box */}
+      <input
+        type="text"
+        placeholder="Search..."
+        value={search}
+        onChange={(e) => {
+          onSearchChange(e.target.value);
+        }}
+        className="border rounded px-2 py-1 mb-2 w-1/3"
+      />
+
+      <TableContainer component={Paper} className="shadow-sm">
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell
+                className="font-bold text-center cursor-pointer"
+                onClick={() => onSort("session_date")}
+              >
+                Date{" "}
+                {sortConfig?.column === "session_date" &&
+                  (sortConfig.direction === "asc" ? (
+                    <ArrowUpwardIcon sx={{ fontSize: "0.9rem" }} />
+                  ) : (
+                    <ArrowDownwardIcon sx={{ fontSize: "0.9rem" }} />
+                  ))}
+              </TableCell>
+              <TableCell
+                className="font-bold text-center cursor-pointer"
+                onClick={() => onSort("start_at")}
+              >
+                Time{" "}
+                {sortConfig?.column === "start_at" &&
+                  (sortConfig.direction === "asc" ? (
+                    <ArrowUpwardIcon sx={{ fontSize: "0.9rem" }} />
+                  ) : (
+                    <ArrowDownwardIcon sx={{ fontSize: "0.9rem" }} />
+                  ))}
+              </TableCell>
+              <TableCell
+                className="font-bold text-center cursor-pointer"
+                onClick={() => onSort("unit_code")}
+              >
+                Unit{" "}
+                {sortConfig?.column === "unit_code" &&
+                  (sortConfig.direction === "asc" ? (
+                    <ArrowUpwardIcon sx={{ fontSize: "0.9rem" }} />
+                  ) : (
+                    <ArrowDownwardIcon sx={{ fontSize: "0.9rem" }} />
+                  ))}
+              </TableCell>
+
+              <TableCell
+                className="font-bold text-center cursor-pointer"
+                onClick={() => onSort("location")}
+              >
+                Location{" "}
+                {sortConfig?.column === "location" &&
+                  (sortConfig.direction === "asc" ? (
+                    <ArrowUpwardIcon sx={{ fontSize: "0.9rem" }} />
+                  ) : (
+                    <ArrowDownwardIcon sx={{ fontSize: "0.9rem" }} />
+                  ))}
+              </TableCell>
+              <TableCell className="font-bold text-center">Hours</TableCell>
+              <TableCell
+                className="font-bold text-center cursor-pointer"
+                onClick={() => onSort("status")}
+              >
+                Status{" "}
+                {sortConfig?.column === "status" &&
+                  (sortConfig.direction === "asc" ? (
+                    <ArrowUpwardIcon sx={{ fontSize: "0.9rem" }} />
+                  ) : (
+                    <ArrowDownwardIcon sx={{ fontSize: "0.9rem" }} />
+                  ))}
+              </TableCell>
+              <TableCell className="font-bold text-center">Actions</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {sessions.map((row, index) => (
+              <TableRow key={index}>
+                <TableCell>
+                  {row.session_date ? row.session_date.slice(0, 10) : "N/A"}
+                </TableCell>
+                <TableCell>
+                  {row.start_at && row.end_at
+                    ? `${niceTime(row.start_at)}-${niceTime(row.end_at)}`
+                    : "N/A"}
+                </TableCell>
+                <TableCell>{row.unit_code ?? "N/A"}</TableCell>
+                <TableCell>{row.location ?? "N/A"}</TableCell>
+                <TableCell>
+                  {hoursBetween(
+                    row.start_at ?? undefined,
+                    row.end_at ?? undefined,
+                  )}
+                </TableCell>
+                <TableCell>{row.status ?? "N/A"}</TableCell>
+                <TableCell>
+                  <Box display="flex" justifyContent="center">
+                    <StyledButton onClick={() => onRowClick(row)}>
+                      {row.actions ?? "View"}
+                    </StyledButton>
+                  </Box>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <TablePagination
+          component="div"
+          count={totalCount}
+          page={page}
+          onPageChange={onPageChange}
+          rowsPerPage={rowsPerPage}
+          onRowsPerPageChange={onRowsPerPageChange}
+        />
+      </TableContainer>
+      <Box
+        display="flex"
+        justifyContent="flex-end"
+        alignItems="center"
+        gap={2.5}
+        mt={2.5}
+      >
+        <Typography>
+          You can export the above data in CSV or JSON formats
+        </Typography>
+        <StyledButton
+          size="medium"
+          onClick={() =>
+            exportCSV(sessions as unknown as Record<string, string | number>[])
+          }
+        >
+          Export as CSV
+        </StyledButton>
+        <StyledButton
+          size="medium"
+          onClick={() =>
+            exportJSON(sessions as unknown as Record<string, string | number>[])
+          }
+        >
+          Export as JSON
+        </StyledButton>
+      </Box>
+    </>
+  );
+};
+
+export default AllocationsTable;

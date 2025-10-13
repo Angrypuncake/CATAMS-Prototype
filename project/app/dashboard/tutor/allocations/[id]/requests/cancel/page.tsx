@@ -15,6 +15,8 @@ import {
   Autocomplete,
   Stack,
   CircularProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { useParams, useRouter } from "next/navigation";
 
@@ -40,6 +42,7 @@ export default function CancelRequestPage() {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [userId, setUserId] = useState(0);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // --- Form state ---
   const [cancelType, setCancelType] = useState<"suggest" | "coordinator">(
@@ -135,14 +138,11 @@ export default function CancelRequestPage() {
 
       const response = await createRequestService(payload);
       console.log("Cancellation request created:", response);
-
-      // Optional: toast / snackbar notification
-      // enqueueSnackbar("Cancellation submitted successfully", { variant: "success" });
-
-      router.push(`/dashboard/tutor/allocations/${allocation.id}`);
+      setTimeout(() => router.push(`/dashboard/tutor/allocations/${id}`), 2000);
     } catch (err) {
-      console.error("Failed to submit cancellation:", err);
-      alert("Failed to submit cancellation request. Please try again.");
+      console.error("Error submitting query:", err);
+      setErr("Something went wrong while submitting your query.");
+      setTimeout(() => router.push(`/dashboard/tutor/allocations/${id}`), 2000);
     } finally {
       setSubmitting(false);
     }
@@ -250,6 +250,37 @@ export default function CancelRequestPage() {
           </Button>
         </Box>
       </form>
+
+      {/* Feedback Snackbar */}
+      <Snackbar
+        open={!!success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSuccess(null)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          {success}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!err}
+        autoHideDuration={4000}
+        onClose={() => setErr(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setErr(null)}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {err}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }

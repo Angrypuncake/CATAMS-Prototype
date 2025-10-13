@@ -20,6 +20,31 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Check for duplicate requests
+
+    const dupCheckSQL = `
+      SELECT request_id FROM request
+      WHERE requester_id = $1
+        AND allocation_id = $2
+        AND request_type = $3
+        AND request_status IN ('pending_ta', 'pending_uc');
+    `;
+    const { rows: existing } = await query(dupCheckSQL, [
+      requesterId,
+      allocationId,
+      requestType,
+    ]);
+
+    if (existing.length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Duplicate open request detected for this allocation and type.",
+        },
+        { status: 409 },
+      );
+    }
+
     // Optional: Validate requestType for safety
     const validTypes = ["claim", "swap", "correction", "cancellation", "query"];
     if (!validTypes.includes(requestType)) {

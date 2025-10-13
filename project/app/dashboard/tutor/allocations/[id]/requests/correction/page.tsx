@@ -26,6 +26,7 @@ import { getAllocationById } from "@/app/services/allocationService";
 import { TutorAllocationRow } from "@/app/_types/allocations";
 import { postCorrectionRequest } from "@/app/services/requestService"; // new service wrapper
 import { TutorCorrectionPayload } from "@/app/_types/request";
+import { Tooltip } from "@mui/material";
 
 export default function CorrectionRequestPage() {
   const router = useRouter();
@@ -417,16 +418,25 @@ export default function CorrectionRequestPage() {
 
       {/* Action Buttons */}
       <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end", gap: 2 }}>
-        <Button variant="outlined" onClick={() => router.back()}>
-          Cancel
-        </Button>
-        <Button
-          variant="contained"
-          onClick={handleSubmit}
-          disabled={isSubmitDisabled}
+        <Tooltip
+          title={
+            isSubmitDisabled
+              ? "Please enter a justification to enable submission"
+              : ""
+          }
+          placement="top"
         >
-          Submit Correction Request
-        </Button>
+          {/* span is needed because disabled buttons don't trigger tooltips */}
+          <span>
+            <Button
+              variant="contained"
+              onClick={handleSubmit}
+              disabled={isSubmitDisabled}
+            >
+              Submit Correction Request
+            </Button>
+          </span>
+        </Tooltip>
       </Box>
     </Container>
   );

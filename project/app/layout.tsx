@@ -24,11 +24,11 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>
+      <body className="bg-gray-100">
         <AppRouterCacheProvider>
           <StyledEngineProvider injectFirst>
             <ThemeProvider theme={websiteTheme}>
-              <div className="flex items-center justify-center min-h-screen bg-gray-100">
+              <div className="flex items-center justify-center min-h-screen">
                 <CssBaseline />
                 {children}
               </div>

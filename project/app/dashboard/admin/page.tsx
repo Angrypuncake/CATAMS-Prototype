@@ -8,10 +8,9 @@ import {
   Chip, // NEW
   Stack, // NEW
 } from "@mui/material";
-import DynamicTable from "../../../components/DynamicTable";
+import DynamicTable from "../../../components/DynamicTable/DynamicTable";
 import AdminInfoBox from "./AdminInfoBox";
 import AdminBudgetBox from "./AdminBudgetBox";
-import AdminPagination from "./AdminPagination";
 import axios from "axios";
 
 // Allow non-primitives in rows (arrays/objects)
@@ -76,14 +75,16 @@ const AdminDashboard = () => {
     numUsers: 0,
     numAllocations: 0,
   });
-  const LIMIT = 4;
-  const [tutorPage, setTutorPage] = useState(1);
   const [tutorRows, setTutorRows] = useState<TableRowData[]>([]);
+  const [tutorTotal, setTutorTotal] = useState(0);
   const [historyRows, setHistoryRows] = useState<HistoryState>({
     staged: [],
     runs: [],
   });
-  const [historyPage, setHistoryPage] = useState(1);
+  const [historyTotals, setHistoryTotals] = useState({
+    staged: 0,
+    runs: 0,
+  });
   const [alignment, setAlignment] = React.useState<"staged" | "runs">("staged");
 
   const handleChange = (
@@ -92,7 +93,6 @@ const AdminDashboard = () => {
   ) => {
     if (!next) return;
     setAlignment(next);
-    setHistoryPage(1);
   };
 
   const loadOverview = useCallback(async () => {
@@ -103,6 +103,7 @@ const AdminDashboard = () => {
         numAllocations: Number(result.data.totals.allocations),
       });
       setTutorRows(result.data.userRoles);
+      setTutorTotal(Number(result.data.userRolesTotal || 0));
     } catch (err) {
       console.error("Error loading overview:", err);
     }
@@ -123,6 +124,10 @@ const AdminDashboard = () => {
       setHistoryRows({
         staged: dropBy(res.data.staged),
         runs: dropBy(dropCounts(res.data.runs)),
+      });
+      setHistoryTotals({
+        staged: Number(res.data.stagedTotal || 0),
+        runs: Number(res.data.runsTotal || 0),
       });
     } catch (err) {
       console.error("Failed to load history:", err);
@@ -192,21 +197,16 @@ const AdminDashboard = () => {
           </div>
 
           {/* User & Role Management */}
-          <div className="h-[34%] bg-white rounded-3xl p-3">
+          <div className="bg-white rounded-3xl p-3">
             <div className="flex justify-between items-center">
               <Typography variant="subtitle1">
                 User & Role Management
               </Typography>
-              <AdminPagination
-                page={tutorPage}
-                setPage={setTutorPage}
-                itemTotal={tutorRows.length}
-                itemLimit={LIMIT}
-              />
             </div>
 
             <DynamicTable
-              rows={tutorRows.slice((tutorPage - 1) * LIMIT, tutorPage * LIMIT)}
+              rows={tutorRows}
+              enablePagination={true}
               columnRenderers={{
                 // roles: array → chips
                 roles: (value) =>
@@ -241,11 +241,12 @@ const AdminDashboard = () => {
                 created_at: (value) => <>{fmtDateTime(value)}</>,
                 updated_at: (value) => <>{fmtDateTime(value)}</>,
               }}
+              totalCount={tutorTotal}
             />
           </div>
 
           {/* Import/Export Jobs */}
-          <div className="h-[34%] bg-white rounded-3xl p-3">
+          <div className="bg-white rounded-3xl p-3">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
                 <Typography variant="subtitle1">
@@ -270,29 +271,18 @@ const AdminDashboard = () => {
                   <ToggleButton value="runs">Runs</ToggleButton>
                 </ToggleButtonGroup>
               </div>
-              <AdminPagination
-                page={historyPage}
-                setPage={setHistoryPage}
-                itemTotal={
-                  alignment === "staged"
-                    ? historyRows.staged.length
-                    : historyRows.runs.length
-                }
-                itemLimit={LIMIT}
-              />
             </div>
 
             <DynamicTable
+              key={alignment}
               rows={
+                alignment === "staged" ? historyRows.staged : historyRows.runs
+              }
+              enablePagination={true}
+              totalCount={
                 alignment === "staged"
-                  ? historyRows.staged.slice(
-                      (historyPage - 1) * LIMIT,
-                      historyPage * LIMIT,
-                    )
-                  : historyRows.runs.slice(
-                      (historyPage - 1) * LIMIT,
-                      historyPage * LIMIT,
-                    )
+                  ? historyTotals.staged
+                  : historyTotals.runs
               }
               columnRenderers={{
                 status: (value) => (

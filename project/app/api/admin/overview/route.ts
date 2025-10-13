@@ -3,10 +3,12 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
 export async function GET() {
-  const [usersRes, allocationsRes, tableRes] = await Promise.all([
-    query(`SELECT COUNT(*)::int AS total_users FROM public.users`),
-    query(`SELECT COUNT(*)::int AS total_allocations FROM public.allocation`),
-    query(`
+  const [usersRes, allocationsRes, userRolesCountRes, tableRes] =
+    await Promise.all([
+      query(`SELECT COUNT(*)::int AS total_users FROM public.users`),
+      query(`SELECT COUNT(*)::int AS total_allocations FROM public.allocation`),
+      query(`SELECT COUNT(*)::int AS total FROM public.users`),
+      query(`
       SELECT
         u.first_name || ' ' || u.last_name AS name,
         u.email,
@@ -38,10 +40,9 @@ export async function GET() {
         GROUP BY ur.user_id, r.role_name
       ) x ON x.user_id = u.user_id
       GROUP BY u.user_id, name, u.email
-      ORDER BY name
-      LIMIT 10;
+      ORDER BY name;
     `),
-  ]);
+    ]);
 
   return NextResponse.json({
     totals: {
@@ -49,5 +50,6 @@ export async function GET() {
       allocations: Number(allocationsRes.rows[0].total_allocations),
     },
     userRoles: tableRes.rows,
+    userRolesTotal: Number(userRolesCountRes.rows[0].total),
   });
 }

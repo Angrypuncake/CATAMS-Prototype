@@ -8,7 +8,6 @@ import {
 } from "@testing-library/react";
 import AdminDashboard from "../app/dashboard/admin/page";
 import AdminInfoBox from "@/app/dashboard/admin/AdminInfoBox";
-import AdminPagination from "@/app/dashboard/admin/AdminPagination";
 import AdminBudgetBox from "@/app/dashboard/admin/AdminBudgetBox";
 import axios from "axios";
 
@@ -249,53 +248,19 @@ describe("AdminDashboard", () => {
     });
   });
 
-  test("should handle pagination controls properly", () => {
-    const mockSetPage = jest.fn();
+  test("should use MUI TablePagination for built-in pagination controls", async () => {
+    await act(async () => {
+      render(<AdminDashboard />);
+    });
 
-    // Start with a middle page to test both directions
-    const { rerender } = render(
-      <AdminPagination
-        page={2}
-        setPage={mockSetPage}
-        itemTotal={100}
-        itemLimit={10}
-      />,
-    );
+    // Wait for data to load
+    await waitFor(() => {
+      expect(screen.getByText("System Admin Dashboard")).toBeInTheDocument();
+    });
 
-    const prevButton = screen.getByText("Prev");
-    const nextButton = screen.getByText("Next");
-
-    // Test navigation in both directions
-    fireEvent.click(prevButton);
-    expect(mockSetPage).toHaveBeenCalledWith(1);
-    fireEvent.click(nextButton);
-    expect(mockSetPage).toHaveBeenCalledWith(3);
-
-    // Middle pages should have both buttons enabled
-    expect(prevButton).not.toBeDisabled();
-    expect(nextButton).not.toBeDisabled();
-
-    // Test edge case: first page should disable prev button
-    rerender(
-      <AdminPagination
-        page={1}
-        setPage={mockSetPage}
-        itemTotal={100}
-        itemLimit={10}
-      />,
-    );
-    expect(screen.getByText("Prev")).toBeDisabled();
-
-    // Test edge case: last page should disable next button
-    rerender(
-      <AdminPagination
-        page={10}
-        setPage={mockSetPage}
-        itemTotal={100}
-        itemLimit={10}
-      />,
-    );
-    expect(screen.getByText("Next")).toBeDisabled();
+    // Check that MUI TablePagination is rendered (it uses "Rows per page" label)
+    const paginationElements = screen.queryAllByText(/rows per page/i);
+    expect(paginationElements.length).toBeGreaterThan(0);
   });
 
   test("should render budget boxes as links or buttons based on href prop", () => {

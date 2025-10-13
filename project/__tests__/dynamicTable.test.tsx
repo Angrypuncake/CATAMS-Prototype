@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
-import DynamicTable from "../components/DynamicTable";
+import DynamicTable from "../components/DynamicTable/DynamicTable";
 
 describe("DynamicTable", () => {
   test("renders table with data", () => {

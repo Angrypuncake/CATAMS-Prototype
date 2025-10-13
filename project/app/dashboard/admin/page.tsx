@@ -197,7 +197,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* User & Role Management */}
-          <div className="h-[34%] bg-white rounded-3xl p-3">
+          <div className="bg-white rounded-3xl p-3">
             <div className="flex justify-between items-center">
               <Typography variant="subtitle1">
                 User & Role Management
@@ -246,7 +246,7 @@ const AdminDashboard = () => {
           </div>
 
           {/* Import/Export Jobs */}
-          <div className="h-[34%] bg-white rounded-3xl p-3">
+          <div className="bg-white rounded-3xl p-3">
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-3">
                 <Typography variant="subtitle1">

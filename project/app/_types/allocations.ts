@@ -15,16 +15,6 @@ export type TimetableRow = {
   row_count: number;
   total_hours: number | null;
 };
-export interface RequestItem {
-  id: string;
-  type: RequestType;
-  state: RequestState;
-  relatedSession: string;
-  creator: string;
-  creatorRole: string;
-  user_id: number;
-}
-
 export interface CommentItem {
   id: string;
   author: string;
@@ -53,6 +43,7 @@ export interface AllocationBase {
 
 export interface TutorAllocationRow extends AllocationBase {
   actions?: string | null;
+  [key: string]: string | number | null | undefined;
 }
 
 export interface AdminAllocationRow extends AllocationBase {

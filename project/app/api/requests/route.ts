@@ -20,6 +20,31 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Check for duplicate requests
+
+    const dupCheckSQL = `
+      SELECT request_id FROM request
+      WHERE requester_id = $1
+        AND allocation_id = $2
+        AND request_type = $3
+        AND request_status IN ('pending_ta', 'pending_uc');
+    `;
+    const { rows: existing } = await query(dupCheckSQL, [
+      requesterId,
+      allocationId,
+      requestType,
+    ]);
+
+    if (existing.length > 0) {
+      return NextResponse.json(
+        {
+          error:
+            "Duplicate open request detected for this allocation and type.",
+        },
+        { status: 409 },
+      );
+    }
+
     // Optional: Validate requestType for safety
     const validTypes = ["claim", "swap", "correction", "cancellation", "query"];
     if (!validTypes.includes(requestType)) {
@@ -62,6 +87,56 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, requestId: insertedId });
   } catch (error) {
     console.error("Error inserting request:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
+  }
+}
+
+// Define which statuses count as "open"
+
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const allocationId = searchParams.get("allocationId");
+    const requesterId = req.headers.get("x-user-id"); // optional filtering
+
+    if (!allocationId) {
+      return NextResponse.json(
+        { error: "Missing allocationId query parameter" },
+        { status: 400 },
+      );
+    }
+
+    // Define which statuses count as "open"
+    const OPEN_STATUSES = ["pending_uc", "pending_ta"];
+
+    // Base SQL
+    let sql = `
+      SELECT request_id, requester_id, allocation_id, request_type, request_status, request_reason, created_at
+      FROM request
+      WHERE allocation_id = $1
+        AND request_status = ANY($2)
+    `;
+    const params: (string | readonly string[])[] = [
+      allocationId,
+      OPEN_STATUSES,
+    ];
+
+    // Optionally scope to current user (frontend header: x-user-id)
+    if (requesterId) {
+      sql += " AND requester_id = $3";
+      params.push(requesterId);
+    }
+
+    sql += " ORDER BY created_at DESC";
+
+    const { rows } = await query(sql, params);
+
+    return NextResponse.json({ data: rows });
+  } catch (error) {
+    console.error("Error fetching open requests:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

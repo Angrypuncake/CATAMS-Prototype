@@ -15,6 +15,8 @@ import {
   Autocomplete,
   Stack,
   CircularProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import { useParams, useRouter } from "next/navigation";
 
@@ -27,6 +29,7 @@ import { createRequestService } from "@/app/services/requestService";
 import { TutorAllocationRow } from "@/app/_types/allocations";
 import { Tutor } from "@/app/_types/tutor";
 import AllocationDetails from "../../_components/AllocationDetails";
+import { getUserFromAuth } from "@/app/services/authService";
 
 export default function CancelRequestPage() {
   const params = useParams<{ id: string }>();
@@ -38,6 +41,8 @@ export default function CancelRequestPage() {
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
+  const [userId, setUserId] = useState(0);
+  const [success, setSuccess] = useState<string | null>(null);
 
   // --- Form state ---
   const [cancelType, setCancelType] = useState<"suggest" | "coordinator">(
@@ -46,7 +51,6 @@ export default function CancelRequestPage() {
   const [selectedTutor, setSelectedTutor] = useState<Tutor | null>(null);
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [userId, setUserId] = useState<string | null>(null);
 
   /** ============================
    *  Load allocation + tutors
@@ -92,17 +96,9 @@ export default function CancelRequestPage() {
    *  ============================ */
   useEffect(() => {
     async function fetchUser() {
-      try {
-        const res = await fetch("/api/auth/me");
-        if (!res.ok) throw new Error("Failed to get user");
-        const data = await res.json();
-        console.log("Current user:", data);
-        setUserId(data.userId);
-      } catch (err) {
-        console.error(err);
-      }
+      const data = await getUserFromAuth();
+      setUserId(data.userId);
     }
-
     fetchUser();
   }, []);
 
@@ -135,21 +131,18 @@ export default function CancelRequestPage() {
         requestType: "cancellation" as const,
         requestReason: reason,
         details: {
-          suggestedUserId:
+          suggested_tutor_id:
             cancelType === "suggest" ? (selectedTutor?.user_id ?? null) : null,
         },
       };
 
       const response = await createRequestService(payload);
       console.log("Cancellation request created:", response);
-
-      // Optional: toast / snackbar notification
-      // enqueueSnackbar("Cancellation submitted successfully", { variant: "success" });
-
-      router.push(`/dashboard/tutor/allocations/${allocation.id}`);
+      setTimeout(() => router.push(`/dashboard/tutor/allocations/${id}`), 2000);
     } catch (err) {
-      console.error("Failed to submit cancellation:", err);
-      alert("Failed to submit cancellation request. Please try again.");
+      console.error("Error submitting query:", err);
+      setErr("Something went wrong while submitting your query.");
+      setTimeout(() => router.push(`/dashboard/tutor/allocations/${id}`), 2000);
     } finally {
       setSubmitting(false);
     }
@@ -257,6 +250,37 @@ export default function CancelRequestPage() {
           </Button>
         </Box>
       </form>
+
+      {/* Feedback Snackbar */}
+      <Snackbar
+        open={!!success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSuccess(null)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          {success}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!err}
+        autoHideDuration={4000}
+        onClose={() => setErr(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setErr(null)}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {err}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }

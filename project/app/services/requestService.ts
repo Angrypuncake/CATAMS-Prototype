@@ -1,8 +1,7 @@
 import type {
-  ClaimDetails,
-  CorrectionDetails,
-  EmptyDetails,
-  SwapDetails,
+  BasicRequest,
+  CreateRequestPayload,
+  PaginatedRequests,
   TutorCorrectionPayload,
   TutorRequest,
 } from "@/app/_types/request";
@@ -62,8 +61,6 @@ export async function getRequestById(id: string): Promise<TutorRequest> {
             location: "Room 302, Engineering Building",
             hours: "2",
             session_type: "Tutorial",
-            justification:
-              "Adjusted session time after timetable update and room change.",
           },
         };
 
@@ -91,28 +88,6 @@ export async function postCorrectionRequest(
   );
   return res.data;
 }
-
-export type RequestType = TutorRequest["requestType"];
-
-export interface CancellationDetails {
-  suggestedUserId: number | null;
-}
-
-export type RequestDetailsMap = {
-  claim: ClaimDetails;
-  swap: SwapDetails;
-  correction: CorrectionDetails;
-  cancellation: CancellationDetails;
-  query: EmptyDetails;
-};
-
-export type CreateRequestPayload<T extends RequestType = RequestType> = {
-  requesterId: number;
-  allocationId: number;
-  requestType: T;
-  requestReason?: string | null;
-  details: RequestDetailsMap[T];
-};
 
 export async function createRequestService(payload: CreateRequestPayload) {
   const res = await axios.post("/requests", payload);
@@ -214,30 +189,81 @@ export async function createRequestService(payload: CreateRequestPayload) {
  * for a unified and maintainable workflow.
  */
 
-//query request for an allocation
-export async function submitQueryRequest(
-  allocationId: string,
-  data: {
-    subject: string;
-    details: string;
-    attachment?: File;
-  },
-): Promise<void> {
-  const formData = new FormData();
-  formData.append("type", "query");
-  formData.append("subject", data.subject);
-  formData.append("details", data.details);
-  if (data.attachment) {
-    formData.append("attachment", data.attachment);
-  }
+/**
+ * Fetches all open requests for a specific allocation.
+ * Returns an array of open request types (e.g. ["query", "swap"]).
+ */
+export interface RawRequestRow {
+  request_id: number;
+  requester_id: number;
+  allocation_id: number;
+  request_type: string | null;
+  request_status: string;
+  request_reason: string | null;
+  created_at: string;
+}
 
-  await axios.post(
-    `/tutor/allocations/${allocationId}/requests/query`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    },
+export async function getOpenRequestTypes(
+  allocationId: number,
+): Promise<string[]> {
+  const response = await axios.get<{ data: RawRequestRow[] }>(
+    `/requests?allocationId=${allocationId}`,
   );
+
+  const openTypes = Array.from(
+    new Set(
+      response.data.data
+        .map((r) => r.request_type?.toLowerCase())
+        .filter((v): v is string => Boolean(v)),
+    ),
+  );
+
+  return openTypes;
+}
+
+/**
+ * Fetch all requests for a given allocation and normalize to camelCase.
+ */
+export async function getRequestsByAllocation(
+  allocationId: number,
+  userId?: number,
+): Promise<BasicRequest[]> {
+  const config = userId
+    ? { headers: { "x-user-id": String(userId) } }
+    : undefined;
+
+  const response = await axios.get<{ data: RawRequestRow[] }>(
+    `/requests?allocationId=${allocationId}`,
+    config,
+  );
+
+  const normalized: BasicRequest[] = response.data.data
+    .filter((r) => r.request_type !== null)
+    .map((r) => ({
+      requestId: r.request_id,
+      requesterId: r.requester_id,
+      allocationId: r.allocation_id,
+      requestType: r.request_type as
+        | "claim"
+        | "swap"
+        | "correction"
+        | "cancellation"
+        | "query",
+      requestStatus: r.request_status,
+      requestReason: r.request_reason,
+      createdAt: r.created_at,
+    }));
+
+  return normalized;
+}
+
+export async function getTutorRequests(
+  page = 1,
+  limit = 50,
+  userId?: number,
+): Promise<PaginatedRequests> {
+  const response = await axios.get<PaginatedRequests>("/tutor/requests", {
+    params: { page, limit },
+  });
+  return response.data;
 }

@@ -82,7 +82,7 @@ export async function postCorrectionRequest(
   payload: TutorCorrectionPayload,
 ) {
   const res = await axios.post(
-    `/api/tutor/allocations/${allocationId}/requests/correction`,
+    `/tutor/allocations/${allocationId}/requests/correction`,
     payload,
   );
   return res.data;

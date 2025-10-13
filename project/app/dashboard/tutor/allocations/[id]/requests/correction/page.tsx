@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, ChangeEvent } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Button,
@@ -107,9 +107,14 @@ export default function CorrectionRequestPage() {
   }, [allocationId]);
 
   /** Input handlers */
-  const handleChange = (
-    e: ChangeEvent<HTMLInputElement> | SelectChangeEvent,
+  const handleTextChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
+    const { name, value } = e.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (e: SelectChangeEvent) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
@@ -163,18 +168,6 @@ export default function CorrectionRequestPage() {
     );
   if (error) return <p className="p-6 text-red-500">Error: {error}</p>;
   if (!allocation) return <p>No allocation found</p>;
-
-  const handleTextChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSelectChange = (e: SelectChangeEvent) => {
-    const { name, value } = e.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
 
   return (
     <Container maxWidth="md" sx={{ py: 4 }}>

@@ -188,29 +188,3 @@ export async function createRequestService(payload: CreateRequestPayload) {
  */
 
 //query request for an allocation
-export async function submitQueryRequest(
-  allocationId: string,
-  data: {
-    subject: string;
-    details: string;
-    attachment?: File;
-  },
-): Promise<void> {
-  const formData = new FormData();
-  formData.append("type", "query");
-  formData.append("subject", data.subject);
-  formData.append("details", data.details);
-  if (data.attachment) {
-    formData.append("attachment", data.attachment);
-  }
-
-  await axios.post(
-    `/tutor/allocations/${allocationId}/requests/query`,
-    formData,
-    {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    },
-  );
-}

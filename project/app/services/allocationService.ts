@@ -6,17 +6,65 @@ import type {
   DiscardResponse,
   PreviewResponse,
   TutorAllocationRow,
+  AdminAllocationRow,
 } from "@/app/_types/allocations";
+
+type By = {
+  id: number | null;
+  name: string | null;
+  email: string | null;
+} | null;
+
+export type Staged = {
+  batch_id: number;
+  created_at: string;
+  status: string;
+  row_count: number | null;
+  issues: Record<string, number> | null;
+  by: By;
+};
+
+export type Run = {
+  run_id: number;
+  batch_id: number;
+  started_at: string;
+  finished_at: string | null;
+  status: "committed" | "rolled_back" | "failed";
+  counts: {
+    teaching_activity?: number;
+    session_occurrence?: number;
+    allocation?: number;
+  } | null;
+  staged_rows: number | null;
+  batch_created_at: string;
+  by: By;
+};
 
 export async function getTutorAllocations(
   userId: string,
   page = 1,
   limit = 10,
-): Promise<TutorAllocationRow[]> {
+): Promise<{
+  data: TutorAllocationRow[];
+  total: number;
+  page: number;
+  limit: number;
+}> {
   const res = await axios.get("/tutor/allocations", {
     params: { userId, page, limit },
   });
-  return res.data.data;
+  return res.data;
+}
+
+export async function getCurrentUser(): Promise<{
+  userId: string;
+  email: string;
+  roles: string[];
+}> {
+  const res = await axios.get("/auth/me", {
+    withCredentials: true,
+  });
+  return res.data;
 }
 
 function toDDMMYYYY(iso?: string | null) {
@@ -92,7 +140,7 @@ export async function getAllocationById(
     location: row.location,
     status: row.status,
     note: row.note,
-    allocated_hours: row.hours,
+    hours: row.hours,
     paycode_id: row.paycode_id,
   };
 }
@@ -114,7 +162,7 @@ export async function getFormattedAllocationById(
     start_at: a.start_at,
     end_at: a.end_at,
     location: a.location ?? "—",
-    allocated_hours: computeHours(a.start_at, a.end_at),
+    hours: computeHours(a.start_at, a.end_at),
     activity_name: a.activity_name ?? "—",
     activity_type: a.activity_type ?? "—",
     note: a.note ?? undefined,
@@ -133,9 +181,27 @@ export async function getAllocationsByUnit(
   return res.data.data;
 }
 
-// Create a new allocation Admin, UnitCoordinator only
+export async function getAllocationsByUnitAndActivityType(
+  unitCode: string | null,
+  activityType: string | null,
+  excludeUserId?: number | string | null, // optional param
+  page = 1,
+  limit = 50,
+): Promise<AdminAllocationRow[]> {
+  const res = await axios.get("/admin/allocations", {
+    params: {
+      unit_code: unitCode ?? undefined,
+      activity_type: activityType ?? undefined,
+      exclude_user_id: excludeUserId ?? undefined, // pass only if defined
+      page,
+      limit,
+    },
+  });
 
-// Update an existing allocation
+  return res.data.data;
+}
+
+// Create a new allocation Admin, UnitCoordinator only
 
 // Delete an allocation
 
@@ -202,10 +268,24 @@ export async function discardImport(
   return res.data;
 }
 
-export async function getPreview(stagingId: number): Promise<PreviewResponse> {
+export async function getPreview(
+  stagingId: number,
+  signal?: AbortSignal,
+): Promise<PreviewResponse> {
   const res = await axios.get<PreviewResponse>(`/admin/preview`, {
     params: { stagingId },
-    // optional: disable cache via headers
+    headers: { "Cache-Control": "no-store" },
+    signal,
+  });
+  return res.data;
+}
+
+export async function getImportHistory(limit = 100): Promise<{
+  staged: Staged[];
+  runs: Run[];
+}> {
+  const res = await axios.get(`/admin/history`, {
+    params: { limit },
     headers: { "Cache-Control": "no-store" },
   });
   return res.data;

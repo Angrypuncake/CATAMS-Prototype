@@ -44,5 +44,6 @@ export interface AllocationTableRow {
   start_at?: string | null;
   location?: string | null;
   status?: string | null;
+  unit_code?: string | null;
   [key: string]: unknown;
 }

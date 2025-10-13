@@ -56,7 +56,7 @@ export default function AllocationDetails({ allocation }: Props) {
           <DetailRow label="Start at" value={allocation.start_at} />
           <DetailRow label="End at" value={allocation.end_at} />
           <DetailRow label="Location" value={allocation.location} />
-          <DetailRow label="Hours" value={allocation.allocated_hours} />
+          <DetailRow label="Hours" value={allocation.hours} />
           <DetailRow label="Session" value={allocation.activity_name} />
         </Box>
 

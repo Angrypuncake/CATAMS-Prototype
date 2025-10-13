@@ -9,6 +9,7 @@ import {
   OccurrenceRow,
 } from "@/app/admin/allocations/types";
 import { SaveAllocationPayload } from "@/app/_types/allocations";
+import { getActivityOccurrences } from "@/app/services/activityService";
 import { Tutor } from "@/app/_types/tutor";
 import {
   fromInputTime,
@@ -79,8 +80,7 @@ export function Drawer({
       note: row.note ?? "",
       status: row.status ?? "",
       location: row.location ?? "",
-      allocatedHours:
-        row.allocated_hours != null ? String(row.allocated_hours) : "",
+      allocatedHours: row.hours != null ? String(row.hours) : "",
       manualHoursOnly: !row.session_date && !row.start_at && !row.end_at,
       applyAllForActivity: false,
     }));
@@ -101,12 +101,8 @@ export function Drawer({
 
     (async () => {
       try {
-        const r = await fetch(
-          `/api/admin/activities/${activityId}/occurrences`,
-        );
-        if (!r.ok) throw new Error("Failed to load occurrences");
-        const data = (await r.json()) as { data: OccurrenceRow[] };
-        setWeeksForActivity(data.data || []);
+        const occurrences = await getActivityOccurrences(activityId);
+        setWeeksForActivity(occurrences);
       } catch (e) {
         console.error(e);
         setWeeksForActivity([]);
@@ -412,7 +408,7 @@ export function Drawer({
                   start_at: null,
                   end_at: null,
                   location: form.location,
-                  allocated_hours: form.allocatedHours
+                  hours: form.allocatedHours
                     ? Number(form.allocatedHours)
                     : null,
                 });

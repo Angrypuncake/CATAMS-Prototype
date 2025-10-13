@@ -1,3 +1,93 @@
+import type {
+  TutorCorrectionPayload,
+  TutorRequest,
+} from "@/app/_types/request";
+import axios from "@/lib/axios";
+
+export async function getRequestById(id: string): Promise<TutorRequest> {
+  const mock = "true";
+  if (mock === "true") {
+    const now = new Date().toISOString();
+
+    const base = {
+      requestId: Number(id),
+      requesterId: 8,
+      reviewerId: 10,
+      requestDate: now,
+      allocationId: 21,
+      requestStatus: "pending" as const,
+      requestReason: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    // Rotate between types for demo
+    const typeIndex = Number(id) % 5;
+    const types: TutorRequest["requestType"][] = [
+      "claim",
+      "swap",
+      "cancellation",
+      "correction",
+      "query",
+    ];
+    const requestType = types[typeIndex];
+
+    switch (requestType) {
+      case "claim":
+        return {
+          ...base,
+          requestType,
+          details: { hours: 2, paycode: "TUT01" },
+        };
+
+      case "swap":
+        return {
+          ...base,
+          requestType,
+          details: { suggested_tutor_id: 10 },
+        };
+
+      case "correction":
+        return {
+          ...base,
+          requestType,
+          details: {
+            date: "2025-10-12",
+            start_at: "09:00",
+            end_at: "11:00",
+            location: "Room 302, Engineering Building",
+            hours: "2",
+            session_type: "Tutorial",
+            justification:
+              "Adjusted session time after timetable update and room change.",
+          },
+        };
+
+      case "cancellation":
+      case "query":
+        return {
+          ...base,
+          requestType,
+          details: null,
+        };
+    }
+  }
+
+  // fallback in case mock disabled
+  throw new Error("Real API not implemented for getRequestById");
+}
+
+export async function postCorrectionRequest(
+  allocationId: string | number,
+  payload: TutorCorrectionPayload,
+) {
+  const res = await axios.post(
+    `/api/tutor/allocations/${allocationId}/requests/correction`,
+    payload,
+  );
+  return res.data;
+}
+
 // ==========================================================
 // SWAP REQUEST SERVICE — handles full tutor → TA → UC workflow
 // ==========================================================
@@ -76,4 +166,32 @@ export async function approveSwap(requestId: number) {
  */
 export async function rejectSwap(requestId: number, reason?: string) {
   // UPDATE swap_request SET status = 'DECLINED', reason = $2 WHERE id = $1
+}
+
+//query request for an allocation
+export async function submitQueryRequest(
+  allocationId: string,
+  data: {
+    subject: string;
+    details: string;
+    attachment?: File;
+  },
+): Promise<void> {
+  const formData = new FormData();
+  formData.append("type", "query");
+  formData.append("subject", data.subject);
+  formData.append("details", data.details);
+  if (data.attachment) {
+    formData.append("attachment", data.attachment);
+  }
+
+  await axios.post(
+    `/tutor/allocations/${allocationId}/requests/query`,
+    formData,
+    {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
 }

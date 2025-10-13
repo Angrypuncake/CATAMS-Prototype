@@ -6,7 +6,11 @@ import AllocationsTable from "./AllocationsTable";
 import ActionRequiredTable from "./ActionRequiredTable";
 import RequestsTable from "./RequestsTable";
 import NoticesTable from "./NoticesTable";
-import axios from "axios";
+import { TutorAllocationRow } from "@/app/_types/allocations";
+import {
+  getTutorAllocations,
+  getCurrentUser,
+} from "@/app/services/allocationService";
 import AllocationQuickviewModal from "./AllocationQuickviewModal";
 import type {
   AllocationRow,
@@ -70,23 +74,22 @@ const Page = () => {
   useEffect(() => {
     const fetchTutorSessions = async () => {
       try {
-        const sessionUser = await axios.get("/api/auth/me", {
-          withCredentials: true,
-        });
-
-        const res = await fetch(
-          `/api/tutor/allocations?userId=${sessionUser.data.userId}&page=${page + 1}&limit=${rowsPerPage}`,
+        const sessionUser = await getCurrentUser();
+        const allocationsData = await getTutorAllocations(
+          sessionUser.userId,
+          page + 1,
+          rowsPerPage,
         );
-        if (!res.ok) throw new Error("Failed to fetch tutor allocations");
-        const data = await res.json();
-        setTutorSessions(data.data);
-        setTotalSessions(data.total);
+
+        setTutorSessions(allocationsData.data);
+        setTotalSessions(allocationsData.total);
       } catch (err) {
         console.error("Error fetching data:", err);
       } finally {
         setLoading(false);
       }
     };
+
     fetchTutorSessions();
   }, [page, rowsPerPage]);
 

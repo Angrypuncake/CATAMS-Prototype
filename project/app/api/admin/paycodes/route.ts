@@ -8,7 +8,7 @@ import { query } from "@/lib/db";
 export async function GET() {
   try {
     const sql = `
-        SELECT code, paycode_description, amount
+        SELECT code, paycode_description
         FROM paycode
         ORDER BY code ASC
         LIMIT 1000

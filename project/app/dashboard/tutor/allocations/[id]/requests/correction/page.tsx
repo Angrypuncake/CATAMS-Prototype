@@ -25,6 +25,7 @@ import { useParams, useRouter } from "next/navigation";
 import { getAllocationById } from "@/app/services/allocationService";
 import { TutorAllocationRow } from "@/app/_types/allocations";
 import { postCorrectionRequest } from "@/app/services/requestService"; // new service wrapper
+import { TutorCorrectionPayload } from "@/app/_types/request";
 
 export default function CorrectionRequestPage() {
   const router = useRouter();
@@ -125,27 +126,26 @@ export default function CorrectionRequestPage() {
 
   /** Submit handler */
   const handleSubmit = async () => {
+    if (!form.justification.trim()) {
+      setError("Please provide a justification before submitting.");
+      return;
+    }
+
     if (!allocationId || !allocation) return;
 
-    const payload = {
+    const payload: TutorCorrectionPayload = {
       allocation_id: allocationId,
-      date: corrections.date
-        ? form.date
-        : (allocation.session_date ?? "No Date"),
-      hours: corrections.hours
-        ? form.hours
-        : String(allocation.hours ?? "No Hours"),
+      date: corrections.date ? form.date : (allocation.session_date ?? ""),
+      start_at: corrections.time ? form.startTime : (allocation.start_at ?? ""),
+      end_at: corrections.time ? form.endTime : (allocation.end_at ?? ""),
       location: corrections.location
         ? form.location
-        : (allocation.location ?? "No Location"),
+        : (allocation.location ?? ""),
+      hours: corrections.hours ? form.hours : String(allocation.hours ?? ""),
       session_type: corrections.session
         ? form.session
-        : (allocation.activity_type ?? "No Session"),
-      start_at: corrections.time
-        ? form.startTime
-        : (allocation.start_at ?? "No Start"),
-      end_at: corrections.time ? form.endTime : (allocation.end_at ?? "No End"),
-      justification: form.justification,
+        : (allocation.activity_type ?? ""),
+      justification: form.justification.trim(),
     };
 
     try {

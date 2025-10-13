@@ -14,7 +14,7 @@ export type ClaimDetails = {
 };
 
 export type SwapDetails = {
-  suggested_tutor_id: number;
+  suggested_tutor_id: number | null;
 };
 
 export type CorrectionDetails = {

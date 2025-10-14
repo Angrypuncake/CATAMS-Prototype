@@ -56,71 +56,6 @@ export async function getTutorAllocations(
   return res.data;
 }
 
-export async function getCurrentUser(): Promise<{
-  userId: string;
-  email: string;
-  roles: string[];
-}> {
-  const res = await axios.get("/auth/me", {
-    withCredentials: true,
-  });
-  return res.data;
-}
-
-function toDDMMYYYY(iso?: string | null) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  const dd = String(d.getUTCDate()).padStart(2, "0");
-  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const yyyy = d.getUTCFullYear();
-  return `${dd}/${mm}/${yyyy}`;
-}
-
-// DB status → UI union type normalization
-type UIStatus = TutorAllocationRow["status"]; // "Confirmed" | "Pending" | "Cancelled"
-function normalizeStatus(s?: string | null): UIStatus {
-  const v = (s ?? "").trim().toLowerCase();
-
-  // Treat as Confirmed
-  if (
-    v === "confirmed" ||
-    v === "approved" ||
-    v === "accepted" ||
-    v === "allocated" ||
-    v === "active" ||
-    v === "assigned"
-  ) {
-    return "Confirmed";
-  }
-
-  // Treat as Pending
-  if (
-    v === "pending" ||
-    v === "in_progress" ||
-    v === "requested" ||
-    v.includes("pending") ||
-    v.includes("review") ||
-    v.includes("await")
-  ) {
-    return "Pending";
-  }
-
-  // Fallback
-  return "Cancelled";
-}
-
-function computeHours(start: string | null, end: string | null): string {
-  if (!start || !end) return "—";
-  const [sh, sm] = start.split(":").map(Number);
-  const [eh, em] = end.split(":").map(Number);
-  const startDate = new Date(0, 0, 0, sh, sm);
-  const endDate = new Date(0, 0, 0, eh, em);
-  let diff = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
-  if (diff < 0) diff += 24;
-  return `${diff.toFixed(2)}h`;
-}
-
 export async function getAllocationById(
   id: string,
 ): Promise<TutorAllocationRow> {
@@ -201,13 +136,6 @@ export async function getAllocationsByUnitAndActivityType(
   return res.data.data;
 }
 
-// Create a new allocation Admin, UnitCoordinator only
-
-// Delete an allocation
-
-// Update allocation status
-
-/* ------------------ ADMIN ------------------ */
 export async function getAdminAllocations(params: {
   page?: number;
   limit?: number;
@@ -229,6 +157,79 @@ export async function getAdminAllocations(params: {
   const res = await axios.get(`/admin/allocations?${search.toString()}`);
   return res.data;
 }
+
+export async function getCurrentUser(): Promise<{
+  userId: string;
+  email: string;
+  roles: string[];
+}> {
+  const res = await axios.get("/auth/me", {
+    withCredentials: true,
+  });
+  return res.data;
+}
+
+function toDDMMYYYY(iso?: string | null) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const dd = String(d.getUTCDate()).padStart(2, "0");
+  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const yyyy = d.getUTCFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
+// DB status → UI union type normalization
+type UIStatus = TutorAllocationRow["status"]; // "Confirmed" | "Pending" | "Cancelled"
+function normalizeStatus(s?: string | null): UIStatus {
+  const v = (s ?? "").trim().toLowerCase();
+
+  // Treat as Confirmed
+  if (
+    v === "confirmed" ||
+    v === "approved" ||
+    v === "accepted" ||
+    v === "allocated" ||
+    v === "active" ||
+    v === "assigned"
+  ) {
+    return "Confirmed";
+  }
+
+  // Treat as Pending
+  if (
+    v === "pending" ||
+    v === "in_progress" ||
+    v === "requested" ||
+    v.includes("pending") ||
+    v.includes("review") ||
+    v.includes("await")
+  ) {
+    return "Pending";
+  }
+
+  // Fallback
+  return "Cancelled";
+}
+
+function computeHours(start: string | null, end: string | null): string {
+  if (!start || !end) return "—";
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  const startDate = new Date(0, 0, 0, sh, sm);
+  const endDate = new Date(0, 0, 0, eh, em);
+  let diff = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
+  if (diff < 0) diff += 24;
+  return `${diff.toFixed(2)}h`;
+}
+
+// Create a new allocation Admin, UnitCoordinator only
+
+// Delete an allocation
+
+// Update allocation status
+
+/* ------------------ ADMIN ------------------ */
 
 export async function patchAdminAllocation(
   id: string | number,

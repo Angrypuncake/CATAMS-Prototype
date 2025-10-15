@@ -21,6 +21,7 @@ import { mapToRequestRow, useColumnSorter } from "./utils";
 import { actions, notices } from "./mockData";
 import { getTutorRequests } from "@/app/services/requestService";
 import { RequestRow } from "@/app/_types/request";
+import { VISIBLE_STATUSES_FOR_TUTOR } from "@/app/_types/allocations";
 
 /* ========= Page ========= */
 const Page = () => {
@@ -82,8 +83,23 @@ const Page = () => {
     fetchData();
   }, [page, rowsPerPage]);
 
+  const filteredSessions = tutorSessions.filter((s) => {
+    // ✅ safely handle possible null / undefined
+    const unitCode = String(s.unitCode) ?? "";
+    const status = s.status ?? "";
+
+    // Search filter
+    if (search && !unitCode.toLowerCase().includes(search.toLowerCase())) {
+      return false;
+    }
+
+    // Status filter
+    return VISIBLE_STATUSES_FOR_TUTOR.includes(status);
+  });
+
+  // Then apply sorting
   const sortedSessions: AllocationRow[] = useColumnSorter<AllocationRow>(
-    tutorSessions,
+    filteredSessions,
     sortAllocationsConfig,
   );
 

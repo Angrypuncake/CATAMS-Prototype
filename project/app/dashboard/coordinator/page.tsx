@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
-import { Slider, Typography, Menu, MenuItem, Button } from "@mui/material";
+import { Slider, Typography, Menu, MenuItem, Button, Box } from "@mui/material";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { CoordinatorBudgetOverview, UnitBudgetRow } from "./types";
 import UnitBudgetOverviewTable from "./UnitBudgetOverviewTable";
@@ -10,6 +10,8 @@ import Link from "next/link";
 import { pendingRequests } from "./mock";
 import { getUnitBudgetOverviews } from "@/app/services/budgetService";
 import { getCurrentYearAndSession } from "@/app/utils/dateHelpers";
+import AssignUnscheduledButton from "./_components/AssignUnscheduledButton";
+import UnscheduledAllocationsTable from "./_components/UnscheduledAllocationsTable";
 
 const Page = () => {
   // State for dropdown
@@ -167,13 +169,24 @@ const Page = () => {
           <Typography variant="body1">No Requests.</Typography>
         </div>
       </div>
-
       <div>
-        <Typography variant="h4">Marking Hours</Typography>
-        <Typography variant="body2">Manual allocations</Typography>
-        <div>
-          <Typography variant="body1">No Hours Allocated.</Typography>
-        </div>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 1,
+          }}
+        >
+          <Box>
+            <Typography variant="h4">Unscheduled Allocations</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Manual Marking and Consultation Hours
+            </Typography>
+          </Box>
+          <AssignUnscheduledButton />
+        </Box>
+        <UnscheduledAllocationsTable />
       </div>
     </div>
   );

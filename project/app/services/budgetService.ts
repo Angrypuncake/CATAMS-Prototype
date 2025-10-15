@@ -1,6 +1,5 @@
 import axios from "@/lib/axios";
-import { getUnitOffering } from "./unitService";
-import { getCoordinatorUnits } from "./userService";
+import { getUnitOffering, getCoordinatorUnits } from "./unitService";
 
 export async function getBudgetByOfferingId(offeringId: number) {
   const res = await axios.get(`/offerings/${offeringId}/budget/total`);

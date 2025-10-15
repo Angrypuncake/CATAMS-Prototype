@@ -38,6 +38,7 @@ export default function UCManualAllocationPage() {
   const [selectedTutor, setSelectedTutor] = useState<number | null>(null);
   const [activityType, setActivityType] = useState<string>("Marking");
   const [hours, setHours] = useState<number>(0);
+  const [note, setNote] = useState<string>("");
 
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState<string | null>(null);
@@ -106,6 +107,7 @@ export default function UCManualAllocationPage() {
         tutorId: selectedTutor,
         hours,
         activityType,
+        note,
       });
 
       setSuccess(
@@ -198,6 +200,17 @@ export default function UCManualAllocationPage() {
             required
             value={hours}
             onChange={(e) => setHours(Number(e.target.value))}
+          />
+
+          <TextField
+            label="Notes (optional)"
+            fullWidth
+            multiline
+            rows={3}
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder="e.g., Extra marking for late submissions or reassessment round."
+            sx={{ mb: 2 }}
           />
 
           {/* Submit */}

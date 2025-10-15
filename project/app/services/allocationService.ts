@@ -297,6 +297,7 @@ export interface UnscheduledAllocationPayload {
   tutorId: number;
   hours: number;
   activityType?: string; // e.g. "Marking", "Consultation", "Tutorial", "Laboratory"
+  note: string;
 }
 
 export interface UnscheduledAllocationResponse {
@@ -306,6 +307,7 @@ export interface UnscheduledAllocationResponse {
   paycodeId: string;
   activityType: string;
   status: string;
+  note: string;
 }
 
 /**

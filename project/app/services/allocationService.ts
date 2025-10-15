@@ -343,3 +343,38 @@ export async function createUnscheduledAllocation(
   );
   return data;
 }
+
+// Update hours, note, or location
+export async function updateUnscheduledAllocation(
+  allocationId: number,
+  updates: {
+    hours?: number;
+    note?: string;
+    location?: string;
+    status?: string;
+  },
+) {
+  const res = await fetch(`/allocations/${allocationId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  return res.json();
+}
+
+// Delete (soft cancel) allocation
+export async function deleteUnscheduledAllocation(allocationId: number) {
+  const res = await fetch(`/allocations/${allocationId}`, { method: "DELETE" });
+  return res.json();
+}
+
+// Get all unscheduled allocations for a unit
+export async function getUnscheduledAllocations(
+  offeringId: number,
+  activityType = "Marking",
+) {
+  const res = await fetch(
+    `/api/allocations/unscheduled?offeringId=${offeringId}&activityType=${activityType}`,
+  );
+  return res.json();
+}

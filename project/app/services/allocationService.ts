@@ -292,9 +292,52 @@ export async function getImportHistory(limit = 100): Promise<{
   return res.data;
 }
 
-export interface ManualAllocationPayload {
+export interface UnscheduledAllocationPayload {
   offeringId: number;
   tutorId: number;
   hours: number;
-  paycodeId?: string; // optional, defaults to "MARK" on backend
+  activityType?: string; // e.g. "Marking", "Consultation", "Tutorial", "Laboratory"
+}
+
+export interface UnscheduledAllocationResponse {
+  activityId: number;
+  occurrenceId: number;
+  allocationId: number;
+  paycodeId: string;
+  activityType: string;
+  status: string;
+}
+
+/**
+ * createUnscheduledAllocation
+ * ----------------------------
+ * Creates an unscheduled allocation (e.g. Marking, Consultation, etc.)
+ * under the given Unit Offering for a specific tutor.
+ *
+ * Usage:
+ * const res = await createUnscheduledAllocation({
+ *   offeringId: 3,
+ *   tutorId: 17,
+ *   hours: 8,
+ *   activityType: "Consultation"
+ * });
+ *
+ * Returns:
+ * {
+ *   activityId: number,
+ *   occurrenceId: number,
+ *   allocationId: number,
+ *   paycodeId: string,
+ *   activityType: string,
+ *   status: "success"
+ * }
+ */
+export async function createUnscheduledAllocation(
+  payload: UnscheduledAllocationPayload,
+): Promise<UnscheduledAllocationResponse> {
+  const { data } = await axios.post<UnscheduledAllocationResponse>(
+    "/allocations/unscheduled",
+    payload,
+  );
+  return data;
 }

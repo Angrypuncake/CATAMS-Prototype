@@ -137,3 +137,52 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const offeringId = searchParams.get("offeringId");
+  const tutorId = searchParams.get("tutorId");
+  const activityType = searchParams.get("activityType") || "Marking";
+  const status = searchParams.get("status");
+
+  if (!offeringId) {
+    return NextResponse.json({ error: "Missing offeringId" }, { status: 400 });
+  }
+
+  let sql = `
+    SELECT 
+      a.allocation_id,
+      a.user_id,
+      u.first_name,
+      u.last_name,
+      u.email,
+      so.hours,
+      so.note,
+      so.location,
+      ta.activity_type,
+      a.status
+    FROM allocation a
+    JOIN session_occurrence so ON a.session_id = so.occurrence_id
+    JOIN teaching_activity ta ON so.activity_id = ta.activity_id
+    JOIN users u ON u.user_id = a.user_id
+    WHERE ta.unit_offering_id = $1
+      AND ta.mode = 'unscheduled'
+      AND ta.activity_type = $2
+  `;
+  const params: (string | number)[] = [offeringId, activityType];
+
+  if (tutorId) {
+    sql += " AND u.user_id = $3";
+    params.push(tutorId);
+  }
+
+  if (status) {
+    sql += tutorId ? " AND a.status = $4" : " AND a.status = $3";
+    params.push(status);
+  }
+
+  sql += " ORDER BY u.last_name ASC;";
+
+  const { rows } = await query(sql, params);
+  return NextResponse.json(rows);
+}

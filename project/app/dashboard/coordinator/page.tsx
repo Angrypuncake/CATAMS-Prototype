@@ -73,10 +73,6 @@ const Page = () => {
           >
             Add/Edit Allocations
           </Button>
-
-          <Box className="flex justify-end mt-4">
-            <AssignUnscheduledButton />
-          </Box>
         </div>
       </div>
 
@@ -174,10 +170,22 @@ const Page = () => {
         </div>
       </div>
       <div>
-        <Typography variant="h4">Unscheduled Allocations</Typography>
-        <Typography variant="body2">
-          Manual Marking and Consultation Hours
-        </Typography>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 1,
+          }}
+        >
+          <Box>
+            <Typography variant="h4">Unscheduled Allocations</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Manual Marking and Consultation Hours
+            </Typography>
+          </Box>
+          <AssignUnscheduledButton />
+        </Box>
         <UnscheduledAllocationsTable />
       </div>
     </div>

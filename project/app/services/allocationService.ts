@@ -7,7 +7,13 @@ import type {
   PreviewResponse,
   TutorAllocationRow,
   AdminAllocationRow,
+  AllocationBase,
 } from "@/app/_types/allocations";
+import {
+  getCoordinatorUnits,
+  getUnitOffering,
+  UnitOffering,
+} from "./unitService";
 
 type By = {
   id: number | null;
@@ -377,4 +383,99 @@ export async function getUnscheduledAllocations(
     `/api/allocations/unscheduled?offeringId=${offeringId}&activityType=${activityType}`,
   );
   return res.json();
+}
+
+export interface UnscheduledAllocation {
+  allocation_id: number;
+  user_id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  hours: number;
+  note: string | null;
+  location: string | null;
+  activity_type: string;
+  status: string;
+}
+
+/**
+ * Fetch all unscheduled allocations for a specific unit offering.
+ *
+ * @param offeringId - The ID of the unit offering
+ * @param activityType - Optional filter (default: "Marking")
+ */
+export async function getUnscheduledAllocationsByOffering(
+  offeringId: number,
+  activityType = "Marking",
+): Promise<UnscheduledAllocation[]> {
+  const res = await axios.get("/allocations/unscheduled", {
+    params: {
+      offeringId,
+      activityType,
+    },
+  });
+  return res.data as UnscheduledAllocation[];
+}
+
+/**
+ * Fetch all unscheduled allocations (e.g. Marking, Consultation)
+ * across all units that this Unit Coordinator manages.
+ */
+export async function getAllUnscheduledAllocationsForUC(
+  activityType = "Marking",
+): Promise<
+  (UnscheduledAllocation & {
+    offeringId: number;
+    unitCode: string;
+    unitName: string;
+    year: number;
+    session: string;
+  })[]
+> {
+  try {
+    // 1️⃣ Fetch all units this UC coordinates (just offering_id)
+    const coordinatorUnits = await getCoordinatorUnits();
+    const offeringIds = coordinatorUnits.map((u) => u.offering_id);
+
+    if (offeringIds.length === 0) return [];
+
+    // 2️⃣ Enrich offerings → get full unit metadata
+    const enrichedOfferings: UnitOffering[] = await Promise.all(
+      offeringIds.map((id) => getUnitOffering(id)),
+    );
+
+    // 3️⃣ For each offering, fetch unscheduled allocations in parallel
+    const results = await Promise.all(
+      enrichedOfferings.map(async (unit) => {
+        const res = await axios.get("/api/allocations/unscheduled", {
+          params: { offeringId: unit.offeringId, activityType },
+        });
+
+        const allocations = res.data as UnscheduledAllocation[];
+
+        // Attach unit context to each allocation
+        return allocations.map((a) => ({
+          ...a,
+          offeringId: unit.offeringId,
+          unitCode: unit.unitCode,
+          unitName: unit.unitName,
+          year: unit.year,
+          session: unit.session,
+        }));
+      }),
+    );
+
+    // 4️⃣ Flatten & sort
+    const merged = results.flat();
+    merged.sort((a, b) =>
+      a.unitCode === b.unitCode
+        ? a.last_name.localeCompare(b.last_name)
+        : a.unitCode.localeCompare(b.unitCode),
+    );
+
+    return merged;
+  } catch (err) {
+    console.error("Failed to fetch all UC unscheduled allocations:", err);
+    throw err;
+  }
 }

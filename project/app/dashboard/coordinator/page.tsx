@@ -10,7 +10,7 @@ import Link from "next/link";
 import { pendingRequests } from "./mock";
 import { getUnitBudgetOverviews } from "@/app/services/budgetService";
 import { getCurrentYearAndSession } from "@/app/utils/dateHelpers";
-import AssignUnscheduledButton from "./AssignUnscheduledButton";
+import AssignUnscheduledButton from "./_components/AssignUnscheduledButton";
 
 const Page = () => {
   // State for dropdown
@@ -170,14 +170,6 @@ const Page = () => {
         <Typography variant="body2">Flagged queues</Typography>
         <div className="flex">
           <Typography variant="body1">No Requests.</Typography>
-        </div>
-      </div>
-
-      <div>
-        <Typography variant="h4">Marking Hours</Typography>
-        <Typography variant="body2">Manual allocations</Typography>
-        <div>
-          <Typography variant="body1">No Hours Allocated.</Typography>
         </div>
       </div>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
-import { Slider, Typography, Menu, MenuItem, Button } from "@mui/material";
+import { Slider, Typography, Menu, MenuItem, Button, Box } from "@mui/material";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { CoordinatorBudgetOverview, UnitBudgetRow } from "./types";
 import UnitBudgetOverviewTable from "./UnitBudgetOverviewTable";
@@ -10,6 +10,7 @@ import Link from "next/link";
 import { pendingRequests } from "./mock";
 import { getUnitBudgetOverviews } from "@/app/services/budgetService";
 import { getCurrentYearAndSession } from "@/app/utils/dateHelpers";
+import AssignUnscheduledButton from "./AssignUnscheduledButton";
 
 const Page = () => {
   // State for dropdown
@@ -71,6 +72,10 @@ const Page = () => {
           >
             Add/Edit Allocations
           </Button>
+
+          <Box className="flex justify-end mt-4">
+            <AssignUnscheduledButton />
+          </Box>
         </div>
       </div>
 

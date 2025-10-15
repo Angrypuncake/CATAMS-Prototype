@@ -1,4 +1,3 @@
-// app/dashboard/uc/manual-allocation/page.tsx
 "use client";
 
 import React, { useState, useEffect } from "react";
@@ -13,6 +12,8 @@ import {
   FormControl,
   InputLabel,
   CircularProgress,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import {
   getCoordinatorUnits,
@@ -33,32 +34,27 @@ interface UnitDisplay {
 export default function UCManualAllocationPage() {
   const [units, setUnits] = useState<UnitDisplay[]>([]);
   const [selectedUnit, setSelectedUnit] = useState<UnitDisplay | null>(null);
-
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [selectedTutor, setSelectedTutor] = useState<number | null>(null);
-
   const [activityType, setActivityType] = useState<string>("Marking");
   const [hours, setHours] = useState<number>(0);
 
   const [loading, setLoading] = useState(false);
-  const [message, setMessage] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
 
-  // Preset activity types
   const activityPresets = [
     { label: "Marking", value: "Marking" },
     { label: "Consultation", value: "Consultation" },
     { label: "Help Desk", value: "HelpDesk" },
   ];
 
-  /** 1️⃣ Load all UC unit offerings */
+  /* ----------------------------- Load Units ----------------------------- */
   useEffect(() => {
     (async () => {
       try {
-        const coordinatorUnits = await getCoordinatorUnits(); // [{ offering_id }]
+        const coordinatorUnits = await getCoordinatorUnits();
         const enrichedUnits: UnitDisplay[] = [];
-
-        // Resolve each offeringId → UnitOffering (code, name, year, session)
         for (const u of coordinatorUnits) {
           const data = await getUnitOffering(u.offering_id);
           enrichedUnits.push({
@@ -69,16 +65,15 @@ export default function UCManualAllocationPage() {
             session: data.session,
           });
         }
-
         setUnits(enrichedUnits);
       } catch (err) {
         console.error(err);
-        setError("Failed to load unit offerings");
+        setErr("Failed to load unit offerings");
       }
     })();
   }, []);
 
-  /** 2️⃣ Fetch tutors when a unit is selected */
+  /* ----------------------------- Load Tutors ---------------------------- */
   useEffect(() => {
     if (!selectedUnit) return;
     (async () => {
@@ -87,20 +82,20 @@ export default function UCManualAllocationPage() {
         setTutors(tutorsRes);
       } catch (err) {
         console.error(err);
-        setError("Failed to load tutors for this unit");
+        setErr("Failed to load tutors for this unit");
       }
     })();
   }, [selectedUnit]);
 
-  /** 3️⃣ Submit allocation */
+  /* ----------------------------- Submit Form ---------------------------- */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setMessage(null);
-    setError(null);
+    setErr(null);
+    setSuccess(null);
 
     if (!selectedUnit || !selectedTutor || !hours) {
-      setError("Please fill in all required fields");
+      setErr("Please fill in all required fields");
       setLoading(false);
       return;
     }
@@ -113,18 +108,23 @@ export default function UCManualAllocationPage() {
         activityType,
       });
 
-      setMessage(
+      setSuccess(
         `✅ Allocation created successfully (Type: ${res.activityType}, Tutor ID: ${selectedTutor})`,
       );
+
+      // Optional: reset form fields
+      setSelectedTutor(null);
+      setHours(0);
+      setActivityType("Marking");
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-
-      setError(msg || "Failed to create allocation");
+      setErr(msg || "Failed to create allocation");
     } finally {
       setLoading(false);
     }
   };
 
+  /* ----------------------------- Render UI ------------------------------ */
   return (
     <Box className="p-6 max-w-2xl mx-auto">
       <Typography variant="h5" fontWeight="bold" gutterBottom>
@@ -143,7 +143,7 @@ export default function UCManualAllocationPage() {
                 const id = Number(e.target.value);
                 const u = units.find((x) => x.offeringId === id) || null;
                 setSelectedUnit(u);
-                setTutors([]); // reset tutor list
+                setTutors([]);
                 setSelectedTutor(null);
               }}
               required
@@ -215,20 +215,40 @@ export default function UCManualAllocationPage() {
               )}
             </Button>
           </Box>
-
-          {/* Feedback */}
-          {message && (
-            <Typography color="success.main" variant="body2">
-              {message}
-            </Typography>
-          )}
-          {error && (
-            <Typography color="error.main" variant="body2">
-              {error}
-            </Typography>
-          )}
         </form>
       </Paper>
+
+      {/* Success Snackbar */}
+      <Snackbar
+        open={!!success}
+        autoHideDuration={4000}
+        onClose={() => setSuccess(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSuccess(null)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          {success}
+        </Alert>
+      </Snackbar>
+
+      {/* Error Snackbar */}
+      <Snackbar
+        open={!!err}
+        autoHideDuration={4000}
+        onClose={() => setErr(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setErr(null)}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {err}
+        </Alert>
+      </Snackbar>
     </Box>
   );
 }

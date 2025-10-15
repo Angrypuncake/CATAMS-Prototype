@@ -3,39 +3,27 @@ import { query } from "@/lib/db";
 
 /**
  * POST /api/allocations/unscheduled
+ * Creates an unscheduled allocation (Marking / Consultation / etc.)
  *
- * Creates an unscheduled allocation for any supported activity type
- *
- * Request Body:
- * --------------
+ * Body:
  * {
- *   "offeringId": number,
- *   "tutorId": number,
- *   "hours": number,
- *   "activityType": string // optional, defaults to "Marking"
- * }
- *
- * Supported activityType → paycodeId map:
- * ---------------------------------------
- * "Marking"       → MARK
- * "Consultation"  → CONS
- * "Tutorial"      → TU2
- * "Laboratory"    → LAB2
- *
- * Response:
- * ----------
- * {
- *   "activityId": number,
- *   "occurrenceId": number,
- *   "allocationId": number,
- *   "status": "success"
+ *   offeringId: number,
+ *   tutorId: number,
+ *   hours: number,
+ *   activityType?: string,
+ *   note?: string
  * }
  */
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { offeringId, tutorId, hours, activityType = "Marking" } = body;
+    const {
+      offeringId,
+      tutorId,
+      hours,
+      activityType = "Marking",
+      note = null,
+    } = body;
 
     if (!offeringId || !tutorId) {
       return NextResponse.json(
@@ -44,7 +32,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 🧠 1️⃣ Map activity type to paycode
+    // 🧠 1️⃣ Map activity type → paycode
     const paycodeMap: Record<string, { code: string; description: string }> = {
       Marking: {
         code: "MARK",
@@ -105,19 +93,21 @@ export async function POST(req: Request) {
     // 🧠 3️⃣ Create session_occurrence
     const insertOccurrenceSQL = `
       INSERT INTO session_occurrence (
-        activity_id, session_date, is_cancelled, description, hours
+        activity_id, session_date, is_cancelled, description, hours, note
       )
-      VALUES ($1, NULL, false, $2, $3)
+      VALUES ($1, NULL, false, $2, $3, $4)
       RETURNING occurrence_id;
     `;
+
     const { rows: occurrenceRows } = await query(insertOccurrenceSQL, [
       activityId,
       `${activityType} (no fixed session)`,
       hours || null,
+      note,
     ]);
     const occurrenceId = occurrenceRows[0].occurrence_id;
 
-    // 🧠 4️⃣ Create allocation
+    // 🧠 4️⃣ Create allocation (with note)
     const insertAllocationSQL = `
       INSERT INTO allocation (
         user_id, session_id, paycode_id, teaching_role, status, created_by_run_id
@@ -138,6 +128,7 @@ export async function POST(req: Request) {
       allocationId,
       paycodeId,
       activityType,
+      note,
       status: "success",
     });
   } catch (e) {

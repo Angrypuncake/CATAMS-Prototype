@@ -56,9 +56,6 @@ export async function getUserUnits(id: number) {
   const res = await axios.get(`/users/${id}/units`);
   return res.data.data;
 }
-interface RawCoordinatorUnit {
-  offering_id: number;
-}
 
 /**
  * Fetches users with optional search and filtering.

@@ -11,6 +11,7 @@ import { pendingRequests } from "./mock";
 import { getUnitBudgetOverviews } from "@/app/services/budgetService";
 import { getCurrentYearAndSession } from "@/app/utils/dateHelpers";
 import AssignUnscheduledButton from "./_components/AssignUnscheduledButton";
+import UnscheduledAllocationsTable from "./_components/UnscheduledAllocationsTable";
 
 const Page = () => {
   // State for dropdown
@@ -171,6 +172,13 @@ const Page = () => {
         <div className="flex">
           <Typography variant="body1">No Requests.</Typography>
         </div>
+      </div>
+      <div>
+        <Typography variant="h4">Unscheduled Allocations</Typography>
+        <Typography variant="body2">
+          Manual Marking and Consultation Hours
+        </Typography>
+        <UnscheduledAllocationsTable />
       </div>
     </div>
   );

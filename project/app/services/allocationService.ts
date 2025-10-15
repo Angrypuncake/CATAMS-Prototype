@@ -447,7 +447,7 @@ export async function getAllUnscheduledAllocationsForUC(
     // 3️⃣ For each offering, fetch unscheduled allocations in parallel
     const results = await Promise.all(
       enrichedOfferings.map(async (unit) => {
-        const res = await axios.get("/api/allocations/unscheduled", {
+        const res = await axios.get("/allocations/unscheduled", {
           params: { offeringId: unit.offeringId, activityType },
         });
 

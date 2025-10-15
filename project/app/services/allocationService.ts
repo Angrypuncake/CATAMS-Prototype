@@ -291,3 +291,10 @@ export async function getImportHistory(limit = 100): Promise<{
   });
   return res.data;
 }
+
+export interface ManualAllocationPayload {
+  offeringId: number;
+  tutorId: number;
+  hours: number;
+  paycodeId?: string; // optional, defaults to "MARK" on backend
+}

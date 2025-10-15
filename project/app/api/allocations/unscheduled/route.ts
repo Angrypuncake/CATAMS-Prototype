@@ -1,0 +1,148 @@
+import { NextResponse } from "next/server";
+import { query } from "@/lib/db";
+
+/**
+ * POST /api/allocations/unscheduled
+ *
+ * Creates an unscheduled allocation for any supported activity type
+ *
+ * Request Body:
+ * --------------
+ * {
+ *   "offeringId": number,
+ *   "tutorId": number,
+ *   "hours": number,
+ *   "activityType": string // optional, defaults to "Marking"
+ * }
+ *
+ * Supported activityType → paycodeId map:
+ * ---------------------------------------
+ * "Marking"       → MARK
+ * "Consultation"  → CONS
+ * "Tutorial"      → TU2
+ * "Laboratory"    → LAB2
+ *
+ * Response:
+ * ----------
+ * {
+ *   "activityId": number,
+ *   "occurrenceId": number,
+ *   "allocationId": number,
+ *   "status": "success"
+ * }
+ */
+
+export async function POST(req: Request) {
+  try {
+    const body = await req.json();
+    const { offeringId, tutorId, hours, activityType = "Marking" } = body;
+
+    if (!offeringId || !tutorId) {
+      return NextResponse.json(
+        { error: "Missing required fields (offeringId, tutorId)" },
+        { status: 400 },
+      );
+    }
+
+    // 🧠 1️⃣ Map activity type to paycode
+    const paycodeMap: Record<string, { code: string; description: string }> = {
+      Marking: {
+        code: "MARK",
+        description: "Hours allocated for manual assessment marking",
+      },
+      Consultation: {
+        code: "CONS",
+        description: "Student consultation hours (unscheduled)",
+      },
+      Tutorial: {
+        code: "TU2",
+        description: "Unscheduled tutorial allocation",
+      },
+      Laboratory: {
+        code: "LAB2",
+        description: "Unscheduled laboratory allocation",
+      },
+    };
+
+    const mapping = paycodeMap[activityType] || paycodeMap["Marking"];
+    const paycodeId = mapping.code;
+    const activityDescription = mapping.description;
+
+    // 🧠 2️⃣ Find or create unscheduled teaching_activity
+    const findActivitySQL = `
+      SELECT activity_id
+      FROM teaching_activity
+      WHERE unit_offering_id = $1
+        AND activity_type = $2
+        AND mode = 'unscheduled'
+      LIMIT 1;
+    `;
+    const { rows: existingActivities } = await query(findActivitySQL, [
+      offeringId,
+      activityType,
+    ]);
+
+    let activityId: number;
+    if (existingActivities.length > 0) {
+      activityId = existingActivities[0].activity_id;
+    } else {
+      const insertActivitySQL = `
+        INSERT INTO teaching_activity (
+          unit_offering_id, activity_type, activity_name, activity_description, mode
+        )
+        VALUES ($1, $2, $3, $4, 'unscheduled')
+        RETURNING activity_id;
+      `;
+      const { rows } = await query(insertActivitySQL, [
+        offeringId,
+        activityType,
+        `Manual ${activityType}`,
+        activityDescription,
+      ]);
+      activityId = rows[0].activity_id;
+    }
+
+    // 🧠 3️⃣ Create session_occurrence
+    const insertOccurrenceSQL = `
+      INSERT INTO session_occurrence (
+        activity_id, session_date, is_cancelled, description, hours
+      )
+      VALUES ($1, NULL, false, $2, $3)
+      RETURNING occurrence_id;
+    `;
+    const { rows: occurrenceRows } = await query(insertOccurrenceSQL, [
+      activityId,
+      `${activityType} (no fixed session)`,
+      hours || null,
+    ]);
+    const occurrenceId = occurrenceRows[0].occurrence_id;
+
+    // 🧠 4️⃣ Create allocation
+    const insertAllocationSQL = `
+      INSERT INTO allocation (
+        user_id, session_id, paycode_id, teaching_role, status, created_by_run_id
+      )
+      VALUES ($1, $2, $3, 'Marker', 'active', NULL)
+      RETURNING allocation_id;
+    `;
+    const { rows: allocationRows } = await query(insertAllocationSQL, [
+      tutorId,
+      occurrenceId,
+      paycodeId,
+    ]);
+    const allocationId = allocationRows[0].allocation_id;
+
+    return NextResponse.json({
+      activityId,
+      occurrenceId,
+      allocationId,
+      paycodeId,
+      activityType,
+      status: "success",
+    });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : "Internal error";
+    console.error("Unscheduled Allocation Error:", message);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

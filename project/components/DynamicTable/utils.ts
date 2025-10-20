@@ -78,3 +78,100 @@ export const compareValues = (
 };
 
 export { defaultRender } from "./renderUtils";
+
+/**
+ * Export utility functions for CSV and JSON
+ */
+
+/**
+ * Format a cell value for CSV export
+ * Wraps values containing commas in quotes
+ */
+const formatCSVCell = (value: unknown): string => {
+  let str = String(value ?? "");
+  // Wrap in quotes if contains comma, quote, or newline
+  if (str.includes(",") || str.includes('"') || str.includes("\n")) {
+    // Escape existing quotes by doubling them
+    str = str.replace(/"/g, '""');
+    return `"${str}"`;
+  }
+  return str;
+};
+
+/**
+ * Export data to JSON file
+ */
+export function exportToJSON<T = Record<string, unknown>>(
+  data: T[],
+  filename = "export.json",
+  excludeKeys: string[] = ["id"],
+): void {
+  if (!data?.length) {
+    console.warn("No data to export");
+    return;
+  }
+
+  // Clone and filter data
+  const filteredData = data.map((row) => {
+    const filtered = { ...row } as Record<string, unknown>;
+    excludeKeys.forEach((key) => delete filtered[key]);
+    return filtered;
+  });
+
+  const jsonString = JSON.stringify(filteredData, null, 2);
+  const blob = new Blob([jsonString], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+
+  URL.revokeObjectURL(url);
+}
+
+/**
+ * Export data to CSV file
+ */
+export function exportToCSV<T = Record<string, unknown>>(
+  data: T[],
+  filename = "export.csv",
+  excludeKeys: string[] = ["id"],
+  columnOrder?: string[],
+): void {
+  if (!data?.length) {
+    console.warn("No data to export");
+    return;
+  }
+
+  // Get all keys from the first row
+  const allKeys = Object.keys(data[0] as object);
+
+  // Filter out excluded keys
+  const filteredKeys = allKeys.filter((key) => !excludeKeys.includes(key));
+
+  // Use provided column order or default to filtered keys
+  const keys = columnOrder
+    ? columnOrder.filter((key) => filteredKeys.includes(key))
+    : filteredKeys;
+
+  // Create CSV header
+  let csvString = keys.join(",") + "\n";
+
+  // Add data rows
+  for (const row of data) {
+    const rowData = row as Record<string, unknown>;
+    const values = keys.map((key) => formatCSVCell(rowData[key]));
+    csvString += values.join(",") + "\n";
+  }
+
+  const blob = new Blob([csvString], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.click();
+
+  URL.revokeObjectURL(url);
+}

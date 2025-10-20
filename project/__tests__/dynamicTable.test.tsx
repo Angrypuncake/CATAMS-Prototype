@@ -281,4 +281,276 @@ describe("DynamicTable", () => {
       expect(onSortChange).toHaveBeenCalledWith("user_name", "desc");
     });
   });
+  describe("Pagination", () => {
+    let longData: Array<{ id: number; name: string }>;
+
+    beforeEach(() => {
+      longData = Array.from({ length: 20 }, (_, i) => ({
+        id: i + 1,
+        name: `User ${i + 1}`,
+      }));
+    });
+    test("client-side pagination displays, navigates, and uses custom options", () => {
+      const { unmount } = render(
+        <DynamicTable
+          rows={longData}
+          enablePagination={true}
+          rowsPerPageOptions={[5, 10, 15]}
+          defaultRowsPerPage={5}
+        />,
+      );
+
+      let rows = screen.getAllByRole("row");
+      expect(rows.length).toBe(6);
+      expect(screen.getByText("User 1")).toBeInTheDocument();
+      expect(screen.queryByText("User 6")).not.toBeInTheDocument();
+
+      const nextButton = screen.getByRole("button", { name: /next page/i });
+      fireEvent.click(nextButton);
+      expect(screen.queryByText("User 1")).not.toBeInTheDocument();
+      expect(screen.getByText("User 6")).toBeInTheDocument();
+
+      const rowsPerPageSelect = screen.getByRole("combobox");
+      fireEvent.mouseDown(rowsPerPageSelect);
+      const option = screen.getByRole("option", { name: "10" });
+      fireEvent.click(option);
+      rows = screen.getAllByRole("row");
+      expect(rows.length).toBe(11);
+
+      unmount();
+      render(<DynamicTable rows={longData} enablePagination={false} />);
+      rows = screen.getAllByRole("row");
+      expect(rows.length).toBe(21);
+    });
+
+    test("server-side pagination triggers callbacks and uses totalCount", () => {
+      const onPaginationChange = jest.fn();
+
+      render(
+        <DynamicTable
+          rows={basicData}
+          enableServerSidePagination={true}
+          onPaginationChange={onPaginationChange}
+          totalCount={100}
+          defaultRowsPerPage={10}
+        />,
+      );
+
+      expect(screen.getByText(/100/)).toBeInTheDocument();
+
+      expect(screen.getByText("Elvis")).toBeInTheDocument();
+      expect(screen.getByText("Alex")).toBeInTheDocument();
+
+      const nextButton = screen.getByRole("button", { name: /next page/i });
+      fireEvent.click(nextButton);
+      expect(onPaginationChange).toHaveBeenCalledWith(1, 10);
+
+      const rowsPerPageSelect = screen.getByRole("combobox");
+      fireEvent.mouseDown(rowsPerPageSelect);
+      const option = screen.getByRole("option", { name: "25" });
+      fireEvent.click(option);
+      expect(onPaginationChange).toHaveBeenCalledWith(0, 25);
+    });
+  });
+
+  test("uses custom column labels and renderers", () => {
+    const mockData = [{ user_name: "Elvis", status: "active" }];
+
+    render(
+      <DynamicTable
+        rows={mockData}
+        columns={[
+          { key: "user_name", label: "Full Name" },
+          { key: "status", label: "Status" },
+        ]}
+        columnRenderers={{
+          status: (value) => (
+            <span data-testid="custom-status">
+              {String(value).toUpperCase()}
+            </span>
+          ),
+        }}
+      />,
+    );
+
+    expect(screen.getByText("Full Name")).toBeInTheDocument();
+    expect(screen.queryByText("User Name")).not.toBeInTheDocument();
+
+    const customElement = screen.getByTestId("custom-status");
+    expect(customElement).toHaveTextContent("ACTIVE");
+  });
+
+  test("action buttons render, call callbacks, support conditions and custom labels", () => {
+    const onClick = jest.fn();
+
+    render(
+      <DynamicTable
+        rows={complexData}
+        actions={[
+          { label: "Edit", onClick, color: "primary" },
+          {
+            label: "Delete",
+            onClick: jest.fn(),
+            disabled: (row) => row.isActive,
+          },
+        ]}
+        actionsLabel="Operations"
+      />,
+    );
+
+    expect(screen.getByText("Operations")).toBeInTheDocument();
+
+    const editButtons = screen.getAllByRole("button", { name: /edit/i });
+    expect(editButtons).toHaveLength(2);
+
+    fireEvent.click(editButtons[0]);
+    expect(onClick).toHaveBeenCalledWith(complexData[0]);
+
+    const deleteButtons = screen.getAllByRole("button", { name: /delete/i });
+    expect(deleteButtons[0]).toBeDisabled();
+    expect(deleteButtons[1]).not.toBeDisabled();
+  });
+
+  test("export shows buttons, triggers download, uses custom filename, and can be disabled", () => {
+    const createElementSpy = jest.spyOn(document, "createElement");
+
+    const { unmount } = render(
+      <DynamicTable
+        rows={basicData}
+        enableExport={true}
+        exportFilename="my_custom_export"
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: /csv/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /json/i })).toBeInTheDocument();
+
+    const csvButton = screen.getByRole("button", { name: /csv/i });
+    fireEvent.click(csvButton);
+    expect(createElementSpy).toHaveBeenCalledWith("a");
+    expect(global.URL.createObjectURL).toHaveBeenCalled();
+
+    const links = createElementSpy.mock.results
+      .filter((r) => r.value.tagName === "A")
+      .map((r) => r.value);
+    expect(links[links.length - 1].download).toBe("my_custom_export.csv");
+
+    const jsonButton = screen.getByRole("button", { name: /json/i });
+    fireEvent.click(jsonButton);
+    expect(createElementSpy).toHaveBeenCalledWith("a");
+
+    unmount();
+    render(<DynamicTable rows={basicData} enableExport={false} />);
+    expect(
+      screen.queryByRole("button", { name: /csv/i }),
+    ).not.toBeInTheDocument();
+  });
+
+  describe("Edge cases", () => {
+    test("handles arrays with chips, objects, and complex nested data", () => {
+      const arrayData = [{ id: 1, tags: ["react", "typescript", "testing"] }];
+
+      const { unmount } = render(
+        <DynamicTable rows={arrayData} maxChips={2} />,
+      );
+
+      expect(screen.getByText("react")).toBeInTheDocument();
+      expect(screen.getByText("typescript")).toBeInTheDocument();
+      expect(screen.getByText("+1 more")).toBeInTheDocument();
+
+      unmount();
+
+      const complexData = [
+        { id: 2, user: { name: "Elvis", age: 30 } },
+        {
+          id: 3,
+          items: [
+            { name: "item1", value: 10 },
+            { name: "item2", value: 20 },
+          ],
+        },
+      ];
+
+      const { container } = render(
+        <DynamicTable
+          rows={complexData}
+          enableSearch={false}
+          enablePagination={false}
+        />,
+      );
+
+      expect(container.textContent).toContain("Elvis");
+
+      const rows = screen.getAllByRole("row");
+      expect(rows.length).toBe(3);
+
+      const inspectButtons = container.querySelectorAll(
+        'svg[data-testid="SearchIcon"]',
+      );
+      expect(inspectButtons.length).toBeGreaterThan(0);
+    });
+
+    test("handles null, undefined, and long string values", () => {
+      const longString = "a".repeat(100);
+      const mockData = [
+        {
+          id: 1,
+          name: null,
+          email: undefined,
+          age: 25,
+          description: longString,
+        },
+      ];
+
+      render(<DynamicTable rows={mockData} />);
+
+      expect(screen.getByText("25")).toBeInTheDocument();
+
+      const dashElements = screen.getAllByText("—");
+      expect(dashElements.length).toBe(2);
+
+      const truncatedText = screen.getByText(/a+…/);
+      expect(truncatedText).toBeInTheDocument();
+      expect(truncatedText.textContent?.length).toBeLessThan(longString.length);
+    });
+
+    test("supports custom searchPlaceholder and works with all features disabled", () => {
+      const { unmount } = render(
+        <DynamicTable
+          rows={basicData}
+          enableSearch={true}
+          searchPlaceholder="Type to search..."
+        />,
+      );
+
+      expect(
+        screen.getByPlaceholderText("Type to search..."),
+      ).toBeInTheDocument();
+
+      unmount();
+      render(
+        <DynamicTable
+          rows={basicData}
+          enableSearch={false}
+          enableSorting={false}
+          enablePagination={false}
+          enableExport={false}
+        />,
+      );
+
+      expect(screen.getAllByText("Elvis")[0]).toBeInTheDocument();
+      expect(screen.getAllByText("Alex")[0]).toBeInTheDocument();
+      expect(screen.getAllByText("Gemma")[0]).toBeInTheDocument();
+
+      expect(
+        screen.queryByPlaceholderText("Search across all fields..."),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /next page/i }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", { name: /csv/i }),
+      ).not.toBeInTheDocument();
+    });
+  });
 });

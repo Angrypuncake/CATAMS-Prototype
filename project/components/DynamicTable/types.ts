@@ -47,4 +47,6 @@ export type DynamicTableProps<T = Record<string, unknown>> = {
   /** Server-side pagination props */
   enableServerSidePagination?: boolean;
   onPaginationChange?: (page: number, rowsPerPage: number) => void;
+  onSearchChange?: (searchTerm: string) => void;
+  onSortChange?: (column: keyof T & string, direction: "asc" | "desc") => void;
 };

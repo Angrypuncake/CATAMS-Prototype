@@ -37,6 +37,8 @@ function DynamicTable<T = Record<string, unknown>>({
   totalCount,
   enableServerSidePagination = false,
   onPaginationChange,
+  onSearchChange,
+  onSortChange,
 }: DynamicTableProps<T>) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(defaultRowsPerPage);
@@ -65,6 +67,11 @@ function DynamicTable<T = Record<string, unknown>>({
 
   const filteredRows = useMemo(() => {
     if (!rows || rows.length === 0) return [];
+
+    // If server-side pagination is enabled, skip client-side filtering
+    // The server should handle filtering
+    if (enableServerSidePagination) return rows;
+
     if (!searchTerm.trim()) return rows;
 
     return rows.filter((row) => {
@@ -73,9 +80,13 @@ function DynamicTable<T = Record<string, unknown>>({
         return searchInValue(value, searchTerm);
       });
     });
-  }, [rows, searchTerm, inferredColumns]);
+  }, [rows, searchTerm, inferredColumns, enableServerSidePagination]);
 
   const sortedRows = useMemo(() => {
+    // If server-side pagination is enabled, skip client-side sorting
+    // The server should handle sorting
+    if (enableServerSidePagination) return filteredRows;
+
     if (!sortColumn) return filteredRows;
 
     return [...filteredRows].sort((a, b) => {
@@ -83,7 +94,7 @@ function DynamicTable<T = Record<string, unknown>>({
       const bValue = b[sortColumn];
       return compareValues(aValue, bValue, sortDirection);
     });
-  }, [filteredRows, sortColumn, sortDirection]);
+  }, [filteredRows, sortColumn, sortDirection, enableServerSidePagination]);
 
   const paginatedRows = useMemo(() => {
     // If server-side pagination is enabled, don't slice the rows
@@ -127,25 +138,45 @@ function DynamicTable<T = Record<string, unknown>>({
   };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(event.target.value);
+    const newSearchTerm = event.target.value;
+    setSearchTerm(newSearchTerm);
     setPage(0); // Reset to first page when searching
+
+    // Notify parent component for server-side search
+    if (enableServerSidePagination && onSearchChange) {
+      onSearchChange(newSearchTerm);
+    }
   };
 
   const handleClearSearch = () => {
     setSearchTerm("");
     setPage(0);
+
+    // Notify parent component for server-side search
+    if (enableServerSidePagination && onSearchChange) {
+      onSearchChange("");
+    }
   };
 
   const handleSort = (column: keyof T & string) => {
+    let newDirection: "asc" | "desc";
+
     if (sortColumn === column) {
       // Toggle direction if same column
-      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+      newDirection = sortDirection === "asc" ? "desc" : "asc";
+      setSortDirection(newDirection);
     } else {
       // New column, start with ascending
       setSortColumn(column);
-      setSortDirection("asc");
+      newDirection = "asc";
+      setSortDirection(newDirection);
     }
     setPage(0); // Reset to first page when sorting
+
+    // Notify parent component for server-side sorting
+    if (enableServerSidePagination && onSortChange) {
+      onSortChange(column, newDirection);
+    }
   };
 
   return (

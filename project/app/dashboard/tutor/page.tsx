@@ -34,10 +34,6 @@ const Page = () => {
   const [tutorSessions, setTutorSessions] = useState<AllocationRow[]>([]);
   const [totalSessions, setTotalSessions] = useState(0);
   const [, setLoading] = useState(true);
-  const [sortAllocationsConfig, setSortAllocationsConfig] = useState<{
-    column: SortableColumns;
-    direction: "asc" | "desc";
-  } | null>(null);
   const [sortActionsConfig, setSortActionsConfig] = useState<{
     column: SortableColumns;
     direction: "asc" | "desc";
@@ -51,12 +47,12 @@ const Page = () => {
     direction: "asc" | "desc";
   } | null>(null);
 
-  // new states for pagination
+  // Pagination states for allocations table
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [tutorRequests, setTutorRequests] = useState<RequestRow[]>([]);
 
-  // Get requests
+  // Fetch allocations and requests
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -86,11 +82,7 @@ const Page = () => {
     fetchData();
   }, [page, rowsPerPage]);
 
-  const sortedSessions: AllocationRow[] = useColumnSorter<AllocationRow>(
-    tutorSessions,
-    sortAllocationsConfig,
-  );
-
+  // Sorting for other tables (Actions, Requests, Notices)
   const sortedActions: ActionRequiredRow[] = useColumnSorter<ActionRequiredRow>(
     actions,
     sortActionsConfig,
@@ -101,34 +93,11 @@ const Page = () => {
     sortNoticesConfig,
   );
 
-  // modal (ONLY for "My Allocations")
+  // Modal for allocations
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState<AllocationRow | null>(null);
 
-  useEffect(() => {
-    const fetchTutorSessions = async () => {
-      try {
-        const sessionUser = await getCurrentUser();
-        const allocationsData = await getTutorAllocations(
-          sessionUser.userId,
-          page + 1,
-          rowsPerPage,
-        );
-
-        setTutorSessions(allocationsData.data);
-        setTotalSessions(allocationsData.total);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTutorSessions();
-  }, [page, rowsPerPage]);
-
-  // NEED MORE QUERIES FOR NOTICES, REQUESTS AND ACTIONS
-
+  // Sort handlers for other tables
   type SortConfig = {
     column: SortableColumns;
     direction: "asc" | "desc";
@@ -146,7 +115,6 @@ const Page = () => {
     };
   };
 
-  const handleSortAllocations = createSortHandler(setSortAllocationsConfig);
   const handleSortActions = createSortHandler(setSortActionsConfig);
   const handleSortRequests = createSortHandler(setSortRequestsConfig);
   const handleSortNotices = createSortHandler(setSortNoticesConfig);
@@ -182,7 +150,7 @@ const Page = () => {
           My Allocations
         </Typography>
         <DynamicTable<AllocationRow>
-          rows={sortedSessions as TableRowData<AllocationRow>[]}
+          rows={tutorSessions as TableRowData<AllocationRow>[]}
           columns={[
             { key: "session_date", label: "Date" },
             { key: "start_at", label: "Time" },

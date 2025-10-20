@@ -43,4 +43,8 @@ export type DynamicTableProps<T = Record<string, unknown>> = {
   rowsPerPageOptions?: number[];
   defaultRowsPerPage?: number;
   totalCount?: number;
+
+  /** Server-side pagination props */
+  enableServerSidePagination?: boolean;
+  onPaginationChange?: (page: number, rowsPerPage: number) => void;
 };

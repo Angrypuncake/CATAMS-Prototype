@@ -35,6 +35,8 @@ function DynamicTable<T = Record<string, unknown>>({
   rowsPerPageOptions = [5, 10, 25, 50],
   defaultRowsPerPage = 5,
   totalCount,
+  enableServerSidePagination = false,
+  onPaginationChange,
 }: DynamicTableProps<T>) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(defaultRowsPerPage);
@@ -84,21 +86,44 @@ function DynamicTable<T = Record<string, unknown>>({
   }, [filteredRows, sortColumn, sortDirection]);
 
   const paginatedRows = useMemo(() => {
+    // If server-side pagination is enabled, don't slice the rows
+    // The parent component is responsible for sending the correct page of data
+    if (enableServerSidePagination) {
+      return sortedRows;
+    }
+
+    // Client-side pagination: slice the sorted rows
     return enablePagination
       ? sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
       : sortedRows;
-  }, [sortedRows, enablePagination, page, rowsPerPage]);
+  }, [
+    sortedRows,
+    enablePagination,
+    enableServerSidePagination,
+    page,
+    rowsPerPage,
+  ]);
 
   if (!rows || rows.length === 0) return null;
 
-  const handleChangePage = (_event: unknown, newPage: number) =>
+  const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
+    // Notify parent component of pagination change for server-side pagination
+    if (enableServerSidePagination && onPaginationChange) {
+      onPaginationChange(newPage, rowsPerPage);
+    }
+  };
 
   const handleChangeRowsPerPage = (
     event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
+    const newRowsPerPage = parseInt(event.target.value, 10);
+    setRowsPerPage(newRowsPerPage);
     setPage(0);
+    // Notify parent component of pagination change for server-side pagination
+    if (enableServerSidePagination && onPaginationChange) {
+      onPaginationChange(0, newRowsPerPage);
+    }
   };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -191,7 +216,11 @@ function DynamicTable<T = Record<string, unknown>>({
         <TablePagination
           rowsPerPageOptions={rowsPerPageOptions}
           component="div"
-          count={totalCount ?? 0}
+          count={
+            enableServerSidePagination
+              ? (totalCount ?? 0)
+              : (totalCount ?? filteredRows.length)
+          }
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}

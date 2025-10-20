@@ -10,9 +10,18 @@ import {
   TablePagination,
   Paper,
   Typography,
+  Box,
+  Button,
 } from "@mui/material";
+import DownloadIcon from "@mui/icons-material/Download";
 import type { TableRowData, ActionButton, DynamicTableProps } from "./types";
-import { searchInValue, compareValues, defaultRender } from "./utils";
+import {
+  searchInValue,
+  compareValues,
+  defaultRender,
+  exportToCSV,
+  exportToJSON,
+} from "./utils";
 import { SearchBar } from "./components/SearchBar";
 import { TableHeader } from "./components/TableHeader";
 import { ActionButtons } from "./components/ActionButtons";
@@ -39,6 +48,9 @@ function DynamicTable<T = Record<string, unknown>>({
   onPaginationChange,
   onSearchChange,
   onSortChange,
+  enableExport = false,
+  exportFilename = "export",
+  exportExcludeKeys = ["id"],
 }: DynamicTableProps<T>) {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(defaultRowsPerPage);
@@ -179,6 +191,16 @@ function DynamicTable<T = Record<string, unknown>>({
     }
   };
 
+  const handleExportCSV = () => {
+    // Export all filtered/sorted rows, not just current page
+    exportToCSV(sortedRows, `${exportFilename}.csv`, exportExcludeKeys);
+  };
+
+  const handleExportJSON = () => {
+    // Export all filtered/sorted rows, not just current page
+    exportToJSON(sortedRows, `${exportFilename}.json`, exportExcludeKeys);
+  };
+
   return (
     <Paper>
       {enableSearch && (
@@ -257,6 +279,40 @@ function DynamicTable<T = Record<string, unknown>>({
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
         />
+      )}
+
+      {enableExport && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            gap: 2,
+            p: 2,
+            borderTop: 1,
+            borderColor: "divider",
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            Export data:
+          </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<DownloadIcon />}
+            onClick={handleExportCSV}
+          >
+            CSV
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<DownloadIcon />}
+            onClick={handleExportJSON}
+          >
+            JSON
+          </Button>
+        </Box>
       )}
     </Paper>
   );

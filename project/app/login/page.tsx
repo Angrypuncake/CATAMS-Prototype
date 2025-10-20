@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import axios from "axios";
 import { Button, TextField, Typography } from "@mui/material";
-import CatamsNav from "@/components/CatamsNav";
+import MinimalNav from "@/components/MinimalNav";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -13,17 +13,13 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     try {
       const result = await axios.post(
         "/api/auth/login",
         { useremail: username, password },
         { withCredentials: true }
       );
-
-      if (result.data?.success) {
-        router.push("/portal");
-      }
+      if (result.data?.success) router.push("/portal");
     } catch (error: any) {
       console.error("Login error:", error);
       if (axios.isAxiosError(error) && error.response) {
@@ -35,18 +31,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#f7f9fc]">
-      {/* EXACT 1cm gap on both sides */}
-      <CatamsNav
-        logoSrc="/usyd_logo.png"
-        rightTitle="CATAMS"
+    <div className="min-h-screen w-full bg-[#f7f7f7]">
+      {/* 1cm gutters, logo on left, actions then CATAMS on right */}
+      <MinimalNav
         actions={[{ label: "HELP", href: "/help" }]}
+        rightTitle="CATAMS"
         edgeGapCm={1}
         maxWidthClass="max-w-screen-2xl"
+        logoSrc="/usyd_logo_white.png"
+        showOrangeAccent={true}
       />
 
-      <main className="max-w-screen-2xl mx-auto px-4 py-30">
-        <div className="mx-auto w-full max-w-xl border border-gray-200 bg-white p-8 shadow-sm">
+      <main className="max-w-screen-2xl mx-auto px-4">
+        <div className="mx-auto w-full max-w-xl border border-gray-200 bg-white p-8 sm:p-10 shadow-sm mt-10 sm:mt-14">
           <Typography
             variant="h5"
             component="h2"
@@ -64,7 +61,7 @@ export default function LoginPage() {
               required
               fullWidth
               label="Username * *"
-              placeholder="Enter your username"
+              placeholder="your.name@uni.edu"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               variant="outlined"
@@ -88,7 +85,13 @@ export default function LoginPage() {
               type="submit"
               variant="contained"
               fullWidth
-              sx={{ mt: 1, borderRadius: 0, py: 1.2 }}
+              sx={{
+                mt: 1,
+                borderRadius: 0,
+                py: 1.2,
+                bgcolor: "#000",
+                "&:hover": { bgcolor: "#111" },
+              }}
             >
               SIGN IN
             </Button>
@@ -97,7 +100,13 @@ export default function LoginPage() {
               variant="outlined"
               fullWidth
               onClick={() => router.push("/portal")}
-              sx={{ borderRadius: 0, py: 1.1 }}
+              sx={{
+                borderRadius: 0,
+                py: 1.1,
+                borderColor: "#9CA3AF",
+                color: "#111827",
+                "&:hover": { borderColor: "#6B7280", bgcolor: "#F9FAFB" },
+              }}
             >
               GO TO PORTAL
             </Button>

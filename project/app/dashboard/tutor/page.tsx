@@ -2,7 +2,6 @@
 import React, { useEffect, useState } from "react";
 import { Typography } from "@mui/material";
 import StyledBox from "./components";
-import AllocationsTable from "./AllocationsTable";
 import ActionRequiredTable from "./ActionRequiredTable";
 import RequestsTable from "./RequestsTable";
 import NoticesTable from "./NoticesTable";
@@ -17,16 +16,24 @@ import type {
   NoticeRow,
   SortableColumns,
 } from "./types";
-import { mapToRequestRow, useColumnSorter } from "./utils";
+import {
+  mapToRequestRow,
+  useColumnSorter,
+  hoursBetween,
+  niceTime,
+} from "./utils";
 import { actions, notices } from "./mockData";
 import { getTutorRequests } from "@/app/services/requestService";
 import { RequestRow } from "@/app/_types/request";
+import DynamicTable, {
+  TableRowData,
+} from "@/components/DynamicTable/DynamicTable";
 
 /* ========= Page ========= */
 const Page = () => {
   const [tutorSessions, setTutorSessions] = useState<AllocationRow[]>([]);
   const [totalSessions, setTotalSessions] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   const [sortAllocationsConfig, setSortAllocationsConfig] = useState<{
     column: SortableColumns;
     direction: "asc" | "desc";
@@ -44,12 +51,10 @@ const Page = () => {
     direction: "asc" | "desc";
   } | null>(null);
 
-  // new states for pagination + search
+  // new states for pagination
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [search, setSearch] = useState("");
   const [tutorRequests, setTutorRequests] = useState<RequestRow[]>([]);
-  const [totalRequests, setTotalRequests] = useState(0);
 
   // Get requests
   useEffect(() => {
@@ -71,7 +76,6 @@ const Page = () => {
         const mappedRequests: RequestRow[] =
           requestsData.data.map(mapToRequestRow);
         setTutorRequests(mappedRequests);
-        setTotalRequests(requestsData.total);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
       } finally {
@@ -174,27 +178,62 @@ const Page = () => {
 
       {/* ---------- My Allocations (ONLY this table opens a modal) ---------- */}
       <StyledBox>
-        <AllocationsTable
-          sessions={sortedSessions}
+        <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
+          My Allocations
+        </Typography>
+        <DynamicTable<AllocationRow>
+          rows={sortedSessions as TableRowData<AllocationRow>[]}
+          columns={[
+            { key: "session_date", label: "Date" },
+            { key: "start_at", label: "Time" },
+            { key: "unit_code", label: "Unit" },
+            { key: "location", label: "Location" },
+            { key: "hours", label: "Hours" },
+            { key: "status", label: "Status" },
+          ]}
+          columnRenderers={{
+            session_date: (value) => (
+              <span>{value ? String(value).slice(0, 10) : "N/A"}</span>
+            ),
+            start_at: (_value, row) => (
+              <span>
+                {row.start_at && row.end_at
+                  ? `${niceTime(row.start_at)}-${niceTime(row.end_at)}`
+                  : "N/A"}
+              </span>
+            ),
+            hours: (_value, row) => (
+              <span>
+                {hoursBetween(
+                  row.start_at ?? undefined,
+                  row.end_at ?? undefined,
+                )}
+              </span>
+            ),
+          }}
+          enableServerSidePagination={true}
+          onPaginationChange={(newPage, newRowsPerPage) => {
+            setPage(newPage);
+            setRowsPerPage(newRowsPerPage);
+          }}
           totalCount={totalSessions}
-          sortConfig={sortAllocationsConfig}
-          onSort={handleSortAllocations}
-          onRowClick={(row) => {
-            setSession(row);
-            setOpen(true);
-          }}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onPageChange={(_e, newPage) => setPage(newPage)}
-          onRowsPerPageChange={(e) => {
-            setRowsPerPage(parseInt(e.target.value, 10));
-            setPage(0);
-          }}
-          search={search}
-          onSearchChange={(value) => {
-            setSearch(value);
-            setPage(0);
-          }}
+          defaultRowsPerPage={5}
+          rowsPerPageOptions={[5, 10, 25]}
+          enableSearch={false}
+          enableExport={true}
+          exportFilename="tutor_allocations"
+          exportExcludeKeys={["id", "user_id"]}
+          actions={[
+            {
+              label: "View",
+              onClick: (row) => {
+                setSession(row);
+                setOpen(true);
+              },
+              color: "primary",
+              variant: "contained",
+            },
+          ]}
         />
       </StyledBox>
 

@@ -60,7 +60,7 @@ export default function LoginPage() {
               type="text"
               required
               fullWidth
-              label="Username * *"
+              label="Username"
               placeholder="your.name@uni.edu"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -73,7 +73,7 @@ export default function LoginPage() {
               type="password"
               required
               fullWidth
-              label="Password * *"
+              label="Password"
               placeholder="Enter your password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}

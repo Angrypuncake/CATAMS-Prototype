@@ -3,12 +3,20 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button, Typography, Card, CardContent, CardActions } from "@mui/material";
-import CatamsNav from "@/components/CatamsNav";
 import axios from "axios";
+import MinimalNav from "@/components/MinimalNav";
 import SchoolIcon from "@mui/icons-material/School";
 import GroupsIcon from "@mui/icons-material/Groups";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+
+/** Theme-appropriate accents (black/white/grey + a touch of orange) */
+const ACCENTS = {
+  black: "#000000",
+  grey: "#6B7280",
+  lightGrey: "#E5E7EB",
+  orange: "#F97316",
+};
 
 const dashboards = [
   {
@@ -16,28 +24,28 @@ const dashboards = [
     description: "View your sessions, allocations, and marking tasks.",
     icon: <SchoolIcon fontSize="large" />,
     href: "/dashboard/tutor",
-    accent: "#0b3a74",
+    accent: ACCENTS.black,
   },
   {
     title: "Teaching Assistant",
     description: "Handle session support and approvals.",
     icon: <GroupsIcon fontSize="large" />,
     href: "/dashboard/assistant",
-    accent: "#f0b429",
+    accent: ACCENTS.orange,
   },
   {
     title: "Coordinator",
     description: "Overview budget, approve hours, and manage staffing.",
     icon: <EventAvailableIcon fontSize="large" />,
     href: "/dashboard/coordinator",
-    accent: "#2f7d32",
+    accent: ACCENTS.grey,
   },
   {
     title: "System Admin",
     description: "User management, data operations, and system settings.",
     icon: <AdminPanelSettingsIcon fontSize="large" />,
     href: "/dashboard/admin",
-    accent: "#e46d0a",
+    accent: ACCENTS.black,
   },
 ];
 
@@ -54,17 +62,18 @@ export default function PortalPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#f7f9fc]">
-      {/* EXACT 1cm gap on both sides */}
-      <CatamsNav
-        logoSrc="/usyd_logo.png"
-        rightTitle="CATAMS"
+    <div className="min-h-screen w-full bg-[#f7f7f7]">
+      {/* New minimal nav (thin black strip + white bar). HELP pill sits left of heavy CATAMS. */}
+      <MinimalNav
         actions={[
           { label: "HELP", href: "/help" },
           { label: "Logout", onClick: handleLogout },
         ]}
+        rightTitle="CATAMS"
         edgeGapCm={1}
         maxWidthClass="max-w-screen-2xl"
+        logoSrc="/usyd_logo_white.png"
+        showOrangeAccent={true}
       />
 
       <main className="max-w-screen-2xl mx-auto px-4 py-8">
@@ -82,8 +91,8 @@ export default function PortalPage() {
             color="text.secondary"
             sx={{ maxWidth: 900, mt: 1 }}
           >
-            One portal for coordinators, TAs, admins, and tutors to view
-            schedules and manage teaching allocations
+            One portal for coordinators, TAs, admins, and tutors to view schedules
+            and manage teaching allocations
           </Typography>
         </header>
 
@@ -91,10 +100,17 @@ export default function PortalPage() {
           {dashboards.map((d) => (
             <Card
               key={d.title}
-              elevation={4}
-              sx={{ borderRadius: 2, overflow: "hidden" }}
+              elevation={3}
+              sx={{
+                borderRadius: 2,
+                overflow: "hidden",
+                border: `1px solid ${ACCENTS.lightGrey}`,
+                bgcolor: "#ffffff",
+              }}
             >
+              {/* thin accent bar per card */}
               <div style={{ height: 6, backgroundColor: d.accent }} />
+
               <CardContent sx={{ textAlign: "center", pt: 3 }}>
                 <div style={{ color: d.accent, display: "flex", justifyContent: "center" }}>
                   {d.icon}
@@ -106,12 +122,17 @@ export default function PortalPage() {
                   {d.description}
                 </Typography>
               </CardContent>
+
               <CardActions sx={{ justifyContent: "center", pb: 2 }}>
                 <Button
                   component={Link}
                   href={d.href}
                   variant="contained"
-                  sx={{ borderRadius: 1 }}
+                  sx={{
+                    borderRadius: 1,
+                    bgcolor: "#000",
+                    "&:hover": { bgcolor: "#111" },
+                  }}
                 >
                   Enter
                 </Button>

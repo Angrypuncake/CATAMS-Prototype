@@ -8,6 +8,14 @@ import SelectField from "./SelectField";
 import AllocationsTable from "./AllocationsTable";
 import ClaimsTable from "./ClaimsTable";
 import RequestsTable from "./RequestsTable";
+import StyledButton from "@/app/dashboard/tutor/StyledButton";
+import MinimalNav from "@/components/MinimalNav";
+import axios from "axios";
+
+/** Full-bleed: makes a child span the entire viewport width without clipping */
+const FullBleed: React.FC<React.PropsWithChildren> = ({ children }) => (
+  <div className="relative left-1/2 right-1/2 -mx-[50vw] w-screen">{children}</div>
+);
 
 interface AllocationRow {
   unit: string;
@@ -19,14 +27,12 @@ interface AllocationRow {
   lastChange: string;
   status: "Open" | "Attention";
 }
-
 interface ClaimData {
   tutor: string;
   session: string;
   diff: string;
   submitted: string;
 }
-
 interface RequestData {
   tutor: string;
   session: string;
@@ -40,238 +46,213 @@ const TeachingOperations: React.FC = () => {
   const [viewValue, setViewValue] = useState<string>("All");
 
   const allocationsData: AllocationRow[] = [
-    {
-      unit: "INFO1110",
-      week: "03",
-      sessions: 22,
-      assigned: 21,
-      unassigned: 1,
-      hours: 44,
-      lastChange: "14/09 09:10",
-      status: "Open",
-    },
-    {
-      unit: "INFO1910",
-      week: "03",
-      sessions: 18,
-      assigned: 18,
-      unassigned: 0,
-      hours: 36,
-      lastChange: "13/09 17:22",
-      status: "Open",
-    },
-    {
-      unit: "INFO3333",
-      week: "03",
-      sessions: 20,
-      assigned: 18,
-      unassigned: 2,
-      hours: 40,
-      lastChange: "13/09 18:05",
-      status: "Attention",
-    },
+    { unit: "INFO1110", week: "03", sessions: 22, assigned: 21, unassigned: 1, hours: 44, lastChange: "14/09 09:10", status: "Open" },
+    { unit: "INFO1910", week: "03", sessions: 18, assigned: 18, unassigned: 0, hours: 36, lastChange: "13/09 17:22", status: "Open" },
+    { unit: "INFO3333", week: "03", sessions: 20, assigned: 18, unassigned: 2, hours: 40, lastChange: "13/09 18:05", status: "Attention" },
   ];
-
   const claimsData: ClaimData[] = [
-    {
-      tutor: "J. Tran",
-      session: "INFO1110 • 13/09 • 5pm",
-      diff: "+0.5h",
-      submitted: "14/09 09:10",
-    },
-    {
-      tutor: "A. Singh",
-      session: "INFO1910 • 12/09 • 3pm",
-      diff: "Paycode",
-      submitted: "13/09 18:41",
-    },
+    { tutor: "J. Tran",  session: "INFO1110 • 13/09 • 5pm", diff: "+0.5h",  submitted: "14/09 09:10" },
+    { tutor: "A. Singh", session: "INFO1910 • 12/09 • 3pm", diff: "Paycode", submitted: "13/09 18:41" },
   ];
-
   const requestsData: RequestData[] = [
-    {
-      tutor: "J. Tran",
-      session: "INFO1110 • 13/09 • 5pm",
-      type: "Swap",
-      submitted: "14/09 09:10",
-    },
-    {
-      tutor: "A. Singh",
-      session: "INFO1910 • 12/09 • 3pm",
-      type: "Correction",
-      submitted: "13/09 18:41",
-    },
+    { tutor: "J. Tran",  session: "INFO1110 • 13/09 • 5pm", type: "Swap",       submitted: "14/09 09:10" },
+    { tutor: "A. Singh", session: "INFO1910 • 12/09 • 3pm", type: "Correction", submitted: "13/09 18:41" },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 w-[80%]">
-      <header className="bg-white border-b px-6 py-4">
-        <div className="flex items-center justify-between">
-          <Typography
-            variant="h3"
-            component="h1"
-            fontWeight="bold"
-            color="text.primary"
-          >
-            Teaching Operations
-          </Typography>
-          <div className="flex items-center gap-4">
-            <SelectField
-              value={termValue}
-              label="Term"
-              options={["S1 2025", "S2 2025", "S1 2026"]}
-              onChange={setTermValue}
-            />
-            <SelectField
-              value={unitValue}
-              label="Unit"
-              options={["All", "INFO1110", "INFO1910", "INFO3333"]}
-              onChange={setUnitValue}
-            />
-            <SelectField
-              value={viewValue}
-              label="View"
-              options={["All", "Allocations", "Claims", "Requests"]}
-              onChange={setViewValue}
-            />
+    <div className="min-h-screen bg-[#f7f7f7]">
+      {/* Full-width nav without touching the nav component */}
+      <FullBleed>
+        <MinimalNav
+          actions={[
+            { label: "HELP", href: "/help" },
+            {
+              label: "Logout",
+              onClick: async () => {
+                try {
+                  await axios.post("/api/auth/logout", {}, { withCredentials: true });
+                  window.location.href = "/login";
+                } catch (e) {
+                  console.error("Logout failed", e);
+                }
+              },
+            },
+          ]}
+          rightTitle="CATAMS"
+          edgeGapCm={0}
+          logoSrc="/usyd_logo_white.png"
+          showOrangeAccent
+        />
+      </FullBleed>
 
-            <div className="relative">
-              <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search tutors / requests / units"
-                className="pl-10 pr-4 py-2 w-72 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <Button
-              variant="secondary"
-              color="blue"
-              startIcon={<DownloadIcon className="w-4 h-4" />}
-            >
-              Export CSV
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      <div className="flex gap-6 p-6">
-        <div className="flex-1 space-y-6">
-          <section className="bg-white rounded-lg shadow-sm">
-            <div className="flex justify-between items-center p-4 border-b">
-              <Typography variant="h5" component="h2" fontWeight="600">
-                Allocations Overview
-              </Typography>
-              <Button variant="secondary" color="blue">
-                Manage Allocations
-              </Button>
-            </div>
-            <AllocationsTable data={allocationsData} />
-          </section>
-
-          <section className="bg-white rounded-lg shadow-sm">
-            <div className="flex justify-between items-center p-4 border-b">
-              <Typography variant="h5" component="h2" fontWeight="600">
-                Needs Attention
-              </Typography>
-              <Button
-                variant="text"
-                endIcon={<ChevronRightIcon className="w-4 h-4" />}
+      {/* Page content container */}
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <header className="bg-white border px-5 sm:px-6 py-5 rounded-xl shadow-sm mt-6">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <Typography
+                variant="h4"
+                component="h1"
+                fontWeight={800}
+                sx={{ lineHeight: 1.15, letterSpacing: "-0.01em" }}
+                className="break-words [text-wrap:balance]"
               >
-                Open Unit Board
-              </Button>
-            </div>
-            <div className="p-4 space-y-3">
-              <div className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                    Claim
-                  </span>
-                  <span className="font-medium">
-                    INFO1110 • 13/09 5pm — 2h → 2.5h
-                  </span>
-                  <span className="text-sm text-gray-600">Tutor: J. Tran</span>
-                </div>
-                <div className="flex gap-3">
-                  <Button variant="text" size="small">
-                    Review
-                  </Button>
-                  <Button variant="text" size="small">
-                    Open session
-                  </Button>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                    Request
-                  </span>
-                  <span className="font-medium">
-                    Swap — Tutor A ⇄ Tutor B (INFO1910)
-                  </span>
-                  <span className="text-sm text-gray-600">Pending 48h</span>
-                </div>
-                <div className="flex gap-3">
-                  <Button variant="text" size="small">
-                    Review
-                  </Button>
-                  <Button variant="text" size="small">
-                    Contact
-                  </Button>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-3 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                    Unassigned
-                  </span>
-                  <span className="font-medium">
-                    INFO3333 • 16/09 10am — No tutor
-                  </span>
-                </div>
-                <div className="flex gap-3">
-                  <Button variant="contained" size="small">
-                    Fill
-                  </Button>
-                  <Button variant="text" size="small">
-                    View options
-                  </Button>
-                </div>
-              </div>
-
-              <div className="text-right pt-2">
-                <Button variant="text">View all items</Button>
-              </div>
-            </div>
-          </section>
-        </div>
-
-        <div className="w-96 space-y-6">
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="flex justify-between items-center p-4 border-b">
-              <Typography variant="h5" component="h2" fontWeight="600">
-                Claims Pending
+                Teaching Operations
               </Typography>
-              <Button variant="secondary" color="blue">
-                View all claims
-              </Button>
+
+              <div className="hidden md:block">
+                <StyledButton startIcon={<DownloadIcon className="w-4 h-4" />}>
+                  Export CSV
+                </StyledButton>
+              </div>
             </div>
-            <ClaimsTable data={claimsData} />
+
+            <div className="flex flex-wrap items-center gap-3 md:gap-4">
+              <SelectField
+                value={termValue}
+                label="Term"
+                options={["S1 2025", "S2 2025", "S1 2026"]}
+                onChange={setTermValue}
+              />
+              <SelectField
+                value={unitValue}
+                label="Unit"
+                options={["All", "INFO1110", "INFO1910", "INFO3333"]}
+                onChange={setUnitValue}
+              />
+              <SelectField
+                value={viewValue}
+                label="View"
+                options={["All", "Allocations", "Claims", "Requests"]}
+                onChange={setViewValue}
+              />
+
+              <div className="relative flex-1 min-w-[220px]">
+                <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search tutors / requests / units"
+                  className="w-full pl-10 pr-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-black"
+                />
+              </div>
+
+              <div className="md:hidden w-full sm:w-auto">
+                <StyledButton startIcon={<DownloadIcon className="w-4 h-4" />} className="w-full sm:w-auto">
+                  Export CSV
+                </StyledButton>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        {/* Main content — RIGHT wider, LEFT narrower */}
+        <main className="grid grid-cols-12 gap-6 py-6">
+          {/* LEFT (narrower): allocations + attention */}
+          <div className="col-span-12 lg:col-span-7 space-y-6">
+            <section className="bg-white rounded-xl shadow-sm border">
+              <div className="flex flex-wrap justify-between items-center gap-3 p-4 sm:p-5 border-b">
+                <Typography variant="h5" component="h2" fontWeight={700}>
+                  Allocations Overview
+                </Typography>
+                <StyledButton>Manage Allocations</StyledButton>
+              </div>
+              {/* flush table: no padding wrapper */}
+              <div className="overflow-x-auto rounded-b-xl">
+                <AllocationsTable data={allocationsData} />
+              </div>
+            </section>
+
+            <section className="bg-white rounded-xl shadow-sm border">
+              <div className="flex flex-wrap justify-between items-center gap-3 p-4 sm:p-5 border-b">
+                <Typography variant="h5" component="h2" fontWeight={700}>
+                  Needs Attention
+                </Typography>
+                <Button variant="text" endIcon={<ChevronRightIcon className="w-4 h-4" />}>
+                  Open Unit Board
+                </Button>
+              </div>
+
+              <div className="p-4 sm:p-5 space-y-3">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                      Claim
+                    </span>
+                    <span className="font-medium">INFO1110 • 13/09 5pm — 2h → 2.5h</span>
+                    <span className="text-sm text-gray-600">Tutor: J. Tran</span>
+                  </div>
+                  <div className="flex gap-2 sm:gap-3">
+                    <Button variant="text" size="small">Review</Button>
+                    <Button variant="text" size="small">Open session</Button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
+                      Request
+                    </span>
+                    <span className="font-medium">Swap — Tutor A ⇄ Tutor B (INFO1910)</span>
+                    <span className="text-sm text-gray-600">Pending 48h</span>
+                  </div>
+                  <div className="flex gap-2 sm:gap-3">
+                    <Button variant="text" size="small">Review</Button>
+                    <Button variant="text" size="small">Contact</Button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                      Unassigned
+                    </span>
+                    <span className="font-medium">INFO3333 • 16/09 10am — No tutor</span>
+                  </div>
+                  <div className="flex gap-2 sm:gap-3">
+                    <Button variant="contained" size="small" sx={{ bgcolor: "#000", "&:hover": { bgcolor: "#111" } }}>
+                      Fill
+                    </Button>
+                    <Button variant="text" size="small">View options</Button>
+                  </div>
+                </div>
+
+                <div className="text-right pt-2">
+                  <Button variant="text">View all items</Button>
+                </div>
+              </div>
+            </section>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm">
-            <div className="flex justify-between items-center p-4 border-b">
-              <Typography variant="h5" component="h2" fontWeight="600">
-                Requests Pending
-              </Typography>
-              <Button variant="secondary" color="blue">
-                View all requests
-              </Button>
-            </div>
-            <RequestsTable data={requestsData} />
-          </div>
-        </div>
+          {/* RIGHT (wider, no scroll clipping): claims + requests */}
+          <aside className="col-span-12 lg:col-span-5 space-y-6">
+            <section className="bg-white rounded-xl shadow-sm border">
+              <div className="flex flex-wrap justify-between items-center gap-3 p-4 sm:p-5 border-b">
+                <Typography variant="h5" component="h2" fontWeight={700}>
+                  Claims Pending
+                </Typography>
+                <StyledButton>View all claims</StyledButton>
+              </div>
+              {/* flush table: no padding wrapper */}
+              <div className="overflow-x-auto rounded-b-xl">
+                <ClaimsTable data={claimsData} />
+              </div>
+            </section>
+
+            <section className="bg-white rounded-xl shadow-sm border">
+              <div className="flex flex-wrap justify-between items-center gap-3 p-4 sm:p-5 border-b">
+                <Typography variant="h5" component="h2" fontWeight={700}>
+                  Requests Pending
+                </Typography>
+                <StyledButton>View all requests</StyledButton>
+              </div>
+              {/* flush table: no padding wrapper */}
+              <div className="overflow-x-auto rounded-b-xl">
+                <RequestsTable data={requestsData} />
+              </div>
+            </section>
+          </aside>
+        </main>
       </div>
     </div>
   );

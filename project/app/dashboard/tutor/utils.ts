@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { SortConfig, AllocationTableRow } from "./types";
+import { BasicRequest, RequestRow } from "@/app/_types/request";
 
 export const timeConverter = (time: string): number => {
   const hours = parseInt(time.split(":")[0], 10);
@@ -141,4 +142,31 @@ export function niceTime(hms?: string | null) {
   // Handle both ISO datetime strings and HH:MM:SS format
   if (hms.includes("T")) return hms.slice(11, 16);
   return hms.slice(0, 5); // HH:MM
+}
+
+export function mapToRequestRow(r: RequestRow): RequestRow {
+  return {
+    requestId: r.requestId,
+    type: r.type,
+    relatedSession: r.relatedSession,
+    status: formatStatus(r.status),
+    actions: "View/Edit",
+    reason: r.reason,
+    createdAt: r.createdAt,
+  };
+}
+
+function formatStatus(status: string): string {
+  switch (status) {
+    case "pending_uc":
+      return "Pending (Unit Coordinator)";
+    case "pending_ta":
+      return "Pending (Teaching Assistant)";
+    case "approved":
+      return "Approved";
+    case "rejected":
+      return "Rejected";
+    default:
+      return status;
+  }
 }

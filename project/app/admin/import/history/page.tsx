@@ -2,37 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-
-type By = {
-  id: number | null;
-  name: string | null;
-  email: string | null;
-} | null;
-
-type Staged = {
-  batch_id: number;
-  created_at: string;
-  status: string;
-  row_count: number | null;
-  issues: Record<string, number> | null;
-  by: By; // NEW
-};
-
-type Run = {
-  run_id: number;
-  batch_id: number;
-  started_at: string;
-  finished_at: string | null;
-  status: "committed" | "rolled_back" | "failed";
-  counts: {
-    teaching_activity?: number;
-    session_occurrence?: number;
-    allocation?: number;
-  } | null;
-  staged_rows: number | null;
-  batch_created_at: string;
-  by: By; // NEW
-};
+import {
+  rollbackRun,
+  getImportHistory,
+  type Staged,
+  type Run,
+} from "@/app/services/allocationService";
 
 export default function ImportHistoryPage() {
   const [staged, setStaged] = useState<Staged[]>([]);
@@ -44,16 +19,15 @@ export default function ImportHistoryPage() {
 
   async function load() {
     setMsg("");
-    const res = await fetch("/api/admin/history?limit=100", {
-      cache: "no-store",
-    });
-    const json = await res.json();
-    if (!res.ok) {
-      setMsg(json?.error || "Failed to load history");
-      return;
+    try {
+      const data = await getImportHistory(100);
+      setStaged(data.staged || []);
+      setRuns(data.runs || []);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Failed to load history";
+      setMsg(message);
     }
-    setStaged(json.staged || []);
-    setRuns(json.runs || []);
   }
 
   useEffect(() => {
@@ -63,25 +37,16 @@ export default function ImportHistoryPage() {
   async function doRollback(runId: number) {
     setBusy(true);
     setMsg("");
+
     try {
-      const res = await fetch("/api/admin/rollback", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ runId }),
-      });
-      const ct = res.headers.get("content-type") || "";
-      const payload = ct.includes("application/json")
-        ? await res.json()
-        : await res.text();
-      if (!res.ok)
-        throw new Error(
-          typeof payload === "string"
-            ? payload
-            : payload?.error || "Rollback failed",
-        );
+      const payload = await rollbackRun(runId);
+      const { d_alloc, d_sess, d_teach } = payload.deleted;
+
       setMsg(
-        `Rolled back run #${runId}. Deleted: ${JSON.stringify(payload.deleted)}`,
+        `Rolled back run #${payload.runId}. 
+         Deleted: allocations=${d_alloc}, sessions=${d_sess}, activities=${d_teach}`,
       );
+
       await load();
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);

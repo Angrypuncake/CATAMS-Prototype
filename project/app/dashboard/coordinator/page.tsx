@@ -1,43 +1,17 @@
 "use client";
 import React, { useEffect, useState, useMemo } from "react";
-import { Slider, Typography, Menu, MenuItem, Button } from "@mui/material";
+import { Slider, Typography, Menu, MenuItem, Button, Box } from "@mui/material";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { CoordinatorBudgetOverview, UnitBudgetRow } from "./types";
 import UnitBudgetOverviewTable from "./UnitBudgetOverviewTable";
 import CoordinatorApprovalTable from "./CoordinatorApprovalTable";
 import AlertBox from "@/components/AlertBox";
 import Link from "next/link";
-import axios from "axios";
-
-const pendingRequests = [
-  {
-    requestID: "REQ001",
-    type: "Swap",
-    relatedSession: "CS101 - 2025-09-10 2:00 PM",
-    status: "Pending",
-    creator: "John Doe",
-    creatorRole: "Tutor",
-    user_id: 123,
-  },
-  {
-    requestID: "REQ003",
-    type: "Swap",
-    relatedSession: "BIO105 - 2025-09-14 1:00 PM",
-    status: "Pending",
-    creator: "Jane Smith",
-    creatorRole: "TA",
-    user_id: 456,
-  },
-  {
-    requestID: "REQ005",
-    type: "Swap",
-    relatedSession: "PHYS110 - 2025-09-13 10:00 AM",
-    status: "Pending",
-    creator: "Alice Johnson",
-    creatorRole: "Tutor",
-    user_id: 789,
-  },
-];
+import { pendingRequests } from "./mock";
+import { getUnitBudgetOverviews } from "@/app/services/budgetService";
+import { getCurrentYearAndSession } from "@/app/utils/dateHelpers";
+import AssignUnscheduledButton from "./_components/AssignUnscheduledButton";
+import UnscheduledAllocationsTable from "./_components/UnscheduledAllocationsTable";
 
 const Page = () => {
   // State for dropdown
@@ -47,17 +21,14 @@ const Page = () => {
 
   async function fetchBudgetOverview() {
     try {
-      const { data: json } = await axios.get<CoordinatorBudgetOverview>(
-        `/api/uc/overview`,
-        {
-          params: { year: 2025, session: "S2", threshold },
-        },
-      );
-      setData(json);
-    } catch (e: unknown) {
+      const { year, session } = getCurrentYearAndSession();
+      const overview = await getUnitBudgetOverviews(year, session, threshold);
+      setData(overview);
+    } catch (e) {
       console.error("Failed to load budget overview:", e);
     }
   }
+
   useEffect(() => {
     fetchBudgetOverview();
   }, []);
@@ -198,13 +169,24 @@ const Page = () => {
           <Typography variant="body1">No Requests.</Typography>
         </div>
       </div>
-
       <div>
-        <Typography variant="h4">Marking Hours</Typography>
-        <Typography variant="body2">Manual allocations</Typography>
-        <div>
-          <Typography variant="body1">No Hours Allocated.</Typography>
-        </div>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            mb: 1,
+          }}
+        >
+          <Box>
+            <Typography variant="h4">Unscheduled Allocations</Typography>
+            <Typography variant="body2" color="text.secondary">
+              Manual Marking and Consultation Hours
+            </Typography>
+          </Box>
+          <AssignUnscheduledButton />
+        </Box>
+        <UnscheduledAllocationsTable />
       </div>
     </div>
   );

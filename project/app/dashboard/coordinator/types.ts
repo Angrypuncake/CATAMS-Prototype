@@ -5,7 +5,8 @@ export interface UnitBudgetRow {
   year: number;
   session: string;
   budget: number;
-  spent: number;
+  allocated: number;
+  claimed: number;
   pctUsed: number;
   variance: number;
 }
@@ -20,14 +21,4 @@ export interface CoordinatorBudgetOverview {
     unitCode: string;
     pctUsed: number;
   }[];
-}
-
-export interface TutorRequestRow {
-  requestID: string;
-  type: string;
-  relatedSession: string;
-  status: string;
-  creator: string;
-  creatorRole: string;
-  user_id: number;
 }

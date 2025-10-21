@@ -1,14 +1,6 @@
-export type AllocationRow = {
-  id: string;
-  session_date: string | null;
-  start_at: string | null;
-  end_at?: string | null;
-  unit_code: string | null;
-  location?: string | null;
-  status?: string | null;
-  actions?: string | null;
-  note?: string | null;
-};
+import type { TutorAllocationRow } from "@/app/_types/allocations";
+
+export type AllocationRow = TutorAllocationRow;
 
 export type ActionRequiredRow = {
   session_date: string | null;
@@ -16,14 +8,6 @@ export type ActionRequiredRow = {
   unit: string | null;
   hours: number | null;
   desc: string | null;
-  status: string | null;
-  actions: string | null;
-};
-
-export type RequestRow = {
-  requestID: string | null;
-  type: string | null;
-  relatedSession: string | null;
   status: string | null;
   actions: string | null;
 };
@@ -52,5 +36,6 @@ export interface AllocationTableRow {
   start_at?: string | null;
   location?: string | null;
   status?: string | null;
-  [key: string]: unknown;
+  unit_code?: string | null;
+  [key: string]: string | number | null | undefined;
 }

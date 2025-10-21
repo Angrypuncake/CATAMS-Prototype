@@ -2,6 +2,12 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
+import {
+  commitImport,
+  discardImport,
+  getPreview,
+} from "@/app/services/allocationService";
+import type { PreviewResponse } from "@/app/_types/allocations";
 
 /** ---------- Types ---------- */
 type TimetableRow = {
@@ -17,14 +23,7 @@ type TimetableRow = {
   total_hours: number | null;
 };
 
-type PreviewPayload = {
-  stagingId: number;
-  preview: {
-    raw: unknown[];
-    issues: Record<string, number>;
-    timetable: TimetableRow[];
-  };
-};
+type PreviewPayload = PreviewResponse;
 
 type ErrorResponse = { error: string };
 type CommitResponse = { inserted: unknown };
@@ -195,28 +194,12 @@ export default function PreviewPage() {
   useEffect(() => {
     if (!id || Number.isNaN(id)) return;
     const ctrl = new AbortController();
+
     const run = async () => {
       setLoading(true);
       setMsg("");
       try {
-        const res = await fetch(`/api/admin/preview?stagingId=${id}`, {
-          cache: "no-store",
-          signal: ctrl.signal,
-        });
-        const ct = res.headers.get("content-type") || "";
-        const payload: unknown = ct.includes("application/json")
-          ? await res.json()
-          : await res.text();
-
-        if (!res.ok) {
-          const message =
-            typeof payload === "string"
-              ? payload
-              : hasError(payload)
-                ? payload.error
-                : "Failed to load preview";
-          throw new Error(message);
-        }
+        const payload = await getPreview(id, ctrl.signal);
 
         if (mountedRef.current) {
           if (isPreviewPayload(payload)) {
@@ -227,12 +210,14 @@ export default function PreviewPage() {
         }
       } catch (e: unknown) {
         const m = e instanceof Error ? e.message : String(e);
-        if (m !== "AbortError" && mountedRef.current)
+        if (m !== "AbortError" && mountedRef.current) {
           setMsg(m || "Failed to load preview");
+        }
       } finally {
         if (mountedRef.current) setLoading(false);
       }
     };
+
     run();
     return () => ctrl.abort();
   }, [id]);
@@ -259,14 +244,13 @@ export default function PreviewPage() {
     return a > b ? 1 : -1;
   }
 
-  // scrub invalid time rows once here so all views are safer
   const cleanTimetable: TimetableRow[] = useMemo(() => {
     if (!data) return [];
-    return data.preview.timetable.filter(
-      (r) =>
-        Number.isFinite(timeToMinutes(r.start_time)) &&
-        Number.isFinite(timeToMinutes(r.end_time)),
-    );
+    return (data.preview.timetable || []).filter((r: TimetableRow) => {
+      const startTime = timeToMinutes(r.start_time);
+      const endTime = timeToMinutes(r.end_time);
+      return Number.isFinite(startTime) && Number.isFinite(endTime);
+    });
   }, [data]);
 
   const filteredTimetable = useMemo<TimetableRow[]>(() => {
@@ -367,36 +351,28 @@ export default function PreviewPage() {
       setMsg(
         `❌ Cannot commit: ${conflictCount} timetable conflict${
           conflictCount > 1 ? "s" : ""
-        } detected. Resolve overlaps (same staff, same time) first.`,
+        } detected. Resolve overlaps first.`,
       );
       return;
     }
+
     setBusy(true);
     setMsg("");
-    try {
-      const res = await fetch("/api/admin/import/commit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stagingId: id }),
-      });
-      const ct = res.headers.get("content-type") || "";
-      const payload: unknown = ct.includes("application/json")
-        ? await res.json()
-        : await res.text();
 
-      if (!res.ok) {
-        if (typeof payload === "string" && payload.includes("<!DOCTYPE")) {
-          throw new Error(
-            "Request was redirected or failed (HTML response). Are you logged in?",
-          );
-        }
-        throw new Error(hasError(payload) ? payload.error : "Commit failed");
-      }
-      const inserted = hasInserted(payload) ? payload.inserted : payload;
-      setMsg(`✅ Committed. Inserted → ${JSON.stringify(inserted)}`);
+    try {
+      const data = await commitImport(id);
+
+      const { teaching_activity, session_occurrence, allocation } =
+        data.inserted;
+      setMsg(
+        `✅ Committed. 
+         Inserted → teaching_activity=${teaching_activity}, 
+         session_occurrence=${session_occurrence}, 
+         allocation=${allocation}`,
+      );
     } catch (e: unknown) {
-      const m = e instanceof Error ? e.message : String(e);
-      setMsg(`❌ ${m || "Commit failed"}`);
+      const message = e instanceof Error ? e.message : String(e);
+      setMsg(`❌ ${message || "Commit failed"}`);
     } finally {
       setBusy(false);
     }
@@ -406,19 +382,12 @@ export default function PreviewPage() {
     setBusy(true);
     setMsg("");
     try {
-      const res = await fetch(`/api/admin/discard`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ stagingId: id }),
-      });
-      const ct = res.headers.get("content-type") || "";
-      const payload: unknown = ct.includes("application/json")
-        ? await res.json()
-        : await res.text();
-      if (!res.ok) {
-        throw new Error(hasError(payload) ? payload.error : "Discard failed");
+      const data = await discardImport(id);
+      if ("error" in data) {
+        setMsg(`❌ ${data.error}${data.detail ? ` – ${data.detail}` : ""}`);
+        return;
       }
-      setMsg("🗑️ Discarded.");
+      setMsg("🗑️ Discarded successfully.");
       router.push("/admin/import");
     } catch (e: unknown) {
       const m = e instanceof Error ? e.message : String(e);

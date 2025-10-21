@@ -3,6 +3,7 @@
 import type { Theme, ThemeOptions } from "@mui/material/styles";
 import { createTheme } from "@mui/material/styles";
 
+/* ---------------- Button variant typings (keep as-is) ---------------- */
 declare module "@mui/material/Button" {
   interface ButtonPropsVariantOverrides {
     primary: true;
@@ -16,13 +17,14 @@ declare module "@mui/material/Button" {
   }
 }
 
+/* ---------------- Reusable styles for custom variants ---------------- */
 const secondaryBaseStyle = ({ theme }: { theme: Theme }) => ({
   boxShadow: theme.shadows[8],
   fontWeight: 700,
   width: "auto",
   alignSelf: "flex-start",
   justifyContent: "flex-start",
-  borderRadius: "16px",
+  borderRadius: 16,
   padding: "2px 12px",
   "&:hover": {
     filter: "brightness(110%)",
@@ -31,141 +33,236 @@ const secondaryBaseStyle = ({ theme }: { theme: Theme }) => ({
 });
 
 const bubbleBaseStyle = ({ theme }: { theme: Theme }) => ({
-  borderRadius: "16px",
+  borderRadius: 16,
   fontSize: "0.85rem",
-  paddingLeft: "10px",
-  paddingRight: "10px",
-  paddingTop: "3px",
-  paddingBottom: "3px",
+  paddingLeft: 10,
+  paddingRight: 10,
+  paddingTop: 3,
+  paddingBottom: 3,
 });
 
+/* ---------------- Minimal monochrome theme + orange accent ---------------- */
 const themeOptions: ThemeOptions = {
   palette: {
-    primary: { main: "#003366" },   // USYD blue (nav top bar)
-    secondary: { main: "#f0b429", contrastText: "#0b3a74" }, // USYD gold (nav bottom bar)
+    mode: "light",
+    primary: { main: "#000000" },              // black
+    secondary: { main: "#E5E7EB" },            // light grey
+    warning: { main: "#F97316" },              // subtle orange accent
+    background: {
+      default: "#F7F7F7",                      // page backdrop (login/portal)
+      paper: "#FFFFFF",
+    },
+    text: {
+      primary: "#111827",
+      secondary: "#6B7280",
+    },
+    divider: "#E5E7EB",
   },
+
   typography: {
     fontFamily: "Inter, Roboto, sans-serif",
-    h1: { fontSize: "2.25rem", fontWeight: 700 }, // 36px
-    h2: { fontSize: "1.75rem", fontWeight: 600 }, // 28px
-    h3: { fontSize: "1.5rem", fontWeight: 600 }, // 24px
-    h4: { fontSize: "1.375rem", fontWeight: 600, lineHeight: 1.4 }, // 22px
-    h5: { fontSize: "1.25rem", fontWeight: 500, lineHeight: 1.5 }, // 20px
-    h6: { fontSize: "1.125rem", fontWeight: 500, lineHeight: 1.5 }, // 18px
-
-    body1: { fontSize: "1rem", lineHeight: 1.6 }, // ~16px (default)
-    body2: { fontSize: "0.875rem", lineHeight: 1.57 }, // ~14px
-
+    h1: { fontSize: "2.25rem", fontWeight: 700 },
+    h2: { fontSize: "1.75rem", fontWeight: 600 },
+    h3: { fontSize: "1.5rem", fontWeight: 600 },
+    h4: { fontSize: "1.375rem", fontWeight: 600, lineHeight: 1.4 },
+    h5: { fontSize: "1.25rem", fontWeight: 600, lineHeight: 1.5 },
+    h6: { fontSize: "1.125rem", fontWeight: 600, lineHeight: 1.5 },
+    body1: { fontSize: "1rem", lineHeight: 1.6 },
+    body2: { fontSize: "0.875rem", lineHeight: 1.57 },
     subtitle1: {
       fontSize: "1rem",
-      color: "#666666",
-      fontWeight: "bold",
+      color: "#6B7280",
+      fontWeight: 700,
       textTransform: "uppercase",
+      letterSpacing: ".02em",
     },
   },
+
   components: {
+    /* Global backdrop color */
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: {
+          backgroundColor: "#F7F7F7",
+        },
+      },
+    },
+
+    /* Cards (tiles/containers) */
+    MuiCard: {
+      styleOverrides: {
+        root: {
+          border: "1px solid #E5E7EB",
+          borderRadius: 12,
+          boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+        },
+      },
+    },
+
+    /* -------- Buttons --------
+       - Any contained button becomes black (fixes blue CSV/JSON)
+       - Outlined gets hairline black
+       - Custom variants preserved but recolored to our scheme
+    */
     MuiButton: {
+      styleOverrides: {
+        root: {
+          textTransform: "none",
+          fontWeight: 600,
+          borderRadius: 8,
+          boxShadow: "none",
+        },
+        contained: {
+          backgroundColor: "#000000",
+          color: "#FFFFFF",
+          "&:hover": { backgroundColor: "#111111" },
+        },
+        outlined: {
+          color: "#111827",
+          borderColor: "#000000",
+          borderWidth: 1,
+          "&:hover": { backgroundColor: "#F9FAFB", borderColor: "#000000" },
+        },
+        containedSecondary: {
+          backgroundColor: "#E5E7EB",
+          color: "#111827",
+          "&:hover": { backgroundColor: "#D1D5DB" },
+        },
+      },
       variants: [
-        //primary button, stretches with the parent container
+        // primary (stretches with parent)
         {
           props: { variant: "primary" },
-          style: ({ theme }) => ({
-            color: theme.palette.common.black,
-            boxShadow: theme.shadows[8],
-            border: "1.5px solid black",
-            textTransform: "none",
-            fontWeight: 500,
-            justifyContent: "flex-start",
-            "&:hover": {
-              filter: "brightness(110%)",
-              boxShadow: theme.shadows[1],
-            },
-          }),
+          style: {
+            color: "#FFFFFF",
+            backgroundColor: "#000000",
+            border: "1.5px solid #000000",
+            fontWeight: 600,
+            "&:hover": { backgroundColor: "#111111", boxShadow: "none" },
+          },
         },
-        //secondary button, the size stretch with the contents, can set color blue/red
+        // secondary (content-sized, hairline black)
         {
           props: { variant: "secondary" },
           style: ({ theme }) => ({
             ...secondaryBaseStyle({ theme }),
-            color: theme.palette.common.black,
-            border: "1.5px solid black",
-            textTransform: "none",
+            color: "#111827",
+            backgroundColor: "#FFFFFF",
+            border: "1px solid #000000",
           }),
         },
+        // legacy secondary colors map to mono so old usages don't look off
         {
           props: { variant: "secondary", color: "blue" },
           style: ({ theme }) => ({
             ...secondaryBaseStyle({ theme }),
-            color: theme.palette.common.white,
-            backgroundColor: theme.palette.primary.main,
-            border: `1.5px solid ${theme.palette.primary.main}`,
+            color: "#FFFFFF",
+            backgroundColor: "#000000",
+            border: "1px solid #000000",
           }),
         },
         {
           props: { variant: "secondary", color: "red" },
           style: ({ theme }) => ({
             ...secondaryBaseStyle({ theme }),
-            color: theme.palette.common.white,
-            backgroundColor: theme.palette.error.main,
-            border: `1.5px solid ${theme.palette.error.main}`,
+            color: "#FFFFFF",
+            backgroundColor: "#000000",
+            border: "1px solid #000000",
           }),
         },
+        // bubble chips
         {
           props: { variant: "bubble" },
           style: ({ theme }) => ({
             ...bubbleBaseStyle({ theme }),
-            color: "#6d7177",
-            backgroundColor: "#f3f4f6",
-            textTransform: "none",
+            color: "#6D7177",
+            backgroundColor: "#F3F4F6",
+            border: "1px solid #E5E7EB",
           }),
         },
         {
           props: { variant: "bubble", color: "green" },
           style: ({ theme }) => ({
             ...bubbleBaseStyle({ theme }),
-            color: "#59A56C",
-            backgroundColor: "#ebf7ef",
-            textTransform: "none",
+            color: "#166534",
+            backgroundColor: "#ECFDF5",
+            border: "1px solid #A7F3D0",
           }),
         },
         {
           props: { variant: "bubble", color: "red" },
           style: ({ theme }) => ({
             ...bubbleBaseStyle({ theme }),
-            color: "#c6332c",
-            backgroundColor: "#faeceb",
-            textTransform: "none",
+            color: "#991B1B",
+            backgroundColor: "#FEF2F2",
+            border: "1px solid #FECACA",
           }),
         },
       ],
     },
+
+    /* Tables */
     MuiTableRow: {
-      //table styling, follows Elvis' design
       styleOverrides: {
         root: {
-          "&:nth-of-type(even)": {
-            backgroundColor: "#f5f5f5", // gray for odd rows
-          },
+          "&:nth-of-type(even)": { backgroundColor: "#FAFAFA" },
         },
         head: {
-          backgroundColor: "#e8e8e8",
-          "& .MuiTableCell-root": {
-            color: "black",
-            fontWeight: 700,
-          },
+          backgroundColor: "#F3F4F6",
+          "& .MuiTableCell-root": { color: "#111827", fontWeight: 700 },
         },
       },
     },
     MuiTableCell: {
       styleOverrides: {
         root: {
-          borderRight: "1px solid #ccc",
+          borderRight: "1px solid #E5E7EB",
           borderLeft: "none",
-          "&:first-of-type": {
-            borderLeft: "1px solid #ccc", // left border for the first column
+          "&:first-of-type": { borderLeft: "1px solid #E5E7EB" },
+          "&:last-child": { borderRight: "1px solid #E5E7EB" },
+        },
+      },
+    },
+
+    /* Text fields – remove blue focus ring */
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: { borderRadius: 0 },
+        notchedOutline: { borderColor: "#E5E7EB" },
+        input: { "&::placeholder": { opacity: 0.7 } },
+      },
+    },
+    MuiTextField: {
+      styleOverrides: {
+        root: {
+          "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#111111",
           },
-          "&:last-child": {
-            borderRight: "1px solid #ccc", // keep right border on last column
+          "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#000000",
+            borderWidth: 1,
+          },
+        },
+      },
+    },
+    MuiInputLabel: {
+      styleOverrides: {
+        root: { color: "#6B7280" },
+        outlined: {
+          "&.Mui-focused": { color: "#111827" },
+        },
+      },
+    },
+
+    /* Pagination chips */
+    MuiPaginationItem: {
+      styleOverrides: {
+        root: {
+          borderRadius: 8,
+          "&.Mui-selected": {
+            backgroundColor: "#000000",
+            color: "#FFFFFF",
+            "&:hover": { backgroundColor: "#111111" },
           },
         },
       },

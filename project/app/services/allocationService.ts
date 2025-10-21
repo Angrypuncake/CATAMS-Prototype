@@ -1,43 +1,481 @@
 import axios from "@/lib/axios";
+import type {
+  SaveAllocationPayload,
+  RollbackResponse,
+  CommitResponse,
+  DiscardResponse,
+  PreviewResponse,
+  TutorAllocationRow,
+  AdminAllocationRow,
+  AllocationBase,
+} from "@/app/_types/allocations";
+import {
+  getCoordinatorUnits,
+  getUnitOffering,
+  UnitOffering,
+} from "./unitService";
 
-export interface Allocation {
-  id: string;
-  unit_code: string;
-  unit_name: string;
+type By = {
+  id: number | null;
+  name: string | null;
+  email: string | null;
+} | null;
+
+export type Staged = {
+  batch_id: number;
+  created_at: string;
   status: string;
-  session_date: string | null;
-  start_at: string | null;
-  end_at: string | null;
-  location: string | null;
-  activity_name: string | null;
-}
+  row_count: number | null;
+  issues: Record<string, number> | null;
+  by: By;
+};
+
+export type Run = {
+  run_id: number;
+  batch_id: number;
+  started_at: string;
+  finished_at: string | null;
+  status: "committed" | "rolled_back" | "failed";
+  counts: {
+    teaching_activity?: number;
+    session_occurrence?: number;
+    allocation?: number;
+  } | null;
+  staged_rows: number | null;
+  batch_created_at: string;
+  by: By;
+};
 
 export async function getTutorAllocations(
   userId: string,
   page = 1,
   limit = 10,
-): Promise<Allocation[]> {
+): Promise<{
+  data: TutorAllocationRow[];
+  total: number;
+  page: number;
+  limit: number;
+}> {
   const res = await axios.get("/tutor/allocations", {
     params: { userId, page, limit },
   });
-  return res.data.data;
+  return res.data;
+}
+
+export async function getAllocationById(
+  id: string,
+): Promise<TutorAllocationRow> {
+  const res = await axios.get(`/tutor/allocations/${encodeURIComponent(id)}`);
+  const row = res.data?.data;
+  if (!row) throw new Error(`Allocation ${id} not found`);
+
+  return {
+    id: row.allocation_id,
+    session_date: row.session_date,
+    start_at: row.start_at,
+    end_at: row.end_at,
+    unit_code: row.unit_code,
+    unit_name: row.unit_name,
+    activity_name: row.activity_name,
+    activity_type: row.activity_type,
+    location: row.location,
+    status: row.status,
+    note: row.note,
+    hours: row.hours,
+    paycode_id: row.paycode_id,
+  };
+}
+
+/**
+ * Higher-level formatter that wraps getAllocationById
+ * and returns a ready-to-display object.
+ */
+export async function getFormattedAllocationById(
+  id: string,
+): Promise<TutorAllocationRow> {
+  const a = await getAllocationById(id);
+  return {
+    id: a.id,
+    unit_code: a.unit_code ?? "—",
+    unit_name: a.unit_name ?? "—",
+    status: normalizeStatus(a.status),
+    session_date: toDDMMYYYY(a.session_date),
+    start_at: a.start_at,
+    end_at: a.end_at,
+    location: a.location ?? "—",
+    hours: computeHours(a.start_at, a.end_at),
+    activity_name: a.activity_name ?? "—",
+    activity_type: a.activity_type ?? "—",
+    note: a.note ?? undefined,
+    paycode_id: a.paycode_id ?? "—",
+  };
 }
 
 export async function getAllocationsByUnit(
   unitCode: string,
   page = 1,
   limit = 50,
-): Promise<Allocation[]> {
+): Promise<TutorAllocationRow[]> {
   const res = await axios.get("/admin/allocations", {
     params: { unit_code: unitCode, page, limit },
   });
   return res.data.data;
 }
 
-// Create a new allocation Admin, UnitCoordinator only
+export async function getAllocationsByUnitAndActivityType(
+  unitCode: string | null,
+  activityType: string | null,
+  excludeUserId?: number | string | null, // optional param
+  page = 1,
+  limit = 50,
+): Promise<AdminAllocationRow[]> {
+  const res = await axios.get("/admin/allocations", {
+    params: {
+      unit_code: unitCode ?? undefined,
+      activity_type: activityType ?? undefined,
+      exclude_user_id: excludeUserId ?? undefined, // pass only if defined
+      page,
+      limit,
+    },
+  });
 
-// Update an existing allocation
+  return res.data.data;
+}
+
+export async function getAdminAllocations(params: {
+  page?: number;
+  limit?: number;
+  tab?: string;
+  q?: string;
+  unitCode?: string;
+  activityType?: string;
+  status?: string;
+}) {
+  const search = new URLSearchParams();
+  if (params.page) search.set("page", String(params.page));
+  if (params.limit) search.set("limit", String(params.limit));
+  if (params.tab) search.set("mode", params.tab);
+  if (params.q) search.set("q", params.q);
+  if (params.unitCode) search.set("unit_code", params.unitCode);
+  if (params.activityType) search.set("activity_type", params.activityType);
+  if (params.status) search.set("status", params.status);
+
+  const res = await axios.get(`/admin/allocations?${search.toString()}`);
+  return res.data;
+}
+
+export async function getCurrentUser(): Promise<{
+  userId: string;
+  email: string;
+  roles: string[];
+}> {
+  const res = await axios.get("/auth/me", {
+    withCredentials: true,
+  });
+  return res.data;
+}
+
+function toDDMMYYYY(iso?: string | null) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const dd = String(d.getUTCDate()).padStart(2, "0");
+  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const yyyy = d.getUTCFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
+// DB status → UI union type normalization
+type UIStatus = TutorAllocationRow["status"]; // "Confirmed" | "Pending" | "Cancelled"
+function normalizeStatus(s?: string | null): UIStatus {
+  const v = (s ?? "").trim().toLowerCase();
+
+  // Treat as Confirmed
+  if (
+    v === "confirmed" ||
+    v === "approved" ||
+    v === "accepted" ||
+    v === "allocated" ||
+    v === "active" ||
+    v === "assigned"
+  ) {
+    return "Confirmed";
+  }
+
+  // Treat as Pending
+  if (
+    v === "pending" ||
+    v === "in_progress" ||
+    v === "requested" ||
+    v.includes("pending") ||
+    v.includes("review") ||
+    v.includes("await")
+  ) {
+    return "Pending";
+  }
+
+  // Fallback
+  return "Cancelled";
+}
+
+function computeHours(start: string | null, end: string | null): string {
+  if (!start || !end) return "—";
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  const startDate = new Date(0, 0, 0, sh, sm);
+  const endDate = new Date(0, 0, 0, eh, em);
+  let diff = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
+  if (diff < 0) diff += 24;
+  return `${diff.toFixed(2)}h`;
+}
+
+// Create a new allocation Admin, UnitCoordinator only
 
 // Delete an allocation
 
 // Update allocation status
+
+/* ------------------ ADMIN ------------------ */
+
+export async function patchAdminAllocation(
+  id: string | number,
+  updated: SaveAllocationPayload,
+) {
+  const res = await axios.patch(`/admin/allocations/${id}`, updated);
+  return res.data;
+}
+
+// IMPORT pipeline
+
+export async function importAdminData(fd: FormData) {
+  const res = await axios.post("/admin/import", fd, {
+    headers: { "Content-Type": "multipart/form-data" },
+  });
+  return res.data;
+}
+
+export async function rollbackRun(runId: number): Promise<RollbackResponse> {
+  const res = await axios.post<RollbackResponse>("/admin/rollback", { runId });
+  return res.data;
+}
+
+export async function commitImport(stagingId: number): Promise<CommitResponse> {
+  const res = await axios.post<CommitResponse>("/admin/import/commit", {
+    stagingId,
+  });
+  return res.data;
+}
+
+export async function discardImport(
+  stagingId: number,
+): Promise<DiscardResponse> {
+  const res = await axios.post<DiscardResponse>("/admin/discard", {
+    stagingId,
+  });
+  return res.data;
+}
+
+export async function getPreview(
+  stagingId: number,
+  signal?: AbortSignal,
+): Promise<PreviewResponse> {
+  const res = await axios.get<PreviewResponse>(`/admin/preview`, {
+    params: { stagingId },
+    headers: { "Cache-Control": "no-store" },
+    signal,
+  });
+  return res.data;
+}
+
+export async function getImportHistory(limit = 100): Promise<{
+  staged: Staged[];
+  runs: Run[];
+}> {
+  const res = await axios.get(`/admin/history`, {
+    params: { limit },
+    headers: { "Cache-Control": "no-store" },
+  });
+  return res.data;
+}
+
+export interface UnscheduledAllocationPayload {
+  offeringId: number;
+  tutorId: number;
+  hours: number;
+  activityType?: string; // e.g. "Marking", "Consultation", "Tutorial", "Laboratory"
+  note: string;
+}
+
+export interface UnscheduledAllocationResponse {
+  activityId: number;
+  occurrenceId: number;
+  allocationId: number;
+  paycodeId: string;
+  activityType: string;
+  status: string;
+  note: string;
+}
+
+/**
+ * createUnscheduledAllocation
+ * ----------------------------
+ * Creates an unscheduled allocation (e.g. Marking, Consultation, etc.)
+ * under the given Unit Offering for a specific tutor.
+ *
+ * Usage:
+ * const res = await createUnscheduledAllocation({
+ *   offeringId: 3,
+ *   tutorId: 17,
+ *   hours: 8,
+ *   activityType: "Consultation"
+ * });
+ *
+ * Returns:
+ * {
+ *   activityId: number,
+ *   occurrenceId: number,
+ *   allocationId: number,
+ *   paycodeId: string,
+ *   activityType: string,
+ *   status: "success"
+ * }
+ */
+export async function createUnscheduledAllocation(
+  payload: UnscheduledAllocationPayload,
+): Promise<UnscheduledAllocationResponse> {
+  const { data } = await axios.post<UnscheduledAllocationResponse>(
+    "/allocations/unscheduled",
+    payload,
+  );
+  return data;
+}
+
+// Update hours, note, or location
+export async function updateUnscheduledAllocation(
+  allocationId: number,
+  updates: {
+    hours?: number;
+    note?: string;
+    location?: string;
+    status?: string;
+  },
+) {
+  const res = await fetch(`/allocations/${allocationId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  return res.json();
+}
+
+// Delete (soft cancel) allocation
+export async function deleteUnscheduledAllocation(allocationId: number) {
+  const res = await fetch(`/allocations/${allocationId}`, { method: "DELETE" });
+  return res.json();
+}
+
+// Get all unscheduled allocations for a unit
+export async function getUnscheduledAllocations(
+  offeringId: number,
+  activityType = "Marking",
+) {
+  const res = await fetch(
+    `/api/allocations/unscheduled?offeringId=${offeringId}&activityType=${activityType}`,
+  );
+  return res.json();
+}
+
+export interface UnscheduledAllocation {
+  allocation_id: number;
+  user_id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  hours: number;
+  note: string | null;
+  location: string | null;
+  activity_type: string;
+  status: string;
+}
+
+/**
+ * Fetch all unscheduled allocations for a specific unit offering.
+ *
+ * @param offeringId - The ID of the unit offering
+ * @param activityType - Optional filter (default: "Marking")
+ */
+export async function getUnscheduledAllocationsByOffering(
+  offeringId: number,
+  activityType = "Marking",
+): Promise<UnscheduledAllocation[]> {
+  const res = await axios.get("/allocations/unscheduled", {
+    params: {
+      offeringId,
+      activityType,
+    },
+  });
+  return res.data as UnscheduledAllocation[];
+}
+
+/**
+ * Fetch all unscheduled allocations (e.g. Marking, Consultation)
+ * across all units that this Unit Coordinator manages.
+ */
+export async function getAllUnscheduledAllocationsForUC(
+  activityType = "Marking",
+): Promise<
+  (UnscheduledAllocation & {
+    offeringId: number;
+    unitCode: string;
+    unitName: string;
+    year: number;
+    session: string;
+  })[]
+> {
+  try {
+    // 1️⃣ Fetch all units this UC coordinates (just offering_id)
+    const coordinatorUnits = await getCoordinatorUnits();
+    const offeringIds = coordinatorUnits.map((u) => u.offering_id);
+
+    if (offeringIds.length === 0) return [];
+
+    // 2️⃣ Enrich offerings → get full unit metadata
+    const enrichedOfferings: UnitOffering[] = await Promise.all(
+      offeringIds.map((id) => getUnitOffering(id)),
+    );
+
+    // 3️⃣ For each offering, fetch unscheduled allocations in parallel
+    const results = await Promise.all(
+      enrichedOfferings.map(async (unit) => {
+        const res = await axios.get("/allocations/unscheduled", {
+          params: { offeringId: unit.offeringId, activityType },
+        });
+
+        const allocations = res.data as UnscheduledAllocation[];
+
+        // Attach unit context to each allocation
+        return allocations.map((a) => ({
+          ...a,
+          offeringId: unit.offeringId,
+          unitCode: unit.unitCode,
+          unitName: unit.unitName,
+          year: unit.year,
+          session: unit.session,
+        }));
+      }),
+    );
+
+    // 4️⃣ Flatten & sort
+    const merged = results.flat();
+    merged.sort((a, b) =>
+      a.unitCode === b.unitCode
+        ? a.last_name.localeCompare(b.last_name)
+        : a.unitCode.localeCompare(b.unitCode),
+    );
+
+    return merged;
+  } catch (err) {
+    console.error("Failed to fetch all UC unscheduled allocations:", err);
+    throw err;
+  }
+}

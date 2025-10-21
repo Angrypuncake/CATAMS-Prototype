@@ -1,79 +1,269 @@
-// ==========================================================
-// SWAP REQUEST SERVICE — handles full tutor → TA → UC workflow
-// ==========================================================
+import type {
+  BasicRequest,
+  CreateRequestPayload,
+  PaginatedRequests,
+  TutorCorrectionPayload,
+  TutorRequest,
+} from "@/app/_types/request";
+import axios from "@/lib/axios";
+
+export async function getRequestById(id: string): Promise<TutorRequest> {
+  const mock = "true";
+  if (mock === "true") {
+    const now = new Date().toISOString();
+
+    const base = {
+      requestId: Number(id),
+      requesterId: 8,
+      reviewerId: 10,
+      requestDate: now,
+      allocationId: 21,
+      requestStatus: "pending" as const,
+      requestReason: null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    // Rotate between types for demo
+    const typeIndex = Number(id) % 5;
+    const types: TutorRequest["requestType"][] = [
+      "claim",
+      "swap",
+      "cancellation",
+      "correction",
+      "query",
+    ];
+    const requestType = types[typeIndex];
+
+    switch (requestType) {
+      case "claim":
+        return {
+          ...base,
+          requestType,
+          details: { hours: 2, paycode: "TUT01" },
+        };
+
+      case "swap":
+        return {
+          ...base,
+          requestType,
+          details: { suggested_tutor_id: 10 },
+        };
+
+      case "correction":
+        return {
+          ...base,
+          requestType,
+          details: {
+            date: "2025-10-12",
+            start_at: "09:00",
+            end_at: "11:00",
+            location: "Room 302, Engineering Building",
+            hours: "2",
+            session_type: "Tutorial",
+          },
+        };
+
+      case "cancellation":
+      case "query":
+        return {
+          ...base,
+          requestType,
+          details: null,
+        };
+    }
+  }
+
+  // fallback in case mock disabled
+  throw new Error("Real API not implemented for getRequestById");
+}
+
+export async function postCorrectionRequest(
+  allocationId: string | number,
+  payload: TutorCorrectionPayload,
+) {
+  const res = await axios.post(
+    `/tutor/allocations/${allocationId}/requests/correction`,
+    payload,
+  );
+  return res.data;
+}
+
+export async function createRequestService(payload: CreateRequestPayload) {
+  const res = await axios.post("/requests", payload);
+  return res.data;
+}
 
 /**
- * Tutor creates a blind swap request.
- * Inserts a new row into `swap_request` table.
- * status = 'PENDING_TA'
+ * ================================================
+ *  Tutor Request Service — Unified Request Creator
+ * ================================================
+ *
+ * PURPOSE:
+ * --------
+ * Provides a single, strongly-typed entry point for
+ * creating any tutor request:
+ *   → "claim" | "swap" | "correction" | "cancellation" | "query"
+ *
+ * The requestService enforces compile-time safety
+ * between `requestType` and its `details` payload
+ * using a discriminated union (see _types/requests.ts).
+ *
+ * --------------------------------
+ * USAGE OVERVIEW
+ * --------------------------------
+ * import { createRequestService } from "@/app/services/requestService";
+ *
+ * // 1️⃣  CLAIM
+ * await createRequestService({
+ *   requesterId: 12,
+ *   allocationId: 45,
+ *   requestType: "claim",
+ *   requestReason: "Claiming unpaid session",
+ *   details: {
+ *     paycode: "TUT102",
+ *     hours: 2,
+ *   },
+ * });
+ *
+ * // 2️⃣  CORRECTION
+ * await createRequestService({
+ *   requesterId: 12,
+ *   allocationId: 45,
+ *   requestType: "correction",
+ *   requestReason: "Incorrect session time",
+ *   details: {
+ *     date: "2025-10-15",
+ *     start_at: "09:00",
+ *     end_at: "11:00",
+ *     location: "Room A",
+ *     hours: 2,
+ *     session_type: "tutorial",
+ *   },
+ * });
+ *
+ * // 3️⃣  CANCELLATION
+ * await createRequestService({
+ *   requesterId: 12,
+ *   allocationId: 45,
+ *   requestType: "cancellation",
+ *   requestReason: "Illness",
+ *   details: {
+ *     suggestedUserId: 34, // optional replacement tutor
+ *   },
+ * });
+ *
+ * // 4️⃣  SWAP
+ * await createRequestService({
+ *   requesterId: 12,
+ *   allocationId: 45,
+ *   requestType: "swap",
+ *   requestReason: "Scheduling conflict",
+ *   details: {
+ *     targetAllocationId: 99,
+ *     targetTutorId: 18,
+ *   },
+ * });
+ *
+ * // 5️⃣  QUERY
+ * await createRequestService({
+ *   requesterId: 12,
+ *   allocationId: 45,
+ *   requestType: "query",
+ *   requestReason: "Clarification on allocation hours",
+ *   details: {}, // EmptyDetails enforced
+ * });
+ *
+ * --------------------------------
+ * DEV NOTES
+ * --------------------------------
+ * - Backend route:  POST /api/requests
+ * - Auto-assigns request_status using a default map
+ * - `details` is JSON-encoded; shape varies per requestType
+ * - Throws if backend returns non-200
+ * - Frontend pages should obtain requesterId from
+ *   /api/dev/whoami or middleware headers.
+ *
+ * This service replaces older specialised helpers
+ * (cancelRequestService, correctionRequestService, etc.)
+ * for a unified and maintainable workflow.
  */
-export async function createSwapRequest(
-  tutorId: number,
+
+/**
+ * Fetches all open requests for a specific allocation.
+ * Returns an array of open request types (e.g. ["query", "swap"]).
+ */
+export interface RawRequestRow {
+  request_id: number;
+  requester_id: number;
+  allocation_id: number;
+  request_type: string | null;
+  request_status: string;
+  request_reason: string | null;
+  created_at: string;
+}
+
+export async function getOpenRequestTypes(
   allocationId: number,
-  reason?: string,
-) {
-  // SQL:
-  // INSERT INTO swap_request (initiator_id, allocation_id, reason, status)
-  // VALUES ($1, $2, $3, 'PENDING_TA')
+): Promise<string[]> {
+  const response = await axios.get<{ data: RawRequestRow[] }>(
+    `/requests?allocationId=${allocationId}`,
+  );
+
+  const openTypes = Array.from(
+    new Set(
+      response.data.data
+        .map((r) => r.request_type?.toLowerCase())
+        .filter((v): v is string => Boolean(v)),
+    ),
+  );
+
+  return openTypes;
 }
 
 /**
- * Returns all swap requests initiated by a given tutor (for dashboard/history).
+ * Fetch all requests for a given allocation and normalize to camelCase.
  */
-export async function getSwapRequestsByUser(userId: number) {
-  // SELECT * FROM swap_request WHERE initiator_id = $1 ORDER BY created_at DESC
+export async function getRequestsByAllocation(
+  allocationId: number,
+  userId?: number,
+): Promise<BasicRequest[]> {
+  const config = userId
+    ? { headers: { "x-user-id": String(userId) } }
+    : undefined;
+
+  const response = await axios.get<{ data: RawRequestRow[] }>(
+    `/requests?allocationId=${allocationId}`,
+    config,
+  );
+
+  const normalized: BasicRequest[] = response.data.data
+    .filter((r) => r.request_type !== null)
+    .map((r) => ({
+      requestId: r.request_id,
+      requesterId: r.requester_id,
+      allocationId: r.allocation_id,
+      requestType: r.request_type as
+        | "claim"
+        | "swap"
+        | "correction"
+        | "cancellation"
+        | "query",
+      requestStatus: r.request_status,
+      requestReason: r.request_reason,
+      createdAt: r.created_at,
+    }));
+
+  return normalized;
 }
 
-/**
- * Returns all swap requests related to a specific unit.
- * Used by TA / UC dashboards to review pending requests.
- */
-export async function getSwapRequestsForUnit(unitCode: string) {
-  // SELECT sr.*, a.unit_code FROM swap_request sr
-  // JOIN allocations a ON a.allocation_id = sr.allocation_id
-  // WHERE a.unit_code = $1
-}
-
-/**
- * TA proposes a replacement tutor or allocation.
- * Updates swap_request with replacement IDs and sets status = 'PENDING_REPLACEMENT'
- */
-export async function proposeReplacement(
-  requestId: number,
-  replacementTutorId: number,
-  replacementAllocationId?: number,
-) {
-  // UPDATE swap_request
-  // SET replacement_tutor_id = $2, replacement_allocation_id = $3, status = 'PENDING_REPLACEMENT'
-  // WHERE id = $1
-}
-
-/**
- * Replacement tutor accepts or declines the swap proposal.
- * Accept → status = 'PENDING_UC'
- * Decline → status = 'PENDING_TA' (revert for TA to reassign)
- */
-export async function respondToSwap(requestId: number, accepted: boolean) {
-  // UPDATE swap_request
-  // SET status = accepted ? 'PENDING_UC' : 'PENDING_TA'
-  // WHERE id = $1
-}
-
-/**
- * Unit Coordinator approves the swap.
- * Calls AllocationService.swapAllocations()
- * and updates swap_request status = 'APPROVED'
- */
-export async function approveSwap(requestId: number) {
-  // 1. Fetch allocations (current + replacement)
-  // 2. Call swapAllocations(a, b)
-  // 3. UPDATE swap_request SET status = 'APPROVED', updated_at = NOW()
-}
-
-/**
- * UC rejects the swap.
- * Updates status = 'DECLINED' and stores optional rejection reason.
- */
-export async function rejectSwap(requestId: number, reason?: string) {
-  // UPDATE swap_request SET status = 'DECLINED', reason = $2 WHERE id = $1
+export async function getTutorRequests(
+  page = 1,
+  limit = 50,
+  userId?: number,
+): Promise<PaginatedRequests> {
+  const response = await axios.get<PaginatedRequests>("/tutor/requests", {
+    params: { page, limit },
+  });
+  return response.data;
 }

@@ -1,190 +1,222 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
+import React, { useEffect, useState } from "react";
 import {
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Stack,
-  TextField,
+  Container,
   Typography,
+  Paper,
+  TextField,
+  Button,
+  Box,
+  Stack,
+  CircularProgress,
+  Tooltip,
+  Snackbar,
+  Alert,
 } from "@mui/material";
+import { useParams, useRouter } from "next/navigation";
 
-type AllocationRow = {
-  unit_code: string | null;
-  unit_name: string | null;
-  session_date: string | null;
-  start_at: string | null; // "HH:MM:SS"
-  end_at: string | null;
-  activity_name: string | null;
-};
+import { getFormattedAllocationById } from "@/app/services/allocationService";
+import AllocationDetails from "../../_components/AllocationDetails";
+import { getUserFromAuth } from "@/app/services/authService";
+import { createRequestService } from "@/app/services/requestService";
+import type { CreateRequestPayload } from "@/app/_types/request";
+import type { AllocationBase } from "@/app/_types/allocations";
 
 export default function QueryRequestPage() {
   const params = useParams<{ id: string }>();
+  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
+
   const router = useRouter();
-  const allocationId = Array.isArray(params?.id) ? params.id[0] : params?.id;
-
-  const [allocation, setAllocation] = useState<AllocationRow | null>(null);
+  const [allocation, setAllocation] = useState<AllocationBase | null>(null);
   const [loading, setLoading] = useState(true);
-
   const [subject, setSubject] = useState("");
   const [details, setDetails] = useState("");
-  const [file, setFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
 
+  /* ------------------------------- Fetch Allocation ------------------------------- */
   useEffect(() => {
-    async function fetchAllocation() {
+    if (!id) return;
+    let cancelled = false;
+
+    (async () => {
       try {
-        const res = await fetch(`/api/tutor/allocations/${allocationId}`);
-        if (!res.ok) throw new Error("Failed to fetch allocation");
-        const json = (await res.json()) as { data?: AllocationRow };
-        setAllocation(json.data ?? null);
-      } catch (e) {
-        console.error(e);
+        setLoading(true);
+        const mapped = await getFormattedAllocationById(id);
+        if (!cancelled) setAllocation(mapped);
+      } catch (e: unknown) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (!cancelled) setErr(msg || "Unknown error");
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  /* -------------------------------- Handle Submit -------------------------------- */
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!subject.trim() || !details.trim()) {
+      setErr("Please provide both a subject and detailed description.");
+      return;
     }
-    if (allocationId) fetchAllocation();
-  }, [allocationId]);
 
-  const handleSubmit = async () => {
+    if (!allocation || !id) return;
+
     try {
-      const formData = new FormData();
-      formData.append("type", "query");
-      formData.append("subject", subject);
-      formData.append("details", details);
-      if (file) formData.append("attachment", file);
+      setSubmitting(true);
+      const user = await getUserFromAuth();
+      if (!user?.userId) throw new Error("Unable to fetch current user.");
 
-      const res = await fetch(
-        `/api/tutor/allocations/${allocationId}/requests/query`,
-        {
-          method: "POST",
-          body: formData,
-          credentials: "include",
-        },
-      );
+      const payload: CreateRequestPayload<"query"> = {
+        requesterId: Number(user.userId),
+        allocationId: Number(id),
+        requestType: "query",
+        requestReason: `${subject.trim()} — ${details.trim()}`,
+        details: null, // EmptyDetails enforced for query
+      };
 
-      if (!res.ok) {
-        const text = await res.text();
-        console.error("Submit failed:", res.status, text);
-        throw new Error("Failed to submit query");
-      }
-
-      alert("Query submitted!");
-      router.push(`/dashboard/tutor/allocations/${allocationId}`);
-    } catch (err: unknown) {
-      console.error(err);
-      alert("Error submitting request.");
+      await createRequestService(payload);
+      setSuccess("Query submitted successfully!");
+      setTimeout(() => router.push(`/dashboard/tutor/allocations/${id}`), 2000);
+    } catch (error) {
+      console.error("Error submitting query:", error);
+      setErr("Something went wrong while submitting your query.");
+      setTimeout(() => router.push(`/dashboard/tutor/allocations/${id}`), 2000);
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  if (loading) return <p>Loading...</p>;
+  /* -------------------------------- Loading States -------------------------------- */
+  if (loading) {
+    return (
+      <Box sx={{ p: 3, maxWidth: 960, mx: "auto" }}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <CircularProgress size={20} />
+          <Typography variant="body2">Loading allocation…</Typography>
+        </Stack>
+      </Box>
+    );
+  }
 
+  if (err && !allocation) {
+    return (
+      <Box p={3}>
+        <Typography color="error">{err}</Typography>
+      </Box>
+    );
+  }
+
+  const isSubmitDisabled = !subject.trim() || !details.trim();
+
+  /* -------------------------------- Render Form -------------------------------- */
   return (
-    <Box sx={{ p: 3, maxWidth: 800, mx: "auto" }}>
-      {/* Back link */}
-      <Typography
-        component={Link}
-        href="/dashboard/tutor"
-        color="primary"
-        sx={{ display: "inline-block", mb: 2, textDecoration: "none" }}
-      >
-        ← Back to Dashboard
-      </Typography>
-
-      {/* Title */}
-      <Typography variant="h5" fontWeight={700} gutterBottom>
+    <Container maxWidth="sm" sx={{ mt: 4 }}>
+      <Typography variant="h4" gutterBottom>
         Query Request
       </Typography>
-      <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-        Use this form to raise a clarification or general question about your
-        allocation or claim.
-      </Typography>
 
-      {/* Allocation summary */}
-      {allocation && (
-        <Card variant="outlined" sx={{ borderRadius: 2, mb: 3 }}>
-          <CardContent>
-            <Typography fontWeight={700}>
-              {allocation.unit_code} – {allocation.unit_name}
-            </Typography>
-            <Typography>Date: {allocation.session_date}</Typography>
-            <Typography>
-              Time: {allocation.start_at?.slice(0, 5)} –{" "}
-              {allocation.end_at?.slice(0, 5)}
-            </Typography>
-            <Typography>Session: {allocation.activity_name}</Typography>
-          </CardContent>
-        </Card>
-      )}
+      {allocation && <AllocationDetails allocation={allocation} />}
 
-      {/* Query form */}
-      <Card variant="outlined" sx={{ borderRadius: 2 }}>
-        <CardContent>
-          <Typography variant="subtitle1" fontWeight={700} gutterBottom>
-            Your Query
-          </Typography>
+      <form onSubmit={handleSubmit}>
+        <TextField
+          fullWidth
+          label="Subject"
+          placeholder="Short title for your query"
+          value={subject}
+          onChange={(e) => setSubject(e.target.value)}
+          sx={{ mb: 3 }}
+        />
 
-          <Stack spacing={3}>
-            {/* Subject */}
-            <TextField
-              label="Subject"
-              placeholder="Short title for your query (required)"
-              value={subject}
-              onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                setSubject(e.target.value)
-              }
-              fullWidth
-              required
-            />
+        <TextField
+          fullWidth
+          multiline
+          rows={4}
+          label="Details"
+          placeholder="Write your question or clarification in detail"
+          value={details}
+          onChange={(e) => setDetails(e.target.value)}
+          sx={{ mb: 3 }}
+        />
 
-            {/* Details */}
-            <TextField
-              label="Details"
-              placeholder="Write your question or clarification in detail (required)"
-              value={details}
-              onChange={(
-                e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-              ) => setDetails(e.target.value)}
-              multiline
-              rows={4}
-              fullWidth
-              required
-            />
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            alignItems: "center",
+            gap: 2,
+            mt: 3,
+          }}
+        >
+          <Button
+            variant="outlined"
+            color="inherit"
+            onClick={() => router.push("../")}
+            disabled={submitting}
+          >
+            Cancel
+          </Button>
 
-            {/* Example note */}
-            <Typography variant="caption" color="text.secondary">
-              Examples: “I’m unsure if this session counts as lab or tutorial
-              hours” or “Does my swap request affect budget?”
-            </Typography>
-
-            <Typography variant="caption" color="text.secondary">
-              Optional evidence or supporting screenshot (PDF/PNG/DOC up to
-              5MB).
-            </Typography>
-
-            {/* Actions */}
-            <Stack direction="row" spacing={2} justifyContent="flex-end">
-              <Button variant="outlined" onClick={() => router.back()}>
-                Cancel
-              </Button>
-              <Button variant="outlined" disabled>
-                Save Draft
-              </Button>
+          <Tooltip
+            title={
+              isSubmitDisabled
+                ? "Please complete both fields before submitting"
+                : ""
+            }
+            placement="top"
+          >
+            <span>
               <Button
                 variant="contained"
-                disabled={!subject || !details}
+                color="primary"
                 onClick={handleSubmit}
+                disabled={isSubmitDisabled || submitting}
               >
                 Submit Query
               </Button>
-            </Stack>
-          </Stack>
-        </CardContent>
-      </Card>
-    </Box>
+            </span>
+          </Tooltip>
+        </Box>
+      </form>
+
+      {/* Feedback Snackbar */}
+      <Snackbar
+        open={!!success}
+        autoHideDuration={3000}
+        onClose={() => setSuccess(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setSuccess(null)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
+          {success}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!err}
+        autoHideDuration={4000}
+        onClose={() => setErr(null)}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          onClose={() => setErr(null)}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
+          {err}
+        </Alert>
+      </Snackbar>
+    </Container>
   );
 }

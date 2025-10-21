@@ -7,8 +7,6 @@ import {
   Button,
   Card,
   CardContent,
-  Chip,
-  Divider,
   IconButton,
   Menu,
   MenuItem,
@@ -19,64 +17,28 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
+import { useSearchParams } from "next/navigation";
 import NewCommentBox from "../_components/NewCommentBox";
 import DetailRow from "../_components/DetailRow";
 import RequestRow from "../_components/RequestRow";
 import CommentBubble from "../_components/CommentBubble";
 import type {
-  AllocationDetail,
-  RequestItem,
+  TutorAllocationRow as AllocationDetail,
   CommentItem,
 } from "@/app/_types/allocations";
 import { useRouter } from "next/navigation";
-
-// ---------- Helpers ----------
-function toHHMM(hms?: string | null) {
-  if (!hms) return "—";
-  return hms.slice(0, 5); // assumes "HH:MM:SS"
-}
-function toDDMMYYYY(iso?: string | null) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  const dd = String(d.getUTCDate()).padStart(2, "0");
-  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const yyyy = d.getUTCFullYear();
-  return `${dd}/${mm}/${yyyy}`;
-}
+import { getFormattedAllocationById } from "@/app/services/allocationService";
+import AllocationDetails from "./_components/AllocationDetails";
+import {
+  getOpenRequestTypes,
+  getRequestsByAllocation,
+} from "@/app/services/requestService";
+import { getUserFromAuth } from "@/app/services/authService";
+import { BasicRequest } from "@/app/_types/request";
+import { useEffect } from "react";
 
 // DB status → UI union type normalization
-type UIStatus = AllocationDetail["status"]; // "Confirmed" | "Pending" | "Cancelled"
-function normalizeStatus(s?: string | null): UIStatus {
-  const v = (s ?? "").trim().toLowerCase();
-
-  // Treat as Confirmed
-  if (
-    v === "confirmed" ||
-    v === "approved" ||
-    v === "accepted" ||
-    v === "allocated" ||
-    v === "active" ||
-    v === "assigned"
-  ) {
-    return "Confirmed";
-  }
-
-  // Treat as Pending
-  if (
-    v === "pending" ||
-    v === "in_progress" ||
-    v === "requested" ||
-    v.includes("pending") ||
-    v.includes("review") ||
-    v.includes("await")
-  ) {
-    return "Pending";
-  }
-
-  // Fallback
-  return "Cancelled";
-}
+// type UIStatus = AllocationDetail["status"]; // "Confirmed" | "Pending" | "Cancelled"
 
 // ---------- Page ----------
 export default function AllocationPage() {
@@ -91,13 +53,26 @@ export default function AllocationPage() {
   const [allocation, setAllocation] = React.useState<AllocationDetail | null>(
     null,
   );
-  const [requests, setRequests] = React.useState<RequestItem[]>([]);
+  const [requests, setRequests] = React.useState<BasicRequest[]>([]);
   const [comments, setComments] = React.useState<CommentItem[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [err, setErr] = React.useState<string | null>(null);
+  const [requestToast, setRequestToast] = React.useState(false);
+  const searchParams = useSearchParams();
+  const [openRequestTypes, setOpenRequestTypes] = React.useState<string[]>([]);
+  const [loadingRequests, setLoadingRequests] = React.useState(false);
+
+  // Toast/feedback for "request created"
+  useEffect(() => {
+    if (searchParams.get("success") === "true") {
+      setRequestToast(true);
+      const timer = setTimeout(() => setRequestToast(false), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [searchParams]);
 
   // fetch allocation detail from DB
-  React.useEffect(() => {
+  useEffect(() => {
     if (!id) return; // wait until router provides id
     let cancelled = false;
 
@@ -108,58 +83,12 @@ export default function AllocationPage() {
           setErr(null);
         }
 
-        const res = await fetch(
-          `/api/tutor/allocations/${encodeURIComponent(id)}`,
-          { cache: "no-store" },
-        );
-        if (!res.ok) throw new Error(`Failed to fetch allocation ${id}`);
-        const json = await res.json();
-
-        const a = json.data as {
-          allocation_id: string;
-          unit_code: string | null;
-          unit_name: string | null;
-          status: string | null;
-          session_date: string | null;
-          start_at: string | null;
-          end_at: string | null;
-          location: string | null;
-          activity_name: string | null;
-          note: string | null;
-        };
-
-        const mapped: AllocationDetail = {
-          id: a.allocation_id,
-          courseCode: a.unit_code ?? "—",
-          courseName: a.unit_name ?? "—",
-          status: normalizeStatus(a.status),
-          date: toDDMMYYYY(a.session_date),
-          time:
-            a.start_at || a.end_at
-              ? `${toHHMM(a.start_at)} – ${toHHMM(a.end_at)}`
-              : "—",
-          location: a.location ?? "—",
-          hours:
-            a.start_at && a.end_at
-              ? (() => {
-                  const [sh, sm] = a.start_at.split(":").map(Number);
-                  const [eh, em] = a.end_at.split(":").map(Number);
-                  const start = new Date(0, 0, 0, sh || 0, sm || 0, 0);
-                  const end = new Date(0, 0, 0, eh || 0, em || 0, 0);
-                  let diff =
-                    (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-                  if (diff < 0) diff += 24;
-                  return `${diff.toFixed(2)}h`;
-                })()
-              : "—",
-          session: a.activity_name ?? "—",
-          notes: a.note ?? undefined,
-        };
+        // fetch via service
+        const mapped = await getFormattedAllocationById(id);
 
         if (!cancelled) {
           setAllocation(mapped);
-          setRequests([]); // TODO: later wire to /requests
-          setComments([]); // TODO: later wire to /comments
+          setComments([]); // future endpoint
         }
       } catch (e: unknown) {
         const msg = e instanceof Error ? e.message : String(e);
@@ -170,6 +99,52 @@ export default function AllocationPage() {
     }
 
     run();
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const user = await getUserFromAuth();
+        const list = await getRequestsByAllocation(Number(id), user?.userId);
+        console.log(list);
+        if (!cancelled) setRequests(list);
+      } catch (err) {
+        console.error("Error fetching requests:", err);
+        if (!cancelled) setRequests([]);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+  useEffect(() => {
+    console.log("Requests updated:", requests);
+  }, [requests]);
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+
+    (async () => {
+      try {
+        setLoadingRequests(true);
+        const types = await getOpenRequestTypes(Number(id));
+        if (!cancelled) setOpenRequestTypes(types);
+      } catch (err) {
+        console.error("Error fetching open request types:", err);
+      } finally {
+        if (!cancelled) setLoadingRequests(false);
+      }
+    })();
+
     return () => {
       cancelled = true;
     };
@@ -209,6 +184,10 @@ export default function AllocationPage() {
     );
   }
 
+  // helper function to determine if this request type already has a request to grey out buttons
+
+  const hasOpen = (type: string) => openRequestTypes.includes(type);
+
   const statusColor: "success" | "warning" | "default" =
     allocation.status === "Confirmed"
       ? "success"
@@ -218,6 +197,11 @@ export default function AllocationPage() {
 
   return (
     <Box sx={{ p: 3, maxWidth: 960, mx: "auto" }}>
+      {requestToast && (
+        <div className="fixed top-4 right-4 bg-green-500 text-white p-3 rounded shadow-lg">
+          Request Submitted.
+        </div>
+      )}
       {/* Header & Back */}
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
         <IconButton
@@ -233,67 +217,29 @@ export default function AllocationPage() {
         </Typography>
       </Stack>
 
+      <AllocationDetails allocation={allocation} />
+
       <Card variant="outlined" sx={{ borderRadius: 2 }}>
         <CardContent>
-          {/* Course + Status */}
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            justifyContent="space-between"
-            alignItems={{ xs: "flex-start", sm: "center" }}
-            spacing={1}
-            sx={{ mb: 1 }}
-          >
-            <Typography variant="h6" fontWeight={700}>
-              {allocation.courseCode} – {allocation.courseName}
-            </Typography>
-            <Chip
-              icon={<CheckCircleIcon fontSize="small" />}
-              label={allocation.status}
-              color={statusColor}
-              variant="outlined"
-              sx={{ fontWeight: 600 }}
-            />
-          </Stack>
-
-          <Divider sx={{ my: 1 }} />
-
-          {/* Details grid */}
-          <Box sx={{ my: 1 }}>
-            <DetailRow label="Date" value={allocation.date} />
-            <DetailRow label="Time" value={allocation.time} />
-            <DetailRow label="Location" value={allocation.location} />
-            <DetailRow label="Hours" value={allocation.hours} />
-            <DetailRow label="Session" value={allocation.session} />
-          </Box>
-
-          {/* Notes */}
-          {allocation.notes && (
-            <Box
-              sx={{
-                mt: 2,
-                p: 2,
-                borderLeft: "4px solid",
-                borderColor: "grey.300",
-                bgcolor: "grey.50",
-                borderRadius: 1,
-              }}
-            >
-              <Typography variant="subtitle2" sx={{ mb: 0.5 }}>
-                Notes
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                {allocation.notes}
-              </Typography>
-            </Box>
-          )}
-
           {/* Actions */}
           <Stack
             direction={{ xs: "column", sm: "row" }}
             spacing={1}
             sx={{ mt: 3, mb: 2 }}
           >
-            <Button variant="contained">Submit Claim</Button>
+            <Button
+              variant="contained"
+              disabled={hasOpen("claim")}
+              onClick={() => router.push(`${id}/requests/claim`)}
+              title={
+                hasOpen("claim")
+                  ? "You already have a pending claim request."
+                  : ""
+              }
+            >
+              Submit Claim
+            </Button>
+
             <div>
               <Button
                 variant="outlined"
@@ -308,22 +254,38 @@ export default function AllocationPage() {
                 open={open}
                 onClose={() => setAnchorEl(null)}
               >
-                <MenuItem onClick={() => router.push(`${id}/requests/swap`)}>
+                <MenuItem
+                  disabled={hasOpen("swap")}
+                  onClick={() => router.push(`${id}/requests/swap`)}
+                >
                   Swap
                 </MenuItem>
-                <MenuItem onClick={() => setAnchorEl(null)}>
+
+                <MenuItem
+                  disabled={hasOpen("correction")}
+                  onClick={() => router.push(`${id}/requests/correction`)}
+                >
                   Correction
                 </MenuItem>
-                <MenuItem onClick={() => setAnchorEl(null)}>
+
+                <MenuItem
+                  disabled={hasOpen("cancellation")}
+                  onClick={() =>
+                    router.push(
+                      `/dashboard/tutor/allocations/${id}/requests/cancel`,
+                    )
+                  }
+                >
                   Cancellation
                 </MenuItem>
+
                 <MenuItem
-                  onClick={() => {
-                    setAnchorEl(null);
+                  disabled={hasOpen("query")}
+                  onClick={() =>
                     router.push(
                       `/dashboard/tutor/allocations/${id}/requests/query`,
-                    );
-                  }}
+                    )
+                  }
                 >
                   Query
                 </MenuItem>
@@ -348,7 +310,7 @@ export default function AllocationPage() {
                 No requests yet.
               </Typography>
             ) : (
-              requests.map((r) => <RequestRow key={r.id} req={r} />)
+              requests.map((r) => <RequestRow key={r.requestId} req={r} />)
             )}
           </Stack>
 

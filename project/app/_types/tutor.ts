@@ -1,11 +1,6 @@
+import type { User } from "./user";
+
 // types/tutor.ts
-export interface Tutor {
-  user_id: string;
-  first_name: string;
-  last_name: string;
-  email: string;
-  phone?: string;
-  status?: "active" | "inactive";
-  role?: "tutor" | "ta" | "admin";
+export interface Tutor extends User {
   units?: string[]; // list of unit codes the tutor belongs to
 }

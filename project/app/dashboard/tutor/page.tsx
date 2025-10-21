@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { Typography } from "@mui/material";
 import StyledBox from "./components";
 import AllocationsTable from "./AllocationsTable";
@@ -18,11 +18,15 @@ import type {
 import { useColumnSorter } from "./utils";
 import { actions, request, notices } from "./mockData";
 
+// NEW: the modern USYD nav for this page only
+import TutorModernNav from "@/components/TutorModernNav";
+
 /* ========= Page ========= */
 const Page = () => {
   const [tutorSessions, setTutorSessions] = useState<AllocationRow[]>([]);
   const [totalSessions, setTotalSessions] = useState(0);
   const [loading, setLoading] = useState(true);
+
   const [sortAllocationsConfig, setSortAllocationsConfig] = useState<{
     column: SortableColumns;
     direction: "asc" | "desc";
@@ -40,27 +44,26 @@ const Page = () => {
     direction: "asc" | "desc";
   } | null>(null);
 
-  // new states for pagination + search
+  // pagination + search
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [search, setSearch] = useState("");
 
   const sortedSessions: AllocationRow[] = useColumnSorter<AllocationRow>(
     tutorSessions,
-    sortAllocationsConfig,
+    sortAllocationsConfig
   );
-
   const sortedActions: ActionRequiredRow[] = useColumnSorter<ActionRequiredRow>(
     actions,
-    sortActionsConfig,
+    sortActionsConfig
   );
   const sortedRequests: RequestRow[] = useColumnSorter<RequestRow>(
     request,
-    sortRequestsConfig,
+    sortRequestsConfig
   );
   const sortedNotices: NoticeRow[] = useColumnSorter<NoticeRow>(
     notices,
-    sortNoticesConfig,
+    sortNoticesConfig
   );
 
   // modal (ONLY for "My Allocations")
@@ -75,7 +78,9 @@ const Page = () => {
         });
 
         const res = await fetch(
-          `/api/tutor/allocations?userId=${sessionUser.data.userId}&page=${page + 1}&limit=${rowsPerPage}`,
+          `/api/tutor/allocations?userId=${sessionUser.data.userId}&page=${
+            page + 1
+          }&limit=${rowsPerPage}`
         );
         if (!res.ok) throw new Error("Failed to fetch tutor allocations");
         const data = await res.json();
@@ -90,21 +95,19 @@ const Page = () => {
     fetchTutorSessions();
   }, [page, rowsPerPage]);
 
-  // NEED MORE QUERIES FOR NOTICES, REQUESTS AND ACTIONS
-
   type SortConfig = {
     column: SortableColumns;
     direction: "asc" | "desc";
   } | null;
 
   const createSortHandler = (
-    setConfig: React.Dispatch<React.SetStateAction<SortConfig>>,
+    setConfig: React.Dispatch<React.SetStateAction<SortConfig>>
   ) => {
     return (column: SortableColumns) => {
       setConfig((prev) =>
         prev?.column === column
           ? { column, direction: prev.direction === "asc" ? "desc" : "asc" }
-          : { column, direction: "asc" },
+          : { column, direction: "asc" }
       );
     };
   };
@@ -119,83 +122,102 @@ const Page = () => {
   const requests = 2;
 
   return (
-    <div className="max-w-6xl w-full mx-auto">
-      <Typography variant="h5" fontWeight="bold" sx={{ m: 2.5 }}>
-        Tutor Dashboard
-      </Typography>
+    <div className="min-h-screen bg-[#f7f9fc]">
+      {/* New modern USYD nav — white logo, divider, HELP + Logout, black strip below  */}
+      <TutorModernNav
+        titleRight="TUTOR"
+        actions={[
+          { label: "HELP", href: "/help" },
+          {
+            label: "Logout",
+            onClick: async () => {
+              try {
+                await axios.post("/api/auth/logout", {}, { withCredentials: true });
+                window.location.href = "/login";
+              } catch (e) {
+                console.error("Logout failed", e);
+              }
+            },
+          },
+        ]}
+        // Uncomment if you want a consistent 1cm edge gap on this page too:
+        // edgeGapCm={1}
+      />
 
-      <div className="flex w-full gap-5">
-        <StyledBox accentColor="border-l-blue-500">
-          <Typography>Allocated Hours</Typography>
-          <Typography fontWeight="bold">{hours}</Typography>
+      <div className="max-w-6xl w-full mx-auto px-4 py-6">
+        <Typography variant="h5" fontWeight="bold" sx={{ m: 1.5 }}>
+          Tutor Dashboard
+        </Typography>
+
+        <div className="flex w-full gap-5">
+          <StyledBox accentColor="border-l-blue-500">
+            <Typography>Allocated Hours</Typography>
+            <Typography fontWeight="bold">{hours}</Typography>
+          </StyledBox>
+          <StyledBox accentColor="border-l-blue-500">
+            <Typography>Upcoming Sessions</Typography>
+            <Typography fontWeight="bold">{sessions}</Typography>
+          </StyledBox>
+          <StyledBox accentColor="border-l-blue-500">
+            <Typography>Pending Requests</Typography>
+            <Typography fontWeight="bold">{requests}</Typography>
+          </StyledBox>
+        </div>
+
+        {/* ---------- My Allocations (ONLY this table opens a modal) ---------- */}
+        <StyledBox>
+          <AllocationsTable
+            sessions={sortedSessions}
+            totalCount={totalSessions}
+            sortConfig={sortAllocationsConfig}
+            onSort={handleSortAllocations}
+            onRowClick={(row) => {
+              setSession(row);
+              setOpen(true);
+            }}
+            page={page}
+            rowsPerPage={rowsPerPage}
+            onPageChange={(_e, newPage) => setPage(newPage)}
+            onRowsPerPageChange={(e) => {
+              setRowsPerPage(parseInt(e.target.value, 10));
+              setPage(0);
+            }}
+            search={search}
+            onSearchChange={(value) => {
+              setSearch(value);
+              setPage(0);
+            }}
+          />
         </StyledBox>
-        <StyledBox accentColor="border-l-blue-500">
-          <Typography>Upcoming Sessions</Typography>
-          <Typography fontWeight="bold">{sessions}</Typography>
+
+        {/* ---------- Other sections ---------- */}
+        <StyledBox>
+          <ActionRequiredTable
+            actions={sortedActions}
+            sortConfig={sortActionsConfig}
+            onSort={handleSortActions}
+          />
         </StyledBox>
-        <StyledBox accentColor="border-l-blue-500">
-          <Typography>Pending Requests</Typography>
-          <Typography fontWeight="bold">{requests}</Typography>
+
+        <StyledBox>
+          <RequestsTable
+            requests={sortedRequests}
+            sortConfig={sortRequestsConfig}
+            onSort={handleSortRequests}
+          />
+        </StyledBox>
+
+        <StyledBox>
+          <NoticesTable
+            notices={sortedNotices}
+            sortConfig={sortNoticesConfig}
+            onSort={handleSortNotices}
+          />
         </StyledBox>
       </div>
 
-      {/* ---------- My Allocations (ONLY this table opens a modal) ---------- */}
-      <StyledBox>
-        <AllocationsTable
-          sessions={sortedSessions}
-          totalCount={totalSessions}
-          sortConfig={sortAllocationsConfig}
-          onSort={handleSortAllocations}
-          onRowClick={(row) => {
-            setSession(row);
-            setOpen(true);
-          }}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onPageChange={(_e, newPage) => setPage(newPage)}
-          onRowsPerPageChange={(e) => {
-            setRowsPerPage(parseInt(e.target.value, 10));
-            setPage(0);
-          }}
-          search={search}
-          onSearchChange={(value) => {
-            setSearch(value);
-            setPage(0);
-          }}
-        />
-      </StyledBox>
-
-      {/* ---------- Other sections (unchanged, no modals) ---------- */}
-      <StyledBox>
-        <ActionRequiredTable
-          actions={sortedActions}
-          sortConfig={sortActionsConfig}
-          onSort={handleSortActions}
-        />
-      </StyledBox>
-
-      <StyledBox>
-        <RequestsTable
-          requests={sortedRequests}
-          sortConfig={sortRequestsConfig}
-          onSort={handleSortRequests}
-        />
-      </StyledBox>
-
-      <StyledBox>
-        <NoticesTable
-          notices={sortedNotices}
-          sortConfig={sortNoticesConfig}
-          onSort={handleSortNotices}
-        />
-      </StyledBox>
-
-      {/* ---------- Allocation Quick View Modal (ONLY for My Allocations) ---------- */}
-      <AllocationQuickviewModal
-        open={open}
-        setOpen={setOpen}
-        session={session}
-      />
+      {/* Allocation Quick View Modal (ONLY for My Allocations) */}
+      <AllocationQuickviewModal open={open} setOpen={setOpen} session={session} />
     </div>
   );
 };

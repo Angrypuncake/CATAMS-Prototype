@@ -45,11 +45,11 @@ const bubbleBaseStyle = ({ theme }: { theme: Theme }) => ({
 const themeOptions: ThemeOptions = {
   palette: {
     mode: "light",
-    primary: { main: "#000000" },              // black
-    secondary: { main: "#E5E7EB" },            // light grey
-    warning: { main: "#F97316" },              // subtle orange accent
+    primary: { main: "#292524" }, // black
+    secondary: { main: "#E5E7EB" }, // light grey
+    warning: { main: "#F97316" }, // subtle orange accent
     background: {
-      default: "#F7F7F7",                      // page backdrop (login/portal)
+      default: "#F7F7F7", // page backdrop (login/portal)
       paper: "#FFFFFF",
     },
     text: {
@@ -113,13 +113,13 @@ const themeOptions: ThemeOptions = {
           boxShadow: "none",
         },
         contained: {
-          backgroundColor: "#000000",
+          backgroundColor: "#292524",
           color: "#FFFFFF",
           "&:hover": { backgroundColor: "#111111" },
         },
         outlined: {
           color: "#111827",
-          borderColor: "#000000",
+          borderColor: "#292524",
           borderWidth: 1,
           "&:hover": { backgroundColor: "#F9FAFB", borderColor: "#000000" },
         },
@@ -135,7 +135,7 @@ const themeOptions: ThemeOptions = {
           props: { variant: "primary" },
           style: {
             color: "#FFFFFF",
-            backgroundColor: "#000000",
+            backgroundColor: "#292524",
             border: "1.5px solid #000000",
             fontWeight: 600,
             "&:hover": { backgroundColor: "#111111", boxShadow: "none" },
@@ -157,7 +157,7 @@ const themeOptions: ThemeOptions = {
           style: ({ theme }) => ({
             ...secondaryBaseStyle({ theme }),
             color: "#FFFFFF",
-            backgroundColor: "#000000",
+            backgroundColor: "#292524",
             border: "1px solid #000000",
           }),
         },
@@ -166,7 +166,7 @@ const themeOptions: ThemeOptions = {
           style: ({ theme }) => ({
             ...secondaryBaseStyle({ theme }),
             color: "#FFFFFF",
-            backgroundColor: "#000000",
+            backgroundColor: "#292524",
             border: "1px solid #000000",
           }),
         },
@@ -238,10 +238,11 @@ const themeOptions: ThemeOptions = {
           "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
             borderColor: "#111111",
           },
-          "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
-            borderColor: "#000000",
-            borderWidth: 1,
-          },
+          "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
+            {
+              borderColor: "#000000",
+              borderWidth: 1,
+            },
         },
       },
     },
@@ -260,7 +261,7 @@ const themeOptions: ThemeOptions = {
         root: {
           borderRadius: 8,
           "&.Mui-selected": {
-            backgroundColor: "#000000",
+            backgroundColor: "#292524",
             color: "#FFFFFF",
             "&:hover": { backgroundColor: "#111111" },
           },

@@ -78,7 +78,7 @@ export default function LoginPage() {
                 mt: 1,
                 borderRadius: 0,
                 py: 1.2,
-                bgcolor: "#000",
+                bgcolor: "#292524",
                 "&:hover": { bgcolor: "#111" },
               }}
             >

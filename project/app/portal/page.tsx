@@ -18,7 +18,7 @@ import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
 
 /** Theme-appropriate accents (black/white/grey + a touch of orange) */
 const ACCENTS = {
-  black: "#000000",
+  black: "#292524",
   grey: "#6B7280",
   lightGrey: "#E5E7EB",
   orange: "#F97316",
@@ -34,7 +34,7 @@ const dashboards = [
   },
   {
     title: "Teaching Assistant",
-    description: "Handle session support and approvals.",
+    description: "Handle session support and approvals for coordinators.",
     icon: <GroupsIcon fontSize="large" />,
     href: "/dashboard/assistant",
     accent: ACCENTS.orange,

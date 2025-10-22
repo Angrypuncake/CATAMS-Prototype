@@ -7,7 +7,13 @@ import type {
   PreviewResponse,
   TutorAllocationRow,
   AdminAllocationRow,
+  AllocationBase,
 } from "@/app/_types/allocations";
+import {
+  getCoordinatorUnits,
+  getUnitOffering,
+  UnitOffering,
+} from "./unitService";
 
 type By = {
   id: number | null;
@@ -69,71 +75,6 @@ export async function getTutorAllocations(
 
   const res = await axios.get("/tutor/allocations", { params });
   return res.data;
-}
-
-export async function getCurrentUser(): Promise<{
-  userId: string;
-  email: string;
-  roles: string[];
-}> {
-  const res = await axios.get("/auth/me", {
-    withCredentials: true,
-  });
-  return res.data;
-}
-
-function toDDMMYYYY(iso?: string | null) {
-  if (!iso) return "—";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
-  const dd = String(d.getUTCDate()).padStart(2, "0");
-  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
-  const yyyy = d.getUTCFullYear();
-  return `${dd}/${mm}/${yyyy}`;
-}
-
-// DB status → UI union type normalization
-type UIStatus = TutorAllocationRow["status"]; // "Confirmed" | "Pending" | "Cancelled"
-function normalizeStatus(s?: string | null): UIStatus {
-  const v = (s ?? "").trim().toLowerCase();
-
-  // Treat as Confirmed
-  if (
-    v === "confirmed" ||
-    v === "approved" ||
-    v === "accepted" ||
-    v === "allocated" ||
-    v === "active" ||
-    v === "assigned"
-  ) {
-    return "Confirmed";
-  }
-
-  // Treat as Pending
-  if (
-    v === "pending" ||
-    v === "in_progress" ||
-    v === "requested" ||
-    v.includes("pending") ||
-    v.includes("review") ||
-    v.includes("await")
-  ) {
-    return "Pending";
-  }
-
-  // Fallback
-  return "Cancelled";
-}
-
-function computeHours(start: string | null, end: string | null): string {
-  if (!start || !end) return "—";
-  const [sh, sm] = start.split(":").map(Number);
-  const [eh, em] = end.split(":").map(Number);
-  const startDate = new Date(0, 0, 0, sh, sm);
-  const endDate = new Date(0, 0, 0, eh, em);
-  let diff = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
-  if (diff < 0) diff += 24;
-  return `${diff.toFixed(2)}h`;
 }
 
 export async function getAllocationById(
@@ -216,13 +157,6 @@ export async function getAllocationsByUnitAndActivityType(
   return res.data.data;
 }
 
-// Create a new allocation Admin, UnitCoordinator only
-
-// Delete an allocation
-
-// Update allocation status
-
-/* ------------------ ADMIN ------------------ */
 export async function getAdminAllocations(params: {
   page?: number;
   limit?: number;
@@ -248,6 +182,79 @@ export async function getAdminAllocations(params: {
   const res = await axios.get(`/admin/allocations?${search.toString()}`);
   return res.data;
 }
+
+export async function getCurrentUser(): Promise<{
+  userId: string;
+  email: string;
+  roles: string[];
+}> {
+  const res = await axios.get("/auth/me", {
+    withCredentials: true,
+  });
+  return res.data;
+}
+
+function toDDMMYYYY(iso?: string | null) {
+  if (!iso) return "—";
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "—";
+  const dd = String(d.getUTCDate()).padStart(2, "0");
+  const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const yyyy = d.getUTCFullYear();
+  return `${dd}/${mm}/${yyyy}`;
+}
+
+// DB status → UI union type normalization
+type UIStatus = TutorAllocationRow["status"]; // "Confirmed" | "Pending" | "Cancelled"
+function normalizeStatus(s?: string | null): UIStatus {
+  const v = (s ?? "").trim().toLowerCase();
+
+  // Treat as Confirmed
+  if (
+    v === "confirmed" ||
+    v === "approved" ||
+    v === "accepted" ||
+    v === "allocated" ||
+    v === "active" ||
+    v === "assigned"
+  ) {
+    return "Confirmed";
+  }
+
+  // Treat as Pending
+  if (
+    v === "pending" ||
+    v === "in_progress" ||
+    v === "requested" ||
+    v.includes("pending") ||
+    v.includes("review") ||
+    v.includes("await")
+  ) {
+    return "Pending";
+  }
+
+  // Fallback
+  return "Cancelled";
+}
+
+function computeHours(start: string | null, end: string | null): string {
+  if (!start || !end) return "—";
+  const [sh, sm] = start.split(":").map(Number);
+  const [eh, em] = end.split(":").map(Number);
+  const startDate = new Date(0, 0, 0, sh, sm);
+  const endDate = new Date(0, 0, 0, eh, em);
+  let diff = (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60);
+  if (diff < 0) diff += 24;
+  return `${diff.toFixed(2)}h`;
+}
+
+// Create a new allocation Admin, UnitCoordinator only
+
+// Delete an allocation
+
+// Update allocation status
+
+/* ------------------ ADMIN ------------------ */
 
 export async function patchAdminAllocation(
   id: string | number,
@@ -308,4 +315,186 @@ export async function getImportHistory(limit = 100): Promise<{
     headers: { "Cache-Control": "no-store" },
   });
   return res.data;
+}
+
+export interface UnscheduledAllocationPayload {
+  offeringId: number;
+  tutorId: number;
+  hours: number;
+  activityType?: string; // e.g. "Marking", "Consultation", "Tutorial", "Laboratory"
+  note: string;
+}
+
+export interface UnscheduledAllocationResponse {
+  activityId: number;
+  occurrenceId: number;
+  allocationId: number;
+  paycodeId: string;
+  activityType: string;
+  status: string;
+  note: string;
+}
+
+/**
+ * createUnscheduledAllocation
+ * ----------------------------
+ * Creates an unscheduled allocation (e.g. Marking, Consultation, etc.)
+ * under the given Unit Offering for a specific tutor.
+ *
+ * Usage:
+ * const res = await createUnscheduledAllocation({
+ *   offeringId: 3,
+ *   tutorId: 17,
+ *   hours: 8,
+ *   activityType: "Consultation"
+ * });
+ *
+ * Returns:
+ * {
+ *   activityId: number,
+ *   occurrenceId: number,
+ *   allocationId: number,
+ *   paycodeId: string,
+ *   activityType: string,
+ *   status: "success"
+ * }
+ */
+export async function createUnscheduledAllocation(
+  payload: UnscheduledAllocationPayload,
+): Promise<UnscheduledAllocationResponse> {
+  const { data } = await axios.post<UnscheduledAllocationResponse>(
+    "/allocations/unscheduled",
+    payload,
+  );
+  return data;
+}
+
+// Update hours, note, or location
+export async function updateUnscheduledAllocation(
+  allocationId: number,
+  updates: {
+    hours?: number;
+    note?: string;
+    location?: string;
+    status?: string;
+  },
+) {
+  const res = await fetch(`/allocations/${allocationId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(updates),
+  });
+  return res.json();
+}
+
+// Delete (soft cancel) allocation
+export async function deleteUnscheduledAllocation(allocationId: number) {
+  const res = await fetch(`/allocations/${allocationId}`, { method: "DELETE" });
+  return res.json();
+}
+
+// Get all unscheduled allocations for a unit
+export async function getUnscheduledAllocations(
+  offeringId: number,
+  activityType = "Marking",
+) {
+  const res = await fetch(
+    `/api/allocations/unscheduled?offeringId=${offeringId}&activityType=${activityType}`,
+  );
+  return res.json();
+}
+
+export interface UnscheduledAllocation {
+  allocation_id: number;
+  user_id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  hours: number;
+  note: string | null;
+  location: string | null;
+  activity_type: string;
+  status: string;
+}
+
+/**
+ * Fetch all unscheduled allocations for a specific unit offering.
+ *
+ * @param offeringId - The ID of the unit offering
+ * @param activityType - Optional filter (default: "Marking")
+ */
+export async function getUnscheduledAllocationsByOffering(
+  offeringId: number,
+  activityType = "Marking",
+): Promise<UnscheduledAllocation[]> {
+  const res = await axios.get("/allocations/unscheduled", {
+    params: {
+      offeringId,
+      activityType,
+    },
+  });
+  return res.data as UnscheduledAllocation[];
+}
+
+/**
+ * Fetch all unscheduled allocations (e.g. Marking, Consultation)
+ * across all units that this Unit Coordinator manages.
+ */
+export async function getAllUnscheduledAllocationsForUC(
+  activityType = "Marking",
+): Promise<
+  (UnscheduledAllocation & {
+    offeringId: number;
+    unitCode: string;
+    unitName: string;
+    year: number;
+    session: string;
+  })[]
+> {
+  try {
+    // 1️⃣ Fetch all units this UC coordinates (just offering_id)
+    const coordinatorUnits = await getCoordinatorUnits();
+    const offeringIds = coordinatorUnits.map((u) => u.offering_id);
+
+    if (offeringIds.length === 0) return [];
+
+    // 2️⃣ Enrich offerings → get full unit metadata
+    const enrichedOfferings: UnitOffering[] = await Promise.all(
+      offeringIds.map((id) => getUnitOffering(id)),
+    );
+
+    // 3️⃣ For each offering, fetch unscheduled allocations in parallel
+    const results = await Promise.all(
+      enrichedOfferings.map(async (unit) => {
+        const res = await axios.get("/allocations/unscheduled", {
+          params: { offeringId: unit.offeringId, activityType },
+        });
+
+        const allocations = res.data as UnscheduledAllocation[];
+
+        // Attach unit context to each allocation
+        return allocations.map((a) => ({
+          ...a,
+          offeringId: unit.offeringId,
+          unitCode: unit.unitCode,
+          unitName: unit.unitName,
+          year: unit.year,
+          session: unit.session,
+        }));
+      }),
+    );
+
+    // 4️⃣ Flatten & sort
+    const merged = results.flat();
+    merged.sort((a, b) =>
+      a.unitCode === b.unitCode
+        ? a.last_name.localeCompare(b.last_name)
+        : a.unitCode.localeCompare(b.unitCode),
+    );
+
+    return merged;
+  } catch (err) {
+    console.error("Failed to fetch all UC unscheduled allocations:", err);
+    throw err;
+  }
 }

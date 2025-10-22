@@ -109,3 +109,13 @@ export type PreviewResponse = {
   };
   error: string;
 };
+
+export const VISIBLE_STATUSES_FOR_TUTOR = [
+  "Approved Allocation",
+  "Hours for Review",
+  "Hours for Approval",
+  "Rejected by Approval",
+  "Variation Complete",
+  "Claimed",
+  "Cancelled",
+];

@@ -272,3 +272,59 @@ export async function getTutorRequests(
   });
   return response.data;
 }
+
+/**
+ * ==========================================================
+ *  Fetch all requests under a specific offering
+ *  Route: GET /api/offerings/:offeringId/requests
+ * ==========================================================
+ */
+
+export interface RequestByOfferingRow {
+  requestId: number;
+  requesterId: number;
+  requestDate: string;
+  allocationId: number;
+  requestType: string | null;
+  details?: JSON;
+  requestStatus: string;
+  requestReason: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+  tutorId: number;
+  firstName: string;
+  lastName: string;
+}
+
+export async function getRequestsByOffering(
+  offeringId: number,
+  userId?: number,
+): Promise<RequestByOfferingRow[]> {
+  const config = userId
+    ? { headers: { "x-user-id": String(userId) } }
+    : undefined;
+
+  const response = await axios.get<{ data?: RequestByOfferingRow[] }>(
+    `/offerings/${offeringId}/requests`,
+    config,
+  );
+
+  // Normalize and ensure consistent typing
+  const rows = (response.data?.data ?? response.data) as RequestByOfferingRow[];
+
+  return rows.map((r) => ({
+    requestId: r.requestId,
+    requesterId: r.requesterId,
+    requestDate: r.requestDate,
+    allocationId: r.allocationId,
+    requestType: r.requestType,
+    details: r.details,
+    requestStatus: r.requestStatus,
+    requestReason: r.requestReason,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+    tutorId: r.tutorId,
+    firstName: r.firstName,
+    lastName: r.lastName,
+  }));
+}

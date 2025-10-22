@@ -82,8 +82,9 @@ describe("DynamicTable", () => {
       expect(screen.queryByText("Id")).not.toBeInTheDocument();
       expect(screen.queryByText("1")).not.toBeInTheDocument();
 
-      const { container } = render(<DynamicTable rows={[]} />);
-      expect(container.firstChild).toBeNull();
+      const { container: emptyContainer } = render(<DynamicTable rows={[]} />);
+      expect(emptyContainer.querySelector("table")).toBeInTheDocument();
+      expect(screen.getByText("No data available")).toBeInTheDocument();
     });
 
     test("renders booleans as chips and dates with formatting", () => {
@@ -177,6 +178,66 @@ describe("DynamicTable", () => {
       expect(
         screen.queryByPlaceholderText("Search across all fields..."),
       ).not.toBeInTheDocument();
+    });
+
+    test("searches date strings and numbers correctly", () => {
+      const dataWithDateStringsAndNumbers = [
+        {
+          id: 1,
+          name: "Alice",
+          createdAt: "2023-01-15",
+          score: 85,
+          count: 100,
+        },
+        {
+          id: 2,
+          name: "Bob",
+          createdAt: "2024-06-20",
+          score: 92,
+          count: 250,
+        },
+        {
+          id: 3,
+          name: "Charlie",
+          createdAt: "2023-12-05",
+          score: 78,
+          count: 150,
+        },
+      ];
+
+      render(
+        <DynamicTable
+          rows={dataWithDateStringsAndNumbers}
+          enableSearch={true}
+        />,
+      );
+
+      const searchInput = screen.getByPlaceholderText(
+        "Search across all fields...",
+      ) as HTMLInputElement;
+
+      // Search by year in date string
+      fireEvent.change(searchInput, { target: { value: "2023" } });
+      expect(screen.getByText("Alice")).toBeInTheDocument();
+      expect(screen.getByText("Charlie")).toBeInTheDocument();
+      expect(screen.queryByText("Bob")).not.toBeInTheDocument();
+
+      // Search by number (exact)
+      fireEvent.change(searchInput, { target: { value: "92" } });
+      expect(screen.getByText("Bob")).toBeInTheDocument();
+      expect(screen.queryByText("Alice")).not.toBeInTheDocument();
+      expect(screen.queryByText("Charlie")).not.toBeInTheDocument();
+
+      // Search by partial number
+      fireEvent.change(searchInput, { target: { value: "5" } });
+      expect(screen.getByText("Alice")).toBeInTheDocument(); // score 85
+      expect(screen.getByText("Charlie")).toBeInTheDocument(); // score 78, count 150
+      expect(screen.getByText("Bob")).toBeInTheDocument(); // count 250
+
+      // Search by date month
+      fireEvent.change(searchInput, { target: { value: "01" } });
+      expect(screen.getByText("Alice")).toBeInTheDocument(); // 2023-01-15
+      expect(screen.queryByText("Bob")).not.toBeInTheDocument();
     });
 
     test("triggers server-side search callback", () => {

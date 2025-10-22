@@ -63,18 +63,18 @@ function DynamicTable<T = Record<string, unknown>>({
   );
 
   const inferredColumns = useMemo(() => {
+    // If columns are explicitly provided, use them
+    if (columns) return columns;
+
+    // Otherwise, try to infer from data
     if (!rows || rows.length === 0) return [];
-    return (
-      columns ??
-      (Object.keys(rows[0])
-        .filter((k) => k !== "id")
-        .map((key) => ({
-          key: key as keyof T & string,
-          label: key
-            .replace(/_/g, " ")
-            .replace(/\b\w/g, (c) => c.toUpperCase()),
-        })) as { key: keyof T & string; label?: string }[])
-    );
+
+    return Object.keys(rows[0])
+      .filter((k) => k !== "id")
+      .map((key) => ({
+        key: key as keyof T & string,
+        label: key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()),
+      })) as { key: keyof T & string; label?: string }[];
   }, [rows, columns]);
 
   const filteredRows = useMemo(() => {
@@ -126,8 +126,6 @@ function DynamicTable<T = Record<string, unknown>>({
     page,
     rowsPerPage,
   ]);
-
-  if (!rows || rows.length === 0) return null;
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
@@ -209,8 +207,16 @@ function DynamicTable<T = Record<string, unknown>>({
           searchPlaceholder={searchPlaceholder}
           onSearchChange={handleSearchChange}
           onClearSearch={handleClearSearch}
-          filteredCount={filteredRows.length}
-          totalCount={rows.length}
+          filteredCount={
+            enableServerSidePagination
+              ? paginatedRows.length
+              : filteredRows.length
+          }
+          totalCount={
+            enableServerSidePagination
+              ? (totalCount ?? 0)
+              : (totalCount ?? rows.length)
+          }
         />
       )}
 

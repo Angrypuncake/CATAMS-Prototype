@@ -1,29 +1,33 @@
 "use client";
-import React, { useCallback, useState, useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
+  Box,
   Button,
-  Typography,
+  Chip,
+  Paper,
+  Stack,
   ToggleButton,
   ToggleButtonGroup,
-  Chip, // NEW
-  Stack, // NEW
+  Typography,
 } from "@mui/material";
+import axios from "axios";
+
+import MinimalNav from "../../../components/MinimalNav"; // ✅ correct path
 import DynamicTable from "../../../components/DynamicTable/DynamicTable";
 import AdminInfoBox from "./AdminInfoBox";
 import AdminBudgetBox from "./AdminBudgetBox";
-import axios from "axios";
 
-// Allow non-primitives in rows (arrays/objects)
+/* ========= Types ========= */
 type TableRowData = {
   id?: string | number | null;
-  [key: string]: unknown; // CHANGED
+  [key: string]: unknown;
 };
 interface HistoryState {
   staged: TableRowData[];
   runs: TableRowData[];
 }
 
-// --- Helpers for renderers ---
+/* ========= Helpers ========= */
 const statusColor = (
   s?: string,
 ): "default" | "success" | "warning" | "error" => {
@@ -50,10 +54,7 @@ const fmtDateTime = (v: unknown) => {
 
 const kvPreview = (obj: unknown, limit = 4) => {
   if (!obj || typeof obj !== "object") return <>—</>;
-  const entries = Object.entries(obj as Record<string, unknown>).slice(
-    0,
-    limit,
-  );
+  const entries = Object.entries(obj as Record<string, unknown>).slice(0, limit);
   return (
     <Stack spacing={0.25}>
       {entries.map(([k, v]) => (
@@ -70,29 +71,17 @@ const kvPreview = (obj: unknown, limit = 4) => {
   );
 };
 
-const AdminDashboard = () => {
-  const [adminView, setAdminView] = useState({
-    numUsers: 0,
-    numAllocations: 0,
-  });
+/* ========= Page ========= */
+export default function AdminPage() {
+  const [adminView, setAdminView] = useState({ numUsers: 0, numAllocations: 0 });
   const [tutorRows, setTutorRows] = useState<TableRowData[]>([]);
   const [tutorTotal, setTutorTotal] = useState(0);
-  const [historyRows, setHistoryRows] = useState<HistoryState>({
-    staged: [],
-    runs: [],
-  });
-  const [historyTotals, setHistoryTotals] = useState({
-    staged: 0,
-    runs: 0,
-  });
-  const [alignment, setAlignment] = React.useState<"staged" | "runs">("staged");
+  const [historyRows, setHistoryRows] = useState<HistoryState>({ staged: [], runs: [] });
+  const [historyTotals, setHistoryTotals] = useState({ staged: 0, runs: 0 });
+  const [alignment, setAlignment] = useState<"staged" | "runs">("staged");
 
-  const handleChange = (
-    _: React.MouseEvent<HTMLElement>,
-    next: "staged" | "runs" | null,
-  ) => {
-    if (!next) return;
-    setAlignment(next);
+  const handleChange = (_: React.MouseEvent<HTMLElement>, next: "staged" | "runs" | null) => {
+    if (next) setAlignment(next);
   };
 
   const loadOverview = useCallback(async () => {
@@ -111,19 +100,15 @@ const AdminDashboard = () => {
 
   const loadImportHistory = useCallback(async () => {
     try {
-      const res = await axios.get("/api/admin/history", {
-        params: { limit: 200 },
-      });
-
+      const res = await axios.get("/api/admin/history", { params: { limit: 200 } });
       const dropBy = <T extends { by?: unknown }>(rows: T[]): Omit<T, "by">[] =>
         rows.map(({ by, ...rest }) => rest);
-      const dropCounts = <T extends { counts?: unknown }>(
-        rows: T[],
-      ): Omit<T, "counts">[] => rows.map(({ counts, ...rest }) => rest);
+      const dropCounts = <T extends { counts?: unknown }>(rows: T[]): Omit<T, "counts">[] =>
+        rows.map(({ counts, ...rest }) => rest);
 
       setHistoryRows({
         staged: dropBy(res.data.staged),
-        runs: dropBy(dropCounts(res.data.runs)),
+        runs: dropCounts(res.data.runs),
       });
       setHistoryTotals({
         staged: Number(res.data.stagedTotal || 0),
@@ -140,179 +125,223 @@ const AdminDashboard = () => {
   }, [loadOverview, loadImportHistory]);
 
   return (
-    <div className="h-screen flex flex-col w-[90%] gap-3">
-      <div className="flex justify-around mt-6 w-full">
-        <div>
-          <div>
-            <Typography variant="h3">System Admin Dashboard</Typography>
-            <Typography variant="body1">
-              Data operations, integrity checks, and system configuration.
-            </Typography>
-          </div>
-        </div>
+    <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
+      {/* ✅ MinimalNav */}
+      <MinimalNav
+        actions={[]}
+        rightTitle="CATAMS"
+        showOrangeAccent
+        edgeGapCm={0} // ensure no internal gaps
+        maxWidthClass="w-full" // full-width alignment
+      />
 
-        <div className="gap-2 flex">
-          <Button variant="secondary">Refresh</Button>
-          <Button variant="secondary" color="blue" href="/admin/import">
-            Bulk Import Allocations
-          </Button>
-          <Button variant="secondary" href="/admin/allocations">
-            Edit allocations
-          </Button>
-        </div>
-      </div>
+      {/* Small spacer under nav */}
+      <Box sx={{ height: 16 }} />
 
-      <div className="flex gap-2 justify-center w-full">
-        <AdminInfoBox
-          adminStatistic={adminView.numUsers}
-          title="User"
-          bubbleText="directory"
-        />
-        <AdminInfoBox
-          adminStatistic={adminView.numAllocations}
-          title="Allocations"
-          bubbleText="current term"
-        />
-      </div>
-
-      <div className="flex justify-center h-full gap-3 w-full">
-        <div className="w-1/4 h-1/3 bg-white rounded-3xl p-3">
-          <Typography variant="subtitle1">Budgets Loaded</Typography>
-          <AdminBudgetBox
-            title="Allocations CSV"
-            description="Upload + preview in timetable"
-            href=""
-          />
-        </div>
-
-        <div className="w-3/4 h-full rounded-3xl flex flex-col gap-3">
-          {/* Validation */}
-          <div className="min-h-[85px] h-[10%] bg-white rounded-3xl p-3">
-            <Typography variant="subtitle1">Validation Reports</Typography>
-            <div>
-              <Button variant="secondary" color="red">
-                Invalid Tutor Emails {`(0)`}
-              </Button>
-            </div>
-          </div>
-
-          {/* User & Role Management */}
-          <div className="bg-white rounded-3xl p-3">
-            <div className="flex justify-between items-center">
-              <Typography variant="subtitle1">
-                User & Role Management
+      {/* ✅ Full-width content, centered */}
+      <Box sx={{ width: "100%", px: { xs: 3, sm: 5, md: 8 }, pb: 8 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
+          {/* Header */}
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              alignItems: "flex-start",
+              justifyContent: "space-between",
+              gap: 2,
+            }}
+          >
+            <Box sx={{ minWidth: 320 }}>
+              <Typography variant="h4">System Admin Dashboard</Typography>
+              <Typography variant="body1" color="text.secondary">
+                Data operations, integrity checks, and system configuration.
               </Typography>
-            </div>
+            </Box>
 
-            <DynamicTable
-              rows={tutorRows}
-              enablePagination={true}
-              columnRenderers={{
-                // roles: array → chips
-                roles: (value) =>
-                  Array.isArray(value) ? (
-                    <Stack direction="row" spacing={0.5} flexWrap="wrap">
-                      {value.map((r, i) => (
-                        <Chip
-                          key={i}
-                          size="small"
-                          variant="outlined"
-                          label={String(r)}
-                        />
-                      ))}
-                    </Stack>
-                  ) : (
-                    <>{String(value ?? "—")}</>
-                  ),
+            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+              <Button variant="secondary">Refresh</Button>
+              <Button variant="secondary" color="blue" href="/admin/import">
+                Bulk Import Allocations
+              </Button>
+              <Button variant="secondary" href="/admin/allocations">
+                Edit allocations
+              </Button>
+            </Stack>
+          </Box>
 
-                // active: boolean → chip
-                active: (value) =>
-                  typeof value === "boolean" ? (
-                    <Chip
-                      size="small"
-                      label={value ? "Active" : "Inactive"}
-                      color={value ? "success" : "default"}
-                    />
-                  ) : (
-                    <>{String(value ?? "—")}</>
-                  ),
+          {/* ===== Grid layout ===== */}
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", lg: "1fr 3fr" },
+              gap: 2.5,
+              alignItems: "start",
+            }}
+          >
+            {/* Left column */}
+            <Paper
+              elevation={0}
+              sx={{ p: 2.5, borderRadius: 4, border: "1px solid", borderColor: "divider" }}
+            >
+              <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                Budgets Loaded
+              </Typography>
+              <AdminBudgetBox
+                title="Allocations CSV"
+                description="Upload + preview in timetable"
+                href=""
+              />
+            </Paper>
 
-                // created_at (if present)
-                created_at: (value) => <>{fmtDateTime(value)}</>,
-                updated_at: (value) => <>{fmtDateTime(value)}</>,
-              }}
-              totalCount={tutorTotal}
-            />
-          </div>
+            {/* Right column */}
+            <Stack spacing={2.5}>
+              {/* KPI row (moved here, above Validation) */}
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  flexWrap: "wrap",
+                  alignItems: "stretch",
+                }}
+              >
+                <AdminInfoBox
+                  adminStatistic={adminView.numUsers}
+                  title="Users"
+                  bubbleText="directory"
+                />
+                <AdminInfoBox
+                  adminStatistic={adminView.numAllocations}
+                  title="Allocations"
+                  bubbleText="current term"
+                />
+              </Box>
 
-          {/* Import/Export Jobs */}
-          <div className="bg-white rounded-3xl p-3">
-            <div className="flex justify-between items-center">
-              <div className="flex items-center gap-3">
-                <Typography variant="subtitle1">
-                  Recent Jobs (Import/Exports)
+              {/* Validation */}
+              <Paper
+                elevation={0}
+                sx={{ p: 2.5, borderRadius: 4, border: "1px solid", borderColor: "divider" }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                  Validation Reports
                 </Typography>
-                <ToggleButtonGroup
-                  color="primary"
-                  value={alignment}
-                  exclusive
-                  onChange={handleChange}
-                  aria-label="Platform"
-                  sx={{
-                    "& .MuiToggleButton-root": {
-                      padding: "0px 6px",
-                      minHeight: "22px",
-                      fontSize: "0.7rem",
-                      lineHeight: 1.2,
-                    },
-                  }}
-                >
-                  <ToggleButton value="staged">Staged</ToggleButton>
-                  <ToggleButton value="runs">Runs</ToggleButton>
-                </ToggleButtonGroup>
-              </div>
-            </div>
+                <Box sx={{ mt: 1 }}>
+                  <Button variant="secondary" color="red">
+                    Invalid Tutor Emails (0)
+                  </Button>
+                </Box>
+              </Paper>
 
-            <DynamicTable
-              key={alignment}
-              rows={
-                alignment === "staged" ? historyRows.staged : historyRows.runs
-              }
-              enablePagination={true}
-              totalCount={
-                alignment === "staged"
-                  ? historyTotals.staged
-                  : historyTotals.runs
-              }
-              columnRenderers={{
-                status: (value) => (
-                  <Chip
-                    size="small"
-                    color={statusColor(String(value))}
-                    label={String(value ?? "—")}
-                  />
-                ),
-                issues: (value) => kvPreview(value),
-                counts: (value) => kvPreview(value),
-                created_at: (value) => <>{fmtDateTime(value)}</>,
-                started_at: (value) => <>{fmtDateTime(value)}</>,
-                finished_at: (value) => <>{fmtDateTime(value)}</>,
-                warnings: (value) =>
-                  Array.isArray(value) ? (
-                    <Stack direction="row" spacing={0.5} flexWrap="wrap">
-                      {value.map((w, i) => (
-                        <Chip key={i} size="small" label={String(w)} />
-                      ))}
-                    </Stack>
-                  ) : (
-                    <>{String(value ?? "—")}</>
-                  ),
-              }}
-            />
-          </div>
-        </div>
-      </div>
-    </div>
+              {/* User & Role Management */}
+              <Paper
+                elevation={0}
+                sx={{ p: 2.5, borderRadius: 4, border: "1px solid", borderColor: "divider" }}
+              >
+                <Typography variant="subtitle1" sx={{ fontWeight: "bold", mb: 1 }}>
+                  User &amp; Role Management
+                </Typography>
+
+                <DynamicTable
+                  rows={tutorRows}
+                  enablePagination
+                  totalCount={tutorTotal}
+                  columnRenderers={{
+                    roles: (value) =>
+                      Array.isArray(value) ? (
+                        <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                          {value.map((r, i) => (
+                            <Chip key={i} size="small" variant="outlined" label={String(r)} />
+                          ))}
+                        </Stack>
+                      ) : (
+                        <>{String(value ?? "—")}</>
+                      ),
+                    active: (value) =>
+                      typeof value === "boolean" ? (
+                        <Chip
+                          size="small"
+                          label={value ? "Active" : "Inactive"}
+                          color={value ? "success" : "default"}
+                        />
+                      ) : (
+                        <>{String(value ?? "—")}</>
+                      ),
+                    created_at: (value) => <>{fmtDateTime(value)}</>,
+                    updated_at: (value) => <>{fmtDateTime(value)}</>,
+                  }}
+                />
+              </Paper>
+
+              {/* Import/Export Jobs */}
+              <Paper
+                elevation={0}
+                sx={{ p: 2.5, borderRadius: 4, border: "1px solid", borderColor: "divider" }}
+              >
+                <Stack
+                  direction="row"
+                  spacing={2}
+                  alignItems="center"
+                  justifyContent="space-between"
+                  flexWrap="wrap"
+                  sx={{ mb: 1 }}
+                >
+                  <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
+                    Recent Jobs (Import/Exports)
+                  </Typography>
+                  <ToggleButtonGroup
+                    color="primary"
+                    value={alignment}
+                    exclusive
+                    onChange={handleChange}
+                    aria-label="History group"
+                    sx={{
+                      "& .MuiToggleButton-root": {
+                        px: 0.75,
+                        minHeight: 24,
+                        fontSize: "0.75rem",
+                        lineHeight: 1.2,
+                      },
+                    }}
+                  >
+                    <ToggleButton value="staged">Staged</ToggleButton>
+                    <ToggleButton value="runs">Runs</ToggleButton>
+                  </ToggleButtonGroup>
+                </Stack>
+
+                <DynamicTable
+                  key={alignment}
+                  rows={alignment === "staged" ? historyRows.staged : historyRows.runs}
+                  enablePagination
+                  totalCount={alignment === "staged" ? historyTotals.staged : historyTotals.runs}
+                  columnRenderers={{
+                    status: (value) => (
+                      <Chip
+                        size="small"
+                        color={statusColor(String(value))}
+                        label={String(value ?? "—")}
+                      />
+                    ),
+                    issues: (value) => kvPreview(value),
+                    counts: (value) => kvPreview(value),
+                    created_at: (value) => <>{fmtDateTime(value)}</>,
+                    started_at: (value) => <>{fmtDateTime(value)}</>,
+                    finished_at: (value) => <>{fmtDateTime(value)}</>,
+                    warnings: (value) =>
+                      Array.isArray(value) ? (
+                        <Stack direction="row" spacing={0.5} flexWrap="wrap">
+                          {value.map((w, i) => (
+                            <Chip key={i} size="small" label={String(w)} />
+                          ))}
+                        </Stack>
+                      ) : (
+                        <>{String(value ?? "—")}</>
+                      ),
+                  }}
+                />
+              </Paper>
+            </Stack>
+          </Box>
+        </Box>
+      </Box>
+    </Box>
   );
-};
-export default AdminDashboard;
+}

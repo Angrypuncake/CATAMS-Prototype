@@ -1,58 +1,38 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import StyledBox from "./components";
-import AllocationsTable from "./AllocationsTable";
-import ActionRequiredTable from "./ActionRequiredTable";
-import RequestsTable from "./RequestsTable";
-import NoticesTable from "./NoticesTable";
 import {
   getTutorAllocations,
   getCurrentUser,
 } from "@/app/services/allocationService";
 import AllocationQuickviewModal from "./AllocationQuickviewModal";
-import type {
-  AllocationRow,
-  ActionRequiredRow,
-  NoticeRow,
-  SortableColumns,
-} from "./types";
-import { mapToRequestRow, useColumnSorter } from "./utils";
+import type { AllocationRow, ActionRequiredRow, NoticeRow } from "./types";
+import { mapToRequestRow, hoursBetween, niceTime } from "./utils";
 import { actions, notices } from "./mockData";
 import { getTutorRequests } from "@/app/services/requestService";
 import { RequestRow } from "@/app/_types/request";
-import { VISIBLE_STATUSES_FOR_TUTOR } from "@/app/_types/allocations";
+import DynamicTable, {
+  TableRowData,
+} from "@/components/DynamicTable/DynamicTable";
 
 /* ========= Page ========= */
 const Page = () => {
   const [tutorSessions, setTutorSessions] = useState<AllocationRow[]>([]);
   const [totalSessions, setTotalSessions] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [sortAllocationsConfig, setSortAllocationsConfig] = useState<{
-    column: SortableColumns;
-    direction: "asc" | "desc";
-  } | null>(null);
-  const [sortActionsConfig, setSortActionsConfig] = useState<{
-    column: SortableColumns;
-    direction: "asc" | "desc";
-  } | null>(null);
-  const [sortRequestsConfig, setSortRequestsConfig] = useState<{
-    column: SortableColumns;
-    direction: "asc" | "desc";
-  } | null>(null);
-  const [sortNoticesConfig, setSortNoticesConfig] = useState<{
-    column: SortableColumns;
-    direction: "asc" | "desc";
-  } | null>(null);
+  const [, setLoading] = useState(true);
 
-  // new states for pagination + search
+  // Pagination states for allocations table
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [search, setSearch] = useState("");
   const [tutorRequests, setTutorRequests] = useState<RequestRow[]>([]);
-  const [totalRequests, setTotalRequests] = useState(0);
 
-  // Get requests
+  // Search and sort states for allocations table
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortColumn, setSortColumn] = useState<string | undefined>(undefined);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
+  // Fetch allocations and requests
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -63,6 +43,9 @@ const Page = () => {
           sessionUser.userId,
           page + 1,
           rowsPerPage,
+          searchTerm,
+          sortColumn,
+          sortDirection,
         );
         setTutorSessions(allocationsData.data);
         setTotalSessions(allocationsData.total);
@@ -72,7 +55,6 @@ const Page = () => {
         const mappedRequests: RequestRow[] =
           requestsData.data.map(mapToRequestRow);
         setTutorRequests(mappedRequests);
-        setTotalRequests(requestsData.total);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
       } finally {
@@ -81,87 +63,25 @@ const Page = () => {
     };
 
     fetchData();
-  }, [page, rowsPerPage]);
+  }, [page, rowsPerPage, searchTerm, sortColumn, sortDirection]);
 
-  const filteredSessions = tutorSessions.filter((s) => {
-    // ✅ safely handle possible null / undefined
-    const unitCode = String(s.unitCode) ?? "";
-    const status = s.status ?? "";
-
-    // Search filter
-    if (search && !unitCode.toLowerCase().includes(search.toLowerCase())) {
-      return false;
-    }
-
-    // Status filter
-    return VISIBLE_STATUSES_FOR_TUTOR.includes(status);
-  });
-
-  // Then apply sorting
-  const sortedSessions: AllocationRow[] = useColumnSorter<AllocationRow>(
-    filteredSessions,
-    sortAllocationsConfig,
-  );
-
-  const sortedActions: ActionRequiredRow[] = useColumnSorter<ActionRequiredRow>(
-    actions,
-    sortActionsConfig,
-  );
-  const sortedRequests: RequestRow[] = tutorRequests; // bypass sorter
-  const sortedNotices: NoticeRow[] = useColumnSorter<NoticeRow>(
-    notices,
-    sortNoticesConfig,
-  );
-
-  // modal (ONLY for "My Allocations")
+  // Modal for allocations
   const [open, setOpen] = useState(false);
   const [session, setSession] = useState<AllocationRow | null>(null);
 
-  useEffect(() => {
-    const fetchTutorSessions = async () => {
-      try {
-        const sessionUser = await getCurrentUser();
-        const allocationsData = await getTutorAllocations(
-          sessionUser.userId,
-          page + 1,
-          rowsPerPage,
-        );
-
-        setTutorSessions(allocationsData.data);
-        setTotalSessions(allocationsData.total);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchTutorSessions();
-  }, [page, rowsPerPage]);
-
-  // NEED MORE QUERIES FOR NOTICES, REQUESTS AND ACTIONS
-
-  type SortConfig = {
-    column: SortableColumns;
-    direction: "asc" | "desc";
-  } | null;
-
-  const createSortHandler = (
-    setConfig: React.Dispatch<React.SetStateAction<SortConfig>>,
-  ) => {
-    return (column: SortableColumns) => {
-      setConfig((prev) =>
-        prev?.column === column
-          ? { column, direction: prev.direction === "asc" ? "desc" : "asc" }
-          : { column, direction: "asc" },
-      );
-    };
+  // Handlers for server-side search and sort in allocations table
+  const handleSearchChange = (newSearchTerm: string) => {
+    console.log("[Tutor Dashboard] Search changed:", newSearchTerm);
+    setSearchTerm(newSearchTerm);
+    setPage(0); // Reset to first page when searching
   };
 
-  const handleSortAllocations = createSortHandler(setSortAllocationsConfig);
-  const handleSortActions = createSortHandler(setSortActionsConfig);
-  const handleSortRequests = createSortHandler(setSortRequestsConfig);
-  const handleSortNotices = createSortHandler(setSortNoticesConfig);
+  const handleSortChange = (column: string, direction: "asc" | "desc") => {
+    console.log("[Tutor Dashboard] Sort changed:", { column, direction });
+    setSortColumn(column);
+    setSortDirection(direction);
+    setPage(0); // Reset to first page when sorting
+  };
 
   const hours = 20;
   const sessions = 10;
@@ -190,52 +110,152 @@ const Page = () => {
 
       {/* ---------- My Allocations (ONLY this table opens a modal) ---------- */}
       <StyledBox>
-        <AllocationsTable
-          sessions={sortedSessions}
+        <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
+          My Allocations
+        </Typography>
+        <DynamicTable<AllocationRow>
+          rows={tutorSessions as TableRowData<AllocationRow>[]}
+          columns={[
+            { key: "session_date", label: "Date" },
+            { key: "start_at", label: "Time" },
+            { key: "unit_code", label: "Unit" },
+            { key: "location", label: "Location" },
+            { key: "hours", label: "Hours" },
+            { key: "status", label: "Status" },
+          ]}
+          columnRenderers={{
+            session_date: (value) => (
+              <span>{value ? String(value).slice(0, 10) : "N/A"}</span>
+            ),
+            start_at: (_value, row) => (
+              <span>
+                {row.start_at && row.end_at
+                  ? `${niceTime(row.start_at)}-${niceTime(row.end_at)}`
+                  : "N/A"}
+              </span>
+            ),
+            hours: (_value, row) => (
+              <span>
+                {hoursBetween(
+                  row.start_at ?? undefined,
+                  row.end_at ?? undefined,
+                )}
+              </span>
+            ),
+          }}
+          enableServerSidePagination={true}
+          onPaginationChange={(newPage, newRowsPerPage) => {
+            setPage(newPage);
+            setRowsPerPage(newRowsPerPage);
+          }}
           totalCount={totalSessions}
-          sortConfig={sortAllocationsConfig}
-          onSort={handleSortAllocations}
-          onRowClick={(row) => {
-            setSession(row);
-            setOpen(true);
-          }}
-          page={page}
-          rowsPerPage={rowsPerPage}
-          onPageChange={(_e, newPage) => setPage(newPage)}
-          onRowsPerPageChange={(e) => {
-            setRowsPerPage(parseInt(e.target.value, 10));
-            setPage(0);
-          }}
-          search={search}
-          onSearchChange={(value) => {
-            setSearch(value);
-            setPage(0);
-          }}
+          defaultRowsPerPage={5}
+          rowsPerPageOptions={[5, 10, 25]}
+          enableSearch={true}
+          onSearchChange={handleSearchChange}
+          onSortChange={handleSortChange}
+          enableExport={true}
+          exportFilename="tutor_allocations"
+          exportExcludeKeys={["id", "user_id"]}
+          actions={[
+            {
+              label: "View",
+              onClick: (row) => {
+                setSession(row);
+                setOpen(true);
+              },
+              color: "primary",
+              variant: "contained",
+            },
+          ]}
         />
       </StyledBox>
 
-      {/* ---------- Other sections (unchanged, no modals) ---------- */}
+      {/* ---------- Action Required ---------- */}
       <StyledBox>
-        <ActionRequiredTable
-          actions={sortedActions}
-          sortConfig={sortActionsConfig}
-          onSort={handleSortActions}
+        <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
+          Action Required
+        </Typography>
+        <DynamicTable<ActionRequiredRow>
+          rows={actions as TableRowData<ActionRequiredRow>[]}
+          columns={[
+            { key: "session_date", label: "Date" },
+            { key: "time", label: "Time" },
+            { key: "unit", label: "Unit" },
+            { key: "hours", label: "Hours" },
+            { key: "desc", label: "Description" },
+            { key: "status", label: "Status" },
+            { key: "actions", label: "Actions" },
+          ]}
+          columnRenderers={{
+            actions: (value) => (
+              <Box display="flex" justifyContent="center">
+                <Button variant="contained" size="small">
+                  {value}
+                </Button>
+              </Box>
+            ),
+          }}
+          defaultRowsPerPage={5}
+          rowsPerPageOptions={[5, 10, 25]}
         />
       </StyledBox>
 
+      {/* ---------- Requests ---------- */}
       <StyledBox>
-        <RequestsTable
-          requests={sortedRequests}
-          sortConfig={sortRequestsConfig}
-          onSort={handleSortRequests}
+        <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
+          My Requests
+        </Typography>
+        <DynamicTable<RequestRow>
+          rows={tutorRequests as TableRowData<RequestRow>[]}
+          columns={[
+            { key: "type", label: "Type" },
+            { key: "relatedSession", label: "Session" },
+            { key: "status", label: "Status" },
+            { key: "createdAt", label: "Requested On" },
+            { key: "actions", label: "Actions" },
+          ]}
+          columnRenderers={{
+            createdAt: (value) => (
+              <span>{value ? String(value).slice(0, 10) : "N/A"}</span>
+            ),
+            actions: (value) => (
+              <Box display="flex" justifyContent="center">
+                <Button variant="contained" size="small">
+                  {value}
+                </Button>
+              </Box>
+            ),
+          }}
+          defaultRowsPerPage={5}
+          rowsPerPageOptions={[5, 10, 25]}
         />
       </StyledBox>
 
+      {/* ---------- Notices ---------- */}
       <StyledBox>
-        <NoticesTable
-          notices={sortedNotices}
-          sortConfig={sortNoticesConfig}
-          onSort={handleSortNotices}
+        <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
+          Notices
+        </Typography>
+        <DynamicTable<NoticeRow>
+          rows={notices as TableRowData<NoticeRow>[]}
+          columns={[
+            { key: "session_date", label: "Date" },
+            { key: "type", label: "Type" },
+            { key: "message", label: "Message" },
+            { key: "actions", label: "Actions" },
+          ]}
+          columnRenderers={{
+            actions: (value) => (
+              <Box display="flex" justifyContent="center">
+                <Button variant="contained" size="small">
+                  {value}
+                </Button>
+              </Box>
+            ),
+          }}
+          defaultRowsPerPage={5}
+          rowsPerPageOptions={[5, 10, 25]}
         />
       </StyledBox>
 

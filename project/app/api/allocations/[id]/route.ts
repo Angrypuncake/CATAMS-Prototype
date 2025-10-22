@@ -4,10 +4,11 @@ import { query } from "@/lib/db";
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const id = Number(params.id);
+    const { id: idParam } = await params;
+    const id = Number(idParam);
     const body = await req.json();
     const { hours, note, location, status } = body;
 
@@ -48,10 +49,11 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } },
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> },
 ) {
-  const id = Number(params.id);
+  const { id: idParam } = await params;
+  const id = Number(idParam);
   try {
     await query(
       "UPDATE allocation SET status = 'cancelled' WHERE allocation_id = $1",

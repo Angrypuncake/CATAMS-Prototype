@@ -1,6 +1,6 @@
 export const pendingRequests = [
   {
-    requestID: "REQ001",
+    requestID: 1,
     type: "Swap",
     relatedSession: "CS101 - 2025-09-10 2:00 PM",
     status: "Pending",
@@ -9,7 +9,7 @@ export const pendingRequests = [
     user_id: 123,
   },
   {
-    requestID: "REQ003",
+    requestID: 3,
     type: "Swap",
     relatedSession: "BIO105 - 2025-09-14 1:00 PM",
     status: "Pending",
@@ -18,7 +18,7 @@ export const pendingRequests = [
     user_id: 456,
   },
   {
-    requestID: "REQ005",
+    requestID: 5,
     type: "Swap",
     relatedSession: "PHYS110 - 2025-09-13 10:00 AM",
     status: "Pending",

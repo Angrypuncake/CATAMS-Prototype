@@ -52,6 +52,11 @@ const Page = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [tutorRequests, setTutorRequests] = useState<RequestRow[]>([]);
 
+  // Search and sort states for allocations table
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortColumn, setSortColumn] = useState<string | undefined>(undefined);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+
   // Fetch allocations and requests
   useEffect(() => {
     const fetchData = async () => {
@@ -63,6 +68,9 @@ const Page = () => {
           sessionUser.userId,
           page + 1,
           rowsPerPage,
+          searchTerm,
+          sortColumn,
+          sortDirection,
         );
         setTutorSessions(allocationsData.data);
         setTotalSessions(allocationsData.total);
@@ -80,7 +88,7 @@ const Page = () => {
     };
 
     fetchData();
-  }, [page, rowsPerPage]);
+  }, [page, rowsPerPage, searchTerm, sortColumn, sortDirection]);
 
   // Sorting for other tables (Actions, Requests, Notices)
   const sortedActions: ActionRequiredRow[] = useColumnSorter<ActionRequiredRow>(
@@ -118,6 +126,20 @@ const Page = () => {
   const handleSortActions = createSortHandler(setSortActionsConfig);
   const handleSortRequests = createSortHandler(setSortRequestsConfig);
   const handleSortNotices = createSortHandler(setSortNoticesConfig);
+
+  // Handlers for server-side search and sort in allocations table
+  const handleSearchChange = (newSearchTerm: string) => {
+    console.log("[Tutor Dashboard] Search changed:", newSearchTerm);
+    setSearchTerm(newSearchTerm);
+    setPage(0); // Reset to first page when searching
+  };
+
+  const handleSortChange = (column: string, direction: "asc" | "desc") => {
+    console.log("[Tutor Dashboard] Sort changed:", { column, direction });
+    setSortColumn(column);
+    setSortDirection(direction);
+    setPage(0); // Reset to first page when sorting
+  };
 
   const hours = 20;
   const sessions = 10;
@@ -187,7 +209,9 @@ const Page = () => {
           totalCount={totalSessions}
           defaultRowsPerPage={5}
           rowsPerPageOptions={[5, 10, 25]}
-          enableSearch={false}
+          enableSearch={true}
+          onSearchChange={handleSearchChange}
+          onSortChange={handleSortChange}
           enableExport={true}
           exportFilename="tutor_allocations"
           exportExcludeKeys={["id", "user_id"]}

@@ -5,7 +5,10 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { CircularProgress, Typography, Box } from "@mui/material";
 
-import { getRequestById } from "@/app/services/requestService";
+import {
+  getRequestById,
+  getRequestByRequestId,
+} from "@/app/services/requestService";
 import { getFormattedAllocationById } from "@/app/services/allocationService";
 
 import type { TutorRequest } from "@/app/_types/request";
@@ -44,10 +47,12 @@ export default function ReviewPage() {
         }
 
         // Step 1 — Fetch request data
-        const requestData = await getRequestById(id);
+        const requestData = await getRequestByRequestId(id);
         if (cancelled) return;
 
         setData(requestData);
+        console.log(requestData);
+        console.log(requestData.allocationId);
 
         // Step 2 — Fetch allocation
         const alloc = await getFormattedAllocationById(

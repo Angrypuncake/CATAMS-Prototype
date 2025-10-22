@@ -1,30 +1,30 @@
 // project/app/api/requests/[id]/route.ts
 
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
 export async function GET(
-  _req: Request,
-  { params }: { params: { id: string } },
+  request: NextRequest,
+  context: { params: { id: string } },
 ) {
-  const { id } = params;
+  const { id } = await context.params;
 
   const sql = `
-    SELECT 
-      r.request_id,
-      r.requester_id,
-      r.request_date,
-      r.allocation_id,
-      r.request_type,
-      r.details,
-      r.request_status,
-      r.request_reason,
-      r.created_at,
-      r.updated_at
-    FROM request r
-    WHERE r.request_id = $1
-    LIMIT 1;
-  `;
+  SELECT 
+    r.request_id AS "requestId",
+    r.requester_id AS "requesterId",
+    r.request_date AS "requestDate",
+    r.allocation_id AS "allocationId",
+    r.request_type AS "requestType",
+    r.details,
+    r.request_status AS "requestStatus",
+    r.request_reason AS "requestReason",
+    r.created_at AS "createdAt",
+    r.updated_at AS "updatedAt"
+  FROM request r
+  WHERE r.request_id = $1
+  LIMIT 1;
+`;
 
   const { rows } = await query(sql, [id]);
   const row = rows[0];

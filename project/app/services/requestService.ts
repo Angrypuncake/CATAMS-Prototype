@@ -7,6 +7,11 @@ import type {
 } from "@/app/_types/request";
 import axios from "@/lib/axios";
 
+export async function getRequestByRequestId(id: string): Promise<TutorRequest> {
+  const res = await axios.get(`requests/${id}`);
+  return res.data.data;
+}
+
 export async function getRequestById(id: string): Promise<TutorRequest> {
   const mock = "true";
   if (mock === "true") {

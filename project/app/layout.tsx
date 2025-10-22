@@ -29,12 +29,14 @@ export default function RootLayout({
         <AppRouterCacheProvider>
           <StyledEngineProvider injectFirst>
             <ThemeProvider theme={websiteTheme}>
+              {/* New minimal nav (thin black strip + white bar). HELP pill sits left of heavy CATAMS. */}
               <MinimalNav
-                actions={[]}
+                actions={[{ label: "HELP", href: "/help" }]}
                 rightTitle="CATAMS"
-                showOrangeAccent
-                edgeGapCm={0}
-                maxWidthClass="w-full"
+                edgeGapCm={1}
+                maxWidthClass="max-w-screen-2xl"
+                logoSrc="/usyd_logo_white.png"
+                showOrangeAccent={true}
               />
               <div className="flex items-center justify-center min-h-screen">
                 <CssBaseline />

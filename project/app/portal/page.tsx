@@ -10,11 +10,11 @@ import {
   CardActions,
 } from "@mui/material";
 import axios from "axios";
+import MinimalNav from "@/components/MinimalNav";
 import SchoolIcon from "@mui/icons-material/School";
 import GroupsIcon from "@mui/icons-material/Groups";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
-import MinimalNav from "@/components/MinimalNav";
 
 /** Theme-appropriate accents (black/white/grey + a touch of orange) */
 const ACCENTS = {
@@ -56,7 +56,6 @@ const dashboards = [
 ];
 
 export default function PortalPage() {
-  const router = useRouter();
   return (
     <div className="min-h-screen w-full bg-[#f7f7f7]">
       <main className="max-w-screen-2xl mx-auto px-4 py-8">

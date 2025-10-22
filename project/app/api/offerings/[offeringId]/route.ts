@@ -1,3 +1,5 @@
+// \api\offerings\[offeringId]\route.ts
+
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 

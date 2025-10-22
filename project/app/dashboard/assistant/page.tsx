@@ -8,15 +8,6 @@ import SelectField from "./SelectField";
 import AllocationsTable from "./AllocationsTable";
 import ClaimsTable from "./ClaimsTable";
 import RequestsTable from "./RequestsTable";
-import MinimalNav from "@/components/MinimalNav";
-import axios from "axios";
-
-/** Full-bleed helper */
-const FullBleed: React.FC<React.PropsWithChildren> = ({ children }) => (
-  <div className="relative left-1/2 right-1/2 -mx-[50vw] w-screen">
-    {children}
-  </div>
-);
 
 interface AllocationRow {
   unit: string;
@@ -109,33 +100,6 @@ const TeachingOperations: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-[#f7f7f7]">
-      <FullBleed>
-        <MinimalNav
-          actions={[
-            { label: "HELP", href: "/help" },
-            {
-              label: "Logout",
-              onClick: async () => {
-                try {
-                  await axios.post(
-                    "/api/auth/logout",
-                    {},
-                    { withCredentials: true },
-                  );
-                  window.location.href = "/login";
-                } catch (e) {
-                  console.error("Logout failed", e);
-                }
-              },
-            },
-          ]}
-          rightTitle="CATAMS"
-          edgeGapCm={0}
-          logoSrc="/usyd_logo_white.png"
-          showOrangeAccent
-        />
-      </FullBleed>
-
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <header className="bg-white border px-5 sm:px-6 py-5 rounded-xl shadow-sm mt-6">

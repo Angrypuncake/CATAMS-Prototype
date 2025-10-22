@@ -1,7 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { Box, Button, Paper, Stack, Typography } from "@mui/material";
-import MinimalNav from "@/components/MinimalNav";
 import StyledBox from "./components";
 import {
   getTutorAllocations,
@@ -87,15 +86,6 @@ const Page = () => {
 
   return (
     <Box sx={{ bgcolor: "grey.100", minHeight: "100vh" }}>
-      {/* Nav */}
-      <MinimalNav
-        actions={[{ label: "HELP", href: "/help" }]}
-        rightTitle="CATAMS"
-        edgeGapCm={0}
-        logoSrc="/usyd_logo_white.png"
-        showOrangeAccent
-      />
-
       <Box
         sx={{
           maxWidth: 1280,

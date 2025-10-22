@@ -2,13 +2,19 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button, Typography, Card, CardContent, CardActions } from "@mui/material";
+import {
+  Button,
+  Typography,
+  Card,
+  CardContent,
+  CardActions,
+} from "@mui/material";
 import axios from "axios";
-import MinimalNav from "@/components/MinimalNav";
 import SchoolIcon from "@mui/icons-material/School";
 import GroupsIcon from "@mui/icons-material/Groups";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
 import AdminPanelSettingsIcon from "@mui/icons-material/AdminPanelSettings";
+import MinimalNav from "@/components/MinimalNav";
 
 /** Theme-appropriate accents (black/white/grey + a touch of orange) */
 const ACCENTS = {
@@ -51,31 +57,8 @@ const dashboards = [
 
 export default function PortalPage() {
   const router = useRouter();
-
-  const handleLogout = async () => {
-    try {
-      await axios.post("/api/auth/logout", {}, { withCredentials: true });
-      router.push("/login");
-    } catch (error) {
-      console.error("Logout error:", error);
-    }
-  };
-
   return (
     <div className="min-h-screen w-full bg-[#f7f7f7]">
-      {/* New minimal nav (thin black strip + white bar). HELP pill sits left of heavy CATAMS. */}
-      <MinimalNav
-        actions={[
-          { label: "HELP", href: "/help" },
-          { label: "Logout", onClick: handleLogout },
-        ]}
-        rightTitle="CATAMS"
-        edgeGapCm={1}
-        maxWidthClass="max-w-screen-2xl"
-        logoSrc="/usyd_logo_white.png"
-        showOrangeAccent={true}
-      />
-
       <main className="max-w-screen-2xl mx-auto px-4 py-8">
         <header className="mb-6">
           <Typography
@@ -91,8 +74,8 @@ export default function PortalPage() {
             color="text.secondary"
             sx={{ maxWidth: 900, mt: 1 }}
           >
-            One portal for coordinators, TAs, admins, and tutors to view schedules
-            and manage teaching allocations
+            One portal for coordinators, TAs, admins, and tutors to view
+            schedules and manage teaching allocations
           </Typography>
         </header>
 
@@ -112,13 +95,23 @@ export default function PortalPage() {
               <div style={{ height: 6, backgroundColor: d.accent }} />
 
               <CardContent sx={{ textAlign: "center", pt: 3 }}>
-                <div style={{ color: d.accent, display: "flex", justifyContent: "center" }}>
+                <div
+                  style={{
+                    color: d.accent,
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
                   {d.icon}
                 </div>
                 <Typography variant="h6" fontWeight={700} sx={{ mt: 1 }}>
                   {d.title}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ mt: 0.5 }}
+                >
                   {d.description}
                 </Typography>
               </CardContent>

@@ -1,7 +1,16 @@
 "use client";
 import React, { useEffect, useMemo, useState } from "react";
 import {
-  Slider, Typography, Menu, MenuItem, Button, Box, Paper, Grid, Stack, Divider,
+  Slider,
+  Typography,
+  Menu,
+  MenuItem,
+  Button,
+  Box,
+  Paper,
+  Grid,
+  Stack,
+  Divider,
 } from "@mui/material";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { CoordinatorBudgetOverview, UnitBudgetRow } from "./types";
@@ -15,19 +24,10 @@ import { getCurrentYearAndSession } from "@/app/utils/dateHelpers";
 import AssignUnscheduledButton from "./_components/AssignUnscheduledButton";
 import UnscheduledAllocationsTable from "./_components/UnscheduledAllocationsTable";
 
-/* Nav */
-import MinimalNav from "@/components/MinimalNav";
-import axios from "axios";
-
-/* Full-bleed wrapper so the nav spans edge-to-edge */
-const FullBleed: React.FC<React.PropsWithChildren> = ({ children }) => (
-  <div className="relative left-1/2 right-1/2 -mx-[50vw] w-screen">{children}</div>
-);
-
 /* Shared black-outline card style to match earlier pages */
 const cardSx = {
   p: { xs: 2, md: 2.5 },
-  borderRadius: 3,                     // ~24px
+  borderRadius: 3, // ~24px
   border: "1px solid #000",
   boxShadow: "0 1px 0 rgba(0,0,0,0.05)",
   bgcolor: "#fff",
@@ -64,7 +64,9 @@ const Page = () => {
     }
   }
 
-  useEffect(() => { fetchBudgetOverview(); }, []); // eslint-disable-line
+  useEffect(() => {
+    fetchBudgetOverview();
+  }, []); // eslint-disable-line
 
   const computedBudgetData = useMemo<{
     rows: (UnitBudgetRow & { status: string })[];
@@ -86,37 +88,40 @@ const Page = () => {
 
   return (
     <Box sx={{ bgcolor: "grey.100", minHeight: "100vh" }}>
-      {/* Nav */}
-      <FullBleed>
-        <MinimalNav
-          actions={[
-            { label: "HELP", href: "/help" },
-            {
-              label: "Logout",
-              onClick: async () => {
-                try {
-                  await axios.post("/api/auth/logout", {}, { withCredentials: true });
-                  window.location.href = "/login";
-                } catch (e) { console.error("Logout failed", e); }
-              },
-            },
-          ]}
-          rightTitle="CATAMS"
-          edgeGapCm={0}
-          logoSrc="/usyd_logo_white.png"
-          showOrangeAccent
-        />
-      </FullBleed>
-
-      <Box sx={{ maxWidth: 1280, mx: "auto", px: { xs: 2, md: 3 }, py: { xs: 2, md: 3 } }}>
+      <Box
+        sx={{
+          maxWidth: 1280,
+          mx: "auto",
+          px: { xs: 2, md: 3 },
+          py: { xs: 2, md: 3 },
+        }}
+      >
         {/* Header */}
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
-          <Typography variant="h4" fontWeight={800}>Unit Coordinator Dashboard</Typography>
+        <Stack
+          direction="row"
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ mb: 3 }}
+        >
+          <Typography variant="h4" fontWeight={800}>
+            Unit Coordinator Dashboard
+          </Typography>
           <Stack direction="row" spacing={1}>
-            <Button variant="outlined" size="small" sx={blackOutlined} onClick={fetchBudgetOverview}>
+            <Button
+              variant="outlined"
+              size="small"
+              sx={blackOutlined}
+              onClick={fetchBudgetOverview}
+            >
               Refresh
             </Button>
-            <Button component={Link} href="/admin/allocations" variant="contained" size="small" sx={blackContained}>
+            <Button
+              component={Link}
+              href="/admin/allocations"
+              variant="contained"
+              size="small"
+              sx={blackContained}
+            >
               Add / Edit Allocations
             </Button>
           </Stack>
@@ -124,7 +129,9 @@ const Page = () => {
 
         {/* Alerts */}
         <Paper sx={{ ...cardSx, mb: 3 }}>
-          <Typography variant="h6" sx={{ mb: 1 }}>Alerts</Typography>
+          <Typography variant="h6" sx={{ mb: 1 }}>
+            Alerts
+          </Typography>
           {computedBudgetData && computedBudgetData.alerts.length > 0 ? (
             <Stack direction="row" flexWrap="wrap" gap={1.5}>
               {computedBudgetData.alerts.map((a, i) => (
@@ -132,16 +139,25 @@ const Page = () => {
               ))}
             </Stack>
           ) : (
-            <Typography variant="body2" color="text.secondary">No alerts at this time.</Typography>
+            <Typography variant="body2" color="text.secondary">
+              No alerts at this time.
+            </Typography>
           )}
         </Paper>
 
         {/* Budget Overview */}
         <Paper sx={{ ...cardSx, mb: 3 }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ mb: 1 }}
+          >
             <Box>
               <Typography variant="h6">Budget Overview</Typography>
-              <Typography variant="body2" color="text.secondary">Per unit offering</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Per unit offering
+              </Typography>
             </Box>
 
             <Stack direction="row" alignItems="center" spacing={1.5}>
@@ -163,14 +179,23 @@ const Page = () => {
                 max={1}
                 sx={{ width: 120 }}
               />
-              <Typography variant="body1" sx={{ width: 40, textAlign: "right" }}>
+              <Typography
+                variant="body1"
+                sx={{ width: 40, textAlign: "right" }}
+              >
                 {Math.round(threshold * 100)}%
               </Typography>
-              <Button variant="contained" size="small" sx={blackContained}>Save</Button>
+              <Button variant="contained" size="small" sx={blackContained}>
+                Save
+              </Button>
             </Stack>
           </Stack>
 
-          <Menu open={Boolean(anchorEl)} anchorEl={anchorEl} onClose={() => setAnchorEl(null)}>
+          <Menu
+            open={Boolean(anchorEl)}
+            anchorEl={anchorEl}
+            onClose={() => setAnchorEl(null)}
+          >
             <MenuItem onClick={() => setAnchorEl(null)}>This Session</MenuItem>
             <MenuItem onClick={() => setAnchorEl(null)}>Last 7 days</MenuItem>
             <MenuItem onClick={() => setAnchorEl(null)}>Last 30 days</MenuItem>
@@ -183,12 +208,21 @@ const Page = () => {
           {/* Approvals */}
           <Grid item xs={12} md={7}>
             <Paper sx={{ ...cardSx, height: "100%" }}>
-              <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
+              <Stack
+                direction="row"
+                justifyContent="space-between"
+                alignItems="center"
+                sx={{ mb: 1 }}
+              >
                 <Box>
                   <Typography variant="h6">UC Approvals</Typography>
-                  <Typography variant="body2" color="text.secondary">Items awaiting your review</Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Items awaiting your review
+                  </Typography>
                 </Box>
-                <Button variant="contained" size="small" sx={blackContained}>Approve All</Button>
+                <Button variant="contained" size="small" sx={blackContained}>
+                  Approve All
+                </Button>
               </Stack>
               <CoordinatorApprovalTable pendingRequests={pendingRequests} />
             </Paper>
@@ -197,8 +231,14 @@ const Page = () => {
           {/* Requests requiring attention */}
           <Grid item xs={12} md={5}>
             <Paper sx={{ ...cardSx, height: "100%" }}>
-              <Typography variant="h6" sx={{ mb: 0.5 }}>Requests Requiring Attention</Typography>
-              <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+              <Typography variant="h6" sx={{ mb: 0.5 }}>
+                Requests Requiring Attention
+              </Typography>
+              <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ mb: 1.5 }}
+              >
                 Flagged queues
               </Typography>
               <Typography variant="body2">No Requests.</Typography>
@@ -208,7 +248,12 @@ const Page = () => {
 
         {/* Unscheduled allocations */}
         <Paper sx={{ ...cardSx, mt: 3 }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ mb: 1 }}
+          >
             <Box>
               <Typography variant="h6">Unscheduled Allocations</Typography>
               <Typography variant="body2" color="text.secondary">

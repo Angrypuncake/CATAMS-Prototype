@@ -12,7 +12,6 @@ import {
 } from "@mui/material";
 import axios from "axios";
 
-import MinimalNav from "../../../components/MinimalNav"; // ✅ correct path
 import DynamicTable from "../../../components/DynamicTable/DynamicTable";
 import AdminInfoBox from "./AdminInfoBox";
 import AdminBudgetBox from "./AdminBudgetBox";
@@ -54,7 +53,10 @@ const fmtDateTime = (v: unknown) => {
 
 const kvPreview = (obj: unknown, limit = 4) => {
   if (!obj || typeof obj !== "object") return <>—</>;
-  const entries = Object.entries(obj as Record<string, unknown>).slice(0, limit);
+  const entries = Object.entries(obj as Record<string, unknown>).slice(
+    0,
+    limit,
+  );
   return (
     <Stack spacing={0.25}>
       {entries.map(([k, v]) => (
@@ -73,14 +75,23 @@ const kvPreview = (obj: unknown, limit = 4) => {
 
 /* ========= Page ========= */
 export default function AdminPage() {
-  const [adminView, setAdminView] = useState({ numUsers: 0, numAllocations: 0 });
+  const [adminView, setAdminView] = useState({
+    numUsers: 0,
+    numAllocations: 0,
+  });
   const [tutorRows, setTutorRows] = useState<TableRowData[]>([]);
   const [tutorTotal, setTutorTotal] = useState(0);
-  const [historyRows, setHistoryRows] = useState<HistoryState>({ staged: [], runs: [] });
+  const [historyRows, setHistoryRows] = useState<HistoryState>({
+    staged: [],
+    runs: [],
+  });
   const [historyTotals, setHistoryTotals] = useState({ staged: 0, runs: 0 });
   const [alignment, setAlignment] = useState<"staged" | "runs">("staged");
 
-  const handleChange = (_: React.MouseEvent<HTMLElement>, next: "staged" | "runs" | null) => {
+  const handleChange = (
+    _: React.MouseEvent<HTMLElement>,
+    next: "staged" | "runs" | null,
+  ) => {
     if (next) setAlignment(next);
   };
 
@@ -100,11 +111,14 @@ export default function AdminPage() {
 
   const loadImportHistory = useCallback(async () => {
     try {
-      const res = await axios.get("/api/admin/history", { params: { limit: 200 } });
+      const res = await axios.get("/api/admin/history", {
+        params: { limit: 200 },
+      });
       const dropBy = <T extends { by?: unknown }>(rows: T[]): Omit<T, "by">[] =>
         rows.map(({ by, ...rest }) => rest);
-      const dropCounts = <T extends { counts?: unknown }>(rows: T[]): Omit<T, "counts">[] =>
-        rows.map(({ counts, ...rest }) => rest);
+      const dropCounts = <T extends { counts?: unknown }>(
+        rows: T[],
+      ): Omit<T, "counts">[] => rows.map(({ counts, ...rest }) => rest);
 
       setHistoryRows({
         staged: dropBy(res.data.staged),
@@ -126,15 +140,6 @@ export default function AdminPage() {
 
   return (
     <Box sx={{ bgcolor: "background.default", minHeight: "100vh" }}>
-      {/* ✅ MinimalNav */}
-      <MinimalNav
-        actions={[]}
-        rightTitle="CATAMS"
-        showOrangeAccent
-        edgeGapCm={0} // ensure no internal gaps
-        maxWidthClass="w-full" // full-width alignment
-      />
-
       {/* Small spacer under nav */}
       <Box sx={{ height: 16 }} />
 
@@ -181,7 +186,12 @@ export default function AdminPage() {
             {/* Left column */}
             <Paper
               elevation={0}
-              sx={{ p: 2.5, borderRadius: 4, border: "1px solid", borderColor: "divider" }}
+              sx={{
+                p: 2.5,
+                borderRadius: 4,
+                border: "1px solid",
+                borderColor: "divider",
+              }}
             >
               <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
                 Budgets Loaded
@@ -219,7 +229,12 @@ export default function AdminPage() {
               {/* Validation */}
               <Paper
                 elevation={0}
-                sx={{ p: 2.5, borderRadius: 4, border: "1px solid", borderColor: "divider" }}
+                sx={{
+                  p: 2.5,
+                  borderRadius: 4,
+                  border: "1px solid",
+                  borderColor: "divider",
+                }}
               >
                 <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
                   Validation Reports
@@ -234,9 +249,17 @@ export default function AdminPage() {
               {/* User & Role Management */}
               <Paper
                 elevation={0}
-                sx={{ p: 2.5, borderRadius: 4, border: "1px solid", borderColor: "divider" }}
+                sx={{
+                  p: 2.5,
+                  borderRadius: 4,
+                  border: "1px solid",
+                  borderColor: "divider",
+                }}
               >
-                <Typography variant="subtitle1" sx={{ fontWeight: "bold", mb: 1 }}>
+                <Typography
+                  variant="subtitle1"
+                  sx={{ fontWeight: "bold", mb: 1 }}
+                >
                   User &amp; Role Management
                 </Typography>
 
@@ -249,7 +272,12 @@ export default function AdminPage() {
                       Array.isArray(value) ? (
                         <Stack direction="row" spacing={0.5} flexWrap="wrap">
                           {value.map((r, i) => (
-                            <Chip key={i} size="small" variant="outlined" label={String(r)} />
+                            <Chip
+                              key={i}
+                              size="small"
+                              variant="outlined"
+                              label={String(r)}
+                            />
                           ))}
                         </Stack>
                       ) : (
@@ -274,7 +302,12 @@ export default function AdminPage() {
               {/* Import/Export Jobs */}
               <Paper
                 elevation={0}
-                sx={{ p: 2.5, borderRadius: 4, border: "1px solid", borderColor: "divider" }}
+                sx={{
+                  p: 2.5,
+                  borderRadius: 4,
+                  border: "1px solid",
+                  borderColor: "divider",
+                }}
               >
                 <Stack
                   direction="row"
@@ -309,9 +342,17 @@ export default function AdminPage() {
 
                 <DynamicTable
                   key={alignment}
-                  rows={alignment === "staged" ? historyRows.staged : historyRows.runs}
+                  rows={
+                    alignment === "staged"
+                      ? historyRows.staged
+                      : historyRows.runs
+                  }
                   enablePagination
-                  totalCount={alignment === "staged" ? historyTotals.staged : historyTotals.runs}
+                  totalCount={
+                    alignment === "staged"
+                      ? historyTotals.staged
+                      : historyTotals.runs
+                  }
                   columnRenderers={{
                     status: (value) => (
                       <Chip

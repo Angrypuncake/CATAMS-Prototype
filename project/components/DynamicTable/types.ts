@@ -43,4 +43,15 @@ export type DynamicTableProps<T = Record<string, unknown>> = {
   rowsPerPageOptions?: number[];
   defaultRowsPerPage?: number;
   totalCount?: number;
+
+  /** Server-side pagination props */
+  enableServerSidePagination?: boolean;
+  onPaginationChange?: (page: number, rowsPerPage: number) => void;
+  onSearchChange?: (searchTerm: string) => void;
+  onSortChange?: (column: keyof T & string, direction: "asc" | "desc") => void;
+
+  /** Export props */
+  enableExport?: boolean;
+  exportFilename?: string;
+  exportExcludeKeys?: string[];
 };

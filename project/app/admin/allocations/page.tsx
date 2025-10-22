@@ -46,6 +46,8 @@ export default function AdminAllAllocationsPage() {
   const [status, setStatus] = useState("");
   const [limit, setLimit] = useState(25);
   const [page, setPage] = useState(1);
+  const [sort, setSort] = useState("so.session_date");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
 
   // scheduled toggle
   const [tab, setTab] = useState<"scheduled" | "unscheduled">("scheduled");
@@ -75,6 +77,8 @@ export default function AdminAllAllocationsPage() {
         unitCode,
         activityType,
         status,
+        sort,
+        sortDir,
       });
       setRows(j.data || []);
       setTotal(j.total || 0);
@@ -85,7 +89,7 @@ export default function AdminAllAllocationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, limit, tab, q, unitCode, activityType, status]);
+  }, [page, limit, tab, q, unitCode, activityType, status, sort, sortDir]);
   // Trigger reload when tab changes
   useEffect(() => {
     setPage(1);
@@ -191,6 +195,18 @@ export default function AdminAllAllocationsPage() {
     }
   }
 
+  function handleSort(column: string) {
+    if (sort === column) {
+      // Toggle direction if same column
+      setSortDir(sortDir === "asc" ? "desc" : "asc");
+    } else {
+      // New column, start with ascending
+      setSort(column);
+      setSortDir("asc");
+    }
+    setPage(1); // Reset to first page when sorting
+  }
+
   return (
     <div className="p-5">
       <h1 className="text-2xl font-semibold mb-4">All Allocations</h1>
@@ -265,6 +281,9 @@ export default function AdminAllAllocationsPage() {
           total={total}
           onEdit={onEdit}
           onPageChange={(newPage) => setPage(newPage)}
+          sort={sort}
+          sortDir={sortDir}
+          onSort={handleSort}
         />
       ) : (
         /* Timeline (scheduled only) */

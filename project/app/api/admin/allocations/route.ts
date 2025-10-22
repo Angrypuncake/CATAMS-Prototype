@@ -59,12 +59,18 @@ export async function GET(req: Request) {
     if (q) {
       params.push(`%${q}%`);
       whereParts.push(`(
-        cu.unit_code      ILIKE $${params.length} OR
-        cu.unit_name      ILIKE $${params.length} OR
-        ta.activity_name  ILIKE $${params.length} OR
-        ta.activity_type  ILIKE $${params.length} OR
-        u.first_name      ILIKE $${params.length} OR
-        u.last_name       ILIKE $${params.length}
+        COALESCE(cu.unit_code, '')      ILIKE $${params.length} OR
+        COALESCE(cu.unit_name, '')      ILIKE $${params.length} OR
+        COALESCE(ta.activity_name, '')  ILIKE $${params.length} OR
+        COALESCE(ta.activity_type, '')  ILIKE $${params.length} OR
+        COALESCE(u.first_name, '')      ILIKE $${params.length} OR
+        COALESCE(u.last_name, '')       ILIKE $${params.length} OR
+        COALESCE(TO_CHAR(so.session_date::date, 'YYYY-MM-DD'), '') ILIKE $${params.length} OR
+        COALESCE(TO_CHAR(so.session_date::date, 'DD/MM/YYYY'), '') ILIKE $${params.length} OR
+        COALESCE(TO_CHAR(so.session_date::date, 'FMMonth'), '') ILIKE $${params.length} OR
+        COALESCE(EXTRACT(YEAR FROM so.session_date::date)::TEXT, '') ILIKE $${params.length} OR
+        COALESCE(TO_CHAR(so.start_at::time, 'HH24:MI'), '') ILIKE $${params.length} OR
+        COALESCE(TO_CHAR(so.end_at::time, 'HH24:MI'), '') ILIKE $${params.length}
       )`);
     }
 

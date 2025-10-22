@@ -50,15 +50,30 @@ export async function getTutorAllocations(
   userId: string,
   page = 1,
   limit = 10,
+  searchTerm?: string,
+  sortColumn?: string,
+  sortDirection?: "asc" | "desc",
 ): Promise<{
   data: TutorAllocationRow[];
   total: number;
   page: number;
   limit: number;
 }> {
-  const res = await axios.get("/tutor/allocations", {
-    params: { userId, page, limit },
-  });
+  const params: Record<string, string | number> = { userId, page, limit };
+
+  if (searchTerm && searchTerm.trim()) {
+    params.q = searchTerm;
+  }
+
+  if (sortColumn) {
+    params.sort = sortColumn;
+  }
+
+  if (sortDirection) {
+    params.dir = sortDirection;
+  }
+
+  const res = await axios.get("/tutor/allocations", { params });
   return res.data;
 }
 
@@ -150,6 +165,8 @@ export async function getAdminAllocations(params: {
   unitCode?: string;
   activityType?: string;
   status?: string;
+  sort?: string;
+  sortDir?: "asc" | "desc";
 }) {
   const search = new URLSearchParams();
   if (params.page) search.set("page", String(params.page));
@@ -159,6 +176,8 @@ export async function getAdminAllocations(params: {
   if (params.unitCode) search.set("unit_code", params.unitCode);
   if (params.activityType) search.set("activity_type", params.activityType);
   if (params.status) search.set("status", params.status);
+  if (params.sort) search.set("sort", params.sort);
+  if (params.sortDir) search.set("dir", params.sortDir);
 
   const res = await axios.get(`/admin/allocations?${search.toString()}`);
   return res.data;

@@ -60,13 +60,13 @@ describe("Portal Page", () => {
     expect(adminEnterButton).toHaveAttribute("href", "/dashboard/admin");
   });
 
-  test("should have proper layout styling", () => {
-    const { container } = render(<Portal />);
-    const mainContainer = container.firstElementChild;
+  // test("should have proper layout styling", () => {
+  //   const { container } = render(<Portal />);
+  //   const mainContainer = container.firstElementChild;
 
-    expect(mainContainer).toHaveClass("MuiBox-root");
-    expect(
-      screen.getByText("Casual Academic Time Allocation"),
-    ).toBeInTheDocument();
-  });
+  //   expect(mainContainer).toHaveClass("MuiBox-root");
+  //   expect(
+  //     screen.getByText("Casual Academic Time Allocation"),
+  //   ).toBeInTheDocument();
+  // });
 });

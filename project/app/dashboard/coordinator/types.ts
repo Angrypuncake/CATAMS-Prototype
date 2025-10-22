@@ -10,6 +10,17 @@ export interface UnitBudgetRow {
   pctUsed: number;
   variance: number;
 }
+
+export interface TutorRequestRow {
+  requestID: number;
+  type: string;
+  status: string;
+  relatedSession: string;
+  creatorRole: string;
+  creator: string;
+  user_id: number;
+}
+
 export interface CoordinatorBudgetOverview {
   year: number;
   session: string;

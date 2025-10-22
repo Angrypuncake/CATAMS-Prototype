@@ -29,6 +29,7 @@ const config = {
     // Mock data and test utilities
     "!**/*mock*.{ts,tsx}",
     "!**/mockData.{ts,tsx}",
+    "!app/services/components/UserServiceTester.tsx",
     // Database and external service clients
     "!lib/db.ts",
     "!lib/supabase/**",

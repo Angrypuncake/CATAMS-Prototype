@@ -1,6 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import { Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
 import StyledBox from "./components";
 import {
   getTutorAllocations,
@@ -15,7 +15,6 @@ import { RequestRow } from "@/app/_types/request";
 import DynamicTable, {
   TableRowData,
 } from "@/components/DynamicTable/DynamicTable";
-import { Box, Button } from "@mui/material";
 
 /* ========= Page ========= */
 const Page = () => {

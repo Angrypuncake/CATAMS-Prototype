@@ -18,22 +18,45 @@ export const searchInValue = (value: unknown, searchTerm: string): boolean => {
 
   const lowerSearch = searchTerm.toLowerCase();
 
+  // Handle Date objects
   if (isDate(value)) {
     return formatDate(value).toLowerCase().includes(lowerSearch);
   }
 
-  if (
-    typeof value === "string" ||
-    typeof value === "number" ||
-    typeof value === "boolean"
-  ) {
+  // Handle strings - check if it's a date string and search both formatted and raw
+  if (typeof value === "string") {
+    const lowerValue = value.toLowerCase();
+
+    // Try to parse as date
+    const parsedDate = new Date(value);
+    if (isDate(parsedDate)) {
+      // Search in both the formatted date and the raw string
+      return (
+        formatDate(parsedDate).toLowerCase().includes(lowerSearch) ||
+        lowerValue.includes(lowerSearch)
+      );
+    }
+
+    // Regular string search
+    return lowerValue.includes(lowerSearch);
+  }
+
+  // Handle numbers - convert to string for searching
+  if (typeof value === "number") {
+    return String(value).includes(searchTerm);
+  }
+
+  // Handle booleans
+  if (typeof value === "boolean") {
     return String(value).toLowerCase().includes(lowerSearch);
   }
 
+  // Handle arrays - recursively search items
   if (Array.isArray(value)) {
     return value.some((item) => searchInValue(item, searchTerm));
   }
 
+  // Handle objects - recursively search values
   if (typeof value === "object") {
     return Object.values(value).some((v) => searchInValue(v, searchTerm));
   }

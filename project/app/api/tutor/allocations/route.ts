@@ -17,12 +17,25 @@ export async function GET(req: Request) {
   const userId = searchParams.get("userId");
 
   // Get search and sort parameters
-  const searchTerm = searchParams.get("q");
+  let searchTerm = searchParams.get("q");
   const sortColumn = searchParams.get("sort");
   const sortDirection = searchParams.get("dir") === "desc" ? "DESC" : "ASC";
 
+  // HACK: If search term looks like a date (YYYY-MM-DD), add 1 day to fix timezone offset
+  if (searchTerm && /^\d{4}-\d{2}-\d{2}$/.test(searchTerm.trim())) {
+    const searchDate = new Date(searchTerm.trim() + "T00:00:00Z");
+    searchDate.setDate(searchDate.getDate() + 1);
+    const year = searchDate.getFullYear();
+    const month = String(searchDate.getMonth() + 1).padStart(2, "0");
+    const day = String(searchDate.getDate()).padStart(2, "0");
+    searchTerm = `${year}-${month}-${day}`;
+    console.log(
+      `[Date Search Adjustment] Original: ${searchParams.get("q")} -> Adjusted: ${searchTerm}`,
+    );
+  }
+
   // Debug logging
-  console.log("[Tutor Allocations API]", {
+  console.log("[Tutor Allocations API] Request params:", {
     userId,
     searchTerm,
     sortColumn,
@@ -45,14 +58,20 @@ export async function GET(req: Request) {
   // Add search clause if search term is provided
   if (searchTerm && searchTerm.trim()) {
     whereClauses.push(`(
-      LOWER(cu.unit_code) LIKE LOWER($${paramIndex}) OR
-      LOWER(cu.unit_name) LIKE LOWER($${paramIndex}) OR
-      LOWER(ta.activity_type) LIKE LOWER($${paramIndex}) OR
-      LOWER(ta.activity_name) LIKE LOWER($${paramIndex}) OR
-      LOWER(u.first_name || ' ' || u.last_name) LIKE LOWER($${paramIndex}) OR
-      LOWER(u.email) LIKE LOWER($${paramIndex}) OR
-      LOWER(a.status) LIKE LOWER($${paramIndex}) OR
-      LOWER(so.location) LIKE LOWER($${paramIndex})
+      LOWER(COALESCE(cu.unit_code, '')) LIKE LOWER($${paramIndex}) OR
+      LOWER(COALESCE(cu.unit_name, '')) LIKE LOWER($${paramIndex}) OR
+      LOWER(COALESCE(ta.activity_type, '')) LIKE LOWER($${paramIndex}) OR
+      LOWER(COALESCE(ta.activity_name, '')) LIKE LOWER($${paramIndex}) OR
+      LOWER(COALESCE(u.first_name || ' ' || u.last_name, '')) LIKE LOWER($${paramIndex}) OR
+      LOWER(COALESCE(u.email, '')) LIKE LOWER($${paramIndex}) OR
+      LOWER(COALESCE(a.status, '')) LIKE LOWER($${paramIndex}) OR
+      LOWER(COALESCE(so.location, '')) LIKE LOWER($${paramIndex}) OR
+      COALESCE(TO_CHAR(so.session_date::date, 'YYYY-MM-DD'), '') LIKE $${paramIndex} OR
+      COALESCE(TO_CHAR(so.session_date::date, 'DD/MM/YYYY'), '') LIKE $${paramIndex} OR
+      COALESCE(TO_CHAR(so.session_date::date, 'FMMonth'), '') ILIKE $${paramIndex} OR
+      COALESCE(EXTRACT(YEAR FROM so.session_date::date)::TEXT, '') LIKE $${paramIndex} OR
+      COALESCE(TO_CHAR(so.start_at::time, 'HH24:MI'), '') LIKE $${paramIndex} OR
+      COALESCE(TO_CHAR(so.end_at::time, 'HH24:MI'), '') LIKE $${paramIndex}
     )`);
     whereParams.push(`%${searchTerm.trim()}%`);
     paramIndex++;
@@ -100,7 +119,7 @@ export async function GET(req: Request) {
       so.end_at,
       ta.activity_type,
       ta.activity_name,
-      so.session_date,
+      so.session_date::date AS session_date,
       a.status,
       so.location,
       so.note
@@ -128,10 +147,21 @@ export async function GET(req: Request) {
   const result = await query(sql, params);
   const countResult = await query(countQuery, countParams);
 
+  console.log("[Tutor Allocations API] SQL WHERE:", where);
+  console.log("[Tutor Allocations API] Params:", params);
   console.log("[Tutor Allocations API] Results:", {
     rowsReturned: result.rows.length,
     totalCount: Number(countResult.rows[0].total),
   });
+
+  // Debug: Show sample dates if search term is provided
+  if (searchTerm && result.rows.length > 0) {
+    console.log("[Tutor Allocations API] Sample dates from results:");
+    result.rows.slice(0, 3).forEach((row: unknown, idx: number) => {
+      const rowData = row as { session_date?: unknown };
+      console.log(`  Row ${idx + 1}: session_date = ${rowData.session_date}`);
+    });
+  }
 
   return NextResponse.json({
     page,

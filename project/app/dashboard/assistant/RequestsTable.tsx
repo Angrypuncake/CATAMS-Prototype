@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import {
   Table,
@@ -39,9 +40,7 @@ const RequestsTable: React.FC<RequestsTableProps> = ({ data }) => {
             <TableRow key={idx}>
               <TableCell>{request.tutor}</TableCell>
               <TableCell>{request.session}</TableCell>
-              <TableCell style={{ fontWeight: "bold" }}>
-                {request.type}
-              </TableCell>
+              <TableCell style={{ fontWeight: 700 }}>{request.type}</TableCell>
               <TableCell>{request.submitted}</TableCell>
               <TableCell>
                 <Button variant="text" size="small">

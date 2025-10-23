@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import {
   Table,
@@ -7,7 +8,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Chip,
 } from "@mui/material";
 
 interface AllocationRow {
@@ -44,7 +44,7 @@ const AllocationsTable: React.FC<AllocationsTableProps> = ({ data }) => {
         <TableBody>
           {data.map((row: AllocationRow, idx: number) => (
             <TableRow key={idx}>
-              <TableCell style={{ fontWeight: "bold" }}>{row.unit}</TableCell>
+              <TableCell style={{ fontWeight: 700 }}>{row.unit}</TableCell>
               <TableCell>{row.week}</TableCell>
               <TableCell>{row.sessions}</TableCell>
               <TableCell>{row.assigned}</TableCell>
@@ -52,12 +52,24 @@ const AllocationsTable: React.FC<AllocationsTableProps> = ({ data }) => {
               <TableCell>{row.hours}</TableCell>
               <TableCell>{row.lastChange}</TableCell>
               <TableCell>
-                <Chip
-                  label={row.status}
-                  size="small"
-                  color={row.status === "Attention" ? "warning" : "success"}
-                  variant={row.status === "Attention" ? "filled" : "outlined"}
-                />
+                {/* Minimal monochrome pill (orange only when attention) */}
+                <span
+                  style={{
+                    display: "inline-block",
+                    padding: "2px 8px",
+                    borderRadius: 9999,
+                    fontSize: "0.75rem",
+                    fontWeight: 600,
+                    border: "1px solid",
+                    borderColor:
+                      row.status === "Attention" ? "#F97316" : "#111111",
+                    color: row.status === "Attention" ? "#F97316" : "#111111",
+                    background:
+                      row.status === "Attention" ? "rgba(249,115,22,0.06)" : "transparent",
+                  }}
+                >
+                  {row.status}
+                </span>
               </TableCell>
             </TableRow>
           ))}

@@ -9,7 +9,7 @@ interface CustomJWTPayload {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  // don't check token if in these pages
+
   if (
     pathname.startsWith("/login") ||
     pathname.startsWith("/api/auth/login") ||

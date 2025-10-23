@@ -1,14 +1,14 @@
 import "@testing-library/jest-dom";
 import { render, screen, act } from "@testing-library/react";
-import AllocationPage from "../app/dashboard/tutor/allocations/[id]/page";
+import TeachingOperations from "../../app/dashboard/assistant/page";
 
-describe("AdminDashboard", () => {
+describe("TADashboard", () => {
   // Basic rendering tests
   test("should display the main dashboard title and description", async () => {
     await act(async () => {
-      //render(<AllocationPage />);
+      render(<TeachingOperations />);
     });
 
-    //expect(screen.getByText("Allocation")).toBeInTheDocument();
+    expect(screen.getByText("Teaching Operations")).toBeInTheDocument();
   });
 });

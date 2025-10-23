@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
-import Portal from "../app/portal/page";
+import Portal from "../../app/portal/page";
 
 // Mock Next.js router
 jest.mock("next/navigation", () => ({

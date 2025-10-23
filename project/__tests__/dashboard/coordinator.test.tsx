@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom";
 import { render, screen, act } from "@testing-library/react";
-import Page from "../app/dashboard/coordinator/page";
+import Page from "../../app/dashboard/coordinator/page";
 
 // Mock Next.js navigation
 jest.mock("next/navigation", () => ({
@@ -17,7 +17,7 @@ jest.mock("next/navigation", () => ({
 }));
 
 // Mock API services to prevent network errors
-jest.mock("../app/services/budgetService", () => ({
+jest.mock("../../app/services/budgetService", () => ({
   getUnitBudgetOverviews: jest.fn(() =>
     Promise.resolve({
       year: 2025,
@@ -29,7 +29,7 @@ jest.mock("../app/services/budgetService", () => ({
   ),
 }));
 
-jest.mock("../app/utils/dateHelpers", () => ({
+jest.mock("../../app/utils/dateHelpers", () => ({
   getCurrentYearAndSession: jest.fn(() => ({
     year: 2025,
     session: "S1",

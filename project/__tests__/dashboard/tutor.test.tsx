@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom";
 import { render, screen, act } from "@testing-library/react";
-import Page from "../app/dashboard/tutor/page";
+import Page from "../../app/dashboard/tutor/page";
 
 describe("AdminDashboard", () => {
   // Basic rendering tests

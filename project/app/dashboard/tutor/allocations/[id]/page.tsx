@@ -112,7 +112,6 @@ export default function AllocationPage() {
       try {
         const user = await getUserFromAuth();
         const list = await getRequestsByAllocation(Number(id), user?.userId);
-        console.log(list);
         if (!cancelled) setRequests(list);
       } catch (err) {
         console.error("Error fetching requests:", err);
@@ -124,10 +123,6 @@ export default function AllocationPage() {
       cancelled = true;
     };
   }, [id]);
-
-  useEffect(() => {
-    console.log("Requests updated:", requests);
-  }, [requests]);
 
   useEffect(() => {
     if (!id) return;

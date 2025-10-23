@@ -30,6 +30,8 @@ const mockAllocation = {
   status: "Confirmed",
   location: "Room 101",
   note: null,
+  hours: 3,
+  paycode_id: "FULL_TIME",
 };
 
 const mockTutor = {
@@ -80,5 +82,113 @@ describe("ClaimReview Component", () => {
 
     expect(screen.getAllByText(/Paycode/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/Hours/i).length).toBeGreaterThan(0);
+  });
+
+  test("should handle API errors gracefully", async () => {
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
+
+    mockGetAllocationById.mockRejectedValue(
+      new Error("Failed to fetch allocation"),
+    );
+    mockGetTutorById.mockRejectedValue(new Error("Failed to fetch tutor"));
+
+    render(<ClaimReview data={mockClaimRequest} />);
+
+    await waitFor(() => {
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        "Failed to fetch allocation details:",
+        expect.any(Error),
+      );
+    });
+
+    consoleErrorSpy.mockRestore();
+  });
+
+  test("should not highlight paycode when it matches allocation paycode", async () => {
+    const allocationWithMatchingPaycode = {
+      ...mockAllocation,
+      paycode_id: "CASUAL",
+      hours: 2,
+    };
+
+    // Reset the mock completely for this test
+    mockGetAllocationById.mockReset();
+    mockGetAllocationById.mockResolvedValue(allocationWithMatchingPaycode);
+
+    const { container } = render(<ClaimReview data={mockClaimRequest} />);
+
+    // Wait for allocation data to load
+    await waitFor(() => {
+      expect(mockGetAllocationById).toHaveBeenCalledWith("1");
+    });
+
+    await waitFor(() => {
+      expect(screen.getByText("CASUAL")).toBeInTheDocument();
+    });
+
+    // Find the paycode span element
+    const spans = container.querySelectorAll("span");
+    const paycodeSpan = Array.from(spans).find(
+      (span) => span.textContent === "CASUAL",
+    );
+
+    // When paycode matches, style should have color: "inherit" (not red)
+    expect(paycodeSpan).toBeDefined();
+    if (paycodeSpan) {
+      const styleAttr = paycodeSpan.getAttribute("style");
+      // Should contain "color: inherit" or not have color set to red
+      expect(styleAttr).toContain("color: inherit");
+      expect(styleAttr).not.toContain("#d32f2f");
+    }
+  });
+
+  test("should display dash when allocation has no paycode_id", async () => {
+    const allocationWithoutPaycode = {
+      ...mockAllocation,
+      paycode_id: null,
+    };
+
+    mockGetAllocationById.mockReset();
+    mockGetAllocationById.mockResolvedValue(allocationWithoutPaycode);
+
+    render(<ClaimReview data={mockClaimRequest} />);
+
+    // Wait for allocation data to load
+    await waitFor(() => {
+      expect(mockGetAllocationById).toHaveBeenCalledWith("1");
+    });
+
+    // Should display dash for null paycode_id (line 118)
+    await waitFor(() => {
+      expect(screen.getByText("—")).toBeInTheDocument();
+    });
+  });
+
+  test("should display 'No reason provided' when requestReason is empty", async () => {
+    const requestWithoutReason: TutorRequest = {
+      ...mockClaimRequest,
+      requestReason: "",
+    };
+
+    render(<ClaimReview data={requestWithoutReason} />);
+
+    // Should display fallback text when no reason (line 194)
+    await waitFor(() => {
+      expect(screen.getByText("No reason provided.")).toBeInTheDocument();
+    });
+  });
+
+  test("should display 'No reason provided' when requestReason is null", async () => {
+    const requestWithNullReason = {
+      ...mockClaimRequest,
+      requestReason: null,
+    } as unknown as TutorRequest;
+
+    render(<ClaimReview data={requestWithNullReason} />);
+
+    // Should display fallback text when reason is null (line 194)
+    await waitFor(() => {
+      expect(screen.getByText("No reason provided.")).toBeInTheDocument();
+    });
   });
 });

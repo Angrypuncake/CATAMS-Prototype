@@ -67,7 +67,6 @@ jest.mock("axios", () => ({
 }));
 
 describe("AdminDashboard", () => {
-  // Basic rendering tests
   test("should display the main dashboard title and description", async () => {
     await act(async () => {
       render(<AdminDashboard />);
@@ -94,29 +93,26 @@ describe("AdminDashboard", () => {
     expect(screen.getByText("Bulk Import Allocations")).toBeInTheDocument();
   });
 
-  // test("should apply proper layout styling with Tailwind classes", async () => {
-  //   let container: HTMLElement;
-  //   await act(async () => {
-  //     const result = render(<AdminDashboard />);
-  //     container = result.container;
-  //   });
+  test("should apply proper layout styling with MUI components", async () => {
+    let container: HTMLElement;
+    await act(async () => {
+      const result = render(<AdminDashboard />);
+      container = result.container;
+    });
 
-  //   // Verify the main container has the correct layout classes
-  //   const mainContainer = container!.firstElementChild;
-  //   expect(mainContainer).toHaveClass(
-  //     "h-screen",
-  //     "flex",
-  //     "flex-col",
-  //     "w-[90%]",
-  //     "gap-3",
-  //   );
+    await waitFor(() => {
+      expect(screen.getByText("System Admin Dashboard")).toBeInTheDocument();
+    });
 
-  //   // Check that we have white rounded sections for content areas
-  //   const whiteSections = container!.querySelectorAll(".bg-white.rounded-3xl");
-  //   expect(whiteSections.length).toBeGreaterThan(0);
-  // });
+    const mainBoxes = container!.querySelectorAll('[class*="MuiBox-root"]');
+    expect(mainBoxes.length).toBeGreaterThan(0);
 
-  // Data loading and API integration tests
+    const paperSections = container!.querySelectorAll(
+      '[class*="MuiPaper-root"]',
+    );
+    expect(paperSections.length).toBeGreaterThan(0);
+  });
+
   test("should load and display statistics from the backend API", async () => {
     await act(async () => {
       render(<AdminDashboard />);
@@ -192,28 +188,23 @@ describe("AdminDashboard", () => {
     consoleErrorSpy.mockRestore();
   });
 
-  // User interaction tests
   test("should allow switching between staged and runs data views", async () => {
     await act(async () => {
       render(<AdminDashboard />);
     });
 
-    // Find the toggle buttons for different data views
     const stagedButton = screen.getByText("Staged");
     const runsButton = screen.getByText("Runs");
 
-    // Test switching to runs view
     await act(async () => {
       fireEvent.click(runsButton);
     });
 
-    // Test switching back to staged view
     await act(async () => {
       fireEvent.click(stagedButton);
     });
   });
 
-  // Component integration tests
   test("should render info boxes with correct data and styling", () => {
     render(
       <div>
@@ -232,20 +223,18 @@ describe("AdminDashboard", () => {
       </div>,
     );
 
-    // Check basic content display
     expect(screen.getByText("Users")).toBeInTheDocument();
     expect(screen.getByText("42")).toBeInTheDocument();
     expect(screen.getByText("Success")).toBeInTheDocument();
     expect(screen.getByText("100")).toBeInTheDocument();
 
-    // Test colored bubble buttons work correctly
-    // const redBubble = screen.getByRole("button", { name: /directory/i });
-    // expect(redBubble).toHaveStyle({ backgroundColor: "rgb(255, 0, 0)" });
+    const redBubble = screen.getByRole("button", { name: /directory/i });
+    expect(redBubble).toBeInTheDocument();
+    expect(redBubble.className).toContain("MuiButton");
 
-    // const greenBubble = screen.getByRole("button", { name: /request/i });
-    // expect(greenBubble).toHaveStyle({
-    //   backgroundColor: expect.stringMatching(/green|rgb\(0,\s*128,\s*0\)/),
-    // });
+    const greenBubble = screen.getByRole("button", { name: /request/i });
+    expect(greenBubble).toBeInTheDocument();
+    expect(greenBubble.className).toContain("MuiButton");
   });
 
   test("should use MUI TablePagination for built-in pagination controls", async () => {
@@ -253,18 +242,15 @@ describe("AdminDashboard", () => {
       render(<AdminDashboard />);
     });
 
-    // Wait for data to load
     await waitFor(() => {
       expect(screen.getByText("System Admin Dashboard")).toBeInTheDocument();
     });
 
-    // Check that MUI TablePagination is rendered (it uses "Rows per page" label)
     const paginationElements = screen.queryAllByText(/rows per page/i);
     expect(paginationElements.length).toBeGreaterThan(0);
   });
 
   test("should render budget boxes as links or buttons based on href prop", () => {
-    // Test the href conditional logic in AdminBudgetBox
     const { rerender } = render(
       <AdminBudgetBox
         title="Test Budget"
@@ -276,11 +262,9 @@ describe("AdminDashboard", () => {
     expect(screen.getByText("Test Budget")).toBeInTheDocument();
     expect(screen.getByText("Test description")).toBeInTheDocument();
 
-    // When href is provided, should render as a clickable link
     const buttonWithHref = screen.getByText("Open");
     expect(buttonWithHref.closest("a")).toHaveAttribute("href", "/test-link");
 
-    // Test without href - should just be a regular button
     rerender(
       <AdminBudgetBox
         title="No Link Budget"
@@ -289,7 +273,6 @@ describe("AdminDashboard", () => {
     );
 
     const buttonWithoutHref = screen.getByText("Open");
-    // Without href, MUI Button renders as a button element instead of anchor
     expect(buttonWithoutHref.tagName).toBe("BUTTON");
     expect(buttonWithoutHref.closest("a")).toBeNull();
   });

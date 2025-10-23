@@ -264,3 +264,133 @@ test("getAllUnscheduledAllocationsForUC throws on error", async () => {
   );
   errorSpy.mockRestore();
 });
+
+test("getAllUnscheduledAllocationsForUC sorts by last_name when unitCode is same", async () => {
+  getCoordinatorUnits.mockResolvedValueOnce([{ offering_id: 1 }]);
+  getUnitOffering.mockResolvedValueOnce({
+    offeringId: 1,
+    unitCode: "COMP1",
+    unitName: "A",
+    year: 2024,
+    session: "T1",
+  });
+
+  // Return multiple allocations with same unitCode but different last_name
+  mockedAxios.get.mockResolvedValueOnce({
+    data: [
+      { last_name: "Zimmerman", unitCode: "COMP1" },
+      { last_name: "Anderson", unitCode: "COMP1" },
+      { last_name: "Miller", unitCode: "COMP1" },
+    ],
+  });
+
+  const merged = await getAllUnscheduledAllocationsForUC("Marking");
+
+  // Should be sorted by last_name (line 491)
+  expect(merged.length).toBe(3);
+  expect(merged[0].last_name).toBe("Anderson");
+  expect(merged[1].last_name).toBe("Miller");
+  expect(merged[2].last_name).toBe("Zimmerman");
+});
+
+/* ------------------------- normalizeStatus tests ------------------------- */
+
+test("getFormattedAllocationById normalizes status with 'pending' substring", async () => {
+  const mockData = {
+    allocation_id: 1,
+    user_id: 10,
+    first_name: "John",
+    last_name: "Doe",
+    email: "john@test.com",
+    unit_code: "COMP1511",
+    unit_name: "Programming Fundamentals",
+    start_at: "10:00:00",
+    end_at: "12:00:00",
+    activity_type: "Tutorial",
+    activity_name: "Week 5",
+    session_date: "2025-03-15",
+    status: "status_pending_approval", // Contains "pending" substring (line 229)
+    location: "Room 101",
+    note: null,
+  };
+
+  mockedAxios.get.mockResolvedValueOnce({ data: { data: mockData } });
+  const row = await getFormattedAllocationById("1");
+
+  expect(row.status).toBe("Pending");
+});
+
+test("getFormattedAllocationById normalizes status with 'review' substring", async () => {
+  const mockData = {
+    allocation_id: 1,
+    user_id: 10,
+    first_name: "John",
+    last_name: "Doe",
+    email: "john@test.com",
+    unit_code: "COMP1511",
+    unit_name: "Programming Fundamentals",
+    start_at: "10:00:00",
+    end_at: "12:00:00",
+    activity_type: "Tutorial",
+    activity_name: "Week 5",
+    session_date: "2025-03-15",
+    status: "under_review", // Contains "review" substring (line 230)
+    location: "Room 101",
+    note: null,
+  };
+
+  mockedAxios.get.mockResolvedValueOnce({ data: { data: mockData } });
+  const row = await getFormattedAllocationById("1");
+
+  expect(row.status).toBe("Pending");
+});
+
+test("getFormattedAllocationById normalizes status with 'await' substring", async () => {
+  const mockData = {
+    allocation_id: 1,
+    user_id: 10,
+    first_name: "John",
+    last_name: "Doe",
+    email: "john@test.com",
+    unit_code: "COMP1511",
+    unit_name: "Programming Fundamentals",
+    start_at: "10:00:00",
+    end_at: "12:00:00",
+    activity_type: "Tutorial",
+    activity_name: "Week 5",
+    session_date: "2025-03-15",
+    status: "awaiting_confirmation", // Contains "await" substring (line 231)
+    location: "Room 101",
+    note: null,
+  };
+
+  mockedAxios.get.mockResolvedValueOnce({ data: { data: mockData } });
+  const row = await getFormattedAllocationById("1");
+
+  expect(row.status).toBe("Pending");
+});
+
+test("getFormattedAllocationById normalizes unknown status to Cancelled", async () => {
+  const mockData = {
+    allocation_id: 1,
+    user_id: 10,
+    first_name: "John",
+    last_name: "Doe",
+    email: "john@test.com",
+    unit_code: "COMP1511",
+    unit_name: "Programming Fundamentals",
+    start_at: "10:00:00",
+    end_at: "12:00:00",
+    activity_type: "Tutorial",
+    activity_name: "Week 5",
+    session_date: "2025-03-15",
+    status: "unknown_status", // Falls through to fallback (line 237)
+    location: "Room 101",
+    note: null,
+  };
+
+  mockedAxios.get.mockResolvedValueOnce({ data: { data: mockData } });
+  const row = await getFormattedAllocationById("1");
+
+  expect(row.status).toBe("Cancelled");
+});

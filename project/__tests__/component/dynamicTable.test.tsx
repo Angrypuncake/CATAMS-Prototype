@@ -1,6 +1,6 @@
 import "@testing-library/jest-dom";
 import { render, screen, fireEvent } from "@testing-library/react";
-import DynamicTable from "../components/DynamicTable/DynamicTable";
+import DynamicTable from "../../components/DynamicTable/DynamicTable";
 
 describe("DynamicTable", () => {
   let basicData: Array<{

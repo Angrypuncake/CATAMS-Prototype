@@ -20,7 +20,6 @@ import {
 import { TutorCombo } from "./TutorCombo";
 import { PaycodeCombo } from "./PaycodeCombo";
 import { PropagationPanel } from "./PropagationPanel";
-import Button from "@mui/material/Button";
 
 export function Drawer({
   open,
@@ -65,6 +64,8 @@ export function Drawer({
     applyAllForActivity: false,
   });
 
+  // State for future occurrence-related features - currently set but not directly read
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [weeksForActivity, setWeeksForActivity] = useState<OccurrenceRow[]>([]);
 
   // Hydrate Drawer from the row
@@ -396,8 +397,6 @@ export function Drawer({
                     ? propPayload.occurrenceIds
                     : undefined,
                 });
-                console.log("prop payload", propPayload);
-                console.log("propagate fields", propPayload.fields);
               } else {
                 onSave({
                   user_id: form.tutorId,

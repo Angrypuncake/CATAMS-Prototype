@@ -206,7 +206,7 @@ const Page = () => {
 
         <Grid container spacing={3}>
           {/* Approvals */}
-          <Grid item xs={12} md={7}>
+          <Grid size={{ xs: 12, md: 7 }}>
             <Paper sx={{ ...cardSx, height: "100%" }}>
               <Stack
                 direction="row"
@@ -229,7 +229,7 @@ const Page = () => {
           </Grid>
 
           {/* Requests requiring attention */}
-          <Grid item xs={12} md={5}>
+          <Grid size={{ xs: 12, md: 5 }}>
             <Paper sx={{ ...cardSx, height: "100%" }}>
               <Typography variant="h6" sx={{ mb: 0.5 }}>
                 Requests Requiring Attention

@@ -19,31 +19,20 @@ import { getAllocationById } from "@/app/services/allocationService";
 import { formatDate } from "./SwapReview";
 
 export default function CorrectionReview({ data }: { data: TutorRequest }) {
-  const {
-    allocationId,
-    requesterId,
-    requestStatus,
-    requestReason,
-    requestId,
-    createdAt,
-    requestType,
-  } = data;
-
-  const details = data.details as {
-    date: string;
-    hours: string | number;
-    end_at?: string;
-    start_at?: string;
-    location?: string;
-    session_type?: string;
-  };
-
   const [tutor, setTutor] = useState<Tutor | null>(null);
   const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const allocationId = data?.allocationId;
+  const requesterId = data?.requesterId;
+
   useEffect(() => {
+    if (!allocationId || !requesterId) {
+      setLoading(false);
+      return;
+    }
+
     async function fetchData() {
       try {
         const [tutorData, alloc] = await Promise.all([
@@ -61,12 +50,6 @@ export default function CorrectionReview({ data }: { data: TutorRequest }) {
     fetchData();
   }, [allocationId, requesterId]);
 
-  // Mocked handlers for now
-  const handleApprove = () =>
-    console.log("✅ Approve correction:", { requestId, comment });
-  const handleReject = () =>
-    console.log("❌ Reject correction:", { requestId, comment });
-
   // Ensure we render even if requestType differs
   if (!data) {
     return (
@@ -75,6 +58,24 @@ export default function CorrectionReview({ data }: { data: TutorRequest }) {
       </Typography>
     );
   }
+
+  const { requestStatus, requestReason, requestId, createdAt, requestType } =
+    data;
+
+  const details = data.details as {
+    date: string;
+    hours: string | number;
+    end_at?: string;
+    start_at?: string;
+    location?: string;
+    session_type?: string;
+  };
+
+  // Mocked handlers for now
+  const handleApprove = () =>
+    console.log("✅ Approve correction:", { requestId, comment });
+  const handleReject = () =>
+    console.log("❌ Reject correction:", { requestId, comment });
 
   // Only render for correction request type
   if (requestType !== "correction") {

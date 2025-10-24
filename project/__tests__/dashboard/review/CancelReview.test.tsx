@@ -223,6 +223,9 @@ describe("CancelReview Component", () => {
     const swapRequest: TutorRequest = {
       ...mockCancelRequest,
       requestType: "swap",
+      details: {
+        suggested_tutor_id: null,
+      },
     };
 
     const { container } = render(<CancelReview data={swapRequest} />);

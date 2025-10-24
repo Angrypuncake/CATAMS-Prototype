@@ -17,6 +17,8 @@ import {
   Button,
   Tooltip,
   Stack,
+  Chip,
+  Link as MUILink,
 } from "@mui/material";
 import {
   getAllUnscheduledAllocationsForUC,
@@ -30,6 +32,14 @@ interface UCUnscheduledAllocation extends UnscheduledAllocation {
   year: number;
   session: string;
 }
+
+const blackOutlined = {
+  borderColor: "#000",
+  color: "#000",
+  borderRadius: 9999,
+  px: 2,
+  "&:hover": { backgroundColor: "#000", color: "#fff", borderColor: "#111" },
+};
 
 export default function UnscheduledAllocationsTable() {
   const [allocations, setAllocations] = useState<UCUnscheduledAllocation[]>([]);
@@ -52,38 +62,36 @@ export default function UnscheduledAllocationsTable() {
 
   useEffect(() => {
     fetchData();
-  }, [activityType]);
-
-  const handleTypeChange = (
-    _: React.MouseEvent<HTMLElement>,
-    newType: string | null,
-  ) => {
-    if (newType) setActivityType(newType as "Marking" | "Consultation");
-  };
+  }, [activityType]); // eslint-disable-line
 
   return (
-    <Box sx={{ mt: 3 }}>
+    <Box>
       <Stack
         direction="row"
         justifyContent="space-between"
         alignItems="center"
         sx={{ mb: 2 }}
       >
-        <Typography variant="h5" fontWeight={600}>
+        <Typography variant="h6" fontWeight={600}>
           {activityType} Hours
         </Typography>
         <Stack direction="row" spacing={1} alignItems="center">
           <ToggleButtonGroup
             exclusive
             value={activityType}
-            onChange={handleTypeChange}
+            onChange={(_, v) => v && setActivityType(v)}
             size="small"
           >
             <ToggleButton value="Marking">Marking</ToggleButton>
             <ToggleButton value="Consultation">Consultation</ToggleButton>
           </ToggleButtonGroup>
           <Tooltip title="Refresh data">
-            <Button variant="outlined" size="small" onClick={fetchData}>
+            <Button
+              variant="outlined"
+              size="small"
+              onClick={fetchData}
+              sx={blackOutlined}
+            >
               Refresh
             </Button>
           </Tooltip>
@@ -102,10 +110,26 @@ export default function UnscheduledAllocationsTable() {
           No {activityType.toLowerCase()} hours allocated across your units.
         </Typography>
       ) : (
-        <TableContainer component={Paper} sx={{ borderRadius: 2 }}>
-          <Table size="small">
+        <TableContainer
+          component={Paper}
+          sx={{
+            borderRadius: 3,
+            border: "1px solid #000",
+            overflow: "hidden",
+            boxShadow: "0 1px 0 rgba(0,0,0,0.05)",
+          }}
+        >
+          <Table size="small" stickyHeader>
             <TableHead>
-              <TableRow>
+              <TableRow
+                sx={{
+                  "& th": {
+                    fontWeight: 700,
+                    backgroundColor: "grey.100",
+                    borderColor: "#000",
+                  },
+                }}
+              >
                 <TableCell>Unit Code</TableCell>
                 <TableCell>Unit Name</TableCell>
                 <TableCell>Tutor</TableCell>
@@ -117,16 +141,31 @@ export default function UnscheduledAllocationsTable() {
             </TableHead>
             <TableBody>
               {allocations.map((a) => (
-                <TableRow key={a.allocation_id}>
+                <TableRow
+                  key={a.allocation_id}
+                  hover
+                  sx={{ "& td": { borderColor: "#000" } }}
+                >
                   <TableCell>{a.unitCode}</TableCell>
                   <TableCell>{a.unitName}</TableCell>
                   <TableCell>
                     {a.first_name} {a.last_name}
                   </TableCell>
-                  <TableCell>{a.email}</TableCell>
+                  <TableCell>
+                    <MUILink href={`mailto:${a.email}`} underline="hover">
+                      {a.email}
+                    </MUILink>
+                  </TableCell>
                   <TableCell align="center">{a.hours}</TableCell>
                   <TableCell>{a.note || "—"}</TableCell>
-                  <TableCell>{a.status}</TableCell>
+                  <TableCell>
+                    <Chip
+                      size="small"
+                      label={a.status}
+                      sx={{ borderColor: "#000", color: "#000" }}
+                      variant="outlined"
+                    />
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

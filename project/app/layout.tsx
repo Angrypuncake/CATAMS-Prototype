@@ -13,6 +13,7 @@ import "@fontsource/inter/500.css";
 import "@fontsource/inter/600.css";
 import "@fontsource/inter/700.css";
 import HomePortalButton from "@/components/HomePortalButton";
+import MinimalNav from "@/components/MinimalNav";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -28,6 +29,15 @@ export default function RootLayout({
         <AppRouterCacheProvider>
           <StyledEngineProvider injectFirst>
             <ThemeProvider theme={websiteTheme}>
+              {/* New minimal nav (thin black strip + white bar). HELP pill sits left of heavy CATAMS. */}
+              <MinimalNav
+                actions={[{ label: "HELP", href: "/help" }]}
+                rightTitle="CATAMS"
+                edgeGapCm={1}
+                maxWidthClass="max-w-screen-2xl"
+                logoSrc="/usyd_logo_white.png"
+                showOrangeAccent={true}
+              />
               <div className="flex items-center justify-center min-h-screen">
                 <CssBaseline />
                 {children}

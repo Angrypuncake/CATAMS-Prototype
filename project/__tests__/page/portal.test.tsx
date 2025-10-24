@@ -64,9 +64,13 @@ describe("Portal Page", () => {
     const { container } = render(<Portal />);
     const mainContainer = container.firstElementChild;
 
-    expect(mainContainer).toHaveClass("MuiBox-root");
+    expect(mainContainer).toHaveClass("min-h-screen", "w-full");
+
     expect(
-      screen.getByText("Casual Academic Time Allocation"),
+      screen.getByText("Casual Academic Time Allocation System"),
     ).toBeInTheDocument();
+
+    const cards = container.querySelectorAll(".MuiCard-root");
+    expect(cards.length).toBe(4);
   });
 });

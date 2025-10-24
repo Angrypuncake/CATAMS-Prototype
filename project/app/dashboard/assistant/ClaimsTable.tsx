@@ -1,3 +1,4 @@
+"use client";
 import React from "react";
 import {
   Table,
@@ -39,7 +40,7 @@ const ClaimsTable: React.FC<ClaimsTableProps> = ({ data }) => {
             <TableRow key={idx}>
               <TableCell>{claim.tutor}</TableCell>
               <TableCell>{claim.session}</TableCell>
-              <TableCell style={{ fontWeight: "bold" }}>{claim.diff}</TableCell>
+              <TableCell style={{ fontWeight: 700 }}>{claim.diff}</TableCell>
               <TableCell>{claim.submitted}</TableCell>
               <TableCell>
                 <Button variant="text" size="small">

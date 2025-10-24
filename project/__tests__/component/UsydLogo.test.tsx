@@ -8,7 +8,7 @@ describe("UsydLogo Component", () => {
 
     const logo = screen.getByAltText("University of Sydney");
     expect(logo).toBeInTheDocument();
-    expect(logo).toHaveAttribute("src", "/usyd_logo.png");
+    expect(logo).toHaveAttribute("src", "/usyd_logo_white.png");
     expect(logo).toHaveClass("object-contain");
   });
 
@@ -38,7 +38,7 @@ describe("UsydLogo Component", () => {
     expect(logo.className).toContain("[filter:brightness(0)_invert(1)]");
   });
 
-  test("should fallback to colored logo on error when white logo is missing", () => {
+  test("should fallback to white PNG on error when white SVG is missing", () => {
     render(<UsydLogo white />);
 
     const logo = screen.getByAltText("University of Sydney");
@@ -47,7 +47,7 @@ describe("UsydLogo Component", () => {
     // Simulate image load error
     fireEvent.error(logo);
 
-    expect(logo).toHaveAttribute("src", "/usyd_logo.png");
+    expect(logo).toHaveAttribute("src", "/usyd_logo_white.png");
   });
 
   test("should not change src on error if already showing fallback", () => {
@@ -55,13 +55,13 @@ describe("UsydLogo Component", () => {
 
     const logo = screen.getByAltText("University of Sydney");
 
-    // First error - should fallback to png
+    // First error - should fallback to white png
     fireEvent.error(logo);
-    expect(logo).toHaveAttribute("src", "/usyd_logo.png");
+    expect(logo).toHaveAttribute("src", "/usyd_logo_white.png");
 
-    // Second error - should stay on png
+    // Second error - should stay on white png
     fireEvent.error(logo);
-    expect(logo).toHaveAttribute("src", "/usyd_logo.png");
+    expect(logo).toHaveAttribute("src", "/usyd_logo_white.png");
   });
 
   test("should pass additional img props", () => {
@@ -117,6 +117,6 @@ describe("UsydLogo Component", () => {
 
     // Should still have white filter even with fallback image
     expect(logo.className).toContain("[filter:brightness(0)_invert(1)]");
-    expect(logo).toHaveAttribute("src", "/usyd_logo.png");
+    expect(logo).toHaveAttribute("src", "/usyd_logo_white.png");
   });
 });

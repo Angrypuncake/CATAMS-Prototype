@@ -33,6 +33,9 @@ export default function CorrectionReview({ data }: { data: TutorRequest }) {
     date: string;
     hours: string | number;
     end_at?: string;
+    start_at?: string;
+    location?: string;
+    session_type?: string;
   };
 
   const [tutor, setTutor] = useState<Tutor | null>(null);
@@ -73,6 +76,11 @@ export default function CorrectionReview({ data }: { data: TutorRequest }) {
     );
   }
 
+  // Only render for correction request type
+  if (requestType !== "correction") {
+    return null;
+  }
+
   // -------------------------------
   //  RENDER
   // -------------------------------
@@ -101,6 +109,66 @@ export default function CorrectionReview({ data }: { data: TutorRequest }) {
       </Typography>
 
       <Divider sx={{ my: 3 }} />
+
+      {/* REQUESTED CORRECTION DETAILS */}
+      <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+        Requested Correction Details
+      </Typography>
+
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 3,
+          mb: 3,
+        }}
+      >
+        <Typography variant="body2" color="text.secondary">
+          <strong>Date</strong>
+        </Typography>
+        <Typography variant="body2" color="text.primary" mb={1}>
+          {details.date}
+        </Typography>
+
+        {details.start_at && details.end_at && (
+          <>
+            <Typography variant="body2" color="text.secondary">
+              <strong>Time</strong>
+            </Typography>
+            <Typography variant="body2" color="text.primary" mb={1}>
+              {details.start_at} - {details.end_at}
+            </Typography>
+          </>
+        )}
+
+        {details.location && (
+          <>
+            <Typography variant="body2" color="text.secondary">
+              <strong>Location</strong>
+            </Typography>
+            <Typography variant="body2" color="text.primary" mb={1}>
+              {details.location}
+            </Typography>
+          </>
+        )}
+
+        <Typography variant="body2" color="text.secondary">
+          <strong>Hours</strong>
+        </Typography>
+        <Typography variant="body2" color="text.primary" mb={1}>
+          {details.hours}
+        </Typography>
+
+        {details.session_type && (
+          <>
+            <Typography variant="body2" color="text.secondary">
+              <strong>Session Type</strong>
+            </Typography>
+            <Typography variant="body2" color="text.primary" mb={1}>
+              {details.session_type}
+            </Typography>
+          </>
+        )}
+      </Paper>
 
       {loading ? (
         <Box display="flex" justifyContent="center" py={3}>

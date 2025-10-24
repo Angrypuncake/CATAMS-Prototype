@@ -7,6 +7,7 @@ jest.mock("next/navigation", () => ({
 }));
 
 const mockGetRequestById = jest.fn();
+const mockGetRequestByRequestId = jest.fn();
 const mockGetFormattedAllocationById = jest.fn();
 const mockGetTutorsByUnit = jest.fn();
 const mockGetTutorById = jest.fn();
@@ -14,6 +15,8 @@ const mockGetAllocationById = jest.fn();
 
 jest.mock("../../../app/services/requestService", () => ({
   getRequestById: (...args: unknown[]) => mockGetRequestById(...args),
+  getRequestByRequestId: (...args: unknown[]) =>
+    mockGetRequestByRequestId(...args),
 }));
 
 jest.mock("../../../app/services/allocationService", () => ({
@@ -56,7 +59,7 @@ const mockTutor = {
 describe("ReviewPage", () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockGetRequestById.mockResolvedValue({
+    const requestData = {
       requestId: 123,
       requesterId: 10,
       reviewerId: 5,
@@ -71,7 +74,9 @@ describe("ReviewPage", () => {
         hours: 2,
         paycode: "CASUAL",
       },
-    });
+    };
+    mockGetRequestById.mockResolvedValue(requestData);
+    mockGetRequestByRequestId.mockResolvedValue(requestData);
     mockGetFormattedAllocationById.mockResolvedValue(mockAllocation);
     mockGetTutorsByUnit.mockResolvedValue([]);
     mockGetTutorById.mockResolvedValue(mockTutor);

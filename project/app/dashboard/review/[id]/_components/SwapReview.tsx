@@ -9,7 +9,6 @@ import {
   Chip,
   TextField,
   Button,
-  Autocomplete,
   CircularProgress,
 } from "@mui/material";
 import { SwapHoriz } from "@mui/icons-material";
@@ -25,7 +24,6 @@ import {
 } from "@/app/_types/allocations";
 import { Tutor } from "@/app/_types/tutor";
 import { getTutorById } from "@/app/services/userService";
-import AllocationDetails from "@/app/dashboard/tutor/allocations/[id]/_components/AllocationDetails";
 
 export function formatDate(isoString?: string | null): string {
   if (!isoString) return "—";
@@ -77,7 +75,7 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
           setSuggestedTutor(suggestedTutor);
         }
 
-        console.log(tutor);
+        // console.log(tutor);
 
         setSourcetutor(tutor);
 
@@ -96,7 +94,8 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
       }
     }
     loadEligible();
-  }, [allocationId, requesterId, data]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allocationId, requesterId, data]); // details is part of data, no need to list separately
 
   // -------------------------------
   //  Event handlers

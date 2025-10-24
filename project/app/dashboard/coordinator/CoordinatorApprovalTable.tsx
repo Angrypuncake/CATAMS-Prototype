@@ -2,8 +2,15 @@
 
 import React from "react";
 import {
-  Table, TableBody, TableCell, TableContainer, TableHead, TableRow,
-  Paper, Button, Chip
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Button,
+  Chip,
 } from "@mui/material";
 import { TutorRequestRow } from "./types";
 
@@ -26,7 +33,9 @@ interface CoordinatorApprovalTableProps {
   pendingRequests: TutorRequestRow[];
 }
 
-const CoordinatorApprovalTable = ({ pendingRequests }: CoordinatorApprovalTableProps) => {
+const CoordinatorApprovalTable = ({
+  pendingRequests,
+}: CoordinatorApprovalTableProps) => {
   return (
     <TableContainer
       component={Paper}
@@ -39,19 +48,37 @@ const CoordinatorApprovalTable = ({ pendingRequests }: CoordinatorApprovalTableP
     >
       <Table size="small" stickyHeader>
         <TableHead>
-          <TableRow sx={{ "& th": { fontWeight: 700, backgroundColor: "grey.100", borderColor: "#000" } }}>
+          <TableRow
+            sx={{
+              "& th": {
+                fontWeight: 700,
+                backgroundColor: "grey.100",
+                borderColor: "#000",
+              },
+            }}
+          >
             <TableCell width={120}>Request ID</TableCell>
             <TableCell width={120}>Type</TableCell>
             <TableCell>Related Session</TableCell>
             <TableCell width={260}>By</TableCell>
-            <TableCell align="center" width={120}>Approve</TableCell>
-            <TableCell align="center" width={110}>Reject</TableCell>
+            <TableCell align="center" width={120}>
+              Approve
+            </TableCell>
+            <TableCell align="center" width={110}>
+              Reject
+            </TableCell>
           </TableRow>
         </TableHead>
         <TableBody>
           {pendingRequests.map((row) => (
-            <TableRow key={row.requestID} hover sx={{ "& td": { borderColor: "#000" } }}>
-              <TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{row.requestID}</TableCell>
+            <TableRow
+              key={row.requestID}
+              hover
+              sx={{ "& td": { borderColor: "#000" } }}
+            >
+              <TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>
+                {row.requestID}
+              </TableCell>
               <TableCell>
                 <Chip
                   size="small"
@@ -60,23 +87,39 @@ const CoordinatorApprovalTable = ({ pendingRequests }: CoordinatorApprovalTableP
                   variant="outlined"
                 />
               </TableCell>
-              <TableCell sx={{ maxWidth: 420, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+              <TableCell
+                sx={{
+                  maxWidth: 420,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
                 {row.relatedSession}
               </TableCell>
               <TableCell>
-                {row.creatorRole}: <strong>{row.creator}</strong> ({row.user_id})
+                {row.creatorRole}: <strong>{row.creator}</strong> ({row.user_id}
+                )
               </TableCell>
               <TableCell align="center">
-                <Button size="small" variant="outlined" sx={pillApprove}>Approve</Button>
+                <Button size="small" variant="outlined" sx={pillApprove}>
+                  Approve
+                </Button>
               </TableCell>
               <TableCell align="center">
-                <Button size="small" variant="outlined" sx={pillReject}>Reject</Button>
+                <Button size="small" variant="outlined" sx={pillReject}>
+                  Reject
+                </Button>
               </TableCell>
             </TableRow>
           ))}
           {pendingRequests.length === 0 && (
             <TableRow>
-              <TableCell colSpan={6} align="center" sx={{ py: 4, color: "text.secondary" }}>
+              <TableCell
+                colSpan={6}
+                align="center"
+                sx={{ py: 4, color: "text.secondary" }}
+              >
                 No pending requests.
               </TableCell>
             </TableRow>

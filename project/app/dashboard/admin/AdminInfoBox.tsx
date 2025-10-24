@@ -18,8 +18,8 @@ const AdminInfoBox: React.FC<AdminInfoBoxProps> = ({
     bubbleColor === "red"
       ? { backgroundColor: "error.main", color: "#fff" }
       : bubbleColor === "green"
-      ? { backgroundColor: "success.main", color: "#fff" }
-      : undefined;
+        ? { backgroundColor: "success.main", color: "#fff" }
+        : undefined;
 
   return (
     <Paper

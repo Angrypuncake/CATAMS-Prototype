@@ -29,20 +29,7 @@ export async function GET(req: Request) {
     const month = String(searchDate.getMonth() + 1).padStart(2, "0");
     const day = String(searchDate.getDate()).padStart(2, "0");
     searchTerm = `${year}-${month}-${day}`;
-    console.log(
-      `[Date Search Adjustment] Original: ${searchParams.get("q")} -> Adjusted: ${searchTerm}`,
-    );
   }
-
-  // Debug logging
-  console.log("[Tutor Allocations API] Request params:", {
-    userId,
-    searchTerm,
-    sortColumn,
-    sortDirection,
-    page,
-    limit,
-  });
 
   // Build WHERE clause
   const whereClauses: string[] = [];
@@ -146,22 +133,6 @@ export async function GET(req: Request) {
   `;
   const result = await query(sql, params);
   const countResult = await query(countQuery, countParams);
-
-  console.log("[Tutor Allocations API] SQL WHERE:", where);
-  console.log("[Tutor Allocations API] Params:", params);
-  console.log("[Tutor Allocations API] Results:", {
-    rowsReturned: result.rows.length,
-    totalCount: Number(countResult.rows[0].total),
-  });
-
-  // Debug: Show sample dates if search term is provided
-  if (searchTerm && result.rows.length > 0) {
-    console.log("[Tutor Allocations API] Sample dates from results:");
-    result.rows.slice(0, 3).forEach((row: unknown, idx: number) => {
-      const rowData = row as { session_date?: unknown };
-      console.log(`  Row ${idx + 1}: session_date = ${rowData.session_date}`);
-    });
-  }
 
   return NextResponse.json({
     page,

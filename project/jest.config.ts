@@ -4,10 +4,40 @@ const createJestConfig = nextJest({ dir: "./" });
 
 const config = {
   testEnvironment: "jsdom",
+  setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1", // remove if you don't use "@/..."
   },
-  // optional: keep coverage if you like
+  collectCoverageFrom: [
+    "app/**/*.{js,jsx,ts,tsx}",
+    "components/**/*.{js,jsx,ts,tsx}",
+    "lib/**/*.{js,jsx,ts,tsx}",
+    // Exclusions
+    "!**/*.d.ts",
+    "!**/node_modules/**",
+    "!**/__tests__/**",
+    "!**/coverage/**",
+    // Next.js app directory - pages and layouts (better tested with E2E)
+    "!app/**/page.tsx",
+    "!app/**/layout.tsx",
+    "!app/page.tsx",
+    // API routes (integration points, better tested with E2E)
+    "!app/api/**",
+    // Type-only files
+    "!app/**/*types.{ts,tsx}",
+    "!app/_types/**",
+    "!components/**/types.{ts,tsx}",
+    // Mock data and test utilities
+    "!**/*mock*.{ts,tsx}",
+    "!**/mockData.{ts,tsx}",
+    "!app/services/components/UserServiceTester.tsx",
+    // Database and external service clients
+    "!lib/db.ts",
+    "!lib/supabase/**",
+    // Next.js config files
+    "!next.config.ts",
+    "!middleware.ts",
+  ],
   clearMocks: true,
   collectCoverage: true,
   coverageDirectory: "coverage",

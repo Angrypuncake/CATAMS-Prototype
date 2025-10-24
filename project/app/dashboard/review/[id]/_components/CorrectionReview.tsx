@@ -19,28 +19,20 @@ import { getAllocationById } from "@/app/services/allocationService";
 import { formatDate } from "./SwapReview";
 
 export default function CorrectionReview({ data }: { data: TutorRequest }) {
-  const {
-    allocationId,
-    requesterId,
-    requestStatus,
-    requestReason,
-    requestId,
-    createdAt,
-    requestType,
-  } = data;
-
-  const details = data.details as {
-    date: string;
-    hours: string | number;
-    end_at?: string;
-  };
-
   const [tutor, setTutor] = useState<Tutor | null>(null);
   const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(true);
 
+  const allocationId = data?.allocationId;
+  const requesterId = data?.requesterId;
+
   useEffect(() => {
+    if (!allocationId || !requesterId) {
+      setLoading(false);
+      return;
+    }
+
     async function fetchData() {
       try {
         const [tutorData, alloc] = await Promise.all([
@@ -58,12 +50,6 @@ export default function CorrectionReview({ data }: { data: TutorRequest }) {
     fetchData();
   }, [allocationId, requesterId]);
 
-  // Mocked handlers for now
-  const handleApprove = () =>
-    console.log("✅ Approve correction:", { requestId, comment });
-  const handleReject = () =>
-    console.log("❌ Reject correction:", { requestId, comment });
-
   // Ensure we render even if requestType differs
   if (!data) {
     return (
@@ -71,6 +57,29 @@ export default function CorrectionReview({ data }: { data: TutorRequest }) {
         No request data available.
       </Typography>
     );
+  }
+
+  const { requestStatus, requestReason, requestId, createdAt, requestType } =
+    data;
+
+  const details = data.details as {
+    date: string;
+    hours: string | number;
+    end_at?: string;
+    start_at?: string;
+    location?: string;
+    session_type?: string;
+  };
+
+  // Mocked handlers for now
+  const handleApprove = () =>
+    console.log("✅ Approve correction:", { requestId, comment });
+  const handleReject = () =>
+    console.log("❌ Reject correction:", { requestId, comment });
+
+  // Only render for correction request type
+  if (requestType !== "correction") {
+    return null;
   }
 
   // -------------------------------
@@ -101,6 +110,66 @@ export default function CorrectionReview({ data }: { data: TutorRequest }) {
       </Typography>
 
       <Divider sx={{ my: 3 }} />
+
+      {/* REQUESTED CORRECTION DETAILS */}
+      <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+        Requested Correction Details
+      </Typography>
+
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 3,
+          mb: 3,
+        }}
+      >
+        <Typography variant="body2" color="text.secondary">
+          <strong>Date</strong>
+        </Typography>
+        <Typography variant="body2" color="text.primary" mb={1}>
+          {details.date}
+        </Typography>
+
+        {details.start_at && details.end_at && (
+          <>
+            <Typography variant="body2" color="text.secondary">
+              <strong>Time</strong>
+            </Typography>
+            <Typography variant="body2" color="text.primary" mb={1}>
+              {details.start_at} - {details.end_at}
+            </Typography>
+          </>
+        )}
+
+        {details.location && (
+          <>
+            <Typography variant="body2" color="text.secondary">
+              <strong>Location</strong>
+            </Typography>
+            <Typography variant="body2" color="text.primary" mb={1}>
+              {details.location}
+            </Typography>
+          </>
+        )}
+
+        <Typography variant="body2" color="text.secondary">
+          <strong>Hours</strong>
+        </Typography>
+        <Typography variant="body2" color="text.primary" mb={1}>
+          {details.hours}
+        </Typography>
+
+        {details.session_type && (
+          <>
+            <Typography variant="body2" color="text.secondary">
+              <strong>Session Type</strong>
+            </Typography>
+            <Typography variant="body2" color="text.primary" mb={1}>
+              {details.session_type}
+            </Typography>
+          </>
+        )}
+      </Paper>
 
       {loading ? (
         <Box display="flex" justifyContent="center" py={3}>

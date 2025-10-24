@@ -6,7 +6,7 @@ import {
   act,
   fireEvent,
 } from "@testing-library/react";
-import AdminDashboard from "../app/dashboard/admin/page";
+import AdminDashboard from "../../app/dashboard/admin/page";
 import AdminInfoBox from "@/app/dashboard/admin/AdminInfoBox";
 import AdminBudgetBox from "@/app/dashboard/admin/AdminBudgetBox";
 import axios from "axios";

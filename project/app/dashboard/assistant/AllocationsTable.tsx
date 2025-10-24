@@ -65,7 +65,9 @@ const AllocationsTable: React.FC<AllocationsTableProps> = ({ data }) => {
                       row.status === "Attention" ? "#F97316" : "#111111",
                     color: row.status === "Attention" ? "#F97316" : "#111111",
                     background:
-                      row.status === "Attention" ? "rgba(249,115,22,0.06)" : "transparent",
+                      row.status === "Attention"
+                        ? "rgba(249,115,22,0.06)"
+                        : "transparent",
                   }}
                 >
                   {row.status}

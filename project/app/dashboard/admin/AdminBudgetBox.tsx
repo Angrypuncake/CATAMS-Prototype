@@ -7,7 +7,11 @@ interface AdminBudgetBoxProps {
   href?: string;
 }
 
-const AdminBudgetBox: React.FC<AdminBudgetBoxProps> = ({ title, description, href }) => {
+const AdminBudgetBox: React.FC<AdminBudgetBoxProps> = ({
+  title,
+  description,
+  href,
+}) => {
   return (
     <Box>
       <Paper
@@ -26,8 +30,12 @@ const AdminBudgetBox: React.FC<AdminBudgetBoxProps> = ({ title, description, hre
         }}
       >
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="h6" noWrap>{title}</Typography>
-          <Typography variant="body2" color="text.secondary">{description}</Typography>
+          <Typography variant="h6" noWrap>
+            {title}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {description}
+          </Typography>
         </Box>
 
         <Button

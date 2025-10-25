@@ -546,3 +546,10 @@ export async function getAdminAllocationById(
   if (!row) throw new Error(`Allocation ${id} not found`);
   return row;
 }
+
+// app/services/allocationService.ts
+
+export async function swapAllocations(allocA_id: number, allocB_id: number) {
+  const res = await axios.patch("/allocations/swap", { allocA_id, allocB_id });
+  return res.data;
+}

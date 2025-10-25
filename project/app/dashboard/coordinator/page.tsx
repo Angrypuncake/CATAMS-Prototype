@@ -161,15 +161,6 @@ const Page = () => {
             </Box>
 
             <Stack direction="row" alignItems="center" spacing={1.5}>
-              <Button
-                onClick={(e) => setAnchorEl(e.currentTarget)}
-                variant="outlined"
-                size="small"
-                endIcon={<ArrowDropDownIcon />}
-                sx={blackOutlined}
-              >
-                This Session
-              </Button>
               <Typography variant="body2">Budget % Threshold</Typography>
               <Slider
                 value={threshold}
@@ -204,47 +195,25 @@ const Page = () => {
           <UnitBudgetOverviewTable computedData={computedBudgetData} />
         </Paper>
 
-        <Grid container spacing={3}>
-          {/* Approvals */}
-          <Grid size={{ xs: 12, md: 7 }}>
-            <Paper sx={{ ...cardSx, height: "100%" }}>
-              <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                sx={{ mb: 1 }}
-              >
-                <Box>
-                  <Typography variant="h6">UC Approvals</Typography>
-                  <Typography variant="body2" color="text.secondary">
-                    Items awaiting your review
-                  </Typography>
-                </Box>
-                <Button variant="contained" size="small" sx={blackContained}>
-                  Approve All
-                </Button>
-              </Stack>
-              <CoordinatorApprovalTable pendingRequests={pendingRequests} />
-            </Paper>
-          </Grid>
-
-          {/* Requests requiring attention */}
-          <Grid size={{ xs: 12, md: 5 }}>
-            <Paper sx={{ ...cardSx, height: "100%" }}>
-              <Typography variant="h6" sx={{ mb: 0.5 }}>
-                Requests Requiring Attention
+        <Paper sx={{ ...cardSx, height: "100%" }}>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{ mb: 1 }}
+          >
+            <Box>
+              <Typography variant="h6">UC Approvals</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Items awaiting your review
               </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ mb: 1.5 }}
-              >
-                Flagged queues
-              </Typography>
-              <Typography variant="body2">No Requests.</Typography>
-            </Paper>
-          </Grid>
-        </Grid>
+            </Box>
+            <Button variant="contained" size="small" sx={blackContained}>
+              Approve All
+            </Button>
+          </Stack>
+          <CoordinatorApprovalTable pendingRequests={pendingRequests} />
+        </Paper>
 
         {/* Unscheduled allocations */}
         <Paper sx={{ ...cardSx, mt: 3 }}>

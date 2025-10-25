@@ -272,3 +272,10 @@ export async function getTutorRequests(
   });
   return response.data;
 }
+
+export async function getRequestsByUnit(
+  offeringId: number,
+): Promise<TutorRequest> {
+  const res = await axios.get(`/offerings/${offeringId}/requests`);
+  return res.data as TutorRequest;
+}

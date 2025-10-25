@@ -299,3 +299,34 @@ export async function getRequestsByUC(): Promise<UCApproval[]> {
 
   return allRequests;
 }
+
+export interface PatchTutorRequest {
+  requestId: number;
+  requestStatus?:
+    | "pending_ta"
+    | "pending_uc"
+    | "approved"
+    | "rejected"
+    | "cancelled";
+  reviewer?: number | null;
+  requestReason?: string | null;
+}
+
+export interface PatchTutorResponse {
+  success: boolean;
+  data?: {
+    request_id: number;
+    request_status: string;
+    reviewer: number | null;
+    request_reason: string | null;
+    updated_at: string;
+  };
+  error?: string;
+}
+
+export async function patchTutorRequest(
+  payload: PatchTutorRequest,
+): Promise<PatchTutorResponse> {
+  const res = await axios.patch<PatchTutorResponse>("/request", payload);
+  return res.data;
+}

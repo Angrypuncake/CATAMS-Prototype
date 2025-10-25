@@ -18,13 +18,13 @@ const UsydLogo: React.FC<Props> = ({
   ...imgProps
 }) => {
   const [src, setSrc] = React.useState<string>(
-    white ? "/usyd_logo_white.svg" : "/usyd_logo.png",
+    white ? "/usyd_logo_white.svg" : "/usyd_logo_white.png",
   );
 
   const onError = React.useCallback(() => {
-    // If white asset is missing, fallback to colored PNG
-    if (src !== "/usyd_logo.png") {
-      setSrc("/usyd_logo.png");
+    // If white asset is missing, fallback to white PNG
+    if (src !== "/usyd_logo_white.png") {
+      setSrc("/usyd_logo_white.png");
     }
   }, [src]);
 

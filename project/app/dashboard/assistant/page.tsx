@@ -13,8 +13,14 @@ const TeachingOperations: React.FC = () => {
   const [requests, setRequests] = useState<UCApproval[]>([]);
 
   async function fetchUnitRequests() {
-    const res = await getRequestsByUC();
-    setRequests(res);
+    try {
+      const res = await getRequestsByUC();
+      // ✅ Remove rows where requestStatus === "pending_uc"
+      const filtered = res.filter((r) => r.requestStatus !== "pending_uc");
+      setRequests(filtered);
+    } catch (err) {
+      console.error("Failed to fetch requests:", err);
+    }
   }
 
   useEffect(() => {

@@ -17,6 +17,7 @@ export async function GET(
       `
       SELECT
         r.request_id         AS "requestId",
+        r.request_type      AS "requestType",
         so.session_date      AS "sessionDate",
         so.start_at          AS "startAt",
         so.end_at            AS "endAt",
@@ -47,6 +48,7 @@ export async function GET(
 
     const approvals = res.rows.map((row) => ({
       requestId: row.requestId,
+      requestType: row.requestType,
       sessionDate: row.sessionDate,
       startAt: row.startAt,
       endAt: row.endAt,

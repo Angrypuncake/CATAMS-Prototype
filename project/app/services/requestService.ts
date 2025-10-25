@@ -330,3 +330,14 @@ export async function patchTutorRequest(
   const res = await axios.patch<PatchTutorResponse>("/request", payload);
   return res.data;
 }
+
+/**
+ * UC: Approves a tutor request.
+ */
+export async function ucApproveRequest(requestId: number, reviewerId: number) {
+  return patchTutorRequest({
+    requestId,
+    requestStatus: "approved",
+    reviewer: reviewerId,
+  });
+}

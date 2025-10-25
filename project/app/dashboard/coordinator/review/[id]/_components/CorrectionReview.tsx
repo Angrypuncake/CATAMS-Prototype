@@ -17,8 +17,17 @@ import type { Tutor } from "@/app/_types/tutor";
 import { getTutorById } from "@/app/services/userService";
 import { getAllocationById } from "@/app/services/allocationService";
 import { formatDate } from "./SwapReview";
+import { useRouter } from "next/navigation";
+import { CurrentUser } from "@/app/_types/user";
+import { getUserFromAuth } from "@/app/services/authService";
+import {
+  ucApproveRequest,
+  ucRejectRequest,
+} from "@/app/services/requestService";
 
 export default function CorrectionReview({ data }: { data: TutorRequest }) {
+  const router = useRouter();
+  const [user, setUser] = useState<CurrentUser | null>(null);
   const [tutor, setTutor] = useState<Tutor | null>(null);
   const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
   const [comment, setComment] = useState("");
@@ -35,10 +44,12 @@ export default function CorrectionReview({ data }: { data: TutorRequest }) {
 
     async function fetchData() {
       try {
-        const [tutorData, alloc] = await Promise.all([
+        const [user, tutorData, alloc] = await Promise.all([
+          getUserFromAuth(),
           getTutorById(String(requesterId)),
           getAllocationById(String(allocationId)),
         ]);
+        setUser(user);
         setTutor(tutorData);
         setAllocation(alloc);
       } catch (err) {
@@ -71,11 +82,40 @@ export default function CorrectionReview({ data }: { data: TutorRequest }) {
     session_type?: string;
   };
 
-  // Mocked handlers for now
-  const handleApprove = () =>
-    console.log("✅ Approve correction:", { requestId, comment });
-  const handleReject = () =>
-    console.log("❌ Reject correction:", { requestId, comment });
+  const handleApprove = async () => {
+    if (!user) return alert("User not authenticated");
+
+    try {
+      setLoading(true);
+
+      await ucApproveRequest(requestId, user.userId, `Approved. ${comment}`);
+
+      alert("Request approved successfully.");
+      setTimeout(() => router.push(`/dashboard/coordinator`), 2000);
+    } catch (err) {
+      console.error("Error approving Request:", err);
+      alert("Approval failed. See console for details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleReject = async () => {
+    if (!user) return alert("User not authenticated");
+
+    try {
+      setLoading(true);
+
+      await ucRejectRequest(requestId, user.userId, "UC rejection", comment);
+
+      alert("Request Rejected successfully.");
+      setTimeout(() => router.push(`/dashboard/coordinator`), 2000);
+    } catch (err) {
+      console.error("Error rejecting Request:", err);
+      alert("Rejection failed. See console for details.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Only render for correction request type
   if (requestType !== "correction") {

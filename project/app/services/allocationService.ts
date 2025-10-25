@@ -510,3 +510,30 @@ export async function getAllocationsByOffering(
   const res = await axios.get(`/offerings/${offeringId}/allocations`);
   return res.data as AdminAllocationRow[];
 }
+
+/**
+ * Fetch all allocations across all offerings that this UC coordinates.
+ * Simplified: no enrichment, just merged list from each offering.
+ */
+export async function getAllAllocationsForUC(): Promise<AdminAllocationRow[]> {
+  try {
+    // 1️⃣ Fetch offerings this UC coordinates
+    const coordinatorUnits = await getCoordinatorUnits();
+    const offeringIds = coordinatorUnits.map((u) => u.offering_id);
+
+    if (offeringIds.length === 0) return [];
+
+    // 2️⃣ Fetch allocations for each offering in parallel
+    const results = await Promise.all(
+      offeringIds.map((id) => getAllocationsByOffering(id)),
+    );
+
+    // 3️⃣ Flatten all results
+    const merged = results.flat();
+
+    return merged;
+  } catch (err) {
+    console.error("Failed to fetch all UC allocations:", err);
+    throw err;
+  }
+}

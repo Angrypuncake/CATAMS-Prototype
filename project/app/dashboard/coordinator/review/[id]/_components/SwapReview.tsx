@@ -24,6 +24,8 @@ import {
 } from "@/app/_types/allocations";
 import { Tutor } from "@/app/_types/tutor";
 import { getTutorById } from "@/app/services/userService";
+import { getUserFromAuth } from "@/app/services/authService";
+import { CurrentUser } from "@/app/_types/user";
 
 export function formatDate(isoString?: string | null): string {
   if (!isoString) return "—";
@@ -41,12 +43,14 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
   // -------------------------------
   //  State
   // -------------------------------
+  const [user, setUser] = useState<CurrentUser | null>(null);
   const { allocationId, requestStatus, requestId, createdAt, requesterId } =
     data;
   const [loadingEligible, setLoadingEligible] = useState(true);
   const [comment, setComment] = useState("");
   const [sourceTutor, setSourcetutor] = useState<Tutor | null>(null);
   const [suggestedTutor, setSuggestedTutor] = useState<Tutor | null>(null);
+  const [loading, setLoading] = useState(true);
   const [sourceAllocation, setsourceAllocationAllocation] =
     useState<TutorAllocationRow | null>(null);
   const [eligibleAllocations, setEligibleAllocations] = useState<
@@ -66,6 +70,9 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
         const activityType = source.activity_type;
 
         const tutor = await getTutorById(String(requesterId));
+        const user = await getUserFromAuth();
+
+        setUser(user);
 
         if (details !== null && data.requestType === "swap") {
           const { details } = data;

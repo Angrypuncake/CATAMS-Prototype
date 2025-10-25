@@ -137,24 +137,6 @@ const Page = () => {
           </Stack>
         </Stack>
 
-        {/* Alerts */}
-        <Paper sx={{ ...cardSx, mb: 3 }}>
-          <Typography variant="h6" sx={{ mb: 1 }}>
-            Alerts
-          </Typography>
-          {computedBudgetData && computedBudgetData.alerts.length > 0 ? (
-            <Stack direction="row" flexWrap="wrap" gap={1.5}>
-              {computedBudgetData.alerts.map((a, i) => (
-                <AlertBox key={i}>{a.message}</AlertBox>
-              ))}
-            </Stack>
-          ) : (
-            <Typography variant="body2" color="text.secondary">
-              No alerts at this time.
-            </Typography>
-          )}
-        </Paper>
-
         {/* Budget Overview */}
         <Paper sx={{ ...cardSx, mb: 3 }}>
           <Stack

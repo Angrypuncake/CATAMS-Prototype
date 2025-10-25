@@ -22,6 +22,7 @@ import ReviewerActions from "./swapcomponents/ReviewerActions";
 import {
   getAdminAllocationById,
   getAllocationById,
+  swapAllocations,
 } from "@/app/services/allocationService";
 
 type ReviewRole = "UC" | "TA" | "USER";
@@ -72,7 +73,8 @@ export default function SwapReview({
   const [selectedAllocation, setSelectedAllocation] =
     useState<AdminAllocationRow | null>(null);
 
-  const isReadOnly = readOnly || role === "USER";
+  const isReadOnly =
+    readOnly || role === "USER" || requestStatus === "approved";
 
   // Resolve the suggested tutor id from either a selection or the pre-filled suggestion
   const resolvedSuggestedTutorId: number | null = (() => {
@@ -121,8 +123,34 @@ export default function SwapReview({
   }, [data.details]);
 
   const actions = {
-    approveUC: () =>
-      ucApproveRequest(Number(requestId), currentUserId!, reviewerNote),
+    approveUC: async () => {
+      try {
+        // 1️⃣ Approve the request via UC API
+        const res = await ucApproveRequest(
+          Number(requestId),
+          currentUserId!,
+          reviewerNote,
+        );
+
+        // 2️⃣ Once approved, trigger allocation swap (only if details are complete)
+        const allocA_id = Number(allocationId); // original allocation
+        const allocB_id = Number(data.details?.suggested_alloc_id);
+
+        if (allocA_id && allocB_id) {
+          await swapAllocations(allocA_id, allocB_id);
+          console.log("✅ Allocations swapped successfully.");
+        } else {
+          console.warn("⚠️ Skipped swap — missing allocation IDs.");
+        }
+
+        // 3️⃣ Optionally reload the request or mark read-only state
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } catch (err) {
+        console.error("Error approving UC request:", err);
+      }
+    },
 
     rejectUC: () =>
       ucRejectRequest(

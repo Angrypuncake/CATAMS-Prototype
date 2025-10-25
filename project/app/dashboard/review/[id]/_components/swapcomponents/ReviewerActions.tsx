@@ -19,11 +19,14 @@ export default function ReviewerActions({
   readOnly: boolean;
   loading: boolean;
 }) {
+  const isActionDisabled = readOnly || loading;
+
   return (
     <>
       <Typography variant="subtitle1" fontWeight={600} gutterBottom>
         Reviewer Note
       </Typography>
+
       <TextField
         fullWidth
         multiline
@@ -35,6 +38,7 @@ export default function ReviewerActions({
         disabled={readOnly}
       />
 
+      {/* Only show action buttons if not read-only */}
       {!readOnly && (
         <Box display="flex" gap={2}>
           {role === "UC" ? (
@@ -43,7 +47,7 @@ export default function ReviewerActions({
                 variant="contained"
                 color="success"
                 onClick={onApprove}
-                disabled={loading}
+                disabled={isActionDisabled}
               >
                 Approve
               </Button>
@@ -51,18 +55,18 @@ export default function ReviewerActions({
                 variant="outlined"
                 color="error"
                 onClick={onReject}
-                disabled={loading}
+                disabled={isActionDisabled}
               >
                 Reject
               </Button>
             </>
-          ) : (
+          ) : role === "TA" ? (
             <>
               <Button
                 variant="contained"
                 color="primary"
                 onClick={onForward}
-                disabled={loading}
+                disabled={isActionDisabled}
               >
                 Forward to UC
               </Button>
@@ -70,12 +74,12 @@ export default function ReviewerActions({
                 variant="outlined"
                 color="error"
                 onClick={onReject}
-                disabled={loading}
+                disabled={isActionDisabled}
               >
                 Reject
               </Button>
             </>
-          )}
+          ) : null}
         </Box>
       )}
     </>

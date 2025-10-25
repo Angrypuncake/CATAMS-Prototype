@@ -25,6 +25,7 @@ import AssignUnscheduledButton from "./_components/AssignUnscheduledButton";
 import UnscheduledAllocationsTable from "./_components/UnscheduledAllocationsTable";
 import { UCApproval, UCApprovalResponse } from "@/app/_types/request";
 import { getRequestsByUC } from "@/app/services/requestService";
+import UCRequestsTable from "./CoordinatorRequestTable";
 
 /* Shared black-outline card style to match earlier pages */
 const cardSx = {
@@ -221,7 +222,7 @@ const Page = () => {
               Approve All
             </Button>
           </Stack>
-          <CoordinatorApprovalTable pendingRequests={pendingRequests} />
+          <UCRequestsTable requests={requests} />
         </Paper>
 
         {/* Unscheduled allocations */}

@@ -23,6 +23,7 @@ import { getUnitBudgetOverviews } from "@/app/services/budgetService";
 import { getCurrentYearAndSession } from "@/app/utils/dateHelpers";
 import AssignUnscheduledButton from "./_components/AssignUnscheduledButton";
 import UnscheduledAllocationsTable from "./_components/UnscheduledAllocationsTable";
+import { UCApproval } from "@/app/_types/request";
 
 /* Shared black-outline card style to match earlier pages */
 const cardSx = {
@@ -53,6 +54,7 @@ const Page = () => {
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const [data, setData] = useState<CoordinatorBudgetOverview | null>(null);
   const [threshold, setThreshold] = useState(0.9);
+  const [requests, setRequests] = useState<UCApproval[] | []>([]);
 
   async function fetchBudgetOverview() {
     try {

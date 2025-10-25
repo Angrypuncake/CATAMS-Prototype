@@ -4,8 +4,11 @@ import type {
   PaginatedRequests,
   TutorCorrectionPayload,
   TutorRequest,
+  UCApproval,
+  UCApprovalResponse,
 } from "@/app/_types/request";
 import axios from "@/lib/axios";
+import { getCoordinatorUnits } from "./unitService";
 
 export async function getRequestByRequestId(id: string): Promise<TutorRequest> {
   const res = await axios.get(`requests/${id}`);
@@ -272,10 +275,27 @@ export async function getTutorRequests(
   });
   return response.data;
 }
-
 export async function getRequestsByUnit(
   offeringId: number,
-): Promise<TutorRequest> {
+): Promise<UCApprovalResponse> {
   const res = await axios.get(`/offerings/${offeringId}/requests`);
-  return res.data as TutorRequest;
+  return res.data as UCApprovalResponse;
+}
+
+export async function getRequestsByUC(): Promise<UCApproval[]> {
+  // 1 Get all unit offering IDs for this UC
+  const rawOfferings = await getCoordinatorUnits();
+  const offeringIds = rawOfferings.map((r) => r.offering_id);
+
+  if (offeringIds.length === 0) return [];
+
+  // 2 Fetch all requests in parallel
+  const results = await Promise.all(
+    offeringIds.map((id) => getRequestsByUnit(id)),
+  );
+
+  // 3 Flatten into a single array of UCApproval
+  const allRequests = results.flatMap((r) => r.approvals);
+
+  return allRequests;
 }

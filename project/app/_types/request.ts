@@ -105,3 +105,18 @@ export interface PaginatedRequests {
   total: number;
   data: RequestRow[];
 }
+
+export interface UCApproval {
+  requestId: number;
+  sessionDate: string;
+  startAt: string;
+  endAt: string;
+  activityName: string;
+  requesterName: string;
+  reviewerName: string | null;
+  requestStatus: string;
+}
+
+export interface UCApprovalResponse {
+  approvals: UCApproval[];
+}

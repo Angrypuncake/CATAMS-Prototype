@@ -218,9 +218,6 @@ const Page = () => {
                 Items awaiting your review
               </Typography>
             </Box>
-            <Button variant="contained" size="small" sx={blackContained}>
-              Approve All
-            </Button>
           </Stack>
           <UCRequestsTable requests={requests} />
         </Paper>

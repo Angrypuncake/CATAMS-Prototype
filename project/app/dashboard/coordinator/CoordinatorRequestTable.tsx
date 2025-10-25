@@ -24,7 +24,7 @@ export default function UCRequestsTable({
     { key: "requesterName", label: "Requester" },
     { key: "reviewerName", label: "Reviewer" },
     { key: "requestStatus", label: "Status" },
-    { key: "review", label: "Review" }, // 👈 new column
+    { key: "review", label: "Review" },
   ];
 
   // -------------------------------------------------
@@ -44,19 +44,17 @@ export default function UCRequestsTable({
   const columnRenderers: Partial<
     Record<
       keyof UCApproval | "review",
-      (value: UCApproval[keyof UCApproval]) => JSX.Element | string
+      (
+        value: UCApproval[keyof UCApproval],
+        row: UCApproval,
+      ) => JSX.Element | string
     >
   > = {
     requestStatus: (value) => {
       if (typeof value !== "string") return "";
-      const color =
-        value === "approved"
-          ? "success"
-          : value === "rejected"
-            ? "error"
-            : "warning";
       const label = STATUS_LABELS[value] ?? value.replace("_", " ");
-      return <Chip label={label} color={color} />;
+      // ⬇️ Use default (no color) chip for neutral look
+      return <Chip label={label} variant="outlined" />;
     },
 
     sessionDate: (value) => {
@@ -75,6 +73,7 @@ export default function UCRequestsTable({
       <Button
         variant="outlined"
         size="small"
+        color="warning" // ⬅️ MUI orange accent
         onClick={() =>
           router.push(`/dashboard/coordinator/review/${row.requestId}`)
         }

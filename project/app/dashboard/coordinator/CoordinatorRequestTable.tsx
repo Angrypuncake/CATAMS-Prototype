@@ -17,6 +17,7 @@ export default function UCRequestsTable({
   // -------------------------------------------------
   const columns: { key: keyof UCApproval | "review"; label: string }[] = [
     { key: "requestId", label: "Request ID" },
+    { key: "requestType", label: "Request Type" },
     { key: "activityName", label: "Activity" },
     { key: "sessionDate", label: "Date" },
     { key: "startAt", label: "Start" },
@@ -37,7 +38,6 @@ export default function UCRequestsTable({
     pending_admin: "Pending Admin Review",
     pending_ta: "Pending TA Review",
   };
-
   // -------------------------------------------------
   // 🔹 Column renderers
   // -------------------------------------------------
@@ -57,6 +57,12 @@ export default function UCRequestsTable({
       return <Chip label={label} variant="outlined" />;
     },
 
+    requestType: (value) => {
+      if (typeof value !== "string") return "";
+      // Capitalize first letter, make rest lowercase
+      return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+    },
+
     sessionDate: (value) => {
       if (typeof value !== "string") return "";
       return new Date(value).toLocaleDateString("en-AU", {
@@ -64,6 +70,13 @@ export default function UCRequestsTable({
         month: "short",
         day: "numeric",
       });
+    },
+
+    reviewerName: (value) => {
+      if (typeof value !== "string" || value.trim() === "") {
+        return <em style={{ color: "#9e9e9e" }}>Awaiting Reviewer</em>;
+      }
+      return value;
     },
 
     startAt: (value) => (typeof value === "string" ? value.slice(0, 5) : ""),

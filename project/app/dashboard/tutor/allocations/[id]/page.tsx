@@ -308,6 +308,30 @@ export default function AllocationPage() {
               requests.map((r) => <RequestRow key={r.requestId} req={r} />)
             )}
           </Stack>
+
+          {/* Comments */}
+          <Typography variant="subtitle1" fontWeight={700} sx={{ mt: 3 }}>
+            Comments
+          </Typography>
+          <Stack spacing={1.25} sx={{ mt: 1 }}>
+            {comments.length === 0 ? (
+              <Typography variant="body2" color="text.secondary">
+                No comments yet.
+              </Typography>
+            ) : (
+              comments.map((c) => <CommentBubble key={c.id} comment={c} />)
+            )}
+
+            {/* New comment input */}
+            <NewCommentBox
+              value={comment}
+              onChange={setComment}
+              onSubmit={() => {
+                // TODO: POST comment
+                setComment("");
+              }}
+            />
+          </Stack>
         </CardContent>
       </Card>
     </Box>

@@ -357,3 +357,35 @@ export async function ucRejectRequest(
     requestReason: reason ?? null,
   });
 }
+
+/**
+ * TA: Marks request as ready for UC approval (cannot directly approve/reject).
+ */
+export async function taForwardToUC(
+  requestId: number,
+  taReviewerId: number,
+  reason?: string,
+) {
+  return patchTutorRequest({
+    requestId,
+    requestStatus: "pending_uc",
+    reviewer: taReviewerId,
+    requestReason: reason ?? null,
+  });
+}
+
+/**
+ * TA: Rejects a tutor request directly (e.g., invalid claim before UC review).
+ */
+export async function taRejectRequest(
+  requestId: number,
+  taReviewerId: number,
+  reason?: string,
+) {
+  return patchTutorRequest({
+    requestId,
+    requestStatus: "rejected",
+    reviewer: taReviewerId,
+    requestReason: reason ?? null,
+  });
+}

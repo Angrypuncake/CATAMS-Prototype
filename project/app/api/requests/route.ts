@@ -153,12 +153,14 @@ interface PatchBody {
   requestStatus?: string;
   reviewer?: number | null;
   requestReason?: string | null;
+  reviewerNote?: string | null;
 }
 
 export async function PATCH(req: Request) {
   try {
     const body: PatchBody = await req.json();
-    const { requestId, requestStatus, reviewer, requestReason } = body;
+    const { requestId, requestStatus, reviewer, requestReason, reviewerNote } =
+      body;
     const userId = req.headers.get("x-user-id");
 
     if (!userId) {
@@ -176,6 +178,11 @@ export async function PATCH(req: Request) {
     if (requestStatus) {
       updates.push(`request_status = $${updates.length + 1}`);
       values.push(requestStatus);
+    }
+
+    if (reviewerNote) {
+      updates.push(`reviwer_note = $${updates.length + 1}`);
+      values.push(reviewerNote);
     }
 
     if (reviewer !== undefined) {
@@ -199,7 +206,7 @@ export async function PATCH(req: Request) {
       UPDATE request
       SET ${updates.join(", ")}, updated_at = NOW()
       WHERE request_id = $${updates.length + 1}
-      RETURNING request_id, request_status, reviewer, request_reason, updated_at;
+      RETURNING request_id, request_status, reviewer, request_reason, updated_at, reviewer_note;
     `;
     values.push(requestId);
 

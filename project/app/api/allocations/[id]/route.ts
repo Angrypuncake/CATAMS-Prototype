@@ -67,3 +67,74 @@ export async function DELETE(
     );
   }
 }
+
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id: idParam } = await params;
+    const id = Number(idParam);
+
+    if (isNaN(id)) {
+      return NextResponse.json(
+        { error: "Invalid allocation ID" },
+        { status: 400 },
+      );
+    }
+
+    const text = `
+      SELECT 
+        a.allocation_id AS id,
+        u.user_id,
+        u.first_name,
+        u.last_name,
+        u.email,
+        so.session_date,
+        so.start_at,
+        so.end_at,
+        so.location,
+        so.note,
+        so.hours,
+        cu.unit_code,
+        cu.unit_name,
+        ta.activity_name,
+        ta.activity_type,
+        ta.mode,
+        a.paycode_id,
+        a.status,
+        a.teaching_role,
+        ta.activity_id AS allocation_activity_id
+      FROM allocation a
+      JOIN users u 
+        ON a.user_id = u.user_id
+      LEFT JOIN session_occurrence so 
+        ON a.session_id = so.occurrence_id
+      LEFT JOIN teaching_activity ta 
+        ON so.activity_id = ta.activity_id
+      LEFT JOIN unit_offering uo 
+        ON ta.unit_offering_id = uo.offering_id
+      LEFT JOIN course_unit cu 
+        ON uo.course_unit_id = cu.unit_code
+      WHERE a.allocation_id = $1
+      LIMIT 1;
+    `;
+
+    const { rows } = await query(text, [id]);
+
+    if (rows.length === 0) {
+      return NextResponse.json(
+        { error: "Allocation not found" },
+        { status: 404 },
+      );
+    }
+
+    return NextResponse.json({ data: rows[0] }, { status: 200 });
+  } catch (error) {
+    console.error("Error fetching allocation by ID:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch allocation" },
+      { status: 500 },
+    );
+  }
+}

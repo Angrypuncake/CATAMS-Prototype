@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import {
+  PatchDetailsUnion,
+  PatchTutorRequestBase,
+} from "@/app/_types/requestsPatch";
 
 /**
  * Generic endpoint to create a tutor request (claim, swap, correction, cancellation, query)
@@ -148,51 +152,58 @@ export async function GET(req: Request) {
 // 🔹 PATCH — update an existing request
 // -----------------------------------------------
 
-interface PatchBody {
-  requestId: number;
-  requestStatus?: string;
-  reviewer?: number | null;
-  requestReason?: string | null;
-  reviewerNote?: string | null;
-}
+type PatchBody =
+  | PatchTutorRequestBase
+  | (PatchTutorRequestBase & PatchDetailsUnion);
 
 export async function PATCH(req: Request) {
   try {
     const body: PatchBody = await req.json();
-    const { requestId, requestStatus, reviewer, requestReason, reviewerNote } =
-      body;
-    const userId = req.headers.get("x-user-id");
 
+    const userId = req.headers.get("x-user-id");
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (!requestId) {
+    if (!body.requestId) {
       return NextResponse.json({ error: "Missing requestId" }, { status: 400 });
     }
 
-    // Build dynamic update clauses
     const updates: string[] = [];
-    const values: (string | number | null)[] = [];
+    const values: Array<string | number | null> = [];
 
-    if (requestStatus) {
+    if (body.requestStatus) {
       updates.push(`request_status = $${updates.length + 1}`);
-      values.push(requestStatus);
+      values.push(body.requestStatus);
     }
 
-    if (reviewerNote) {
+    if (body.reviewerNote !== undefined) {
       updates.push(`reviewer_note = $${updates.length + 1}`);
-      values.push(reviewerNote);
+      values.push(body.reviewerNote);
     }
 
-    if (reviewer !== undefined) {
+    if (body.reviewer !== undefined) {
       updates.push(`reviewer = $${updates.length + 1}`);
-      values.push(reviewer);
+      values.push(body.reviewer);
     }
 
-    if (requestReason !== undefined) {
+    if (body.requestReason !== undefined) {
       updates.push(`request_reason = $${updates.length + 1}`);
-      values.push(requestReason);
+      values.push(body.requestReason);
+    }
+
+    // Details patching is allowed only when both discriminator and payload exist
+    if ("requestType" in body && "details" in body) {
+      if (body.details === null || body.requestType === "query") {
+        // explicit clear (or query has no details)
+        updates.push(`details = NULL`);
+      } else {
+        // shallow-merge JSON (preserve unspecified keys)
+        updates.push(
+          `details = COALESCE(details, '{}'::jsonb) || $${updates.length + 1}::jsonb`,
+        );
+        values.push(JSON.stringify(body.details));
+      }
     }
 
     if (updates.length === 0) {
@@ -206,12 +217,11 @@ export async function PATCH(req: Request) {
       UPDATE request
       SET ${updates.join(", ")}, updated_at = NOW()
       WHERE request_id = $${updates.length + 1}
-      RETURNING request_id, request_status, reviewer, request_reason, updated_at, reviewer_note;
+      RETURNING request_id, request_status, reviewer, request_reason, reviewer_note, details, updated_at;
     `;
-    values.push(requestId);
+    values.push(body.requestId);
 
     const { rows } = await query(sql, values);
-
     if (rows.length === 0) {
       return NextResponse.json({ error: "Request not found" }, { status: 404 });
     }

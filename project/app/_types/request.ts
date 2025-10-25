@@ -15,6 +15,7 @@ export type ClaimDetails = {
 
 export type SwapDetails = {
   suggested_tutor_id: number | null;
+  suggested_alloc_id: number | null;
 };
 
 export type CorrectionDetails = {

@@ -537,3 +537,12 @@ export async function getAllAllocationsForUC(): Promise<AdminAllocationRow[]> {
     throw err;
   }
 }
+
+export async function getAdminAllocationById(
+  id: string,
+): Promise<AdminAllocationRow> {
+  const res = await axios.get(`/allocations/${encodeURIComponent(id)}`);
+  const row = res.data?.data;
+  if (!row) throw new Error(`Allocation ${id} not found`);
+  return row;
+}

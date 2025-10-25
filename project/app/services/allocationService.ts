@@ -498,3 +498,15 @@ export async function getAllUnscheduledAllocationsForUC(
     throw err;
   }
 }
+
+/**
+ * Fetch all allocations for a specific offering
+ * @param offeringId The ID of the unit offering
+ * @returns Promise resolving to an array of AdminAllocationRow
+ */
+export async function getAllocationsByOffering(
+  offeringId: number,
+): Promise<AdminAllocationRow[]> {
+  const res = await axios.get(`/offerings/${offeringId}/allocations`);
+  return res.data as AdminAllocationRow[];
+}

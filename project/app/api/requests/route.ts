@@ -143,3 +143,78 @@ export async function GET(req: Request) {
     );
   }
 }
+
+// -----------------------------------------------
+// 🔹 PATCH — update an existing request
+// -----------------------------------------------
+
+interface PatchBody {
+  requestId: number;
+  requestStatus?: string;
+  reviewer?: number | null;
+  requestReason?: string | null;
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const body: PatchBody = await req.json();
+    const { requestId, requestStatus, reviewer, requestReason } = body;
+    const userId = req.headers.get("x-user-id");
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!requestId) {
+      return NextResponse.json({ error: "Missing requestId" }, { status: 400 });
+    }
+
+    // Build dynamic update clauses
+    const updates: string[] = [];
+    const values: (string | number | null)[] = [];
+
+    if (requestStatus) {
+      updates.push(`request_status = $${updates.length + 1}`);
+      values.push(requestStatus);
+    }
+
+    if (reviewer !== undefined) {
+      updates.push(`reviewer = $${updates.length + 1}`);
+      values.push(reviewer);
+    }
+
+    if (requestReason !== undefined) {
+      updates.push(`request_reason = $${updates.length + 1}`);
+      values.push(requestReason);
+    }
+
+    if (updates.length === 0) {
+      return NextResponse.json(
+        { error: "No fields provided for update" },
+        { status: 400 },
+      );
+    }
+
+    const sql = `
+      UPDATE request
+      SET ${updates.join(", ")}, updated_at = NOW()
+      WHERE request_id = $${updates.length + 1}
+      RETURNING request_id, request_status, reviewer, request_reason, updated_at;
+    `;
+    values.push(requestId);
+
+    const { rows } = await query(sql, values);
+
+    if (rows.length === 0) {
+      return NextResponse.json({ error: "Request not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, data: rows[0] });
+  } catch (error) {
+    console.error("Error updating request:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
+  }
+}

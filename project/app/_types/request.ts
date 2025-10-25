@@ -108,6 +108,7 @@ export interface PaginatedRequests {
 
 export interface UCApproval {
   requestId: number;
+  requestType: string;
   sessionDate: string;
   startAt: string;
   endAt: string;

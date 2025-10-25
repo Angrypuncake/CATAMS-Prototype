@@ -341,3 +341,19 @@ export async function ucApproveRequest(requestId: number, reviewerId: number) {
     reviewer: reviewerId,
   });
 }
+
+/**
+ * UC: Rejects a tutor request.
+ */
+export async function ucRejectRequest(
+  requestId: number,
+  reviewerId: number,
+  reason?: string,
+) {
+  return patchTutorRequest({
+    requestId,
+    requestStatus: "rejected",
+    reviewer: reviewerId,
+    requestReason: reason ?? null,
+  });
+}

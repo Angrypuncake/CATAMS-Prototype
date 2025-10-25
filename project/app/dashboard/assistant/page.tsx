@@ -10,6 +10,7 @@ import { getAllAllocationsForUC } from "@/app/services/allocationService";
 import { UCApproval } from "@/app/_types/request";
 import { AdminAllocationRow } from "@/app/_types/allocations";
 import AllocationsTable from "./AllocationsTable";
+import RequestsTable from "./RequestsTable";
 
 const TeachingOperations: React.FC = () => {
   const [termValue, setTermValue] = useState("S2 2025");
@@ -103,7 +104,7 @@ const TeachingOperations: React.FC = () => {
               </Typography>
             </Box>
           </Stack>
-          <UCRequestsTable requests={requests} />
+          <RequestsTable requests={requests} />
         </Paper>
 
         {/* --- 📘 Allocations Section --- */}

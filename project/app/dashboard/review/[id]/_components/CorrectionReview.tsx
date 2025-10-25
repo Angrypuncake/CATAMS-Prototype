@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -17,22 +16,42 @@ import type { Tutor } from "@/app/_types/tutor";
 import { getTutorById } from "@/app/services/userService";
 import { getAllocationById } from "@/app/services/allocationService";
 import { formatDate } from "./SwapReview";
+import {
+  ucApproveRequest,
+  ucRejectRequest,
+  taForwardToUC,
+  taRejectRequest,
+} from "@/app/services/requestService";
 
-export default function CorrectionReview({ data }: { data: TutorRequest }) {
+type ReviewRole = "UC" | "TA" | "USER";
+
+export default function CorrectionReview({
+  data,
+  role = "UC",
+  readOnly = false,
+  currentUserId,
+}: {
+  data: TutorRequest;
+  role?: ReviewRole;
+  readOnly?: boolean;
+  currentUserId?: number;
+}) {
   const [tutor, setTutor] = useState<Tutor | null>(null);
   const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
-  const [comment, setComment] = useState("");
+  const [reviewerNote, setReviewerNote] = useState("");
   const [loading, setLoading] = useState(true);
 
   const allocationId = data?.allocationId;
   const requesterId = data?.requesterId;
+
+  const isReadOnly = readOnly || role === "USER";
+  const canAct = !isReadOnly && (role === "UC" || role === "TA");
 
   useEffect(() => {
     if (!allocationId || !requesterId) {
       setLoading(false);
       return;
     }
-
     async function fetchData() {
       try {
         const [tutorData, alloc] = await Promise.all([
@@ -50,18 +69,9 @@ export default function CorrectionReview({ data }: { data: TutorRequest }) {
     fetchData();
   }, [allocationId, requesterId]);
 
-  // Ensure we render even if requestType differs
-  if (!data) {
-    return (
-      <Typography variant="body2" color="text.secondary">
-        No request data available.
-      </Typography>
-    );
-  }
+  if (data.requestType !== "correction") return null;
 
-  const { requestStatus, requestReason, requestId, createdAt, requestType } =
-    data;
-
+  const { requestStatus, requestReason, requestId, createdAt } = data;
   const details = data.details as {
     date: string;
     hours: string | number;
@@ -71,20 +81,39 @@ export default function CorrectionReview({ data }: { data: TutorRequest }) {
     session_type?: string;
   };
 
-  // Mocked handlers for now
-  const handleApprove = () =>
-    console.log("✅ Approve correction:", { requestId, comment });
-  const handleReject = () =>
-    console.log("❌ Reject correction:", { requestId, comment });
+  // Actions
+  const approveUC = async () => {
+    if (!currentUserId) return;
+    await ucApproveRequest(Number(requestId), currentUserId, reviewerNote);
+  };
+  const rejectUC = async () => {
+    if (!currentUserId) return;
+    await ucRejectRequest(
+      Number(requestId),
+      currentUserId,
+      undefined,
+      reviewerNote,
+    );
+  };
+  const forwardTA = async () => {
+    if (!currentUserId) return;
+    await taForwardToUC(
+      Number(requestId),
+      currentUserId,
+      requestReason ?? undefined,
+      reviewerNote,
+    );
+  };
+  const rejectTA = async () => {
+    if (!currentUserId) return;
+    await taRejectRequest(
+      Number(requestId),
+      currentUserId,
+      requestReason ?? undefined,
+      reviewerNote,
+    );
+  };
 
-  // Only render for correction request type
-  if (requestType !== "correction") {
-    return null;
-  }
-
-  // -------------------------------
-  //  RENDER
-  // -------------------------------
   return (
     <Paper elevation={2} sx={{ p: 4, mb: 6 }}>
       {/* HEADER */}
@@ -116,13 +145,7 @@ export default function CorrectionReview({ data }: { data: TutorRequest }) {
         Requested Correction Details
       </Typography>
 
-      <Paper
-        variant="outlined"
-        sx={{
-          p: 3,
-          mb: 3,
-        }}
-      >
+      <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
         <Typography variant="body2" color="text.secondary">
           <strong>Date</strong>
         </Typography>
@@ -187,11 +210,7 @@ export default function CorrectionReview({ data }: { data: TutorRequest }) {
             {/* Initiator */}
             <Paper
               variant="outlined"
-              sx={{
-                flex: 1,
-                p: 3,
-                minWidth: { xs: "100%", md: "30%" },
-              }}
+              sx={{ flex: 1, p: 3, minWidth: { xs: "100%", md: "30%" } }}
             >
               <Typography variant="subtitle1" fontWeight={700} gutterBottom>
                 Initiator Details
@@ -218,11 +237,7 @@ export default function CorrectionReview({ data }: { data: TutorRequest }) {
             {/* Original Allocation */}
             <Paper
               variant="outlined"
-              sx={{
-                flex: 2,
-                p: 3,
-                minWidth: { xs: "100%", md: "65%" },
-              }}
+              sx={{ flex: 2, p: 3, minWidth: { xs: "100%", md: "65%" } }}
             >
               <Typography variant="subtitle1" fontWeight={700} gutterBottom>
                 Original Allocation
@@ -350,40 +365,54 @@ export default function CorrectionReview({ data }: { data: TutorRequest }) {
             </Typography>
           </Paper>
 
-          {/* REVIEWER COMMENT */}
+          {/* REVIEWER NOTE */}
           <Divider sx={{ my: 3 }} />
           <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-            Reviewer Comment
+            Reviewer Note
           </Typography>
           <TextField
             fullWidth
             multiline
             minRows={3}
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            placeholder="Add notes or remarks for this decision..."
+            value={reviewerNote}
+            onChange={(e) => setReviewerNote(e.target.value)}
+            placeholder="Add notes or remarks..."
             sx={{ mb: 3 }}
+            disabled={isReadOnly}
           />
 
           {/* ACTION BUTTONS */}
-          <Box display="flex" gap={2}>
-            <Button
-              variant="contained"
-              color="success"
-              onClick={handleApprove}
-              disabled={loading}
-            >
-              Approve Correction
-            </Button>
-            <Button
-              variant="outlined"
-              color="error"
-              onClick={handleReject}
-              disabled={loading}
-            >
-              Reject
-            </Button>
-          </Box>
+          {canAct && (
+            <Box display="flex" gap={2}>
+              {role === "UC" ? (
+                <>
+                  <Button
+                    variant="contained"
+                    color="success"
+                    onClick={approveUC}
+                  >
+                    Approve Correction
+                  </Button>
+                  <Button variant="outlined" color="error" onClick={rejectUC}>
+                    Reject
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={forwardTA}
+                  >
+                    Forward to UC
+                  </Button>
+                  <Button variant="outlined" color="error" onClick={rejectTA}>
+                    Reject
+                  </Button>
+                </>
+              )}
+            </Box>
+          )}
         </>
       )}
     </Paper>

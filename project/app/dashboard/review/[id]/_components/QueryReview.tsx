@@ -1,3 +1,4 @@
+"use client";
 import {
   Typography,
   Paper,
@@ -12,11 +13,33 @@ import ReviewLayout from "./ReviewLayout";
 import { useEffect, useState } from "react";
 import { Tutor } from "@/app/_types/tutor";
 import { getTutorById } from "@/app/services/userService";
+import {
+  ucRejectRequest,
+  taForwardToUC,
+  taRejectRequest,
+} from "@/app/services/requestService";
 
-export default function QueryReview({ data }: { data: TutorRequest }) {
-  const { requesterId, requestReason, createdAt, requestStatus } = data;
+type ReviewRole = "UC" | "TA" | "USER";
+
+export default function QueryReview({
+  data,
+  role = "UC",
+  readOnly = false,
+  currentUserId,
+}: {
+  data: TutorRequest;
+  role?: ReviewRole;
+  readOnly?: boolean;
+  currentUserId?: number;
+}) {
+  const { requesterId, requestReason, createdAt, requestStatus, requestId } =
+    data;
   const [tutor, setTutor] = useState<Tutor | null>(null);
   const [response, setResponse] = useState("");
+  const [reviewerNote, setReviewerNote] = useState("");
+
+  const isReadOnly = readOnly || role === "USER";
+  const canAct = !isReadOnly && (role === "UC" || role === "TA");
 
   useEffect(() => {
     async function fetchTutor() {
@@ -30,15 +53,35 @@ export default function QueryReview({ data }: { data: TutorRequest }) {
     fetchTutor();
   }, [requesterId]);
 
-  const handleRespond = () => {
-    if (!response.trim()) return;
-    console.log("Submitting response:", response);
-    // TODO: integrate with backend endpoint, e.g. postReviewResponse(requestId, response)
+  // Actions:
+  // For UC on "Query", a typical flow is to respond out-of-band + optionally mark resolved/rejected.
+  // Here we provide 'Reject' (close) for UC, and TA can forward or reject.
+  const rejectUC = async () => {
+    if (!currentUserId) return;
+    await ucRejectRequest(
+      Number(requestId),
+      currentUserId,
+      undefined,
+      reviewerNote || response || undefined,
+    );
   };
-
-  const handleDismiss = () => {
-    console.log("Query dismissed.");
-    // TODO: integrate with backend endpoint for dismissing query
+  const forwardTA = async () => {
+    if (!currentUserId) return;
+    await taForwardToUC(
+      Number(requestId),
+      currentUserId,
+      requestReason ?? undefined,
+      reviewerNote || response || undefined,
+    );
+  };
+  const rejectTA = async () => {
+    if (!currentUserId) return;
+    await taRejectRequest(
+      Number(requestId),
+      currentUserId,
+      requestReason ?? undefined,
+      reviewerNote || response || undefined,
+    );
   };
 
   return (
@@ -53,14 +96,7 @@ export default function QueryReview({ data }: { data: TutorRequest }) {
         }}
       >
         {/* Tutor Info */}
-        <Paper
-          variant="outlined"
-          sx={{
-            flex: 1,
-            p: 3,
-            minWidth: 280,
-          }}
-        >
+        <Paper variant="outlined" sx={{ flex: 1, p: 3, minWidth: 280 }}>
           <Typography variant="h6" fontWeight={600} gutterBottom>
             Tutor Details
           </Typography>
@@ -100,10 +136,7 @@ export default function QueryReview({ data }: { data: TutorRequest }) {
             </Typography>
             <Typography
               color="text.secondary"
-              sx={{
-                whiteSpace: "pre-wrap",
-                lineHeight: 1.6,
-              }}
+              sx={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}
             >
               {requestReason || "No query message provided."}
             </Typography>
@@ -114,53 +147,56 @@ export default function QueryReview({ data }: { data: TutorRequest }) {
             color="text.secondary"
             sx={{ alignSelf: "flex-end" }}
           >
-            Submitted on: {new Date(createdAt).toLocaleString()}
+            Submitted on: {new Date(createdAt).toLocaleString()} • Status:{" "}
+            {requestStatus}
           </Typography>
         </Paper>
       </Box>
 
-      {/* Reviewer Response Section */}
+      {/* Reviewer Response (note: disabled if readOnly/USER) */}
       <Paper
         variant="outlined"
-        sx={{
-          p: 3,
-          display: "flex",
-          flexDirection: "column",
-        }}
+        sx={{ p: 3, display: "flex", flexDirection: "column", gap: 2 }}
       >
         <Typography variant="h6" fontWeight={600} gutterBottom>
-          Reviewer Response
+          Reviewer Response / Note
         </Typography>
         <TextField
           fullWidth
           multiline
           minRows={3}
-          placeholder="Write your response to the tutor..."
+          placeholder="Write your response or note..."
           value={response}
           onChange={(e) => setResponse(e.target.value)}
-          sx={{
-            mb: 3,
-            "& .MuiInputBase-root": { borderRadius: 2 },
-          }}
+          disabled={isReadOnly}
         />
-        <Stack
-          direction="row"
-          spacing={2}
-          justifyContent="flex-end"
-          sx={{ mt: "auto" }}
-        >
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleRespond}
-            disabled={!response.trim()}
-          >
-            Send Response
-          </Button>
-          <Button variant="outlined" color="error" onClick={handleDismiss}>
-            Dismiss Query
-          </Button>
-        </Stack>
+        <TextField
+          fullWidth
+          multiline
+          minRows={2}
+          placeholder="Private reviewer note (not shown to tutor)"
+          value={reviewerNote}
+          onChange={(e) => setReviewerNote(e.target.value)}
+          disabled={isReadOnly}
+        />
+        {canAct && (
+          <Stack direction="row" spacing={2} justifyContent="flex-end">
+            {role === "UC" ? (
+              <Button variant="outlined" color="error" onClick={rejectUC}>
+                Close / Reject
+              </Button>
+            ) : (
+              <>
+                <Button variant="outlined" color="error" onClick={rejectTA}>
+                  Reject
+                </Button>
+                <Button variant="contained" color="primary" onClick={forwardTA}>
+                  Forward to UC
+                </Button>
+              </>
+            )}
+          </Stack>
+        )}
       </Paper>
     </ReviewLayout>
   );

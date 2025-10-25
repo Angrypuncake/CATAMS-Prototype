@@ -19,7 +19,6 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 import { useSearchParams } from "next/navigation";
 import NewCommentBox from "../_components/NewCommentBox";
-import DetailRow from "../_components/DetailRow";
 import RequestRow from "../_components/RequestRow";
 import CommentBubble from "../_components/CommentBubble";
 import type {

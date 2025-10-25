@@ -1,58 +1,114 @@
-"use client";
-import React from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-  Button,
-} from "@mui/material";
+import { UCApproval } from "@/app/_types/request";
+import DynamicTable from "@/components/DynamicTable/DynamicTable";
+import { Chip, Button } from "@mui/material";
+import { JSX } from "react";
+import { useRouter } from "next/navigation";
 
-interface RequestData {
-  tutor: string;
-  session: string;
-  type: "Swap" | "Correction";
-  submitted: string;
-}
+// Suppose this is inside your UCRequestsPage.tsx
+export default function UCRequestsTable({
+  requests,
+}: {
+  requests: UCApproval[];
+}) {
+  const router = useRouter();
 
-interface RequestsTableProps {
-  data: RequestData[];
-}
+  // -------------------------------------------------
+  // 🔹 Define base columns
+  // -------------------------------------------------
+  const columns: { key: keyof UCApproval | "review"; label: string }[] = [
+    { key: "requestId", label: "Request ID" },
+    { key: "requestType", label: "Request Type" },
+    { key: "activityName", label: "Activity" },
+    { key: "sessionDate", label: "Date" },
+    { key: "startAt", label: "Start" },
+    { key: "endAt", label: "End" },
+    { key: "requesterName", label: "Requester" },
+    { key: "reviewerName", label: "Reviewer" },
+    { key: "requestStatus", label: "Status" },
+    { key: "review", label: "Review" },
+  ];
 
-const RequestsTable: React.FC<RequestsTableProps> = ({ data }) => {
+  // -------------------------------------------------
+  // 🔹 Status label map
+  // -------------------------------------------------
+  const STATUS_LABELS: Record<string, string> = {
+    pending_uc: "Pending UC Review",
+    approved: "Approved",
+    rejected: "Rejected",
+    pending_admin: "Pending Admin Review",
+    pending_ta: "Pending TA Review",
+  };
+  // -------------------------------------------------
+  // 🔹 Column renderers
+  // -------------------------------------------------
+  const columnRenderers: Partial<
+    Record<
+      keyof UCApproval | "review",
+      (
+        value: UCApproval[keyof UCApproval],
+        row: UCApproval,
+      ) => JSX.Element | string
+    >
+  > = {
+    requestStatus: (value) => {
+      if (typeof value !== "string") return "";
+      const label = STATUS_LABELS[value] ?? value.replace("_", " ");
+      // ⬇️ Use default (no color) chip for neutral look
+      return <Chip label={label} variant="outlined" />;
+    },
+
+    requestType: (value) => {
+      if (typeof value !== "string") return "";
+      // Capitalize first letter, make rest lowercase
+      return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+    },
+
+    sessionDate: (value) => {
+      if (typeof value !== "string") return "";
+      return new Date(value).toLocaleDateString("en-AU", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    },
+
+    reviewerName: (value) => {
+      if (typeof value !== "string" || value.trim() === "") {
+        return <em style={{ color: "#9e9e9e" }}>Awaiting Reviewer</em>;
+      }
+      return value;
+    },
+
+    startAt: (value) => (typeof value === "string" ? value.slice(0, 5) : ""),
+    endAt: (value) => (typeof value === "string" ? value.slice(0, 5) : ""),
+
+    review: (_, row) => (
+      <Button
+        variant="outlined"
+        size="small"
+        color="warning" // ⬅️ MUI orange accent
+        onClick={() =>
+          router.push(`/dashboard/assistant/review/${row.requestId}`)
+        }
+      >
+        Review
+      </Button>
+    ),
+  };
+
+  // -------------------------------------------------
+  // 🔹 Render DynamicTable
+  // -------------------------------------------------
   return (
-    <TableContainer component={Paper}>
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Tutor</TableCell>
-            <TableCell>Session</TableCell>
-            <TableCell>Type</TableCell>
-            <TableCell>Submitted</TableCell>
-            <TableCell>Action</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {data.map((request: RequestData, idx: number) => (
-            <TableRow key={idx}>
-              <TableCell>{request.tutor}</TableCell>
-              <TableCell>{request.session}</TableCell>
-              <TableCell style={{ fontWeight: 700 }}>{request.type}</TableCell>
-              <TableCell>{request.submitted}</TableCell>
-              <TableCell>
-                <Button variant="text" size="small">
-                  Review
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <DynamicTable<UCApproval>
+      rows={requests}
+      columns={columns}
+      columnRenderers={columnRenderers}
+      defaultSortColumn="sessionDate"
+      defaultSortDirection="asc"
+      enablePagination
+      enableSearch
+      exportFilename="uc_requests"
+    />
   );
-};
-
-export default RequestsTable;
+}

@@ -1,4 +1,13 @@
-import { Typography, Box, Paper, Divider, Button, Stack } from "@mui/material";
+"use client";
+import {
+  Typography,
+  Box,
+  Paper,
+  Divider,
+  Button,
+  Stack,
+  TextField,
+} from "@mui/material";
 import type { TutorRequest } from "@/app/_types/request";
 import ReviewLayout from "./ReviewLayout";
 import { useEffect, useState } from "react";
@@ -7,8 +16,26 @@ import { getAllocationById } from "@/app/services/allocationService";
 import { formatDate } from "./SwapReview";
 import { Tutor } from "@/app/_types/tutor";
 import { getTutorById } from "@/app/services/userService";
+import {
+  ucApproveRequest,
+  ucRejectRequest,
+  taForwardToUC,
+  taRejectRequest,
+} from "@/app/services/requestService";
 
-export default function ClaimReview({ data }: { data: TutorRequest }) {
+type ReviewRole = "UC" | "TA" | "USER";
+
+export default function ClaimReview({
+  data,
+  role = "UC",
+  readOnly = false,
+  currentUserId,
+}: {
+  data: TutorRequest;
+  role?: ReviewRole;
+  readOnly?: boolean;
+  currentUserId?: number;
+}) {
   const {
     allocationId,
     requestStatus,
@@ -21,6 +48,10 @@ export default function ClaimReview({ data }: { data: TutorRequest }) {
   const details = data.details as { hours: number; paycode: string };
   const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
   const [tutor, setTutor] = useState<Tutor | null>(null);
+  const [reviewerNote, setReviewerNote] = useState("");
+
+  const isReadOnly = readOnly || role === "USER";
+  const canAct = !isReadOnly && (role === "UC" || role === "TA");
 
   useEffect(() => {
     async function run() {
@@ -37,8 +68,38 @@ export default function ClaimReview({ data }: { data: TutorRequest }) {
     run();
   }, [allocationId, requesterId]);
 
-  const handleApprove = () => console.log("Approved claim", requestId);
-  const handleReject = () => console.log("Rejected claim", requestId);
+  // ---- Actions ----
+  const approve = async () => {
+    if (!currentUserId) return;
+    await ucApproveRequest(Number(requestId), currentUserId, reviewerNote);
+  };
+  const rejectAsUC = async () => {
+    if (!currentUserId) return;
+    await ucRejectRequest(
+      Number(requestId),
+      currentUserId,
+      undefined,
+      reviewerNote,
+    );
+  };
+  const taForward = async () => {
+    if (!currentUserId) return;
+    await taForwardToUC(
+      Number(requestId),
+      currentUserId,
+      requestReason ?? undefined,
+      reviewerNote,
+    );
+  };
+  const taReject = async () => {
+    if (!currentUserId) return;
+    await taRejectRequest(
+      Number(requestId),
+      currentUserId,
+      requestReason ?? undefined,
+      reviewerNote,
+    );
+  };
 
   return (
     <ReviewLayout title="Claim Request Review" data={data}>
@@ -196,16 +257,43 @@ export default function ClaimReview({ data }: { data: TutorRequest }) {
         </Paper>
       </Box>
 
+      {/* Reviewer note (disabled in read-only) */}
+      <TextField
+        fullWidth
+        multiline
+        minRows={3}
+        placeholder="Reviewer note (optional)"
+        value={reviewerNote}
+        onChange={(e) => setReviewerNote(e.target.value)}
+        sx={{ mt: 2, mb: 3 }}
+        disabled={isReadOnly}
+      />
+
       {/* ======= REVIEW ACTIONS ======= */}
-      <Divider sx={{ my: 3 }} />
-      <Stack direction="row" spacing={2} justifyContent="flex-end">
-        <Button variant="outlined" color="error" onClick={handleReject}>
-          Reject
-        </Button>
-        <Button variant="contained" color="success" onClick={handleApprove}>
-          Approve
-        </Button>
-      </Stack>
+      {canAct && (
+        <>
+          <Divider sx={{ my: 3 }} />
+          {role === "UC" ? (
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Button variant="outlined" color="error" onClick={rejectAsUC}>
+                Reject
+              </Button>
+              <Button variant="contained" color="success" onClick={approve}>
+                Approve
+              </Button>
+            </Stack>
+          ) : role === "TA" ? (
+            <Stack direction="row" spacing={2} justifyContent="flex-end">
+              <Button variant="outlined" color="error" onClick={taReject}>
+                Reject
+              </Button>
+              <Button variant="contained" color="primary" onClick={taForward}>
+                Forward to UC
+              </Button>
+            </Stack>
+          ) : null}
+        </>
+      )}
     </ReviewLayout>
   );
 }

@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -24,12 +23,17 @@ import {
 } from "@/app/_types/allocations";
 import { Tutor } from "@/app/_types/tutor";
 import { getTutorById } from "@/app/services/userService";
+import {
+  ucApproveRequest,
+  ucRejectRequest,
+  taForwardToUC,
+  taRejectRequest,
+} from "@/app/services/requestService";
 
 export function formatDate(isoString?: string | null): string {
   if (!isoString) return "—";
   const date = new Date(isoString);
   if (isNaN(date.getTime())) return "Invalid date";
-
   return date.toLocaleDateString("en-AU", {
     year: "numeric",
     month: "short",
@@ -37,14 +41,24 @@ export function formatDate(isoString?: string | null): string {
   });
 }
 
-export default function SwapReview({ data }: { data: TutorRequest }) {
-  // -------------------------------
-  //  State
-  // -------------------------------
+type ReviewRole = "UC" | "TA" | "USER";
+
+export default function SwapReview({
+  data,
+  role = "UC",
+  readOnly = false,
+  currentUserId,
+}: {
+  data: TutorRequest;
+  role?: ReviewRole;
+  readOnly?: boolean;
+  currentUserId?: number;
+}) {
   const { allocationId, requestStatus, requestId, createdAt, requesterId } =
     data;
+
   const [loadingEligible, setLoadingEligible] = useState(true);
-  const [comment, setComment] = useState("");
+  const [reviewerNote, setReviewerNote] = useState("");
   const [sourceTutor, setSourcetutor] = useState<Tutor | null>(null);
   const [suggestedTutor, setSuggestedTutor] = useState<Tutor | null>(null);
   const [sourceAllocation, setsourceAllocationAllocation] =
@@ -55,9 +69,10 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
   const [selectedAllocation, setSelectedAllocation] =
     useState<AdminAllocationRow | null>(null);
 
-  // -------------------------------
-  //  Fetch eligible tutors
-  // -------------------------------
+  const isReadOnly = readOnly || role === "USER";
+  const canAct = !isReadOnly && (role === "UC" || role === "TA");
+
+  // Fetch eligible tutors
   useEffect(() => {
     async function loadEligible() {
       try {
@@ -67,18 +82,15 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
 
         const tutor = await getTutorById(String(requesterId));
 
-        if (details !== null && data.requestType === "swap") {
+        if (data.requestType === "swap" && data.details) {
           const { details } = data;
-          const suggestedTutor = await getTutorById(
-            String(details.suggested_tutor_id),
-          );
-          setSuggestedTutor(suggestedTutor);
+          if (details?.suggested_tutor_id) {
+            const sug = await getTutorById(String(details.suggested_tutor_id));
+            setSuggestedTutor(sug);
+          }
         }
 
-        // console.log(tutor);
-
         setSourcetutor(tutor);
-
         setsourceAllocationAllocation(source);
 
         const allocations = await getAllocationsByUnitAndActivityType(
@@ -94,39 +106,47 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
       }
     }
     loadEligible();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allocationId, requesterId, data]); // details is part of data, no need to list separately
+  }, [allocationId, requesterId, data]);
 
-  // -------------------------------
-  //  Event handlers
-  // -------------------------------
-  const handleApprove = async () => {
-    if (!selectedAllocation) {
-      alert("Please select an allocation first.");
-      return;
-    }
-
-    console.log("Approving swap:", {
-      requestId,
-      selectedAllocationId: selectedAllocation.id,
-      selectedTutorId: selectedAllocation.user_id,
-      comment,
-    });
-
-    // TODO: PATCH /api/requests/:id with selectedAllocation info
-  };
-
-  const handleReject = async () => {
-    console.log("Rejecting swap:", { requestId, comment });
-    // TODO: implement PATCH /api/requests/:id
-  };
   if (data.requestType !== "swap") return null;
+
+  // Actions
+  const approveUC = async () => {
+    if (!currentUserId) return;
+    // You might extend your backend to accept selectedAllocation if needed.
+    await ucApproveRequest(Number(requestId), currentUserId, reviewerNote);
+  };
+  const rejectUC = async () => {
+    if (!currentUserId) return;
+    await ucRejectRequest(
+      Number(requestId),
+      currentUserId,
+      undefined,
+      reviewerNote,
+    );
+  };
+  const forwardTA = async () => {
+    if (!currentUserId) return;
+    await taForwardToUC(
+      Number(requestId),
+      currentUserId,
+      undefined,
+      reviewerNote,
+    );
+  };
+  const rejectTA = async () => {
+    if (!currentUserId) return;
+    await taRejectRequest(
+      Number(requestId),
+      currentUserId,
+      undefined,
+      reviewerNote,
+    );
+  };
 
   const { details } = data;
 
-  // -------------------------------
-  //  Render
-  // -------------------------------
+  // ------------------------------- Render -------------------------------
   return (
     <Paper elevation={2} sx={{ p: 4, mb: 6 }}>
       {/* HEADER */}
@@ -242,7 +262,7 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
             Suggested Tutor
           </Typography>
 
-          {details.suggested_tutor_id && suggestedTutor ? (
+          {details?.suggested_tutor_id && suggestedTutor ? (
             <>
               <Typography color="text.secondary">
                 ID: {suggestedTutor.user_id}
@@ -327,20 +347,22 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
                     <td className="px-3 py-2">{a.hours ?? "-"}</td>
                     <td className="px-3 py-2">{a.location ?? "-"}</td>
                     <td className="px-3 py-2 text-right">
-                      <Button
-                        size="small"
-                        variant={
-                          selectedAllocation?.id === a.id
-                            ? "contained"
-                            : "outlined"
-                        }
-                        color="primary"
-                        onClick={() => setSelectedAllocation(a)}
-                      >
-                        {selectedAllocation?.id === a.id
-                          ? "Selected"
-                          : "Select"}
-                      </Button>
+                      {!isReadOnly && (
+                        <Button
+                          size="small"
+                          variant={
+                            selectedAllocation?.id === a.id
+                              ? "contained"
+                              : "outlined"
+                          }
+                          color="primary"
+                          onClick={() => setSelectedAllocation(a)}
+                        >
+                          {selectedAllocation?.id === a.id
+                            ? "Selected"
+                            : "Select"}
+                        </Button>
+                      )}
                     </td>
                   </tr>
                 ))
@@ -354,14 +376,13 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
       {selectedAllocation && (
         <>
           <Divider sx={{ my: 4 }} />
-
           <Typography variant="subtitle1" fontWeight={600} gutterBottom>
             Swap Summary
           </Typography>
 
           <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
             <Typography variant="body1" gutterBottom>
-              You are reviewing a swap between:
+              You&apos;re reviewing a swap between:
             </Typography>
 
             <Box
@@ -380,7 +401,6 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
                   Tutor Name:{" "}
                   {`${sourceTutor?.first_name ?? "-"} ${sourceTutor?.last_name ?? "-"}`}
                 </Typography>
-
                 <Typography color="text.secondary">
                   Tutor ID: {data.requesterId}
                 </Typography>
@@ -432,40 +452,66 @@ export default function SwapReview({ data }: { data: TutorRequest }) {
         </>
       )}
 
-      {/* REVIEWER COMMENT */}
+      {/* REVIEWER NOTE */}
       <Divider sx={{ my: 3 }} />
       <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-        Reviewer Comment
+        Reviewer Note
       </Typography>
       <TextField
         fullWidth
         multiline
         minRows={3}
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
+        value={reviewerNote}
+        onChange={(e) => setReviewerNote(e.target.value)}
         placeholder="Add notes for this decision..."
         sx={{ mb: 3 }}
+        disabled={isReadOnly}
       />
 
       {/* ACTION BUTTONS */}
-      <Box display="flex" gap={2}>
-        <Button
-          variant="contained"
-          color="success"
-          onClick={handleApprove}
-          disabled={loadingEligible}
-        >
-          Approve
-        </Button>
-        <Button
-          variant="outlined"
-          color="error"
-          onClick={handleReject}
-          disabled={loadingEligible}
-        >
-          Reject
-        </Button>
-      </Box>
+      {canAct && (
+        <Box display="flex" gap={2}>
+          {role === "UC" ? (
+            <>
+              <Button
+                variant="contained"
+                color="success"
+                onClick={approveUC}
+                disabled={loadingEligible}
+              >
+                Approve
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={rejectUC}
+                disabled={loadingEligible}
+              >
+                Reject
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={forwardTA}
+                disabled={loadingEligible}
+              >
+                Forward to UC
+              </Button>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={rejectTA}
+                disabled={loadingEligible}
+              >
+                Reject
+              </Button>
+            </>
+          )}
+        </Box>
+      )}
     </Paper>
   );
 }

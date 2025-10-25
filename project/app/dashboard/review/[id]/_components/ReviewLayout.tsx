@@ -22,7 +22,9 @@ export default function ReviewLayout({
         <div>Request ID: {data.requestId}</div>
         <div>Requester ID: {data.requesterId}</div>
         <div>Status: {data.requestStatus}</div>
-        <div>Date: {new Date(data.requestDate).toLocaleString()}</div>
+        <div>
+          Date: {new Date(data.requestDate ?? data.createdAt).toLocaleString()}
+        </div>
       </Box>
 
       {children}

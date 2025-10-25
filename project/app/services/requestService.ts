@@ -299,7 +299,6 @@ export async function getRequestsByUC(): Promise<UCApproval[]> {
 
   return allRequests;
 }
-
 export interface PatchTutorRequest {
   requestId: number;
   requestStatus?:
@@ -310,6 +309,7 @@ export interface PatchTutorRequest {
     | "cancelled";
   reviewer?: number | null;
   requestReason?: string | null;
+  reviewerNote?: string | null; // 🆕 added
 }
 
 export interface PatchTutorResponse {
@@ -319,26 +319,41 @@ export interface PatchTutorResponse {
     request_status: string;
     reviewer: number | null;
     request_reason: string | null;
+    reviewer_note: string | null; // 🆕 included in return
     updated_at: string;
   };
   error?: string;
 }
 
+// -------------------------------------------------------------
+// 🔹 Base PATCH call
+// -------------------------------------------------------------
 export async function patchTutorRequest(
   payload: PatchTutorRequest,
 ): Promise<PatchTutorResponse> {
-  const res = await axios.patch<PatchTutorResponse>("/request", payload);
+  const res = await axios.patch<PatchTutorResponse>("/request", payload, {
+    headers: { "Content-Type": "application/json" },
+  });
   return res.data;
 }
+
+// -------------------------------------------------------------
+// 🔹 Derived helpers for UC and TA
+// -------------------------------------------------------------
 
 /**
  * UC: Approves a tutor request.
  */
-export async function ucApproveRequest(requestId: number, reviewerId: number) {
+export async function ucApproveRequest(
+  requestId: number,
+  reviewerId: number,
+  reviewerNote?: string,
+) {
   return patchTutorRequest({
     requestId,
     requestStatus: "approved",
     reviewer: reviewerId,
+    reviewerNote: reviewerNote ?? null,
   });
 }
 
@@ -349,28 +364,32 @@ export async function ucRejectRequest(
   requestId: number,
   reviewerId: number,
   reason?: string,
+  reviewerNote?: string,
 ) {
   return patchTutorRequest({
     requestId,
     requestStatus: "rejected",
     reviewer: reviewerId,
     requestReason: reason ?? null,
+    reviewerNote: reviewerNote ?? null,
   });
 }
 
 /**
- * TA: Marks request as ready for UC approval (cannot directly approve/reject).
+ * TA: Forwards a request to UC for approval (their version of “approve”).
  */
 export async function taForwardToUC(
   requestId: number,
   taReviewerId: number,
   reason?: string,
+  reviewerNote?: string,
 ) {
   return patchTutorRequest({
     requestId,
     requestStatus: "pending_uc",
     reviewer: taReviewerId,
     requestReason: reason ?? null,
+    reviewerNote: reviewerNote ?? null,
   });
 }
 
@@ -381,11 +400,13 @@ export async function taRejectRequest(
   requestId: number,
   taReviewerId: number,
   reason?: string,
+  reviewerNote?: string,
 ) {
   return patchTutorRequest({
     requestId,
     requestStatus: "rejected",
     reviewer: taReviewerId,
     requestReason: reason ?? null,
+    reviewerNote: reviewerNote ?? null,
   });
 }

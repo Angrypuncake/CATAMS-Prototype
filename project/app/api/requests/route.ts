@@ -57,10 +57,10 @@ export async function POST(req: Request) {
     // Assign status based on request type (you can refine later)
     const defaultStatusMap: Record<string, string> = {
       claim: "pending_ta",
-      swap: "pending_uc",
+      swap: "pending_ta",
       correction: "pending_ta",
-      cancellation: "pending_uc",
-      query: "pending_uc",
+      cancellation: "pending_ta",
+      query: "pending_ta",
     };
     const requestStatus = defaultStatusMap[requestType] ?? "pending_uc";
 

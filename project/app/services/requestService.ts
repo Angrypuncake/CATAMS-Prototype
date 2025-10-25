@@ -331,7 +331,7 @@ export interface PatchTutorResponse {
 export async function patchTutorRequest(
   payload: PatchTutorRequest,
 ): Promise<PatchTutorResponse> {
-  const res = await axios.patch<PatchTutorResponse>("/request", payload, {
+  const res = await axios.patch<PatchTutorResponse>("/requests", payload, {
     headers: { "Content-Type": "application/json" },
   });
   return res.data;

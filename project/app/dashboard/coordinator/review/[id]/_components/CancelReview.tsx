@@ -17,6 +17,14 @@ import { TutorAllocationRow } from "@/app/_types/allocations";
 import { Tutor } from "@/app/_types/tutor";
 import { getTutorById, getTutorsByUnit } from "@/app/services/userService";
 import { formatDate } from "./SwapReview";
+import { CurrentUser } from "@/app/_types/user";
+import { getUserFromAuth } from "@/app/services/authService";
+import {
+  taRejectRequest,
+  ucApproveRequest,
+  ucRejectRequest,
+} from "@/app/services/requestService";
+import { useRouter } from "next/navigation";
 
 export default function CancellationReview({ data }: { data: TutorRequest }) {
   const {
@@ -27,8 +35,9 @@ export default function CancellationReview({ data }: { data: TutorRequest }) {
     createdAt,
     requesterId,
   } = data;
-
+  const router = useRouter();
   const [tutor, setTutor] = useState<Tutor | null>(null);
+  const [user, setUser] = useState<CurrentUser | null>(null);
   const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
   const [comment, setComment] = useState("");
   const [availableTutors, setAvailableTutors] = useState<Tutor[]>([]);
@@ -41,10 +50,12 @@ export default function CancellationReview({ data }: { data: TutorRequest }) {
   useEffect(() => {
     async function fetchData() {
       try {
-        const [tutorData, alloc] = await Promise.all([
+        const [user, tutorData, alloc] = await Promise.all([
+          getUserFromAuth(),
           getTutorById(String(requesterId)),
           getAllocationById(String(allocationId)),
         ]);
+        setUser(user);
         setTutor(tutorData);
         setAllocation(alloc);
 
@@ -67,17 +78,49 @@ export default function CancellationReview({ data }: { data: TutorRequest }) {
   // -------------------------------
   //  Event Handlers
   // -------------------------------
-  const handleApprove = () => {
-    console.log("Approve cancellation:", {
-      requestId,
-      selectedReplacementTutorId: selectedTutor?.user_id ?? null,
-      comment,
-    });
+  const handleApprove = async () => {
+    if (!user) return alert("User not authenticated");
+
+    try {
+      setLoading(true);
+
+      await ucApproveRequest(requestId, user.userId, `Approved. ${comment}`);
+
+      alert("Cancellation approved successfully.");
+      setTimeout(() => router.push(`/dashboard/coordinator`), 2000);
+    } catch (err) {
+      console.error("Error approving cancellation:", err);
+      alert("Approval failed. See console for details.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  const handleReject = async () => {
+    if (!user) return alert("User not authenticated");
+
+    try {
+      setLoading(true);
+
+      await ucRejectRequest(requestId, user.userId, "UC rejection", comment);
+
+      alert("Cancellation rejected successfully.");
+      setTimeout(() => router.push(`/dashboard/coordinator`), 2000);
+    } catch (err) {
+      console.error("Error rejecting cancellation:", err);
+      alert("Rejection failed. See console for details.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleReject = () => {
-    console.log("Reject cancellation:", { requestId, comment });
-  };
+  if (data.requestType !== "cancellation") return null;
+
+  if (loading)
+    return (
+      <Box className="flex justify-center items-center h-64">
+        <CircularProgress />
+      </Box>
+    );
 
   if (data.requestType !== "cancellation") return null;
 

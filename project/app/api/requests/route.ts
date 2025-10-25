@@ -181,7 +181,7 @@ export async function PATCH(req: Request) {
     }
 
     if (reviewerNote) {
-      updates.push(`reviwer_note = $${updates.length + 1}`);
+      updates.push(`reviewer_note = $${updates.length + 1}`);
       values.push(reviewerNote);
     }
 

@@ -29,6 +29,8 @@ import {
   taForwardToUC,
   taRejectRequest,
 } from "@/app/services/requestService";
+import SwapSummary from "./SwapSummary";
+import EligibleAllocationsTable from "./EligibleAllocationsTable";
 
 export function formatDate(isoString?: string | null): string {
   if (!isoString) return "—";
@@ -292,164 +294,25 @@ export default function SwapReview({
       </Box>
 
       {/* ELIGIBLE ALLOCATIONS */}
-      <Divider sx={{ my: 3 }} />
-      <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-        Eligible Allocations for Swap
-      </Typography>
-
-      {loadingEligible ? (
-        <Box display="flex" justifyContent="center" py={3}>
-          <CircularProgress size={28} />
-        </Box>
-      ) : (
-        <Paper variant="outlined" sx={{ overflowX: "auto" }}>
-          <table className="min-w-full text-sm border-collapse">
-            <thead>
-              <tr style={{ backgroundColor: "#f5f5f5" }}>
-                <th className="px-3 py-2 text-left font-semibold">Tutor</th>
-                <th className="px-3 py-2 text-left font-semibold">Role</th>
-                <th className="px-3 py-2 text-left font-semibold">Unit</th>
-                <th className="px-3 py-2 text-left font-semibold">Activity</th>
-                <th className="px-3 py-2 text-left font-semibold">Date</th>
-                <th className="px-3 py-2 text-left font-semibold">Hours</th>
-                <th className="px-3 py-2 text-left font-semibold">Location</th>
-                <th className="px-3 py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {eligibleAllocations.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={8}
-                    className="px-3 py-3 text-center text-gray-500"
-                  >
-                    No eligible allocations found
-                  </td>
-                </tr>
-              ) : (
-                eligibleAllocations.map((a) => (
-                  <tr
-                    key={a.id ?? `${a.user_id}-${a.session_date}`}
-                    style={{
-                      backgroundColor:
-                        selectedAllocation?.id === a.id
-                          ? "#e8f5e9"
-                          : "transparent",
-                    }}
-                  >
-                    <td className="px-3 py-2">
-                      {a.first_name} {a.last_name}
-                    </td>
-                    <td className="px-3 py-2">{a.teaching_role ?? "-"}</td>
-                    <td className="px-3 py-2">{a.unit_code ?? "-"}</td>
-                    <td className="px-3 py-2">{a.activity_name ?? "-"}</td>
-                    <td className="px-3 py-2">{a.session_date ?? "-"}</td>
-                    <td className="px-3 py-2">{a.hours ?? "-"}</td>
-                    <td className="px-3 py-2">{a.location ?? "-"}</td>
-                    <td className="px-3 py-2 text-right">
-                      {!isReadOnly && (
-                        <Button
-                          size="small"
-                          variant={
-                            selectedAllocation?.id === a.id
-                              ? "contained"
-                              : "outlined"
-                          }
-                          color="primary"
-                          onClick={() => setSelectedAllocation(a)}
-                        >
-                          {selectedAllocation?.id === a.id
-                            ? "Selected"
-                            : "Select"}
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </Paper>
+      {role !== "USER" && (
+        <EligibleAllocationsTable
+          eligibleAllocations={eligibleAllocations}
+          selectedAllocation={selectedAllocation}
+          onSelect={setSelectedAllocation}
+          loading={loadingEligible}
+          readOnly={isReadOnly}
+        />
       )}
 
       {/* SWAP SUMMARY */}
       {selectedAllocation && (
-        <>
-          <Divider sx={{ my: 4 }} />
-          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-            Swap Summary
-          </Typography>
-
-          <Paper variant="outlined" sx={{ p: 3, mb: 3 }}>
-            <Typography variant="body1" gutterBottom>
-              You&apos;re reviewing a swap between:
-            </Typography>
-
-            <Box
-              display="flex"
-              flexDirection={{ xs: "column", md: "row" }}
-              alignItems="stretch"
-              justifyContent="space-between"
-              gap={3}
-            >
-              {/* From (Initiator) */}
-              <Paper variant="outlined" sx={{ flex: 1, p: 2 }}>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  From
-                </Typography>
-                <Typography color="text.secondary">
-                  Tutor Name:{" "}
-                  {`${sourceTutor?.first_name ?? "-"} ${sourceTutor?.last_name ?? "-"}`}
-                </Typography>
-                <Typography color="text.secondary">
-                  Tutor ID: {data.requesterId}
-                </Typography>
-                <Typography color="text.secondary">
-                  Allocation ID: {allocationId}
-                </Typography>
-                <Typography variant="body2" mt={1}>
-                  {sourceAllocation?.activity_name ?? "—"}
-                </Typography>
-              </Paper>
-
-              <Box
-                display="flex"
-                alignItems="center"
-                justifyContent="center"
-                flexShrink={0}
-              >
-                <SwapHoriz fontSize="large" />
-              </Box>
-
-              {/* To (Selected Allocation) */}
-              <Paper variant="outlined" sx={{ flex: 1, p: 2 }}>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  To
-                </Typography>
-                <Typography color="text.secondary">
-                  Tutor: {selectedAllocation.first_name}{" "}
-                  {selectedAllocation.last_name}
-                </Typography>
-                <Typography color="text.secondary">
-                  Allocation ID: {selectedAllocation.id ?? "—"}
-                </Typography>
-                <Typography variant="body2" mt={1}>
-                  {selectedAllocation.activity_name ?? "—"}
-                </Typography>
-              </Paper>
-            </Box>
-
-            <Typography variant="body2" color="text.secondary" mt={2}>
-              <strong>Heads-up:</strong> This will replace the initiator’s
-              allocation with{" "}
-              <strong>
-                {selectedAllocation.first_name} {selectedAllocation.last_name}
-              </strong>{" "}
-              for the same session (
-              {selectedAllocation.session_date ?? "date unknown"}).
-            </Typography>
-          </Paper>
-        </>
+        <SwapSummary
+          sourceTutor={sourceTutor}
+          sourceAllocation={sourceAllocation}
+          selectedAllocation={selectedAllocation}
+          requesterId={data.requesterId}
+          allocationId={allocationId}
+        />
       )}
 
       {/* REVIEWER NOTE */}

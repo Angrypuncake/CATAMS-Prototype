@@ -217,76 +217,82 @@ export default function CancellationReview({
         </Typography>
       </Paper>
 
-      {/* Optional list (kept visible in read-only, but selection disabled) */}
-      <Divider sx={{ my: 3 }} />
-      <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-        Optional Replacement Tutor
-      </Typography>
+      {/* Optional Replacement Tutor — only visible to UC/TA */}
+      {role !== "USER" && (
+        <>
+          <Divider sx={{ my: 3 }} />
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            Optional Replacement Tutor
+          </Typography>
 
-      {loading ? (
-        <Box display="flex" justifyContent="center" py={3}>
-          <CircularProgress size={28} />
-        </Box>
-      ) : (
-        <Paper variant="outlined" sx={{ overflowX: "auto" }}>
-          <table className="min-w-full text-sm border-collapse">
-            <thead>
-              <tr style={{ backgroundColor: "#f5f5f5" }}>
-                <th className="px-3 py-2 text-left font-semibold">Tutor ID</th>
-                <th className="px-3 py-2 text-left font-semibold">Name</th>
-                <th className="px-3 py-2 text-left font-semibold">Email</th>
-                <th className="px-3 py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {availableTutors.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-3 py-3 text-center text-gray-500"
-                  >
-                    No available tutors found for this unit
-                  </td>
-                </tr>
-              ) : (
-                availableTutors.map((t) => (
-                  <tr
-                    key={t.user_id}
-                    style={{
-                      backgroundColor:
-                        selectedTutor?.user_id === t.user_id
-                          ? "#e8f5e9"
-                          : "transparent",
-                    }}
-                  >
-                    <td className="px-3 py-2">{t.user_id}</td>
-                    <td className="px-3 py-2">
-                      {t.first_name} {t.last_name}
-                    </td>
-                    <td className="px-3 py-2">{t.email}</td>
-                    <td className="px-3 py-2 text-right">
-                      {!isReadOnly && (
-                        <Button
-                          size="small"
-                          variant={
-                            selectedTutor?.user_id === t.user_id
-                              ? "contained"
-                              : "outlined"
-                          }
-                          onClick={() => setSelectedTutor(t)}
-                        >
-                          {selectedTutor?.user_id === t.user_id
-                            ? "Selected"
-                            : "Select"}
-                        </Button>
-                      )}
-                    </td>
+          {loading ? (
+            <Box display="flex" justifyContent="center" py={3}>
+              <CircularProgress size={28} />
+            </Box>
+          ) : (
+            <Paper variant="outlined" sx={{ overflowX: "auto" }}>
+              <table className="min-w-full text-sm border-collapse">
+                <thead>
+                  <tr style={{ backgroundColor: "#f5f5f5" }}>
+                    <th className="px-3 py-2 text-left font-semibold">
+                      Tutor ID
+                    </th>
+                    <th className="px-3 py-2 text-left font-semibold">Name</th>
+                    <th className="px-3 py-2 text-left font-semibold">Email</th>
+                    <th className="px-3 py-2"></th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </Paper>
+                </thead>
+                <tbody>
+                  {availableTutors.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-3 py-3 text-center text-gray-500"
+                      >
+                        No available tutors found for this unit
+                      </td>
+                    </tr>
+                  ) : (
+                    availableTutors.map((t) => (
+                      <tr
+                        key={t.user_id}
+                        style={{
+                          backgroundColor:
+                            selectedTutor?.user_id === t.user_id
+                              ? "#e8f5e9"
+                              : "transparent",
+                        }}
+                      >
+                        <td className="px-3 py-2">{t.user_id}</td>
+                        <td className="px-3 py-2">
+                          {t.first_name} {t.last_name}
+                        </td>
+                        <td className="px-3 py-2">{t.email}</td>
+                        <td className="px-3 py-2 text-right">
+                          {!isReadOnly && (
+                            <Button
+                              size="small"
+                              variant={
+                                selectedTutor?.user_id === t.user_id
+                                  ? "contained"
+                                  : "outlined"
+                              }
+                              onClick={() => setSelectedTutor(t)}
+                            >
+                              {selectedTutor?.user_id === t.user_id
+                                ? "Selected"
+                                : "Select"}
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </Paper>
+          )}
+        </>
       )}
 
       {/* REVIEWER NOTE */}

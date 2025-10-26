@@ -102,7 +102,6 @@ Open http://localhost:3000
 
 ## Testing report
 # Unit tests `npm run test`
-----------------------------------------|---------|----------|---------|---------|-------------------
 File                                    | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 ----------------------------------------|---------|----------|---------|---------|-------------------
 All files                               |   99.58 |    92.46 |   91.11 |   99.58 |                   
@@ -190,16 +189,23 @@ Time:        12.663 s
 Ran all test suites.
 
 # Integration tests `npm run test:integration`
- PASS   integration  __tests__/integration/api/allocations.integration.test.ts (7.908 s)
+ PASS   integration  __tests__/integration/api/allocations.integration.test.ts (7.908 s) 
+ 
  PASS   integration  __tests__/integration/api/budget-requests.integration.test.ts (5.71 s)
+ 
  PASS   integration  __tests__/integration/api/users.integration.test.ts
+ 
  PASS   integration  __tests__/integration/api/database.integration.test.ts
 
 Test Suites: 4 passed, 4 total
+
 Tests:       43 passed, 43 total
+
 Snapshots:   0 total
+
 Time:        21.325 s
+
 Ran all test suites.
 
 # End to End tests `npm run test:e2e:ui`
-20/20 passed, verify in ui.
+20/20 passed, verify e2e UI screenshot in https://github.sydney.edu.au/engu9651/SOFT3888_TU_08_01_P30/pull/175.

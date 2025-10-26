@@ -181,11 +181,15 @@ All files                               |   99.58 |    92.46 |   91.11 |   99.58
   TableHeader.tsx                       |     100 |    88.88 |     100 |     100 | 34                
  lib                                    |     100 |    92.85 |     100 |     100 |                   
   axios.ts                              |     100 |    92.85 |     100 |     100 | 33                
-----------------------------------------|---------|----------|---------|---------|-------------------
+
 Test Suites: 53 passed, 53 total
+
 Tests:       595 passed, 595 total
+
 Snapshots:   0 total
+
 Time:        12.663 s
+
 Ran all test suites.
 
 # Integration tests `npm run test:integration`

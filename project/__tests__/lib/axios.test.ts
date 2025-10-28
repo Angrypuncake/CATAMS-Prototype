@@ -47,7 +47,13 @@ describe("axios instance (/lib/axios)", () => {
 
   beforeEach(() => {
     api.defaults.adapter = originalAdapter;
-    localStorage.clear();
+    // Clear all cookies by setting them to expire
+    document.cookie.split(";").forEach((cookie) => {
+      const eqPos = cookie.indexOf("=");
+      const name =
+        eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
+      document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
+    });
     jest.spyOn(console, "groupCollapsed").mockImplementation(() => {});
     jest.spyOn(console, "groupEnd").mockImplementation(() => {});
     jest.spyOn(console, "error").mockImplementation(() => {});
@@ -65,7 +71,7 @@ describe("axios instance (/lib/axios)", () => {
   });
 
   test("request interceptor adds Authorization header when token exists", async () => {
-    localStorage.setItem("token", "abc123");
+    document.cookie = "auth-token=abc123";
 
     const adapter = jest.fn(
       async (

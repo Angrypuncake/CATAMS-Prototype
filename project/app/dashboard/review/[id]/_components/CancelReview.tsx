@@ -15,7 +15,7 @@ import { getAllocationById } from "@/app/services/allocationService";
 import { TutorAllocationRow } from "@/app/_types/allocations";
 import { Tutor } from "@/app/_types/tutor";
 import { getTutorById, getTutorsByUnit } from "@/app/services/userService";
-import { formatDate } from "./SwapReview";
+import { formatDate } from "./swapcomponents/formatDate";
 import {
   ucApproveRequest,
   ucRejectRequest,

@@ -2,6 +2,15 @@ import "@testing-library/jest-dom";
 import { render, screen } from "@testing-library/react";
 import RequestRow from "../../../../app/dashboard/tutor/allocations/_components/RequestRow";
 
+// Mock Next.js useRouter
+jest.mock("next/navigation", () => ({
+  useRouter: jest.fn(() => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    prefetch: jest.fn(),
+  })),
+}));
+
 describe("RequestRow Component", () => {
   const mockRequest = {
     requestId: 123,
@@ -32,7 +41,7 @@ describe("RequestRow Component", () => {
   test("should render view/edit button", () => {
     render(<RequestRow req={mockRequest} />);
 
-    expect(screen.getByText("View / Edit")).toBeInTheDocument();
+    expect(screen.getByText("View")).toBeInTheDocument();
   });
 
   test("should format pending_uc status correctly", () => {
@@ -141,7 +150,7 @@ describe("RequestRow Component", () => {
     expect(screen.getByText("cancellation")).toBeInTheDocument();
     expect(screen.getByText(/Pending/)).toBeInTheDocument();
     expect(screen.getByText(/15 Mar 2025/)).toBeInTheDocument();
-    expect(screen.getByText("View / Edit")).toBeInTheDocument();
+    expect(screen.getByText("View")).toBeInTheDocument();
   });
 
   test("should handle date formatting for different dates", () => {

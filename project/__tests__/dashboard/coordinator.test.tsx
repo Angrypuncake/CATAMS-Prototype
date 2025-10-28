@@ -29,6 +29,14 @@ jest.mock("../../app/services/budgetService", () => ({
   ),
 }));
 
+jest.mock("../../app/services/requestService", () => ({
+  getRequestsByUC: jest.fn(() => Promise.resolve([])),
+}));
+
+jest.mock("../../app/services/unitService", () => ({
+  getCoordinatorUnits: jest.fn(() => Promise.resolve([])),
+}));
+
 jest.mock("../../app/utils/dateHelpers", () => ({
   getCurrentYearAndSession: jest.fn(() => ({
     year: 2025,

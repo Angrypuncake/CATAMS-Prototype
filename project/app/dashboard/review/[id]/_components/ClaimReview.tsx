@@ -13,7 +13,7 @@ import ReviewLayout from "./ReviewLayout";
 import { useEffect, useState } from "react";
 import { TutorAllocationRow } from "@/app/_types/allocations";
 import { getAllocationById } from "@/app/services/allocationService";
-import { formatDate } from "./SwapReview";
+import { formatDate } from "./swapcomponents/formatDate";
 import { Tutor } from "@/app/_types/tutor";
 import { getTutorById } from "@/app/services/userService";
 import {

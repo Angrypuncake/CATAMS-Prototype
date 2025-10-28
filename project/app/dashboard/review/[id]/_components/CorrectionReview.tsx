@@ -15,7 +15,7 @@ import type { TutorAllocationRow } from "@/app/_types/allocations";
 import type { Tutor } from "@/app/_types/tutor";
 import { getTutorById } from "@/app/services/userService";
 import { getAllocationById } from "@/app/services/allocationService";
-import { formatDate } from "./SwapReview";
+import { formatDate } from "./swapcomponents/formatDate";
 import {
   ucApproveRequest,
   ucRejectRequest,
@@ -69,7 +69,7 @@ export default function CorrectionReview({
     fetchData();
   }, [allocationId, requesterId]);
 
-  if (data.requestType !== "correction") return null;
+  if (!data || data.requestType !== "correction") return null;
 
   const { requestStatus, requestReason, requestId, createdAt } = data;
   const details = data.details as {

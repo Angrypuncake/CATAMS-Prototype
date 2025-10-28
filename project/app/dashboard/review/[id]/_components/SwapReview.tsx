@@ -7,7 +7,6 @@ import SwapSummary from "./SwapSummary";
 import {
   ucApproveRequest,
   ucRejectRequest,
-  taForwardToUC,
   taRejectRequest,
   taForwardWithDetails, // 🆕 import
 } from "@/app/services/requestService";
@@ -21,7 +20,6 @@ import SuggestedTutorCard from "./swapcomponents/SuggestedTutorCard";
 import ReviewerActions from "./swapcomponents/ReviewerActions";
 import {
   getAdminAllocationById,
-  getAllocationById,
   swapAllocations,
 } from "@/app/services/allocationService";
 
@@ -59,7 +57,7 @@ export default function SwapReview({
   currentUserId?: number;
 }) {
   const { allocationId, requestStatus, requestId, createdAt, requesterId } =
-    data;
+    data || {};
 
   const {
     loadingEligible,
@@ -72,6 +70,31 @@ export default function SwapReview({
   const [reviewerNote, setReviewerNote] = useState("");
   const [selectedAllocation, setSelectedAllocation] =
     useState<AdminAllocationRow | null>(null);
+
+  useEffect(() => {
+    if (!data) return;
+    const suggestedAllocId = data.details?.suggested_alloc_id;
+    console.log("DATA", data);
+    console.log("DATA.details", data.details);
+    console.log("DATA.suggested_alloc_id", data.details?.suggested_alloc_id);
+
+    if (!suggestedAllocId) return;
+
+    (async () => {
+      try {
+        const allocation = await getAdminAllocationById(
+          String(suggestedAllocId),
+        );
+        console.log("Fetched allocation:", allocation);
+        setSelectedAllocation(allocation);
+      } catch (err) {
+        console.error("Error fetching allocation:", err);
+      }
+    })();
+  }, [data]);
+
+  // Only render for swap requests (after all hooks are called)
+  if (!data || data.requestType !== "swap") return null;
 
   const isReadOnly =
     readOnly || role === "USER" || requestStatus === "approved";
@@ -103,34 +126,11 @@ export default function SwapReview({
     return null;
   })();
 
-  useEffect(() => {
-    const suggestedAllocId = data.details?.suggested_alloc_id;
-    console.log("DATA", data);
-    console.log("DATA.details", data.details);
-    console.log("DATA.suggested_alloc_id", data.details.suggested_alloc_id);
-
-    if (!suggestedAllocId) return;
-
-    (async () => {
-      try {
-        const res = await getAdminAllocationById(String(suggestedAllocId));
-        console.log("Fetched allocation:", res);
-        setSelectedAllocation(res);
-      } catch (err) {
-        console.error("Error fetching allocation:", err);
-      }
-    })();
-  }, [data.details]);
-
   const actions = {
     approveUC: async () => {
       try {
         // 1️⃣ Approve the request via UC API
-        const res = await ucApproveRequest(
-          Number(requestId),
-          currentUserId!,
-          reviewerNote,
-        );
+        await ucApproveRequest(Number(requestId), currentUserId!, reviewerNote);
 
         // 2️⃣ Once approved, trigger allocation swap (only if details are complete)
         const allocA_id = Number(allocationId); // original allocation

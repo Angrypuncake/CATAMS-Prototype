@@ -9,19 +9,17 @@ const api = axios.create({
 });
 
 // attach jwt tokens automatically
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem("token");
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
-
-// This replaces the need for try and catch blocks
-
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    //  Ignore canceled requests to avoid noisy logs
+    if (axios.isCancel?.(error) || error.code === "ERR_CANCELED") {
+      if (process.env.NODE_ENV === "development") {
+        console.debug(`[Axios] Request canceled: ${error.message}`);
+      }
+      return Promise.reject(error);
+    }
+
     const isAxiosError = !!error.isAxiosError;
 
     const details = {
@@ -49,7 +47,7 @@ api.interceptors.response.use(
       });
     }
     console.groupEnd();
-    // You can optionally normalize or rethrow custom error object
+
     return Promise.reject(error);
   },
 );

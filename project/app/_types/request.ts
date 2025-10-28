@@ -115,7 +115,7 @@ export interface UCApproval {
   endAt: string;
   activityName: string;
   requesterName: string;
-  reviewerName: string | null;
+  reviewerName: number | null;
   requestStatus: string;
 }
 

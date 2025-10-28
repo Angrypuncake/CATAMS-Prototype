@@ -165,7 +165,7 @@ export default function QueryReview({
           fullWidth
           multiline
           minRows={3}
-          placeholder="Write your response or note..."
+          placeholder="Reviewer response"
           value={response}
           onChange={(e) => setResponse(e.target.value)}
           disabled={isReadOnly}
@@ -174,10 +174,9 @@ export default function QueryReview({
           fullWidth
           multiline
           minRows={2}
-          placeholder="Private reviewer note (not shown to tutor)"
+          placeholder="Reviewer note (not shown to tutor)"
           value={reviewerNote}
           onChange={(e) => setReviewerNote(e.target.value)}
-          disabled={isReadOnly}
         />
         {canAct && (
           <Stack direction="row" spacing={2} justifyContent="flex-end">

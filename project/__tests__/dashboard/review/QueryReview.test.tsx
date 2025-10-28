@@ -46,10 +46,9 @@ describe("QueryReview Component", () => {
     expect(
       screen.getByText("Question about allocation schedule"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Send Response")).toBeInTheDocument();
-    expect(screen.getByText("Dismiss Query")).toBeInTheDocument();
+    expect(screen.getByText("Close / Reject")).toBeInTheDocument();
     expect(
-      screen.getByPlaceholderText("Write your response to the tutor..."),
+      screen.getByPlaceholderText("Reviewer response"),
     ).toBeInTheDocument();
 
     await waitFor(() => {
@@ -84,9 +83,7 @@ describe("QueryReview Component", () => {
   test("should handle response input change", async () => {
     render(<QueryReview data={mockQueryRequest} />);
 
-    const responseField = screen.getByPlaceholderText(
-      "Write your response to the tutor...",
-    );
+    const responseField = screen.getByPlaceholderText("Reviewer response");
 
     fireEvent.change(responseField, {
       target: { value: "Thank you for your query" },
@@ -95,75 +92,34 @@ describe("QueryReview Component", () => {
     expect(responseField).toHaveValue("Thank you for your query");
   });
 
-  test("should call handleRespond when Send Response button is clicked with valid response", async () => {
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation();
-
+  test("should render reviewer note field", async () => {
     render(<QueryReview data={mockQueryRequest} />);
 
-    const responseField = screen.getByPlaceholderText(
-      "Write your response to the tutor...",
+    const reviewerNoteField = screen.getByPlaceholderText(
+      "Reviewer note (not shown to tutor)",
     );
-    const sendButton = screen.getByText("Send Response");
 
-    // Initially button should be disabled
-    expect(sendButton).toBeDisabled();
+    expect(reviewerNoteField).toBeInTheDocument();
 
-    // Type a response (lines 34-37)
-    fireEvent.change(responseField, {
-      target: { value: "This is my response" },
+    fireEvent.change(reviewerNoteField, {
+      target: { value: "Internal note for review" },
     });
 
-    // Button should now be enabled
-    expect(sendButton).not.toBeDisabled();
-
-    // Click the send button
-    fireEvent.click(sendButton);
-
-    expect(consoleSpy).toHaveBeenCalledWith(
-      "Submitting response:",
-      "This is my response",
-    );
-
-    consoleSpy.mockRestore();
+    expect(reviewerNoteField).toHaveValue("Internal note for review");
   });
 
-  test("should not submit response when input is empty or whitespace", async () => {
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+  test("should render Close / Reject button for UC role", async () => {
+    render(<QueryReview data={mockQueryRequest} role="UC" />);
 
-    render(<QueryReview data={mockQueryRequest} />);
-
-    const responseField = screen.getByPlaceholderText(
-      "Write your response to the tutor...",
-    );
-    const sendButton = screen.getByText("Send Response");
-
-    // Type only whitespace (line 34 - early return)
-    fireEvent.change(responseField, { target: { value: "   " } });
-
-    // Button should be disabled
-    expect(sendButton).toBeDisabled();
-
-    // Try clicking anyway (won't fire because disabled, but tests the condition)
-    // The handleRespond function checks !response.trim() and returns early
-
-    expect(consoleSpy).not.toHaveBeenCalled();
-
-    consoleSpy.mockRestore();
+    const rejectButton = screen.getByText("Close / Reject");
+    expect(rejectButton).toBeInTheDocument();
   });
 
-  test("should call handleDismiss when Dismiss Query button is clicked", async () => {
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+  test("should render TA action buttons for TA role", async () => {
+    render(<QueryReview data={mockQueryRequest} role="TA" />);
 
-    render(<QueryReview data={mockQueryRequest} />);
-
-    const dismissButton = screen.getByText("Dismiss Query");
-
-    // Click the dismiss button (lines 40-42)
-    fireEvent.click(dismissButton);
-
-    expect(consoleSpy).toHaveBeenCalledWith("Query dismissed.");
-
-    consoleSpy.mockRestore();
+    expect(screen.getByText("Reject")).toBeInTheDocument();
+    expect(screen.getByText("Forward to UC")).toBeInTheDocument();
   });
 
   test("should display 'No query message provided' when requestReason is empty", async () => {

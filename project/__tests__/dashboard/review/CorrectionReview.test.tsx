@@ -6,6 +6,10 @@ import type { TutorRequest } from "../../../app/_types/request";
 // Mock the service functions
 const mockGetTutorById = jest.fn();
 const mockGetAllocationById = jest.fn();
+const mockUcApproveRequest = jest.fn();
+const mockUcRejectRequest = jest.fn();
+const mockTaForwardToUC = jest.fn();
+const mockTaRejectRequest = jest.fn();
 
 jest.mock("../../../app/services/userService", () => ({
   getTutorById: (...args: unknown[]) => mockGetTutorById(...args),
@@ -13,6 +17,13 @@ jest.mock("../../../app/services/userService", () => ({
 
 jest.mock("../../../app/services/allocationService", () => ({
   getAllocationById: (...args: unknown[]) => mockGetAllocationById(...args),
+}));
+
+jest.mock("../../../app/services/requestService", () => ({
+  ucApproveRequest: (...args: unknown[]) => mockUcApproveRequest(...args),
+  ucRejectRequest: (...args: unknown[]) => mockUcRejectRequest(...args),
+  taForwardToUC: (...args: unknown[]) => mockTaForwardToUC(...args),
+  taRejectRequest: (...args: unknown[]) => mockTaRejectRequest(...args),
 }));
 
 const mockTutor = {
@@ -101,16 +112,20 @@ describe("CorrectionReview Component", () => {
     expect(container.firstChild).toBeNull();
   });
 
-  test("should render 'No request data available' when data is null", () => {
-    render(<CorrectionReview data={null as unknown as TutorRequest} />);
+  test("should render nothing when data is null", () => {
+    const { container } = render(
+      <CorrectionReview data={null as unknown as TutorRequest} />,
+    );
 
-    expect(screen.getByText("No request data available.")).toBeInTheDocument();
+    expect(container.firstChild).toBeNull();
   });
 
-  test("should render 'No request data available' when data is undefined", () => {
-    render(<CorrectionReview data={undefined as unknown as TutorRequest} />);
+  test("should render nothing when data is undefined", () => {
+    const { container } = render(
+      <CorrectionReview data={undefined as unknown as TutorRequest} />,
+    );
 
-    expect(screen.getByText("No request data available.")).toBeInTheDocument();
+    expect(container.firstChild).toBeNull();
   });
 
   test("should display approved status with success color", async () => {
@@ -161,11 +176,9 @@ describe("CorrectionReview Component", () => {
   });
 
   test("should call handleApprove when Approve button is clicked", async () => {
-    const consoleLogSpy = jest
-      .spyOn(console, "log")
-      .mockImplementation(() => {});
+    mockUcApproveRequest.mockResolvedValue({});
 
-    render(<CorrectionReview data={mockCorrectionRequest} />);
+    render(<CorrectionReview data={mockCorrectionRequest} currentUserId={5} />);
 
     await waitFor(() => {
       expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
@@ -174,20 +187,15 @@ describe("CorrectionReview Component", () => {
     const approveButton = screen.getByText("Approve Correction");
     fireEvent.click(approveButton);
 
-    expect(consoleLogSpy).toHaveBeenCalledWith("✅ Approve correction:", {
-      requestId: 2,
-      comment: "",
+    await waitFor(() => {
+      expect(mockUcApproveRequest).toHaveBeenCalledWith(2, 5, "");
     });
-
-    consoleLogSpy.mockRestore();
   });
 
   test("should call handleReject when Reject button is clicked", async () => {
-    const consoleLogSpy = jest
-      .spyOn(console, "log")
-      .mockImplementation(() => {});
+    mockUcRejectRequest.mockResolvedValue({});
 
-    render(<CorrectionReview data={mockCorrectionRequest} />);
+    render(<CorrectionReview data={mockCorrectionRequest} currentUserId={5} />);
 
     await waitFor(() => {
       expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
@@ -196,41 +204,37 @@ describe("CorrectionReview Component", () => {
     const rejectButton = screen.getByText("Reject");
     fireEvent.click(rejectButton);
 
-    expect(consoleLogSpy).toHaveBeenCalledWith("❌ Reject correction:", {
-      requestId: 2,
-      comment: "",
+    await waitFor(() => {
+      expect(mockUcRejectRequest).toHaveBeenCalledWith(2, 5, undefined, "");
     });
-
-    consoleLogSpy.mockRestore();
   });
 
   test("should update comment state when typing in comment field", async () => {
-    const consoleLogSpy = jest
-      .spyOn(console, "log")
-      .mockImplementation(() => {});
+    mockUcApproveRequest.mockResolvedValue({});
 
-    render(<CorrectionReview data={mockCorrectionRequest} />);
+    render(<CorrectionReview data={mockCorrectionRequest} currentUserId={5} />);
 
     await waitFor(() => {
       expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
     });
 
-    const commentField = screen.getByPlaceholderText(
-      "Add notes or remarks for this decision...",
-    );
+    const commentField = screen.getByPlaceholderText("Add notes or remarks...");
     fireEvent.change(commentField, {
       target: { value: "Looks good to approve" },
     });
 
+    expect(commentField).toHaveValue("Looks good to approve");
+
     const approveButton = screen.getByText("Approve Correction");
     fireEvent.click(approveButton);
 
-    expect(consoleLogSpy).toHaveBeenCalledWith("✅ Approve correction:", {
-      requestId: 2,
-      comment: "Looks good to approve",
+    await waitFor(() => {
+      expect(mockUcApproveRequest).toHaveBeenCalledWith(
+        2,
+        5,
+        "Looks good to approve",
+      );
     });
-
-    consoleLogSpy.mockRestore();
   });
 
   test("should show loading state initially", () => {

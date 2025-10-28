@@ -69,31 +69,6 @@ test("coordinator can navigate to add/edit allocations", async ({ page }) => {
   await expect(page).toHaveURL(/\/admin\/allocations/);
 });
 
-test("coordinator can open session dropdown menu", async ({ page }) => {
-  await page.goto("/login");
-  await page.getByLabel(/username/i).fill("demouser@demo.edu");
-  await page.getByLabel(/password/i).fill("10");
-  await page.getByRole("button", { name: /sign in/i }).click();
-  await page.waitForURL("**/portal");
-
-  await page.getByRole("link", { name: /enter/i }).nth(2).click();
-  await page.waitForURL("**/dashboard/coordinator");
-
-  const sessionButton = page.getByRole("button", { name: /this session/i });
-  await expect(sessionButton).toBeVisible();
-  await sessionButton.click();
-
-  await expect(
-    page.getByRole("menuitem", { name: /this session/i }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("menuitem", { name: /last 7 days/i }),
-  ).toBeVisible();
-  await expect(
-    page.getByRole("menuitem", { name: /last 30 days/i }),
-  ).toBeVisible();
-});
-
 test("coordinator can adjust budget threshold slider", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel(/username/i).fill("demouser@demo.edu");

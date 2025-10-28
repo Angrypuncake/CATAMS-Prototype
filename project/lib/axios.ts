@@ -2,11 +2,30 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL: "/api", // all requests start form .api
-  timeout: 15000, // 15 s timeout
+  timeout: 10000, // 10 s timeout
   headers: {
     "Content-Type": "application/json",
   },
 });
+
+// Request interceptor to add Authorization header from cookies
+api.interceptors.request.use(
+  (config) => {
+    // Only access document.cookie in browser environment
+    if (typeof window !== "undefined" && document.cookie) {
+      const cookies = document.cookie.split("; ");
+      const authCookie = cookies.find((cookie) =>
+        cookie.startsWith("auth-token="),
+      );
+      if (authCookie) {
+        const token = authCookie.split("=")[1];
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error),
+);
 
 // attach jwt tokens automatically
 api.interceptors.response.use(

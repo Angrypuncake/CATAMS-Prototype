@@ -9,7 +9,7 @@ test("navigate to Coordinator dashboard after login", async ({ page }) => {
   await expect(
     page.getByRole("heading", {
       name: /Casual Academic Time Allocation System/i,
-    }),
+    })
   ).toBeVisible();
 
   await page.getByRole("link", { name: /enter/i }).nth(2).click();

@@ -11,22 +11,13 @@ export async function POST(request: Request) {
     }
 
     if (!password || typeof password !== "string") {
-      return NextResponse.json(
-        { error: "Password is required" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Password is required" }, { status: 400 });
     }
 
-    const user = await query(
-      `SELECT email, user_id FROM users WHERE email = $1`,
-      [useremail],
-    );
+    const user = await query(`SELECT email, user_id FROM users WHERE email = $1`, [useremail]);
 
     if (!user.rows || user.rows.length === 0) {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 
     const userData = user.rows[0];
@@ -37,7 +28,7 @@ export async function POST(request: Request) {
           FROM user_role ur
           JOIN role r ON ur.role_id = r.role_id
           WHERE ur.user_id = $1`,
-        [userData.user_id],
+        [userData.user_id]
       );
       const roleNames = roles.rows.map((row) => row.role_name);
       console.log(roleNames);
@@ -48,7 +39,7 @@ export async function POST(request: Request) {
           roles: roleNames,
         },
         process.env.JWT_SECRET!,
-        { expiresIn: "24h" },
+        { expiresIn: "24h" }
       );
 
       const response = NextResponse.json({
@@ -68,16 +59,10 @@ export async function POST(request: Request) {
 
       return response;
     } else {
-      return NextResponse.json(
-        { error: "Invalid credentials" },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
   } catch (error) {
     console.error("Error in login request:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

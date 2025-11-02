@@ -28,9 +28,7 @@ const AllocationQuickviewModal: React.FC<AllocationQuickviewModalProps> = ({
 }) => {
   const isConfirmed = session?.status === "Confirmed";
   const isPending = session?.status === "Pending";
-  const hasEnded = session?.end_at
-    ? new Date(session.end_at) < new Date()
-    : false;
+  const hasEnded = session?.end_at ? new Date(session.end_at) < new Date() : false;
   const claimDisabledReason = "Session has not ended yet";
   return (
     <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
@@ -44,9 +42,7 @@ const AllocationQuickviewModal: React.FC<AllocationQuickviewModalProps> = ({
             <Chip
               size="small"
               variant="outlined"
-              color={
-                isConfirmed ? "success" : isPending ? "warning" : "default"
-              }
+              color={isConfirmed ? "success" : isPending ? "warning" : "default"}
               label={session?.status ?? "Unknown"}
             />
           </Stack>
@@ -54,22 +50,14 @@ const AllocationQuickviewModal: React.FC<AllocationQuickviewModalProps> = ({
           <Divider />
 
           <Stack direction="row" spacing={1.25}>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ minWidth: 120 }}
-            >
+            <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
               Date
             </Typography>
             <Box>{session?.session_date?.slice(0, 10) ?? "—"}</Box>
           </Stack>
 
           <Stack direction="row" spacing={1.25}>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ minWidth: 120 }}
-            >
+            <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
               Time
             </Typography>
             <Box>
@@ -80,44 +68,28 @@ const AllocationQuickviewModal: React.FC<AllocationQuickviewModalProps> = ({
           </Stack>
 
           <Stack direction="row" spacing={1.25}>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ minWidth: 120 }}
-            >
+            <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
               Location
             </Typography>
             <Box>{session?.location ?? "—"}</Box>
           </Stack>
 
           <Stack direction="row" spacing={1.25}>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ minWidth: 120 }}
-            >
+            <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
               Unit
             </Typography>
             <Box>{session?.unit_code ?? "—"}</Box>
           </Stack>
 
           <Stack direction="row" spacing={1.25}>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ minWidth: 120 }}
-            >
+            <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
               Hours
             </Typography>
             <Box>{hoursBetween(session?.start_at, session?.end_at)}</Box>
           </Stack>
 
           <Stack direction="row" spacing={1.25}>
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ minWidth: 120 }}
-            >
+            <Typography variant="body2" color="text.secondary" sx={{ minWidth: 120 }}>
               Description
             </Typography>
             <Box>{session?.note ?? "—"}</Box>
@@ -136,11 +108,7 @@ const AllocationQuickviewModal: React.FC<AllocationQuickviewModalProps> = ({
             <Button
               variant="contained"
               disabled={!hasEnded}
-              title={
-                !hasEnded
-                  ? claimDisabledReason
-                  : "Submit your claim for this session"
-              }
+              title={!hasEnded ? claimDisabledReason : "Submit your claim for this session"}
               onClick={() => setOpen(false)}
             >
               Submit Claim

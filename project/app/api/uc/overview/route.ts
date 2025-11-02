@@ -30,10 +30,8 @@ async function dbRows(sql: string, params?: unknown[]): Promise<unknown[]> {
   const res = await (
     rawQuery as unknown as (
       q: string,
-      p?: unknown[],
-    ) => Promise<
-      { rows: unknown[] } | { rows: unknown[]; [k: string]: unknown }
-    >
+      p?: unknown[]
+    ) => Promise<{ rows: unknown[] } | { rows: unknown[]; [k: string]: unknown }>
   )(sql, params);
   // some apps wrap pool.query, some return QueryResult — both have .rows
   // ensure we always return an array
@@ -48,13 +46,9 @@ export async function GET(req: Request) {
     const sessionParam = searchParams.get("session");
     const thresholdParam = searchParams.get("threshold");
 
-    const year = Number.isFinite(Number(yearParam))
-      ? Number(yearParam)
-      : new Date().getFullYear();
+    const year = Number.isFinite(Number(yearParam)) ? Number(yearParam) : new Date().getFullYear();
     const session = (sessionParam && sessionParam.trim()) || "S2"; // e.g. 'S2' or 'S2%'
-    const threshold = Number.isFinite(Number(thresholdParam))
-      ? Number(thresholdParam)
-      : 0.9; // 0..1
+    const threshold = Number.isFinite(Number(thresholdParam)) ? Number(thresholdParam) : 0.9; // 0..1
 
     const sessionLike = session.includes("%") ? session : `${session}%`;
 
@@ -115,9 +109,6 @@ export async function GET(req: Request) {
     const msg = err instanceof Error ? err.message : String(err);
     // Keep server logs useful but concise
     console.error("UC overview error:", msg);
-    return NextResponse.json(
-      { error: "Failed to load UC overview." },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to load UC overview." }, { status: 500 });
   }
 }

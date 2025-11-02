@@ -29,13 +29,7 @@ export default function ImportPage() {
 
   // simple progress stages to give the user feedback
   const [stage, setStage] = useState<
-    | "idle"
-    | "reading"
-    | "uploading"
-    | "validating"
-    | "staging"
-    | "redirect"
-    | "error"
+    "idle" | "reading" | "uploading" | "validating" | "staging" | "redirect" | "error"
   >("idle");
 
   const accept = useMemo(() => [".csv", ".xlsx"], []);
@@ -78,9 +72,7 @@ export default function ImportPage() {
     setFileName(f.name);
     setBusy(true);
     setStage("reading");
-    appendLog(
-      `[client] Selected: ${f.name} (${(f.size / (1024 * 1024)).toFixed(2)} MB)`,
-    );
+    appendLog(`[client] Selected: ${f.name} (${(f.size / (1024 * 1024)).toFixed(2)} MB)`);
 
     try {
       setStage("uploading");
@@ -155,12 +147,9 @@ export default function ImportPage() {
 
       {/* Header */}
       <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">
-          Import Allocations
-        </h1>
+        <h1 className="text-2xl font-semibold tracking-tight">Import Allocations</h1>
         <p className="text-sm text-zinc-600">
-          Upload a CSV/XLSX file to stage an import, review differences, and
-          commit to production.
+          Upload a CSV/XLSX file to stage an import, review differences, and commit to production.
         </p>
       </header>
 
@@ -194,22 +183,14 @@ export default function ImportPage() {
               htmlFor="file-input"
               className={[
                 "flex w-full cursor-pointer flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed px-5 py-10 text-center transition",
-                dragActive
-                  ? "border-blue-500 bg-blue-50"
-                  : "border-zinc-300 hover:bg-zinc-50",
+                dragActive ? "border-blue-500 bg-blue-50" : "border-zinc-300 hover:bg-zinc-50",
                 busy && "pointer-events-none opacity-60",
               ]
                 .filter(Boolean)
                 .join(" ")}
             >
               <div className="rounded-full p-3 ring-1 ring-zinc-200">
-                <svg
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  aria-hidden
-                >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden>
                   <path
                     d="M12 16V4m0 0 4 4m-4-4-4 4M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"
                     stroke="currentColor"
@@ -219,12 +200,10 @@ export default function ImportPage() {
               </div>
               <div className="space-y-1">
                 <p className="text-sm">
-                  <span className="font-medium text-zinc-900">Drag & drop</span>{" "}
-                  your file here, or <span className="underline">browse</span>
+                  <span className="font-medium text-zinc-900">Drag & drop</span> your file here, or{" "}
+                  <span className="underline">browse</span>
                 </p>
-                <p className="text-xs text-zinc-500">
-                  Accepted: {accept.join(", ")} · Max 10MB
-                </p>
+                <p className="text-xs text-zinc-500">Accepted: {accept.join(", ")} · Max 10MB</p>
                 {fileName && (
                   <p className="text-xs text-zinc-600">
                     <span className="font-medium">Selected:</span> {fileName}
@@ -311,16 +290,12 @@ export default function ImportPage() {
               <h3 className="font-semibold">Heads‑up</h3>
               <ul className="mt-2 list-disc space-y-1 pl-5">
                 <li>
-                  Ensure required columns exist (e.g., <code>unit_code</code>,{" "}
-                  <code>date</code>, <code>start_at</code>, <code>end_at</code>
+                  Ensure required columns exist (e.g., <code>unit_code</code>, <code>date</code>,{" "}
+                  <code>start_at</code>, <code>end_at</code>
                   ).
                 </li>
-                <li>
-                  Dates must be ISO (YYYY‑MM‑DD). Times are 24‑hour HH:MM:SS.
-                </li>
-                <li>
-                  You’ll review a diff in the next step before committing.
-                </li>
+                <li>Dates must be ISO (YYYY‑MM‑DD). Times are 24‑hour HH:MM:SS.</li>
+                <li>You’ll review a diff in the next step before committing.</li>
               </ul>
             </div>
 

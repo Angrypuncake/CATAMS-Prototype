@@ -18,12 +18,10 @@ describe("Allocation Integration Tests (trimmed)", () => {
 
   const q1 = (text: string, params?: unknown[]) => pool.query(text, params);
   const getUserId = async (email: string) =>
-    (await q1("SELECT user_id FROM test_users WHERE email=$1", [email])).rows[0]
-      .user_id;
+    (await q1("SELECT user_id FROM test_users WHERE email=$1", [email])).rows[0].user_id;
   const getAny = async (sql: string) => (await q1(sql)).rows[0];
   const getAnyAllocationId = async () =>
-    (await q1("SELECT allocation_id FROM test_allocation LIMIT 1")).rows[0]
-      .allocation_id;
+    (await q1("SELECT allocation_id FROM test_allocation LIMIT 1")).rows[0].allocation_id;
 
   beforeAll(async () => {
     const setup = await setupTestDatabase();
@@ -64,12 +62,8 @@ describe("Allocation Integration Tests (trimmed)", () => {
       label: "scheduled",
       buildValues: async () => {
         const userId = await getUserId("testtutor@demo.edu");
-        const occ = await getAny(
-          "SELECT occurrence_id FROM test_session_occurrence LIMIT 1",
-        );
-        const act = await getAny(
-          "SELECT activity_id FROM test_teaching_activity LIMIT 1",
-        );
+        const occ = await getAny("SELECT occurrence_id FROM test_session_occurrence LIMIT 1");
+        const act = await getAny("SELECT activity_id FROM test_teaching_activity LIMIT 1");
         return [
           userId,
           occ.occurrence_id,
@@ -81,11 +75,7 @@ describe("Allocation Integration Tests (trimmed)", () => {
           2.0,
         ] as const;
       },
-      expectRow: (row: {
-        status: string;
-        mode: string;
-        session_id: number | null;
-      }) => {
+      expectRow: (row: { status: string; mode: string; session_id: number | null }) => {
         expect(row.status).toBe("pending");
         expect(row.mode).toBe("scheduled");
         expect(row.session_id).toBeTruthy();
@@ -95,9 +85,7 @@ describe("Allocation Integration Tests (trimmed)", () => {
       label: "unscheduled",
       buildValues: async () => {
         const userId = await getUserId("testtutor@demo.edu");
-        const act = await getAny(
-          "SELECT activity_id FROM test_teaching_activity LIMIT 1",
-        );
+        const act = await getAny("SELECT activity_id FROM test_teaching_activity LIMIT 1");
         return [
           userId,
           null,
@@ -115,16 +103,8 @@ describe("Allocation Integration Tests (trimmed)", () => {
       },
     },
   ])("creates %s allocation", async (_case) => {
-    const [
-      user_id,
-      session_id,
-      activity_id,
-      status,
-      paycode_id,
-      teaching_role,
-      mode,
-      hours,
-    ] = await _case.buildValues();
+    const [user_id, session_id, activity_id, status, paycode_id, teaching_role, mode, hours] =
+      await _case.buildValues();
 
     const res = await q1(
       `
@@ -132,16 +112,7 @@ describe("Allocation Integration Tests (trimmed)", () => {
       VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
       RETURNING allocation_id, status, mode, session_id
     `,
-      [
-        user_id,
-        session_id,
-        activity_id,
-        status,
-        paycode_id,
-        teaching_role,
-        mode,
-        hours,
-      ],
+      [user_id, session_id, activity_id, status, paycode_id, teaching_role, mode, hours]
     );
 
     expect(res.rows).toHaveLength(1);
@@ -184,9 +155,7 @@ describe("Allocation Integration Tests (trimmed)", () => {
 
   it("retrieves allocations for a tutor", async () => {
     const userId = await getUserId("testtutor@demo.edu");
-    const res = await q1(`SELECT * FROM test_allocation WHERE user_id=$1`, [
-      userId,
-    ]);
+    const res = await q1(`SELECT * FROM test_allocation WHERE user_id=$1`, [userId]);
     expect(res.rows.length).toBeGreaterThan(0);
     expect(res.rows.every((r) => r.user_id === userId)).toBe(true);
   });
@@ -239,82 +208,49 @@ describe("Allocation Integration Tests (trimmed)", () => {
     {
       label: "status -> confirmed",
       run: async (id: number) =>
-        q1(
-          `UPDATE test_allocation SET status='confirmed' WHERE allocation_id=$1`,
-          [id],
-        ),
+        q1(`UPDATE test_allocation SET status='confirmed' WHERE allocation_id=$1`, [id]),
       read: async (id: number) =>
-        (
-          await q1(
-            `SELECT status FROM test_allocation WHERE allocation_id=$1`,
-            [id],
-          )
-        ).rows[0].status,
+        (await q1(`SELECT status FROM test_allocation WHERE allocation_id=$1`, [id])).rows[0]
+          .status,
       expectVal: "confirmed",
     },
     {
       label: "status -> cancelled",
       run: async (id: number) =>
-        q1(
-          `UPDATE test_allocation SET status='cancelled' WHERE allocation_id=$1`,
-          [id],
-        ),
+        q1(`UPDATE test_allocation SET status='cancelled' WHERE allocation_id=$1`, [id]),
       read: async (id: number) =>
-        (
-          await q1(
-            `SELECT status FROM test_allocation WHERE allocation_id=$1`,
-            [id],
-          )
-        ).rows[0].status,
+        (await q1(`SELECT status FROM test_allocation WHERE allocation_id=$1`, [id])).rows[0]
+          .status,
       expectVal: "cancelled",
     },
     {
       label: "paycode_id -> CONS",
       run: async (id: number) =>
-        q1(
-          `UPDATE test_allocation SET paycode_id='CONS' WHERE allocation_id=$1`,
-          [id],
-        ),
+        q1(`UPDATE test_allocation SET paycode_id='CONS' WHERE allocation_id=$1`, [id]),
       read: async (id: number) =>
-        (
-          await q1(
-            `SELECT paycode_id FROM test_allocation WHERE allocation_id=$1`,
-            [id],
-          )
-        ).rows[0].paycode_id,
+        (await q1(`SELECT paycode_id FROM test_allocation WHERE allocation_id=$1`, [id])).rows[0]
+          .paycode_id,
       expectVal: "CONS",
     },
     {
       label: "note -> Updated note for testing",
       run: async (id: number) =>
-        q1(
-          `UPDATE test_allocation SET note='Updated note for testing' WHERE allocation_id=$1`,
-          [id],
-        ),
+        q1(`UPDATE test_allocation SET note='Updated note for testing' WHERE allocation_id=$1`, [
+          id,
+        ]),
       read: async (id: number) =>
-        (
-          await q1(`SELECT note FROM test_allocation WHERE allocation_id=$1`, [
-            id,
-          ])
-        ).rows[0].note,
+        (await q1(`SELECT note FROM test_allocation WHERE allocation_id=$1`, [id])).rows[0].note,
       expectVal: "Updated note for testing",
     },
     {
       label: "user_id -> testta@demo.edu",
       run: async (id: number) => {
         const newTutorId = await getUserId("testta@demo.edu");
-        return q1(
-          `UPDATE test_allocation SET user_id=$1 WHERE allocation_id=$2`,
-          [newTutorId, id],
-        );
+        return q1(`UPDATE test_allocation SET user_id=$1 WHERE allocation_id=$2`, [newTutorId, id]);
       },
       read: async (id: number) =>
-        (
-          await q1(
-            `SELECT user_id FROM test_allocation WHERE allocation_id=$1`,
-            [id],
-          )
-        ).rows[0].user_id,
+        (await q1(`SELECT user_id FROM test_allocation WHERE allocation_id=$1`, [id])).rows[0]
+          .user_id,
       expectDynamic: async () => await getUserId("testta@demo.edu"),
     },
   ])("updates allocation: $label", async (caseDef) => {

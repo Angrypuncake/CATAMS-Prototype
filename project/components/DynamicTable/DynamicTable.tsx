@@ -15,13 +15,7 @@ import {
 } from "@mui/material";
 import DownloadIcon from "@mui/icons-material/Download";
 import type { TableRowData, ActionButton, DynamicTableProps } from "./types";
-import {
-  searchInValue,
-  compareValues,
-  defaultRender,
-  exportToCSV,
-  exportToJSON,
-} from "./utils";
+import { searchInValue, compareValues, defaultRender, exportToCSV, exportToJSON } from "./utils";
 import { SearchBar } from "./components/SearchBar";
 import { TableHeader } from "./components/TableHeader";
 import { ActionButtons } from "./components/ActionButtons";
@@ -56,11 +50,9 @@ function DynamicTable<T = Record<string, unknown>>({
   const [rowsPerPage, setRowsPerPage] = useState(defaultRowsPerPage);
   const [searchTerm, setSearchTerm] = useState("");
   const [sortColumn, setSortColumn] = useState<(keyof T & string) | null>(
-    defaultSortColumn ?? null,
+    defaultSortColumn ?? null
   );
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(
-    defaultSortDirection,
-  );
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">(defaultSortDirection);
 
   const inferredColumns = useMemo(() => {
     // If columns are explicitly provided, use them
@@ -119,13 +111,7 @@ function DynamicTable<T = Record<string, unknown>>({
     return enablePagination
       ? sortedRows.slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
       : sortedRows;
-  }, [
-    sortedRows,
-    enablePagination,
-    enableServerSidePagination,
-    page,
-    rowsPerPage,
-  ]);
+  }, [sortedRows, enablePagination, enableServerSidePagination, page, rowsPerPage]);
 
   const handleChangePage = (_event: unknown, newPage: number) => {
     setPage(newPage);
@@ -136,7 +122,7 @@ function DynamicTable<T = Record<string, unknown>>({
   };
 
   const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     const newRowsPerPage = parseInt(event.target.value, 10);
     setRowsPerPage(newRowsPerPage);
@@ -207,16 +193,8 @@ function DynamicTable<T = Record<string, unknown>>({
           searchPlaceholder={searchPlaceholder}
           onSearchChange={handleSearchChange}
           onClearSearch={handleClearSearch}
-          filteredCount={
-            enableServerSidePagination
-              ? paginatedRows.length
-              : filteredRows.length
-          }
-          totalCount={
-            enableServerSidePagination
-              ? (totalCount ?? 0)
-              : (totalCount ?? rows.length)
-          }
+          filteredCount={enableServerSidePagination ? paginatedRows.length : filteredRows.length}
+          totalCount={enableServerSidePagination ? (totalCount ?? 0) : (totalCount ?? rows.length)}
         />
       )}
 
@@ -240,24 +218,17 @@ function DynamicTable<T = Record<string, unknown>>({
                     const custom = columnRenderers?.[col.key];
                     return (
                       <TableCell key={String(col.key)}>
-                        {custom
-                          ? custom(value, row, col.key)
-                          : defaultRender(value, maxChips)}
+                        {custom ? custom(value, row, col.key) : defaultRender(value, maxChips)}
                       </TableCell>
                     );
                   })}
-                  {actions && actions.length > 0 && (
-                    <ActionButtons actions={actions} row={row} />
-                  )}
+                  {actions && actions.length > 0 && <ActionButtons actions={actions} row={row} />}
                 </TableRow>
               ))
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={
-                    inferredColumns.length +
-                    (actions && actions.length > 0 ? 1 : 0)
-                  }
+                  colSpan={inferredColumns.length + (actions && actions.length > 0 ? 1 : 0)}
                   align="center"
                   sx={{ py: 4 }}
                 >
@@ -276,9 +247,7 @@ function DynamicTable<T = Record<string, unknown>>({
           rowsPerPageOptions={rowsPerPageOptions}
           component="div"
           count={
-            enableServerSidePagination
-              ? (totalCount ?? 0)
-              : (totalCount ?? filteredRows.length)
+            enableServerSidePagination ? (totalCount ?? 0) : (totalCount ?? filteredRows.length)
           }
           rowsPerPage={rowsPerPage}
           page={page}

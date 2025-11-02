@@ -24,11 +24,7 @@ export async function getAdminOverview() {
   return res.data;
 }
 
-export async function getBudgetOverview(
-  year: number,
-  session: string,
-  threshold: number,
-) {
+export async function getBudgetOverview(year: number, session: string, threshold: number) {
   const res = await axios.get("/uc/overview", {
     params: { year, session, threshold },
   });
@@ -78,9 +74,7 @@ export async function getUserUnits(id: number) {
  */
 export async function getUsers(filters?: Record<string, string | number>) {
   const params = filters
-    ? new URLSearchParams(
-        Object.entries(filters).map(([k, v]) => [k, String(v)]),
-      )
+    ? new URLSearchParams(Object.entries(filters).map(([k, v]) => [k, String(v)]))
     : "";
   const res = await axios.get(`/users${params ? "?" + params : ""}`);
   return res.data.data;

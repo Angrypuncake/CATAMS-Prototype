@@ -12,13 +12,9 @@ interface Props extends React.ImgHTMLAttributes<HTMLImageElement> {
   white?: boolean;
 }
 
-const UsydLogo: React.FC<Props> = ({
-  white = false,
-  className,
-  ...imgProps
-}) => {
+const UsydLogo: React.FC<Props> = ({ white = false, className, ...imgProps }) => {
   const [src, setSrc] = React.useState<string>(
-    white ? "/usyd_logo_white.svg" : "/usyd_logo_white.png",
+    white ? "/usyd_logo_white.svg" : "/usyd_logo_white.png"
   );
 
   const onError = React.useCallback(() => {

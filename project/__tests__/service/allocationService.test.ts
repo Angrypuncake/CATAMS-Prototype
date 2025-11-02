@@ -40,9 +40,7 @@ jest.mock("../../app/services/unitService", () => ({
 global.fetch = jest.fn();
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
-const { getCoordinatorUnits, getUnitOffering } = jest.requireMock(
-  "../../app/services/unitService",
-);
+const { getCoordinatorUnits, getUnitOffering } = jest.requireMock("../../app/services/unitService");
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -53,10 +51,7 @@ beforeEach(() => {
 test("getTutorAllocations builds params and returns data", async () => {
   mockedAxios.get.mockResolvedValueOnce({ data: { data: ["ok"], total: 1 } });
   const res = await getTutorAllocations("u1", 2, 5, "abc", "unit", "asc");
-  expect(mockedAxios.get).toHaveBeenCalledWith(
-    "/tutor/allocations",
-    expect.any(Object),
-  );
+  expect(mockedAxios.get).toHaveBeenCalledWith("/tutor/allocations", expect.any(Object));
   expect(res).toEqual({ data: ["ok"], total: 1 });
 });
 
@@ -77,9 +72,7 @@ test("getAllocationById returns mapped row", async () => {
 
 test("getAllocationById throws if missing row", async () => {
   mockedAxios.get.mockResolvedValueOnce({ data: { data: null } });
-  await expect(getAllocationById("9")).rejects.toThrow(
-    "Allocation 9 not found",
-  );
+  await expect(getAllocationById("9")).rejects.toThrow("Allocation 9 not found");
 });
 
 test("getFormattedAllocationById formats and normalizes", async () => {
@@ -103,10 +96,7 @@ test("getFormattedAllocationById formats and normalizes", async () => {
 test("getAllocationsByUnit and ByUnitAndActivityType call correct endpoints", async () => {
   mockedAxios.get.mockResolvedValueOnce({ data: { data: ["x"] } });
   await getAllocationsByUnit("COMP1000");
-  expect(mockedAxios.get).toHaveBeenCalledWith(
-    "/admin/allocations",
-    expect.any(Object),
-  );
+  expect(mockedAxios.get).toHaveBeenCalledWith("/admin/allocations", expect.any(Object));
 
   mockedAxios.get.mockResolvedValueOnce({ data: { data: ["y"] } });
   const res = await getAllocationsByUnitAndActivityType("COMP", "Lab", 1);
@@ -116,9 +106,7 @@ test("getAllocationsByUnit and ByUnitAndActivityType call correct endpoints", as
 test("getAdminAllocations builds URLSearchParams properly", async () => {
   mockedAxios.get.mockResolvedValueOnce({ data: { ok: 1 } });
   await getAdminAllocations({ page: 2, limit: 10, q: "x", unitCode: "COMP" });
-  expect(mockedAxios.get).toHaveBeenCalledWith(
-    expect.stringContaining("/admin/allocations?"),
-  );
+  expect(mockedAxios.get).toHaveBeenCalledWith(expect.stringContaining("/admin/allocations?"));
 });
 
 test("getCurrentUser uses withCredentials", async () => {
@@ -175,10 +163,7 @@ test("createUnscheduledAllocation posts and returns data", async () => {
     hours: 3,
     note: "ok",
   });
-  expect(mockedAxios.post).toHaveBeenCalledWith(
-    "/allocations/unscheduled",
-    expect.any(Object),
-  );
+  expect(mockedAxios.post).toHaveBeenCalledWith("/allocations/unscheduled", expect.any(Object));
   expect(res.allocationId).toBe(10);
 });
 
@@ -202,7 +187,7 @@ test("getUnscheduledAllocations uses fetch and returns json", async () => {
   });
   const r = await getUnscheduledAllocations(9, "Lab");
   expect(global.fetch).toHaveBeenCalledWith(
-    "/api/allocations/unscheduled?offeringId=9&activityType=Lab",
+    "/api/allocations/unscheduled?offeringId=9&activityType=Lab"
   );
   expect(r[0].a).toBe(1);
 });
@@ -219,10 +204,7 @@ test("getUnscheduledAllocationsByOffering calls axios with params", async () => 
 /* ---------------- UC-level combined unscheduled allocations -------------- */
 
 test("getAllUnscheduledAllocationsForUC returns merged data", async () => {
-  getCoordinatorUnits.mockResolvedValueOnce([
-    { offering_id: 1 },
-    { offering_id: 2 },
-  ]);
+  getCoordinatorUnits.mockResolvedValueOnce([{ offering_id: 1 }, { offering_id: 2 }]);
   getUnitOffering.mockResolvedValueOnce({
     offeringId: 1,
     unitCode: "COMP1",
@@ -260,7 +242,7 @@ test("getAllUnscheduledAllocationsForUC throws on error", async () => {
 
   expect(errorSpy).toHaveBeenCalledWith(
     "Failed to fetch all UC unscheduled allocations:",
-    expect.any(Error),
+    expect.any(Error)
   );
   errorSpy.mockRestore();
 });

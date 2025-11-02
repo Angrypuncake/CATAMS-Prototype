@@ -19,7 +19,7 @@ export async function POST(req: NextRequest) {
         count(*) FILTER (WHERE activity_date IS NULL)    AS missing_date
       FROM s
       `,
-      [stagingId],
+      [stagingId]
     );
     const blocking =
       Number(chk[0].missing_unit_code) +
@@ -28,21 +28,15 @@ export async function POST(req: NextRequest) {
     if (blocking > 0) {
       return NextResponse.json(
         { error: "Fix validation issues before commit", issues: chk[0] },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     // Run ETL
-    const { rows } = await query(
-      `SELECT * FROM public.etl_commit_staging($1)`,
-      [stagingId],
-    );
+    const { rows } = await query(`SELECT * FROM public.etl_commit_staging($1)`, [stagingId]);
 
     // (Nice to have) mark batch committed
-    await query(
-      `UPDATE public.import_batch SET status='committed' WHERE batch_id=$1`,
-      [stagingId],
-    );
+    await query(`UPDATE public.import_batch SET status='committed' WHERE batch_id=$1`, [stagingId]);
 
     return NextResponse.json({
       committed: true,
@@ -55,9 +49,6 @@ export async function POST(req: NextRequest) {
     });
   } catch (err) {
     console.error("Commit error:", err);
-    return NextResponse.json(
-      { error: "Failed to commit import" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to commit import" }, { status: 500 });
   }
 }

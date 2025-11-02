@@ -1,13 +1,5 @@
 "use client";
-import {
-  Typography,
-  Box,
-  Paper,
-  Divider,
-  Button,
-  Stack,
-  TextField,
-} from "@mui/material";
+import { Typography, Box, Paper, Divider, Button, Stack, TextField } from "@mui/material";
 import type { TutorRequest } from "@/app/_types/request";
 import ReviewLayout from "./ReviewLayout";
 import { useEffect, useState } from "react";
@@ -36,14 +28,7 @@ export default function ClaimReview({
   readOnly?: boolean;
   currentUserId?: number;
 }) {
-  const {
-    allocationId,
-    requestStatus,
-    requestId,
-    createdAt,
-    requesterId,
-    requestReason,
-  } = data;
+  const { allocationId, requestStatus, requestId, createdAt, requesterId, requestReason } = data;
 
   const details = data.details as { hours: number; paycode: string };
   const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
@@ -75,21 +60,11 @@ export default function ClaimReview({
   };
   const rejectAsUC = async () => {
     if (!currentUserId) return;
-    await ucRejectRequest(
-      Number(requestId),
-      currentUserId,
-      undefined,
-      reviewerNote,
-    );
+    await ucRejectRequest(Number(requestId), currentUserId, undefined, reviewerNote);
   };
   const taForward = async () => {
     if (!currentUserId) return;
-    await taForwardToUC(
-      Number(requestId),
-      currentUserId,
-      requestReason ?? undefined,
-      reviewerNote,
-    );
+    await taForwardToUC(Number(requestId), currentUserId, requestReason ?? undefined, reviewerNote);
   };
   const taReject = async () => {
     if (!currentUserId) return;
@@ -97,25 +72,16 @@ export default function ClaimReview({
       Number(requestId),
       currentUserId,
       requestReason ?? undefined,
-      reviewerNote,
+      reviewerNote
     );
   };
 
   return (
     <ReviewLayout title="Claim Request Review" data={data}>
       {/* ======= TOP SECTION: INITIATOR + SYSTEM RECORD ======= */}
-      <Box
-        display="flex"
-        flexWrap="wrap"
-        gap={3}
-        alignItems="stretch"
-        sx={{ mb: 3 }}
-      >
+      <Box display="flex" flexWrap="wrap" gap={3} alignItems="stretch" sx={{ mb: 3 }}>
         {/* INITIATOR DETAILS */}
-        <Paper
-          variant="outlined"
-          sx={{ flex: 1, p: 3, borderRadius: 2, minWidth: 320 }}
-        >
+        <Paper variant="outlined" sx={{ flex: 1, p: 3, borderRadius: 2, minWidth: 320 }}>
           <Typography variant="subtitle1" fontWeight={700} gutterBottom>
             INITIATOR DETAILS
           </Typography>
@@ -145,17 +111,13 @@ export default function ClaimReview({
 
         {/* SYSTEM ALLOCATION RECORD */}
         {allocation && (
-          <Paper
-            variant="outlined"
-            sx={{ flex: 2, p: 3, borderRadius: 2, minWidth: 400 }}
-          >
+          <Paper variant="outlined" sx={{ flex: 2, p: 3, borderRadius: 2, minWidth: 400 }}>
             <Typography variant="subtitle1" fontWeight={700} gutterBottom>
               SYSTEM ALLOCATION RECORD
             </Typography>
 
             <Typography variant="body2" mb={1}>
-              <strong>Unit:</strong> {allocation.unit_code} –{" "}
-              {allocation.unit_name}
+              <strong>Unit:</strong> {allocation.unit_code} – {allocation.unit_name}
             </Typography>
             <Typography variant="body2">
               <strong>Session:</strong> {allocation.activity_name}
@@ -180,11 +142,7 @@ export default function ClaimReview({
             </Typography>
 
             {allocation.note && (
-              <Box
-                mt={2}
-                p={1.5}
-                sx={{ bgcolor: "action.hover", borderRadius: 1 }}
-              >
+              <Box mt={2} p={1.5} sx={{ bgcolor: "action.hover", borderRadius: 1 }}>
                 <Typography variant="subtitle2">Notes</Typography>
                 <Typography variant="body2" color="text.secondary">
                   {allocation.note}
@@ -196,18 +154,9 @@ export default function ClaimReview({
       </Box>
 
       {/* ======= MID SECTION: CLAIMED + REASON ======= */}
-      <Box
-        display="flex"
-        flexWrap="wrap"
-        gap={3}
-        alignItems="stretch"
-        sx={{ mb: 3 }}
-      >
+      <Box display="flex" flexWrap="wrap" gap={3} alignItems="stretch" sx={{ mb: 3 }}>
         {/* ALTERED DETAILS */}
-        <Paper
-          variant="outlined"
-          sx={{ flex: 1, p: 3, borderRadius: 2, minWidth: 320 }}
-        >
+        <Paper variant="outlined" sx={{ flex: 1, p: 3, borderRadius: 2, minWidth: 320 }}>
           <Typography variant="subtitle1" fontWeight={700} gutterBottom>
             CLAIMED (ALTERED) DETAILS
           </Typography>
@@ -216,10 +165,8 @@ export default function ClaimReview({
             <strong>Claimed Hours:</strong>{" "}
             <span
               style={{
-                color:
-                  allocation?.hours !== details.hours ? "#d32f2f" : "inherit",
-                fontWeight:
-                  allocation?.hours !== details.hours ? 600 : "normal",
+                color: allocation?.hours !== details.hours ? "#d32f2f" : "inherit",
+                fontWeight: allocation?.hours !== details.hours ? 600 : "normal",
               }}
             >
               {details.hours} hour(s)
@@ -230,12 +177,8 @@ export default function ClaimReview({
             <strong>Paycode:</strong>{" "}
             <span
               style={{
-                color:
-                  allocation?.paycode_id !== details.paycode
-                    ? "#d32f2f"
-                    : "inherit",
-                fontWeight:
-                  allocation?.paycode_id !== details.paycode ? 600 : "normal",
+                color: allocation?.paycode_id !== details.paycode ? "#d32f2f" : "inherit",
+                fontWeight: allocation?.paycode_id !== details.paycode ? 600 : "normal",
               }}
             >
               {details.paycode}
@@ -244,10 +187,7 @@ export default function ClaimReview({
         </Paper>
 
         {/* REASON BOX */}
-        <Paper
-          variant="outlined"
-          sx={{ flex: 1.5, p: 3, borderRadius: 2, minWidth: 320 }}
-        >
+        <Paper variant="outlined" sx={{ flex: 1.5, p: 3, borderRadius: 2, minWidth: 320 }}>
           <Typography variant="subtitle1" fontWeight={700} gutterBottom>
             REQUEST REASON
           </Typography>

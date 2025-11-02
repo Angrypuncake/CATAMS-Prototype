@@ -75,7 +75,7 @@ describe("postCorrectionRequest", () => {
     const res = await postCorrectionRequest(45, payload);
     expect(mockedAxios.post).toHaveBeenCalledWith(
       "/tutor/allocations/45/requests/correction",
-      payload,
+      payload
     );
     expect(res).toEqual({ ok: true });
   });
@@ -209,10 +209,7 @@ describe("getRequestsByAllocation", () => {
       },
     });
     const res = await getRequestsByAllocation(3);
-    expect(mockedAxios.get).toHaveBeenCalledWith(
-      "/requests?allocationId=3",
-      undefined,
-    );
+    expect(mockedAxios.get).toHaveBeenCalledWith("/requests?allocationId=3", undefined);
     expect(res).toEqual([
       {
         requestId: 1,

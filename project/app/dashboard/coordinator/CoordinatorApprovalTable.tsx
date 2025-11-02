@@ -33,9 +33,7 @@ interface CoordinatorApprovalTableProps {
   pendingRequests: TutorRequestRow[];
 }
 
-const CoordinatorApprovalTable = ({
-  pendingRequests,
-}: CoordinatorApprovalTableProps) => {
+const CoordinatorApprovalTable = ({ pendingRequests }: CoordinatorApprovalTableProps) => {
   return (
     <TableContainer
       component={Paper}
@@ -71,14 +69,8 @@ const CoordinatorApprovalTable = ({
         </TableHead>
         <TableBody>
           {pendingRequests.map((row) => (
-            <TableRow
-              key={row.requestID}
-              hover
-              sx={{ "& td": { borderColor: "#000" } }}
-            >
-              <TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>
-                {row.requestID}
-              </TableCell>
+            <TableRow key={row.requestID} hover sx={{ "& td": { borderColor: "#000" } }}>
+              <TableCell sx={{ fontVariantNumeric: "tabular-nums" }}>{row.requestID}</TableCell>
               <TableCell>
                 <Chip
                   size="small"
@@ -98,8 +90,7 @@ const CoordinatorApprovalTable = ({
                 {row.relatedSession}
               </TableCell>
               <TableCell>
-                {row.creatorRole}: <strong>{row.creator}</strong> ({row.user_id}
-                )
+                {row.creatorRole}: <strong>{row.creator}</strong> ({row.user_id})
               </TableCell>
               <TableCell align="center">
                 <Button size="small" variant="outlined" sx={pillApprove}>
@@ -115,11 +106,7 @@ const CoordinatorApprovalTable = ({
           ))}
           {pendingRequests.length === 0 && (
             <TableRow>
-              <TableCell
-                colSpan={6}
-                align="center"
-                sx={{ py: 4, color: "text.secondary" }}
-              >
+              <TableCell colSpan={6} align="center" sx={{ py: 4, color: "text.secondary" }}>
                 No pending requests.
               </TableCell>
             </TableRow>

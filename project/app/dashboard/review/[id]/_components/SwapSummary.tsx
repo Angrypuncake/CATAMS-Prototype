@@ -2,10 +2,7 @@
 import { Box, Divider, Paper, Typography } from "@mui/material";
 import { SwapHoriz } from "@mui/icons-material";
 import type { Tutor } from "@/app/_types/tutor";
-import type {
-  AdminAllocationRow,
-  TutorAllocationRow,
-} from "@/app/_types/allocations";
+import type { AdminAllocationRow, TutorAllocationRow } from "@/app/_types/allocations";
 
 interface SwapSummaryProps {
   sourceTutor: Tutor | null;
@@ -49,28 +46,16 @@ export default function SwapSummary({
               From
             </Typography>
             <Typography color="text.secondary">
-              Tutor Name:{" "}
-              {`${sourceTutor?.first_name ?? "-"} ${
-                sourceTutor?.last_name ?? "-"
-              }`}
+              Tutor Name: {`${sourceTutor?.first_name ?? "-"} ${sourceTutor?.last_name ?? "-"}`}
             </Typography>
-            <Typography color="text.secondary">
-              Tutor ID: {requesterId}
-            </Typography>
-            <Typography color="text.secondary">
-              Allocation ID: {allocationId}
-            </Typography>
+            <Typography color="text.secondary">Tutor ID: {requesterId}</Typography>
+            <Typography color="text.secondary">Allocation ID: {allocationId}</Typography>
             <Typography variant="body2" mt={1}>
               {sourceAllocation?.activity_name ?? "—"}
             </Typography>
           </Paper>
 
-          <Box
-            display="flex"
-            alignItems="center"
-            justifyContent="center"
-            flexShrink={0}
-          >
+          <Box display="flex" alignItems="center" justifyContent="center" flexShrink={0}>
             <SwapHoriz fontSize="large" />
           </Box>
 
@@ -80,8 +65,7 @@ export default function SwapSummary({
               To
             </Typography>
             <Typography color="text.secondary">
-              Tutor: {selectedAllocation.first_name}{" "}
-              {selectedAllocation.last_name}
+              Tutor: {selectedAllocation.first_name} {selectedAllocation.last_name}
             </Typography>
             <Typography color="text.secondary">
               Allocation ID: {selectedAllocation.id ?? "—"}
@@ -93,13 +77,11 @@ export default function SwapSummary({
         </Box>
 
         <Typography variant="body2" color="text.secondary" mt={2}>
-          <strong>Heads-up:</strong> This will replace the initiator’s
-          allocation with{" "}
+          <strong>Heads-up:</strong> This will replace the initiator’s allocation with{" "}
           <strong>
             {selectedAllocation.first_name} {selectedAllocation.last_name}
           </strong>{" "}
-          for the same session (
-          {selectedAllocation.session_date ?? "date unknown"}).
+          for the same session ({selectedAllocation.session_date ?? "date unknown"}).
         </Typography>
       </Paper>
     </>

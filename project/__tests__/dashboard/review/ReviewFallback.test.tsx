@@ -23,7 +23,7 @@ describe("ReviewFallback Component", () => {
 
     expect(screen.getByText("Unknown Request Type")).toBeInTheDocument();
     expect(
-      screen.getByText("This request type is not recognized or supported yet."),
+      screen.getByText("This request type is not recognized or supported yet.")
     ).toBeInTheDocument();
   });
 });

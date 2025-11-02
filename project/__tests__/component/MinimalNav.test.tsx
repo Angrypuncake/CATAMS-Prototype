@@ -133,16 +133,14 @@ describe("MinimalNav Component", () => {
       expect(mockedAxios.post).toHaveBeenCalledWith(
         "/api/auth/logout",
         {},
-        { withCredentials: true },
+        { withCredentials: true }
       );
       expect(mockPush).toHaveBeenCalledWith("/login");
     });
   });
 
   test("should handle logout error", async () => {
-    const consoleErrorSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
     mockedAxios.post.mockRejectedValue(new Error("Logout failed"));
     mockPathname.mockReturnValue("/dashboard");
 
@@ -152,10 +150,7 @@ describe("MinimalNav Component", () => {
     fireEvent.click(logoutButton);
 
     await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Logout error:",
-        expect.any(Error),
-      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Logout error:", expect.any(Error));
     });
 
     consoleErrorSpy.mockRestore();
@@ -174,7 +169,7 @@ describe("MinimalNav Component", () => {
     // Find the orange accent div by checking for background-color in style
     const divs = container.querySelectorAll("div");
     const orangeAccent = Array.from(divs).find((div) =>
-      div.style.backgroundColor.includes("rgb(249, 115, 22)"),
+      div.style.backgroundColor.includes("rgb(249, 115, 22)")
     );
     expect(orangeAccent).toBeTruthy();
   });
@@ -185,7 +180,7 @@ describe("MinimalNav Component", () => {
     // Find the orange accent div by checking for background-color in style
     const divs = container.querySelectorAll("div");
     const orangeAccent = Array.from(divs).find((div) =>
-      div.style.backgroundColor.includes("rgb(249, 115, 22)"),
+      div.style.backgroundColor.includes("rgb(249, 115, 22)")
     );
     expect(orangeAccent).toBeFalsy();
   });

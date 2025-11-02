@@ -9,9 +9,7 @@ export interface UnitOffering {
   session: string;
   budget: number;
 }
-export async function getUnitOffering(
-  offeringId: number,
-): Promise<UnitOffering> {
+export async function getUnitOffering(offeringId: number): Promise<UnitOffering> {
   const res = await axios.get(`/offerings/${offeringId}`);
   return res.data as UnitOffering;
 }

@@ -8,22 +8,17 @@ import {
   Button,
   Box,
   Paper,
-  Grid,
   Stack,
   Divider,
 } from "@mui/material";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import { CoordinatorBudgetOverview, UnitBudgetRow } from "./types";
 import UnitBudgetOverviewTable from "./UnitBudgetOverviewTable";
-import CoordinatorApprovalTable from "./CoordinatorApprovalTable";
-import AlertBox from "@/components/AlertBox";
 import Link from "next/link";
-import { pendingRequests } from "./mock";
 import { getUnitBudgetOverviews } from "@/app/services/budgetService";
 import { getCurrentYearAndSession } from "@/app/utils/dateHelpers";
 import AssignUnscheduledButton from "./_components/AssignUnscheduledButton";
 import UnscheduledAllocationsTable from "./_components/UnscheduledAllocationsTable";
-import { UCApproval, UCApprovalResponse } from "@/app/_types/request";
+import { UCApproval } from "@/app/_types/request";
 import { getRequestsByUC } from "@/app/services/requestService";
 import UCRequestsTable from "./CoordinatorRequestTable";
 
@@ -76,7 +71,7 @@ const Page = () => {
   useEffect(() => {
     fetchBudgetOverview();
     fetchUnitRequests();
-  }, []); // eslint-disable-line
+  }, []);
 
   const computedBudgetData = useMemo<{
     rows: (UnitBudgetRow & { status: string })[];
@@ -107,12 +102,7 @@ const Page = () => {
         }}
       >
         {/* Header */}
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ mb: 3 }}
-        >
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
           <Typography variant="h4" fontWeight={800}>
             Unit Coordinator Dashboard
           </Typography>
@@ -139,12 +129,7 @@ const Page = () => {
 
         {/* Budget Overview */}
         <Paper sx={{ ...cardSx, mb: 3 }}>
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            sx={{ mb: 1 }}
-          >
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
             <Box>
               <Typography variant="h6">Budget Overview</Typography>
               <Typography variant="body2" color="text.secondary">
@@ -162,10 +147,7 @@ const Page = () => {
                 max={1}
                 sx={{ width: 120 }}
               />
-              <Typography
-                variant="body1"
-                sx={{ width: 40, textAlign: "right" }}
-              >
+              <Typography variant="body1" sx={{ width: 40, textAlign: "right" }}>
                 {Math.round(threshold * 100)}%
               </Typography>
               <Button variant="contained" size="small" sx={blackContained}>
@@ -174,11 +156,7 @@ const Page = () => {
             </Stack>
           </Stack>
 
-          <Menu
-            open={Boolean(anchorEl)}
-            anchorEl={anchorEl}
-            onClose={() => setAnchorEl(null)}
-          >
+          <Menu open={Boolean(anchorEl)} anchorEl={anchorEl} onClose={() => setAnchorEl(null)}>
             <MenuItem onClick={() => setAnchorEl(null)}>This Session</MenuItem>
             <MenuItem onClick={() => setAnchorEl(null)}>Last 7 days</MenuItem>
             <MenuItem onClick={() => setAnchorEl(null)}>Last 30 days</MenuItem>
@@ -188,12 +166,7 @@ const Page = () => {
         </Paper>
 
         <Paper sx={{ ...cardSx, height: "100%" }}>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            sx={{ mb: 1 }}
-          >
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
             <Box>
               <Typography variant="h6">UC Approvals</Typography>
               <Typography variant="body2" color="text.secondary">
@@ -206,12 +179,7 @@ const Page = () => {
 
         {/* Unscheduled allocations */}
         <Paper sx={{ ...cardSx, mt: 3 }}>
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            sx={{ mb: 1 }}
-          >
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
             <Box>
               <Typography variant="h6">Unscheduled Allocations</Typography>
               <Typography variant="body2" color="text.secondary">

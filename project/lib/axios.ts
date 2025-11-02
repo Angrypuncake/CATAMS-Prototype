@@ -14,9 +14,7 @@ api.interceptors.request.use(
     // Only access document.cookie in browser environment
     if (typeof window !== "undefined" && document.cookie) {
       const cookies = document.cookie.split("; ");
-      const authCookie = cookies.find((cookie) =>
-        cookie.startsWith("auth-token="),
-      );
+      const authCookie = cookies.find((cookie) => cookie.startsWith("auth-token="));
       if (authCookie) {
         const token = authCookie.split("=")[1];
         config.headers.Authorization = `Bearer ${token}`;
@@ -24,7 +22,7 @@ api.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error),
+  (error) => Promise.reject(error)
 );
 
 // attach jwt tokens automatically
@@ -53,7 +51,7 @@ api.interceptors.response.use(
 
     console.groupCollapsed(
       `%c[API ERROR] ${details.method?.toUpperCase()} ${details.url}`,
-      "color: #ff4d4d; font-weight: bold;",
+      "color: #ff4d4d; font-weight: bold;"
     );
     try {
       console.error(JSON.stringify(details, null, 2));
@@ -68,7 +66,7 @@ api.interceptors.response.use(
     console.groupEnd();
 
     return Promise.reject(error);
-  },
+  }
 );
 
 export default api;

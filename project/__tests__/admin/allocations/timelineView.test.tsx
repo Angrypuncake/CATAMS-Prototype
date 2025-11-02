@@ -1,5 +1,5 @@
 import "@testing-library/jest-dom";
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import {
   TimelineView,
   WeekDef,
@@ -44,19 +44,13 @@ describe("TimelineView", () => {
     },
   ];
 
-  const renderTimeline = (
-    props?: Partial<React.ComponentProps<typeof TimelineView>>,
-  ) =>
-    render(
-      <TimelineView weeks={mockWeeks} activities={mockActivities} {...props} />,
-    );
+  const renderTimeline = (props?: Partial<React.ComponentProps<typeof TimelineView>>) =>
+    render(<TimelineView weeks={mockWeeks} activities={mockActivities} {...props} />);
 
   test("renders title, weeks, and activity rows", () => {
     renderTimeline({ title: "Allocation Timeline" });
     expect(screen.getByText("Allocation Timeline")).toBeInTheDocument();
-    mockWeeks.forEach((w) =>
-      expect(screen.getByText(w.label)).toBeInTheDocument(),
-    );
+    mockWeeks.forEach((w) => expect(screen.getByText(w.label)).toBeInTheDocument());
     expect(screen.getByText("INFO1110 - Tutorial 01")).toBeInTheDocument();
     expect(screen.getByText("COMP2123 - Lab 01")).toBeInTheDocument();
   });
@@ -64,16 +58,12 @@ describe("TimelineView", () => {
   test("renders tutors and handles multiple tutors per cell", () => {
     renderTimeline();
     ["John Doe", "Jane Smith", "Bob Wilson"].forEach((tutor) => {
-      expect(
-        screen.getAllByText(new RegExp(tutor, "i")).length,
-      ).toBeGreaterThan(0);
+      expect(screen.getAllByText(new RegExp(tutor, "i")).length).toBeGreaterThan(0);
     });
   });
 
   it.each(["compact", "regular"])("renders with %s density", (density) => {
-    const { container } = renderTimeline(
-      density === "compact" ? { density } : {},
-    );
+    const { container } = renderTimeline(density === "compact" ? { density } : {});
     expect(container.firstChild).toBeTruthy();
   });
 
@@ -157,16 +147,14 @@ describe("TimelineView", () => {
   test("calls onCellClick when cell clicked", () => {
     const mockOnCellClick = jest.fn();
     renderTimeline({ onCellClick: mockOnCellClick });
-    const cell = screen
-      .getAllByRole("button")
-      .find((b) => b.textContent?.includes("John Doe"));
+    const cell = screen.getAllByRole("button").find((b) => b.textContent?.includes("John Doe"));
     if (cell) {
       fireEvent.click(cell);
       expect(mockOnCellClick).toHaveBeenCalledWith(
         expect.objectContaining({
           activity: expect.any(Object),
           week: expect.any(Object),
-        }),
+        })
       );
     }
   });
@@ -179,11 +167,7 @@ describe("TimelineView", () => {
     if (cell) {
       await user.hover(cell);
       try {
-        const editBtn = await screen.findByText(
-          "Edit this allocation",
-          {},
-          { timeout: 2000 },
-        );
+        const editBtn = await screen.findByText("Edit this allocation", {}, { timeout: 2000 });
         await user.click(editBtn);
         expect(mockOnCellEdit).toHaveBeenCalled();
       } catch {

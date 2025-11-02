@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  Box,
-  TextField,
-  InputAdornment,
-  IconButton,
-  Typography,
-} from "@mui/material";
+import { Box, TextField, InputAdornment, IconButton, Typography } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
 
@@ -52,11 +46,7 @@ export const SearchBar = ({
         }}
       />
       {searchTerm && (
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{ mt: 1, display: "block" }}
-        >
+        <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
           Found {filteredCount} of {totalCount} results
         </Typography>
       )}

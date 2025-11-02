@@ -18,7 +18,7 @@ export function TutorCombo({ options, valueId, onChange }: TutorComboProps) {
 
   const selected = useMemo(
     () => options.find((t) => t.user_id === valueId) || null,
-    [options, valueId],
+    [options, valueId]
   );
 
   const filtered = useMemo(() => {
@@ -69,9 +69,7 @@ export function TutorCombo({ options, valueId, onChange }: TutorComboProps) {
                   <div className="font-medium">
                     {(t.first_name ?? "") + " " + (t.last_name ?? "")}
                   </div>
-                  {t.email && (
-                    <div className="text-xs text-gray-500">{t.email}</div>
-                  )}
+                  {t.email && <div className="text-xs text-gray-500">{t.email}</div>}
                 </button>
               </li>
             ))}

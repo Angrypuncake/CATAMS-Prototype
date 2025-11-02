@@ -14,10 +14,7 @@ const DOW_OFFSETS: Record<Weekday, number> = {
   Sun: 6,
 };
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const allocationId = Number(id);
   if (!allocationId) {
@@ -50,15 +47,7 @@ export async function PATCH(
     start_at?: string;
     end_at?: string;
     location?: string;
-    propagate_fields?: (
-      | "tutor"
-      | "paycode"
-      | "start"
-      | "end"
-      | "note"
-      | "status"
-      | "location"
-    )[];
+    propagate_fields?: ("tutor" | "paycode" | "start" | "end" | "note" | "status" | "location")[];
     propagate_notes_mode?: "overwrite" | "append";
     propagate_dow?: Weekday;
     propagate_occurrence_ids?: number[];
@@ -78,10 +67,9 @@ export async function PATCH(
    LEFT JOIN session_occurrence so ON so.occurrence_id = a.session_id
        WHERE a.allocation_id = $1
       `,
-      [allocationId],
+      [allocationId]
     );
-    if (!alloc)
-      return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!alloc) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     // 1) Update allocation row core fields if present
     console.log("test blah");
@@ -106,12 +94,12 @@ export async function PATCH(
         vals.push(allocationId);
         console.log(
           "SQL:",
-          `UPDATE allocation SET ${sets.join(", ")} WHERE allocation_id = $${vals.length}`,
+          `UPDATE allocation SET ${sets.join(", ")} WHERE allocation_id = $${vals.length}`
         );
         console.log("Values:", vals);
         await query(
           `UPDATE allocation SET ${sets.join(", ")} WHERE allocation_id = $${vals.length}`,
-          vals,
+          vals
         );
       }
     }
@@ -123,14 +111,14 @@ export async function PATCH(
     if (hasAnyTime && !hasAllTime) {
       return NextResponse.json(
         { error: "Provide session_date, start_at and end_at together." },
-        { status: 400 },
+        { status: 400 }
       );
     }
     if (hasAllTime) {
       if (!alloc.session_id) {
         return NextResponse.json(
           { error: "Cannot set schedule on an unscheduled allocation." },
-          { status: 400 },
+          { status: 400 }
         );
       }
       console.log("Date read as", session_date);
@@ -140,7 +128,7 @@ export async function PATCH(
                 start_at     = $3::time,
                 end_at       = $4::time
           WHERE occurrence_id = $1`,
-        [alloc.session_id, session_date, start_at, end_at],
+        [alloc.session_id, session_date, start_at, end_at]
       );
     }
 
@@ -148,14 +136,14 @@ export async function PATCH(
       if (!alloc.session_id) {
         return NextResponse.json(
           { error: "Cannot set schedule on an unscheduled allocation." },
-          { status: 400 },
+          { status: 400 }
         );
       }
       await query(
         `UPDATE session_occurrence
            SET location = $2
          WHERE occurrence_id = $1`,
-        [alloc.session_id, location],
+        [alloc.session_id, location]
       );
     }
 
@@ -163,7 +151,7 @@ export async function PATCH(
       if (!alloc.session_id) {
         return NextResponse.json(
           { error: "Cannot set schedule on an unscheduled allocation." },
-          { status: 400 },
+          { status: 400 }
         );
       }
       console.log(alloc.note);
@@ -171,7 +159,7 @@ export async function PATCH(
         `UPDATE session_occurrence
            SET note = COALESCE($2, note)
          WHERE occurrence_id = $1`,
-        [alloc.session_id, note],
+        [alloc.session_id, note]
       );
       console.log("Rows updated:", result.rowCount);
     }
@@ -183,9 +171,7 @@ export async function PATCH(
     });
 
     // 4) Propagation (optional)
-    const doProp =
-      Array.isArray(propagate_occurrence_ids) &&
-      propagate_occurrence_ids.length > 0;
+    const doProp = Array.isArray(propagate_occurrence_ids) && propagate_occurrence_ids.length > 0;
     if (doProp) {
       // Filter target occurrences to the same activity for safety
       const { rows: validTargets } = await query(
@@ -196,7 +182,7 @@ export async function PATCH(
            AND occurrence_id = ANY($2::int[])
         ORDER BY session_date, start_at, occurrence_id
         `,
-        [alloc.allocation_activity_id, propagate_occurrence_ids],
+        [alloc.allocation_activity_id, propagate_occurrence_ids]
       );
 
       console.log("Propagation request", {
@@ -208,17 +194,12 @@ export async function PATCH(
       // Derive “new time” from payload (if start/end selected). If not selected, keep each row’s existing time.
       const changeStart = propagate_fields?.includes("start") && start_at;
       const changeEnd = propagate_fields?.includes("end") && end_at;
-      const changeTutor =
-        propagate_fields?.includes("tutor") && user_id !== undefined;
-      const changePay =
-        propagate_fields?.includes("paycode") && paycode_id !== undefined;
-      const changeNotes =
-        propagate_fields?.includes("note") && note !== undefined;
-      const changeStatus =
-        propagate_fields?.includes("status") && status != null;
+      const changeTutor = propagate_fields?.includes("tutor") && user_id !== undefined;
+      const changePay = propagate_fields?.includes("paycode") && paycode_id !== undefined;
+      const changeNotes = propagate_fields?.includes("note") && note !== undefined;
+      const changeStatus = propagate_fields?.includes("status") && status != null;
 
-      const changeLocation =
-        propagate_fields?.includes("location") && location != null;
+      const changeLocation = propagate_fields?.includes("location") && location != null;
 
       console.log("Propagation change flags", {
         changeStart,
@@ -246,18 +227,11 @@ export async function PATCH(
           },
         });
 
-        if (
-          propagate_dow &&
-          DOW_OFFSETS[propagate_dow] !== undefined &&
-          t.session_date
-        ) {
+        if (propagate_dow && DOW_OFFSETS[propagate_dow] !== undefined && t.session_date) {
           // Monday-of-week + offset
           const {
             rows: [{ monday }],
-          } = await query(
-            `SELECT date_trunc('week', $1::date)::date AS monday`,
-            [t.session_date],
-          );
+          } = await query(`SELECT date_trunc('week', $1::date)::date AS monday`, [t.session_date]);
           console.log("Updated occurrence timing", {
             occurrenceId: t.occurrence_id,
             newDate,
@@ -273,10 +247,10 @@ export async function PATCH(
           const offset = DOW_OFFSETS[propagate_dow]; // 0..6
           const {
             rows: [{ d }],
-          } = await query(
-            `SELECT ($1::date + ($2||' days')::interval)::date AS d`,
-            [monday, String(offset)],
-          );
+          } = await query(`SELECT ($1::date + ($2||' days')::interval)::date AS d`, [
+            monday,
+            String(offset),
+          ]);
           console.log("Updated occurrence timing", {
             occurrenceId: t.occurrence_id,
             newDate,
@@ -309,7 +283,7 @@ export async function PATCH(
               changeStart ? start_at : null,
               changeEnd ? end_at : null,
               changeLocation ? location : null,
-            ],
+            ]
           );
           console.log("Updated occurrence timing", {
             occurrenceId: t.occurrence_id,
@@ -344,7 +318,7 @@ export async function PATCH(
               changeTutor ? user_id : null,
               changePay ? paycode_id : null,
               changeStatus ? status : null,
-            ],
+            ]
           );
         }
         // 4c) Apply allocation-level NOTE changes across selected occurrences
@@ -371,7 +345,7 @@ export async function PATCH(
               note, // $2
               propagate_notes_mode || "overwrite", // $3
               t.occurrence_id, // $4
-            ],
+            ]
           );
           console.log("Updated occurrence timing", {
             occurrenceId: t.occurrence_id,
@@ -415,7 +389,7 @@ export async function PATCH(
    LEFT JOIN course_unit cu        ON cu.unit_code = uo.course_unit_id
        WHERE a.allocation_id = $1
       `,
-      [allocationId],
+      [allocationId]
     );
     console.log("Final updated row", updated);
 

@@ -145,7 +145,7 @@ test("getUsers with multiple filters builds query string (any order)", async () 
 
   // Accept either order of params (URLSearchParams preserves insertion, but be tolerant)
   expect(mockedAxios.get).toHaveBeenCalledWith(
-    expect.stringMatching(/^\/users\?(q=alex&role=admin|role=admin&q=alex)$/),
+    expect.stringMatching(/^\/users\?(q=alex&role=admin|role=admin&q=alex)$/)
   );
   expect(res).toEqual(list);
 });

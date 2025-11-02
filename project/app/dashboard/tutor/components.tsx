@@ -11,7 +11,7 @@ const StyledBox: React.FC<StyledBoxProps> = ({ children, accentColor }) => {
     <div
       className={clsx(
         "w-full shadow-md bg-white rounded-lg p-6 my-5 mx-0 border",
-        accentColor ? `border-l-4 ${accentColor}` : "border-black",
+        accentColor ? `border-l-4 ${accentColor}` : "border-black"
       )}
     >
       {children}

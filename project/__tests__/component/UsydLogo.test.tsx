@@ -65,14 +65,7 @@ describe("UsydLogo Component", () => {
   });
 
   test("should pass additional img props", () => {
-    render(
-      <UsydLogo
-        width={200}
-        height={100}
-        style={{ margin: "10px" }}
-        draggable={false}
-      />,
-    );
+    render(<UsydLogo width={200} height={100} style={{ margin: "10px" }} draggable={false} />);
 
     const logo = screen.getByAltText("University of Sydney");
     expect(logo).toHaveAttribute("width", "200");

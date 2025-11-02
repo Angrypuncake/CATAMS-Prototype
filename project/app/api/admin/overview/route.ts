@@ -3,12 +3,11 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
 export async function GET() {
-  const [usersRes, allocationsRes, userRolesCountRes, tableRes] =
-    await Promise.all([
-      query(`SELECT COUNT(*)::int AS total_users FROM public.users`),
-      query(`SELECT COUNT(*)::int AS total_allocations FROM public.allocation`),
-      query(`SELECT COUNT(*)::int AS total FROM public.users`),
-      query(`
+  const [usersRes, allocationsRes, userRolesCountRes, tableRes] = await Promise.all([
+    query(`SELECT COUNT(*)::int AS total_users FROM public.users`),
+    query(`SELECT COUNT(*)::int AS total_allocations FROM public.allocation`),
+    query(`SELECT COUNT(*)::int AS total FROM public.users`),
+    query(`
       SELECT
         u.first_name || ' ' || u.last_name AS name,
         u.email,
@@ -42,7 +41,7 @@ export async function GET() {
       GROUP BY u.user_id, name, u.email
       ORDER BY name;
     `),
-    ]);
+  ]);
 
   return NextResponse.json({
     totals: {

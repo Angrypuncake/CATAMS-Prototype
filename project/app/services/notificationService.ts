@@ -9,11 +9,7 @@ export async function notifyTA(requestId: number) {
 /**
  * Notify tutor when their swap request status changes.
  */
-export async function notifyTutor(
-  userId: number,
-  requestId: number,
-  newStatus: string,
-) {
+export async function notifyTutor(userId: number, requestId: number, newStatus: string) {
   // INSERT INTO notifications (target_user, request_id, message) VALUES ($1, $2, `Request updated to ${newStatus}`)
 }
 

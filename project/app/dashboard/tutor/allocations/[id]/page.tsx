@@ -15,23 +15,16 @@ import {
   CircularProgress,
 } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 import { useSearchParams } from "next/navigation";
 import NewCommentBox from "../_components/NewCommentBox";
 import RequestRow from "../_components/RequestRow";
 import CommentBubble from "../_components/CommentBubble";
-import type {
-  TutorAllocationRow as AllocationDetail,
-  CommentItem,
-} from "@/app/_types/allocations";
+import type { TutorAllocationRow as AllocationDetail, CommentItem } from "@/app/_types/allocations";
 import { useRouter } from "next/navigation";
 import { getFormattedAllocationById } from "@/app/services/allocationService";
 import AllocationDetails from "./_components/AllocationDetails";
-import {
-  getOpenRequestTypes,
-  getRequestsByAllocation,
-} from "@/app/services/requestService";
+import { getOpenRequestTypes, getRequestsByAllocation } from "@/app/services/requestService";
 import { getUserFromAuth } from "@/app/services/authService";
 import { BasicRequest } from "@/app/_types/request";
 import { useEffect } from "react";
@@ -49,9 +42,7 @@ export default function AllocationPage() {
   const open = Boolean(anchorEl);
   const [comment, setComment] = React.useState("");
 
-  const [allocation, setAllocation] = React.useState<AllocationDetail | null>(
-    null,
-  );
+  const [allocation, setAllocation] = React.useState<AllocationDetail | null>(null);
   const [requests, setRequests] = React.useState<BasicRequest[]>([]);
   const [comments, setComments] = React.useState<CommentItem[]>([]);
   const [loading, setLoading] = React.useState(true);
@@ -216,20 +207,12 @@ export default function AllocationPage() {
       <Card variant="outlined" sx={{ borderRadius: 2 }}>
         <CardContent>
           {/* Actions */}
-          <Stack
-            direction={{ xs: "column", sm: "row" }}
-            spacing={1}
-            sx={{ mt: 3, mb: 2 }}
-          >
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1} sx={{ mt: 3, mb: 2 }}>
             <Button
               variant="contained"
               disabled={hasOpen("claim")}
               onClick={() => router.push(`${id}/requests/claim`)}
-              title={
-                hasOpen("claim")
-                  ? "You already have a pending claim request."
-                  : ""
-              }
+              title={hasOpen("claim") ? "You already have a pending claim request." : ""}
             >
               Submit Claim
             </Button>
@@ -237,17 +220,11 @@ export default function AllocationPage() {
             <div>
               <Button
                 variant="outlined"
-                onClick={(e: React.MouseEvent<HTMLElement>) =>
-                  setAnchorEl(e.currentTarget)
-                }
+                onClick={(e: React.MouseEvent<HTMLElement>) => setAnchorEl(e.currentTarget)}
               >
                 Create Request ▾
               </Button>
-              <Menu
-                anchorEl={anchorEl}
-                open={open}
-                onClose={() => setAnchorEl(null)}
-              >
+              <Menu anchorEl={anchorEl} open={open} onClose={() => setAnchorEl(null)}>
                 <MenuItem
                   disabled={hasOpen("swap")}
                   onClick={() => router.push(`${id}/requests/swap`)}
@@ -264,32 +241,20 @@ export default function AllocationPage() {
 
                 <MenuItem
                   disabled={hasOpen("cancellation")}
-                  onClick={() =>
-                    router.push(
-                      `/dashboard/tutor/allocations/${id}/requests/cancel`,
-                    )
-                  }
+                  onClick={() => router.push(`/dashboard/tutor/allocations/${id}/requests/cancel`)}
                 >
                   Cancellation
                 </MenuItem>
 
                 <MenuItem
                   disabled={hasOpen("query")}
-                  onClick={() =>
-                    router.push(
-                      `/dashboard/tutor/allocations/${id}/requests/query`,
-                    )
-                  }
+                  onClick={() => router.push(`/dashboard/tutor/allocations/${id}/requests/query`)}
                 >
                   Query
                 </MenuItem>
               </Menu>
             </div>
-            <Button
-              variant="outlined"
-              component={Link}
-              href="/dashboard/tutor/allocations"
-            >
+            <Button variant="outlined" component={Link} href="/dashboard/tutor/allocations">
               Back to Allocations
             </Button>
           </Stack>

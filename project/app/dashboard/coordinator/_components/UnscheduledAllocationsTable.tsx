@@ -43,9 +43,7 @@ const blackOutlined = {
 
 export default function UnscheduledAllocationsTable() {
   const [allocations, setAllocations] = useState<UCUnscheduledAllocation[]>([]);
-  const [activityType, setActivityType] = useState<"Marking" | "Consultation">(
-    "Marking",
-  );
+  const [activityType, setActivityType] = useState<"Marking" | "Consultation">("Marking");
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
@@ -62,16 +60,11 @@ export default function UnscheduledAllocationsTable() {
 
   useEffect(() => {
     fetchData();
-  }, [activityType]); // eslint-disable-line
+  }, [activityType]);
 
   return (
     <Box>
-      <Stack
-        direction="row"
-        justifyContent="space-between"
-        alignItems="center"
-        sx={{ mb: 2 }}
-      >
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
         <Typography variant="h6" fontWeight={600}>
           {activityType} Hours
         </Typography>
@@ -86,12 +79,7 @@ export default function UnscheduledAllocationsTable() {
             <ToggleButton value="Consultation">Consultation</ToggleButton>
           </ToggleButtonGroup>
           <Tooltip title="Refresh data">
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={fetchData}
-              sx={blackOutlined}
-            >
+            <Button variant="outlined" size="small" onClick={fetchData} sx={blackOutlined}>
               Refresh
             </Button>
           </Tooltip>
@@ -101,9 +89,7 @@ export default function UnscheduledAllocationsTable() {
       {loading ? (
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 2 }}>
           <CircularProgress size={20} />
-          <Typography>
-            Loading {activityType.toLowerCase()} allocations…
-          </Typography>
+          <Typography>Loading {activityType.toLowerCase()} allocations…</Typography>
         </Box>
       ) : allocations.length === 0 ? (
         <Typography variant="body2" color="text.secondary">
@@ -141,11 +127,7 @@ export default function UnscheduledAllocationsTable() {
             </TableHead>
             <TableBody>
               {allocations.map((a) => (
-                <TableRow
-                  key={a.allocation_id}
-                  hover
-                  sx={{ "& td": { borderColor: "#000" } }}
-                >
+                <TableRow key={a.allocation_id} hover sx={{ "& td": { borderColor: "#000" } }}>
                   <TableCell>{a.unitCode}</TableCell>
                   <TableCell>{a.unitName}</TableCell>
                   <TableCell>

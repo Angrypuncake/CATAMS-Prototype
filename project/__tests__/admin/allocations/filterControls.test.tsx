@@ -24,9 +24,7 @@ describe("FilterControls Component", () => {
   test("should render all filter inputs and labels", () => {
     render(<FilterControls {...mockProps} />);
 
-    expect(
-      screen.getByPlaceholderText("Search tutor, unit, or activity…"),
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Search tutor, unit, or activity…")).toBeInTheDocument();
     expect(screen.getByText("Unit Code")).toBeInTheDocument();
     expect(screen.getByText("Activity Type")).toBeInTheDocument();
     expect(screen.getByText("Status")).toBeInTheDocument();
@@ -37,9 +35,7 @@ describe("FilterControls Component", () => {
   test("should call onQChange when search input changes", () => {
     render(<FilterControls {...mockProps} />);
 
-    const searchInput = screen.getByPlaceholderText(
-      "Search tutor, unit, or activity…",
-    );
+    const searchInput = screen.getByPlaceholderText("Search tutor, unit, or activity…");
     fireEvent.change(searchInput, { target: { value: "test search" } });
 
     expect(mockProps.onQChange).toHaveBeenCalledWith("test search");

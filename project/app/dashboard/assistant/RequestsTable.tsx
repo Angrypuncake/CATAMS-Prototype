@@ -5,11 +5,7 @@ import { JSX } from "react";
 import { useRouter } from "next/navigation";
 
 // Suppose this is inside your UCRequestsPage.tsx
-export default function UCRequestsTable({
-  requests,
-}: {
-  requests: UCApproval[];
-}) {
+export default function UCRequestsTable({ requests }: { requests: UCApproval[] }) {
   const router = useRouter();
 
   // -------------------------------------------------
@@ -44,10 +40,7 @@ export default function UCRequestsTable({
   const columnRenderers: Partial<
     Record<
       keyof UCApproval | "review",
-      (
-        value: UCApproval[keyof UCApproval],
-        row: UCApproval,
-      ) => JSX.Element | string
+      (value: UCApproval[keyof UCApproval], row: UCApproval) => JSX.Element | string
     >
   > = {
     requestStatus: (value) => {
@@ -87,9 +80,7 @@ export default function UCRequestsTable({
         variant="outlined"
         size="small"
         color="warning" // ⬅️ MUI orange accent
-        onClick={() =>
-          router.push(`/dashboard/assistant/review/${row.requestId}`)
-        }
+        onClick={() => router.push(`/dashboard/assistant/review/${row.requestId}`)}
       >
         Review
       </Button>

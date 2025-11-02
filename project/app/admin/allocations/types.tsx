@@ -1,8 +1,4 @@
-import {
-  AdminAllocationRow,
-  SaveAllocationPayload,
-  Dow,
-} from "@/app/_types/allocations";
+import { AdminAllocationRow, SaveAllocationPayload, Dow } from "@/app/_types/allocations";
 
 export type AllocationRow = AdminAllocationRow;
 
@@ -36,9 +32,7 @@ export type OccurrenceRow = {
 export type SavePayload = SaveAllocationPayload;
 
 export type PropagationPayload = {
-  fields: Array<
-    "tutor" | "paycode" | "start" | "end" | "note" | "status" | "location"
-  >;
+  fields: Array<"tutor" | "paycode" | "start" | "end" | "note" | "status" | "location">;
   notesMode?: "overwrite" | "append";
   dow?: Dow;
   occurrenceIds: number[];

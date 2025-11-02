@@ -45,9 +45,7 @@ export default function CancelRequestPage() {
   const [success, setSuccess] = useState<string | null>(null);
 
   // --- Form state ---
-  const [cancelType, setCancelType] = useState<"suggest" | "coordinator">(
-    "suggest",
-  );
+  const [cancelType, setCancelType] = useState<"suggest" | "coordinator">("suggest");
   const [selectedTutor, setSelectedTutor] = useState<Tutor | null>(null);
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -131,8 +129,7 @@ export default function CancelRequestPage() {
         requestType: "cancellation" as const,
         requestReason: reason,
         details: {
-          suggested_tutor_id:
-            cancelType === "suggest" ? (selectedTutor?.user_id ?? null) : null,
+          suggested_tutor_id: cancelType === "suggest" ? (selectedTutor?.user_id ?? null) : null,
         },
       };
 
@@ -196,15 +193,9 @@ export default function CancelRequestPage() {
           <FormLabel>Replacement Option</FormLabel>
           <RadioGroup
             value={cancelType}
-            onChange={(e) =>
-              setCancelType(e.target.value as "suggest" | "coordinator")
-            }
+            onChange={(e) => setCancelType(e.target.value as "suggest" | "coordinator")}
           >
-            <FormControlLabel
-              value="suggest"
-              control={<Radio />}
-              label="I will suggest a tutor"
-            />
+            <FormControlLabel value="suggest" control={<Radio />} label="I will suggest a tutor" />
             <FormControlLabel
               value="coordinator"
               control={<Radio />}
@@ -217,35 +208,20 @@ export default function CancelRequestPage() {
         <Autocomplete
           disabled={cancelType !== "suggest"}
           options={tutors}
-          getOptionLabel={(tutor) =>
-            `${tutor.first_name} ${tutor.last_name} (${tutor.email})`
-          }
+          getOptionLabel={(tutor) => `${tutor.first_name} ${tutor.last_name} (${tutor.email})`}
           value={selectedTutor}
           onChange={(e, newValue) => setSelectedTutor(newValue)}
           renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Find Tutor (if suggesting)"
-              sx={{ mb: 3 }}
-            />
+            <TextField {...params} label="Find Tutor (if suggesting)" sx={{ mb: 3 }} />
           )}
         />
 
         {/* Actions */}
         <Box display="flex" justifyContent="flex-end" gap={2}>
-          <Button
-            variant="outlined"
-            color="inherit"
-            onClick={() => router.push("../")}
-          >
+          <Button variant="outlined" color="inherit" onClick={() => router.push("../")}>
             Cancel
           </Button>
-          <Button
-            variant="contained"
-            color="primary"
-            type="submit"
-            disabled={submitting}
-          >
+          <Button variant="contained" color="primary" type="submit" disabled={submitting}>
             {submitting ? "Submitting..." : "Submit Cancellation"}
           </Button>
         </Box>
@@ -258,11 +234,7 @@ export default function CancelRequestPage() {
         onClose={() => setSuccess(null)}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert
-          onClose={() => setSuccess(null)}
-          severity="success"
-          sx={{ width: "100%" }}
-        >
+        <Alert onClose={() => setSuccess(null)} severity="success" sx={{ width: "100%" }}>
           {success}
         </Alert>
       </Snackbar>
@@ -273,11 +245,7 @@ export default function CancelRequestPage() {
         onClose={() => setErr(null)}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert
-          onClose={() => setErr(null)}
-          severity="error"
-          sx={{ width: "100%" }}
-        >
+        <Alert onClose={() => setErr(null)} severity="error" sx={{ width: "100%" }}>
           {err}
         </Alert>
       </Snackbar>

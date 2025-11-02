@@ -101,7 +101,7 @@ describe("DynamicTable", () => {
       render(<DynamicTable rows={basicData} enableSearch={true} />);
 
       const searchInput = screen.getByPlaceholderText(
-        "Search across all fields...",
+        "Search across all fields..."
       ) as HTMLInputElement;
       fireEvent.change(searchInput, { target: { value: "NONEXISTENT" } });
 
@@ -131,7 +131,7 @@ describe("DynamicTable", () => {
       render(<DynamicTable rows={complexData} enableSearch={true} />);
 
       const searchInput = screen.getByPlaceholderText(
-        "Search across all fields...",
+        "Search across all fields..."
       ) as HTMLInputElement;
 
       fireEvent.change(searchInput, { target: { value: "ELVIS" } });
@@ -162,12 +162,10 @@ describe("DynamicTable", () => {
         { id: 2, name: "Alex", email: "alex@test.com", age: 25 },
       ];
 
-      const { rerender } = render(
-        <DynamicTable rows={dataWithNulls} enableSearch={true} />,
-      );
+      const { rerender } = render(<DynamicTable rows={dataWithNulls} enableSearch={true} />);
 
       const searchInput = screen.getByPlaceholderText(
-        "Search across all fields...",
+        "Search across all fields..."
       ) as HTMLInputElement;
 
       fireEvent.change(searchInput, { target: { value: "alex@test" } });
@@ -175,9 +173,7 @@ describe("DynamicTable", () => {
       expect(screen.queryByText("Elvis")).not.toBeInTheDocument();
 
       rerender(<DynamicTable rows={basicData} enableSearch={false} />);
-      expect(
-        screen.queryByPlaceholderText("Search across all fields..."),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByPlaceholderText("Search across all fields...")).not.toBeInTheDocument();
     });
 
     test("searches date strings and numbers correctly", () => {
@@ -205,15 +201,10 @@ describe("DynamicTable", () => {
         },
       ];
 
-      render(
-        <DynamicTable
-          rows={dataWithDateStringsAndNumbers}
-          enableSearch={true}
-        />,
-      );
+      render(<DynamicTable rows={dataWithDateStringsAndNumbers} enableSearch={true} />);
 
       const searchInput = screen.getByPlaceholderText(
-        "Search across all fields...",
+        "Search across all fields..."
       ) as HTMLInputElement;
 
       // Search by year in date string
@@ -249,11 +240,11 @@ describe("DynamicTable", () => {
           enableSearch={true}
           enableServerSidePagination={true}
           onSearchChange={onSearchChange}
-        />,
+        />
       );
 
       const searchInput = screen.getByPlaceholderText(
-        "Search across all fields...",
+        "Search across all fields..."
       ) as HTMLInputElement;
 
       fireEvent.change(searchInput, { target: { value: "test" } });
@@ -304,7 +295,7 @@ describe("DynamicTable", () => {
           enableSorting={true}
           defaultSortColumn="name"
           defaultSortDirection="desc"
-        />,
+        />
       );
 
       let rows = screen.getAllByRole("row");
@@ -331,7 +322,7 @@ describe("DynamicTable", () => {
           enableSorting={true}
           enableServerSidePagination={true}
           onSortChange={onSortChange}
-        />,
+        />
       );
 
       const nameHeader = screen.getByText("User Name");
@@ -358,7 +349,7 @@ describe("DynamicTable", () => {
           enablePagination={true}
           rowsPerPageOptions={[5, 10, 15]}
           defaultRowsPerPage={5}
-        />,
+        />
       );
 
       let rows = screen.getAllByRole("row");
@@ -394,7 +385,7 @@ describe("DynamicTable", () => {
           onPaginationChange={onPaginationChange}
           totalCount={100}
           defaultRowsPerPage={10}
-        />,
+        />
       );
 
       expect(screen.getByText(/100/)).toBeInTheDocument();
@@ -425,13 +416,9 @@ describe("DynamicTable", () => {
           { key: "status", label: "Status" },
         ]}
         columnRenderers={{
-          status: (value) => (
-            <span data-testid="custom-status">
-              {String(value).toUpperCase()}
-            </span>
-          ),
+          status: (value) => <span data-testid="custom-status">{String(value).toUpperCase()}</span>,
         }}
-      />,
+      />
     );
 
     expect(screen.getByText("Full Name")).toBeInTheDocument();
@@ -456,7 +443,7 @@ describe("DynamicTable", () => {
           },
         ]}
         actionsLabel="Operations"
-      />,
+      />
     );
 
     expect(screen.getByText("Operations")).toBeInTheDocument();
@@ -476,11 +463,7 @@ describe("DynamicTable", () => {
     const createElementSpy = jest.spyOn(document, "createElement");
 
     const { unmount } = render(
-      <DynamicTable
-        rows={basicData}
-        enableExport={true}
-        exportFilename="my_custom_export"
-      />,
+      <DynamicTable rows={basicData} enableExport={true} exportFilename="my_custom_export" />
     );
 
     expect(screen.getByRole("button", { name: /csv/i })).toBeInTheDocument();
@@ -502,18 +485,14 @@ describe("DynamicTable", () => {
 
     unmount();
     render(<DynamicTable rows={basicData} enableExport={false} />);
-    expect(
-      screen.queryByRole("button", { name: /csv/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /csv/i })).not.toBeInTheDocument();
   });
 
   describe("Edge cases", () => {
     test("handles arrays with chips, objects, and complex nested data", () => {
       const arrayData = [{ id: 1, tags: ["react", "typescript", "testing"] }];
 
-      const { unmount } = render(
-        <DynamicTable rows={arrayData} maxChips={2} />,
-      );
+      const { unmount } = render(<DynamicTable rows={arrayData} maxChips={2} />);
 
       expect(screen.getByText("react")).toBeInTheDocument();
       expect(screen.getByText("typescript")).toBeInTheDocument();
@@ -533,11 +512,7 @@ describe("DynamicTable", () => {
       ];
 
       const { container } = render(
-        <DynamicTable
-          rows={complexData}
-          enableSearch={false}
-          enablePagination={false}
-        />,
+        <DynamicTable rows={complexData} enableSearch={false} enablePagination={false} />
       );
 
       expect(container.textContent).toContain("Elvis");
@@ -545,9 +520,7 @@ describe("DynamicTable", () => {
       const rows = screen.getAllByRole("row");
       expect(rows.length).toBe(3);
 
-      const inspectButtons = container.querySelectorAll(
-        'svg[data-testid="SearchIcon"]',
-      );
+      const inspectButtons = container.querySelectorAll('svg[data-testid="SearchIcon"]');
       expect(inspectButtons.length).toBeGreaterThan(0);
     });
 
@@ -577,16 +550,10 @@ describe("DynamicTable", () => {
 
     test("supports custom searchPlaceholder and works with all features disabled", () => {
       const { unmount } = render(
-        <DynamicTable
-          rows={basicData}
-          enableSearch={true}
-          searchPlaceholder="Type to search..."
-        />,
+        <DynamicTable rows={basicData} enableSearch={true} searchPlaceholder="Type to search..." />
       );
 
-      expect(
-        screen.getByPlaceholderText("Type to search..."),
-      ).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("Type to search...")).toBeInTheDocument();
 
       unmount();
       render(
@@ -596,22 +563,16 @@ describe("DynamicTable", () => {
           enableSorting={false}
           enablePagination={false}
           enableExport={false}
-        />,
+        />
       );
 
       expect(screen.getAllByText("Elvis")[0]).toBeInTheDocument();
       expect(screen.getAllByText("Alex")[0]).toBeInTheDocument();
       expect(screen.getAllByText("Gemma")[0]).toBeInTheDocument();
 
-      expect(
-        screen.queryByPlaceholderText("Search across all fields..."),
-      ).not.toBeInTheDocument();
-      expect(
-        screen.queryByRole("button", { name: /next page/i }),
-      ).not.toBeInTheDocument();
-      expect(
-        screen.queryByRole("button", { name: /csv/i }),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByPlaceholderText("Search across all fields...")).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /next page/i })).not.toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: /csv/i })).not.toBeInTheDocument();
     });
   });
 });

@@ -16,7 +16,7 @@ export default function LoginPage() {
       const result = await axios.post(
         "/api/auth/login",
         { useremail: username, password },
-        { withCredentials: true },
+        { withCredentials: true }
       );
       if (result.data?.success) router.push("/portal");
     } catch (error: unknown) {
@@ -33,13 +33,7 @@ export default function LoginPage() {
     <div className="min-h-screen w-full bg-[#f7f7f7]">
       <main className="max-w-screen-2xl mx-auto px-4">
         <div className="mx-auto w-full max-w-xl border border-gray-200 bg-white p-8 sm:p-10 shadow-sm mt-10 sm:mt-14">
-          <Typography
-            variant="h5"
-            component="h2"
-            align="center"
-            fontWeight="bold"
-            sx={{ mb: 3 }}
-          >
+          <Typography variant="h5" component="h2" align="center" fontWeight="bold" sx={{ mb: 3 }}>
             Sign in to your account
           </Typography>
 

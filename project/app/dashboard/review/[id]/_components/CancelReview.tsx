@@ -36,14 +36,7 @@ export default function CancellationReview({
   readOnly?: boolean;
   currentUserId?: number;
 }) {
-  const {
-    allocationId,
-    requestStatus,
-    requestReason,
-    requestId,
-    createdAt,
-    requesterId,
-  } = data;
+  const { allocationId, requestStatus, requestReason, requestId, createdAt, requesterId } = data;
 
   const [tutor, setTutor] = useState<Tutor | null>(null);
   const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
@@ -87,21 +80,11 @@ export default function CancellationReview({
   };
   const rejectUC = async () => {
     if (!currentUserId) return;
-    await ucRejectRequest(
-      Number(requestId),
-      currentUserId,
-      undefined,
-      reviewerNote,
-    );
+    await ucRejectRequest(Number(requestId), currentUserId, undefined, reviewerNote);
   };
   const forwardTA = async () => {
     if (!currentUserId) return;
-    await taForwardToUC(
-      Number(requestId),
-      currentUserId,
-      requestReason ?? undefined,
-      reviewerNote,
-    );
+    await taForwardToUC(Number(requestId), currentUserId, requestReason ?? undefined, reviewerNote);
   };
   const rejectTA = async () => {
     if (!currentUserId) return;
@@ -109,7 +92,7 @@ export default function CancellationReview({
       Number(requestId),
       currentUserId,
       requestReason ?? undefined,
-      reviewerNote,
+      reviewerNote
     );
   };
 
@@ -135,19 +118,13 @@ export default function CancellationReview({
       </Box>
 
       <Typography variant="body2" color="text.secondary" mt={0.5}>
-        Request ID: {requestId} • Created:{" "}
-        {new Date(createdAt).toLocaleString()}
+        Request ID: {requestId} • Created: {new Date(createdAt).toLocaleString()}
       </Typography>
 
       <Divider sx={{ my: 3 }} />
 
       {/* INITIATOR & ALLOCATION */}
-      <Box
-        display="flex"
-        flexDirection={{ xs: "column", md: "row" }}
-        gap={3}
-        mb={3}
-      >
+      <Box display="flex" flexDirection={{ xs: "column", md: "row" }} gap={3} mb={3}>
         {/* Initiator */}
         <Paper variant="outlined" sx={{ flex: 1, p: 3 }}>
           <Typography variant="subtitle1" fontWeight={700} gutterBottom>
@@ -234,9 +211,7 @@ export default function CancellationReview({
               <table className="min-w-full text-sm border-collapse">
                 <thead>
                   <tr style={{ backgroundColor: "#f5f5f5" }}>
-                    <th className="px-3 py-2 text-left font-semibold">
-                      Tutor ID
-                    </th>
+                    <th className="px-3 py-2 text-left font-semibold">Tutor ID</th>
                     <th className="px-3 py-2 text-left font-semibold">Name</th>
                     <th className="px-3 py-2 text-left font-semibold">Email</th>
                     <th className="px-3 py-2"></th>
@@ -245,10 +220,7 @@ export default function CancellationReview({
                 <tbody>
                   {availableTutors.length === 0 ? (
                     <tr>
-                      <td
-                        colSpan={4}
-                        className="px-3 py-3 text-center text-gray-500"
-                      >
+                      <td colSpan={4} className="px-3 py-3 text-center text-gray-500">
                         No available tutors found for this unit
                       </td>
                     </tr>
@@ -258,9 +230,7 @@ export default function CancellationReview({
                         key={t.user_id}
                         style={{
                           backgroundColor:
-                            selectedTutor?.user_id === t.user_id
-                              ? "#e8f5e9"
-                              : "transparent",
+                            selectedTutor?.user_id === t.user_id ? "#e8f5e9" : "transparent",
                         }}
                       >
                         <td className="px-3 py-2">{t.user_id}</td>
@@ -273,15 +243,11 @@ export default function CancellationReview({
                             <Button
                               size="small"
                               variant={
-                                selectedTutor?.user_id === t.user_id
-                                  ? "contained"
-                                  : "outlined"
+                                selectedTutor?.user_id === t.user_id ? "contained" : "outlined"
                               }
                               onClick={() => setSelectedTutor(t)}
                             >
-                              {selectedTutor?.user_id === t.user_id
-                                ? "Selected"
-                                : "Select"}
+                              {selectedTutor?.user_id === t.user_id ? "Selected" : "Select"}
                             </Button>
                           )}
                         </td>

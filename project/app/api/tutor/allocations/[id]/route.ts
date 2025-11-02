@@ -5,10 +5,7 @@ import { query } from "@/lib/db";
  * GET /api/tutor/allocations/:id
  * Returns one allocation row joined with related session/unit info.
  */
-export async function GET(
-  req: Request,
-  ctx: { params: Promise<{ id: string }> },
-) {
+export async function GET(req: Request, ctx: { params: Promise<{ id: string }> }) {
   const { id } = await ctx.params;
 
   // Keep column names consistent with the list route’s joins
@@ -47,10 +44,7 @@ export async function GET(
   const row = rows[0];
 
   if (!row) {
-    return NextResponse.json(
-      { error: `Allocation ${id} not found` },
-      { status: 404 },
-    );
+    return NextResponse.json({ error: `Allocation ${id} not found` }, { status: 404 });
   }
 
   // Return raw DB-ish fields; the page maps them to its AllocationDetail shape

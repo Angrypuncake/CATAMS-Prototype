@@ -2,10 +2,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: idParam } = await params;
     const id = Number(idParam);
@@ -26,18 +23,12 @@ export async function PATCH(
 
     const { rows } = await query(updateSQL, [hours, note, location, id]);
     if (rows.length === 0) {
-      return NextResponse.json(
-        { error: "Allocation not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Allocation not found" }, { status: 404 });
     }
 
     // optional: update allocation status if provided
     if (status) {
-      await query(
-        `UPDATE allocation SET status = $1 WHERE allocation_id = $2;`,
-        [status, id],
-      );
+      await query(`UPDATE allocation SET status = $1 WHERE allocation_id = $2;`, [status, id]);
     }
 
     return NextResponse.json({ status: "success", ...rows[0] });
@@ -48,39 +39,24 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function DELETE(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id: idParam } = await params;
   const id = Number(idParam);
   try {
-    await query(
-      "UPDATE allocation SET status = 'cancelled' WHERE allocation_id = $1",
-      [id],
-    );
+    await query("UPDATE allocation SET status = 'cancelled' WHERE allocation_id = $1", [id]);
     return NextResponse.json({ status: "deleted" });
   } catch (e) {
-    return NextResponse.json(
-      { error: "Failed to delete allocation" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to delete allocation" }, { status: 500 });
   }
 }
 
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id: idParam } = await params;
     const id = Number(idParam);
 
     if (isNaN(id)) {
-      return NextResponse.json(
-        { error: "Invalid allocation ID" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid allocation ID" }, { status: 400 });
     }
 
     const text = `
@@ -123,18 +99,12 @@ export async function GET(
     const { rows } = await query(text, [id]);
 
     if (rows.length === 0) {
-      return NextResponse.json(
-        { error: "Allocation not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "Allocation not found" }, { status: 404 });
     }
 
     return NextResponse.json({ data: rows[0] }, { status: 200 });
   } catch (error) {
     console.error("Error fetching allocation by ID:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch allocation" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch allocation" }, { status: 500 });
   }
 }

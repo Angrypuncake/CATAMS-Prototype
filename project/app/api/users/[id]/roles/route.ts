@@ -3,10 +3,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
-export async function GET(
-  _: Request,
-  context: { params: Promise<{ id: string }> },
-) {
+export async function GET(_: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await context.params;
     const userId = Number(id);

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
 import { CircularProgress, Typography, Box } from "@mui/material";
 
 import { getRequestByRequestId } from "@/app/services/requestService";
@@ -51,9 +50,7 @@ export default function ReviewShell({
         if (cancelled) return;
         setData(req);
 
-        const alloc = await getFormattedAllocationById(
-          String(req.allocationId),
-        );
+        const alloc = await getFormattedAllocationById(String(req.allocationId));
         if (cancelled) return;
         setAllocation(alloc);
 
@@ -93,9 +90,7 @@ export default function ReviewShell({
   if (!data || !allocation) {
     return (
       <Box p={3}>
-        <Typography color="error">
-          {err ?? "Request or allocation not found."}
-        </Typography>
+        <Typography color="error">{err ?? "Request or allocation not found."}</Typography>
       </Box>
     );
   }

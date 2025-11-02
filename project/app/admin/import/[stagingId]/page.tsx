@@ -2,11 +2,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import {
-  commitImport,
-  discardImport,
-  getPreview,
-} from "@/app/services/allocationService";
+import { commitImport, discardImport, getPreview } from "@/app/services/allocationService";
 import type { PreviewResponse } from "@/app/_types/allocations";
 
 /** ---------- Types ---------- */
@@ -29,14 +25,11 @@ type ErrorResponse = { error: string };
 type CommitResponse = { inserted: unknown };
 
 /** ---------- Safe helpers / type guards ---------- */
-const isObject = (v: unknown): v is Record<string, unknown> =>
-  v !== null && typeof v === "object";
+const isObject = (v: unknown): v is Record<string, unknown> => v !== null && typeof v === "object";
 
-const hasError = (v: unknown): v is ErrorResponse =>
-  isObject(v) && typeof v.error === "string";
+const hasError = (v: unknown): v is ErrorResponse => isObject(v) && typeof v.error === "string";
 
-const hasInserted = (v: unknown): v is CommitResponse =>
-  isObject(v) && "inserted" in v;
+const hasInserted = (v: unknown): v is CommitResponse => isObject(v) && "inserted" in v;
 
 const isPreviewPayload = (v: unknown): v is PreviewPayload =>
   isObject(v) &&
@@ -62,11 +55,7 @@ function Pill({
     info: "bg-blue-100 text-blue-700",
   };
   return (
-    <span
-      className={`px-2 py-0.5 rounded-full text-xs font-medium ${map[tone]}`}
-    >
-      {children}
-    </span>
+    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${map[tone]}`}>{children}</span>
   );
 }
 
@@ -232,15 +221,11 @@ export default function PreviewPage() {
   const totalSlots = data?.preview.timetable?.length ?? 0;
 
   /** ---------- Filter + sort (table) ---------- */
-  function cmp<T extends string | number | null | undefined>(
-    a: T,
-    b: T,
-  ): number {
+  function cmp<T extends string | number | null | undefined>(a: T, b: T): number {
     if (a === b) return 0;
     if (a == null) return -1;
     if (b == null) return 1;
-    if (typeof a === "string" && typeof b === "string")
-      return a.localeCompare(b);
+    if (typeof a === "string" && typeof b === "string") return a.localeCompare(b);
     return a > b ? 1 : -1;
   }
 
@@ -265,7 +250,7 @@ export default function PreviewPage() {
           (r.activity_description || "").toLowerCase().includes(q) ||
           (r.staff_name || "").toLowerCase().includes(q) ||
           (r.staff_id || "").toLowerCase().includes(q) ||
-          r.date.toLowerCase().includes(q),
+          r.date.toLowerCase().includes(q)
       );
     }
 
@@ -285,21 +270,13 @@ export default function PreviewPage() {
   }
 
   /** ---------- Overlap detection (blocking) ---------- */
-  function intervalsOverlap(
-    aStart: string,
-    aEnd: string,
-    bStart: string,
-    bEnd: string,
-  ) {
+  function intervalsOverlap(aStart: string, aEnd: string, bStart: string, bEnd: string) {
     const as = timeToMinutes(aStart),
       ae = timeToMinutes(aEnd);
     const bs = timeToMinutes(bStart),
       be = timeToMinutes(bEnd);
     if (![as, ae, bs, be].every(Number.isFinite)) return false;
-    return (
-      Math.max(as as number, bs as number) <
-      Math.min(ae as number, be as number)
-    );
+    return Math.max(as as number, bs as number) < Math.min(ae as number, be as number);
   }
 
   const conflicts = useMemo(() => {
@@ -319,20 +296,11 @@ export default function PreviewPage() {
       const [date, staff] = key.split("__");
       const sorted = rows
         .slice()
-        .sort(
-          (x, y) => timeToMinutes(x.start_time) - timeToMinutes(y.start_time),
-        );
+        .sort((x, y) => timeToMinutes(x.start_time) - timeToMinutes(y.start_time));
       for (let i = 1; i < sorted.length; i++) {
         const prev = sorted[i - 1];
         const curr = sorted[i];
-        if (
-          intervalsOverlap(
-            prev.start_time,
-            prev.end_time,
-            curr.start_time,
-            curr.end_time,
-          )
-        ) {
+        if (intervalsOverlap(prev.start_time, prev.end_time, curr.start_time, curr.end_time)) {
           res.push({ date, staff, a: prev, b: curr });
         }
       }
@@ -342,8 +310,7 @@ export default function PreviewPage() {
 
   const conflictCount = conflicts.length;
 
-  const hasBlocking =
-    missingUnit + missingAct + missingDate > 0 || conflictCount > 0;
+  const hasBlocking = missingUnit + missingAct + missingDate > 0 || conflictCount > 0;
 
   /** ---------- Mutations ---------- */
   async function onCommit() {
@@ -351,7 +318,7 @@ export default function PreviewPage() {
       setMsg(
         `❌ Cannot commit: ${conflictCount} timetable conflict${
           conflictCount > 1 ? "s" : ""
-        } detected. Resolve overlaps first.`,
+        } detected. Resolve overlaps first.`
       );
       return;
     }
@@ -362,13 +329,12 @@ export default function PreviewPage() {
     try {
       const data = await commitImport(id);
 
-      const { teaching_activity, session_occurrence, allocation } =
-        data.inserted;
+      const { teaching_activity, session_occurrence, allocation } = data.inserted;
       setMsg(
         `✅ Committed. 
          Inserted → teaching_activity=${teaching_activity}, 
          session_occurrence=${session_occurrence}, 
-         allocation=${allocation}`,
+         allocation=${allocation}`
       );
     } catch (e: unknown) {
       const message = e instanceof Error ? e.message : String(e);
@@ -400,7 +366,7 @@ export default function PreviewPage() {
   function copyId() {
     navigator.clipboard.writeText(String(id)).then(
       () => setMsg("Copied batch id"),
-      () => setMsg("Failed to copy batch id"),
+      () => setMsg("Failed to copy batch id")
     );
   }
 
@@ -447,11 +413,8 @@ export default function PreviewPage() {
     const s = timeToMinutes(start);
     const e = timeToMinutes(end);
     const total = Math.max(1, max - min);
-    const span =
-      Number.isFinite(s) && Number.isFinite(e) ? Math.max(0, e - s) : 0;
-    const leftPct = Number.isFinite(s)
-      ? Math.max(0, Math.min(100, ((s - min) / total) * 100))
-      : 0;
+    const span = Number.isFinite(s) && Number.isFinite(e) ? Math.max(0, e - s) : 0;
+    const leftPct = Number.isFinite(s) ? Math.max(0, Math.min(100, ((s - min) / total) * 100)) : 0;
     const widthPct = Math.max(1, Math.min(100, (span / total) * 100));
     return {
       left: `${leftPct}%`,
@@ -470,7 +433,7 @@ export default function PreviewPage() {
 
   function assignLanes(rows: TimetableRow[]) {
     const sorted = [...rows].sort(
-      (a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time),
+      (a, b) => timeToMinutes(a.start_time) - timeToMinutes(b.start_time)
     );
     const lanes: TimetableRow[][] = [];
     const placement: Array<{ r: TimetableRow; lane: number }> = [];
@@ -500,9 +463,7 @@ export default function PreviewPage() {
       <div className="sticky top-0 z-10 bg-white/90 backdrop-blur border-b py-3">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <h1 className="text-xl md:text-2xl font-semibold">
-              Preview Import — Batch #{id}
-            </h1>
+            <h1 className="text-xl md:text-2xl font-semibold">Preview Import — Batch #{id}</h1>
             <button
               onClick={copyId}
               type="button"
@@ -524,9 +485,7 @@ export default function PreviewPage() {
             <div className="hidden sm:flex items-center gap-2 mr-3">
               <button
                 className={`rounded-md px-2 py-1 text-sm ${
-                  view === "timetable"
-                    ? "bg-gray-900 text-white"
-                    : "bg-gray-200"
+                  view === "timetable" ? "bg-gray-900 text-white" : "bg-gray-200"
                 }`}
                 onClick={() => setView("timetable")}
               >
@@ -549,11 +508,7 @@ export default function PreviewPage() {
             >
               Import New
             </Button>
-            <Button
-              tone="neutral"
-              onClick={() => location.reload()}
-              disabled={busy || loading}
-            >
+            <Button tone="neutral" onClick={() => location.reload()} disabled={busy || loading}>
               Reload
             </Button>
             <Button
@@ -584,30 +539,18 @@ export default function PreviewPage() {
       </div>
 
       {/* Status / messages */}
-      {msg && (
-        <div className="text-sm rounded-md border p-3 bg-gray-50">{msg}</div>
-      )}
+      {msg && <div className="text-sm rounded-md border p-3 bg-gray-50">{msg}</div>}
 
       {/* Validation panel */}
       <section className="border rounded-xl p-4">
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-medium">Validation</h2>
           <div className="flex gap-2">
-            <Pill tone={missingUnit ? "bad" : "good"}>
-              missing_unit_code: {missingUnit}
-            </Pill>
-            <Pill tone={missingAct ? "bad" : "good"}>
-              missing_activity_name: {missingAct}
-            </Pill>
-            <Pill tone={missingDate ? "bad" : "good"}>
-              missing_date: {missingDate}
-            </Pill>
-            <Pill tone={missingTimes ? "warn" : "good"}>
-              missing_times: {missingTimes}
-            </Pill>
-            <Pill tone={conflictCount ? "bad" : "good"}>
-              conflicts: {conflictCount}
-            </Pill>
+            <Pill tone={missingUnit ? "bad" : "good"}>missing_unit_code: {missingUnit}</Pill>
+            <Pill tone={missingAct ? "bad" : "good"}>missing_activity_name: {missingAct}</Pill>
+            <Pill tone={missingDate ? "bad" : "good"}>missing_date: {missingDate}</Pill>
+            <Pill tone={missingTimes ? "warn" : "good"}>missing_times: {missingTimes}</Pill>
+            <Pill tone={conflictCount ? "bad" : "good"}>conflicts: {conflictCount}</Pill>
           </div>
         </div>
         <pre className="text-xs bg-gray-50 p-3 rounded max-h-52 overflow-auto">
@@ -621,9 +564,8 @@ export default function PreviewPage() {
               {conflicts.slice(0, 10).map((c, i) => (
                 <li key={i}>
                   {dateLabel(c.date)} · {c.staff}: “{c.a.activity_name}”{" "}
-                  {c.a.start_time.slice(0, 5)}–{c.a.end_time.slice(0, 5)}{" "}
-                  overlaps “{c.b.activity_name}” {c.b.start_time.slice(0, 5)}–
-                  {c.b.end_time.slice(0, 5)}
+                  {c.a.start_time.slice(0, 5)}–{c.a.end_time.slice(0, 5)} overlaps “
+                  {c.b.activity_name}” {c.b.start_time.slice(0, 5)}–{c.b.end_time.slice(0, 5)}
                 </li>
               ))}
               {conflictCount > 10 && <li>…and {conflictCount - 10} more</li>}
@@ -686,17 +628,13 @@ export default function PreviewPage() {
                 <div className="flex items-center justify-between border-b bg-gray-50 px-4 py-3">
                   <h3 className="font-medium">{dateLabel(date)}</h3>
                   <div className="text-xs text-gray-600">
-                    {minutesToLabel(min)}–{minutesToLabel(max)} · {rows.length}{" "}
-                    slots
+                    {minutesToLabel(min)}–{minutesToLabel(max)} · {rows.length} slots
                   </div>
                 </div>
 
                 {/* Grid header */}
                 <div className="relative">
-                  <div
-                    className="grid"
-                    style={{ gridTemplateColumns: "12rem 1fr" }}
-                  >
+                  <div className="grid" style={{ gridTemplateColumns: "12rem 1fr" }}>
                     <div className="border-r bg-white px-3 py-2 text-xs font-medium text-gray-700">
                       Staff Lanes
                     </div>
@@ -716,22 +654,17 @@ export default function PreviewPage() {
                   </div>
 
                   {/* Rows per lane */}
-                  <div
-                    className="grid"
-                    style={{ gridTemplateColumns: "12rem 1fr" }}
-                  >
+                  <div className="grid" style={{ gridTemplateColumns: "12rem 1fr" }}>
                     {/* Left rail: lane labels */}
                     <div className="border-r">
-                      {Array.from({ length: Math.max(lanesCount, 1) }).map(
-                        (_, i) => (
-                          <div
-                            key={i}
-                            className="h-16 border-b px-3 py-2 text-xs text-gray-600 flex items-center"
-                          >
-                            Lane {i + 1}
-                          </div>
-                        ),
-                      )}
+                      {Array.from({ length: Math.max(lanesCount, 1) }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="h-16 border-b px-3 py-2 text-xs text-gray-600 flex items-center"
+                        >
+                          Lane {i + 1}
+                        </div>
+                      ))}
                     </div>
 
                     {/* Right: timeline rows */}
@@ -749,71 +682,54 @@ export default function PreviewPage() {
                       </div>
 
                       {/* lane rows */}
-                      {Array.from({ length: Math.max(lanesCount, 1) }).map(
-                        (_, lane) => (
-                          <div
-                            key={lane}
-                            className="relative h-16 border-b border-gray-100"
-                          >
-                            {placement
-                              .filter((p) => p.lane === lane)
-                              .map(({ r }) => {
-                                const style = blockStyle(
-                                  r.start_time,
-                                  r.end_time,
-                                  min,
-                                  max,
-                                );
-                                const conflict = rows.some(
-                                  (x) =>
-                                    x !== r &&
-                                    (x.staff_id === r.staff_id ||
-                                      x.staff_name === r.staff_name) &&
-                                    collide(x, r),
-                                );
-                                return (
-                                  <div
-                                    key={`${r.activity_name}-${r.start_time}-${r.end_time}-${r.staff_id}-${r.date}`}
-                                    className={`absolute top-1 bottom-1 rounded-md px-2 py-1 overflow-hidden shadow-sm ${
-                                      conflict
-                                        ? "bg-rose-100 ring-1 ring-rose-300"
-                                        : "bg-emerald-100 ring-1 ring-emerald-300"
-                                    }`}
-                                    style={style}
-                                    title={`${r.activity_name} • ${r.activity_type} • ${
-                                      r.staff_name || r.staff_id || "Unassigned"
-                                    } • ${r.start_time.slice(0, 5)}–${r.end_time.slice(0, 5)}`}
-                                  >
-                                    <div className="text-[11px] font-medium truncate">
-                                      {r.activity_name}
-                                    </div>
-                                    <div className="text-[10px] text-gray-700 truncate">
-                                      {(
-                                        r.staff_name ||
-                                        r.staff_id ||
-                                        "Unassigned"
-                                      ).toString()}{" "}
-                                      · {r.start_time.slice(0, 5)}–
-                                      {r.end_time.slice(0, 5)}
-                                    </div>
+                      {Array.from({ length: Math.max(lanesCount, 1) }).map((_, lane) => (
+                        <div key={lane} className="relative h-16 border-b border-gray-100">
+                          {placement
+                            .filter((p) => p.lane === lane)
+                            .map(({ r }) => {
+                              const style = blockStyle(r.start_time, r.end_time, min, max);
+                              const conflict = rows.some(
+                                (x) =>
+                                  x !== r &&
+                                  (x.staff_id === r.staff_id || x.staff_name === r.staff_name) &&
+                                  collide(x, r)
+                              );
+                              return (
+                                <div
+                                  key={`${r.activity_name}-${r.start_time}-${r.end_time}-${r.staff_id}-${r.date}`}
+                                  className={`absolute top-1 bottom-1 rounded-md px-2 py-1 overflow-hidden shadow-sm ${
+                                    conflict
+                                      ? "bg-rose-100 ring-1 ring-rose-300"
+                                      : "bg-emerald-100 ring-1 ring-emerald-300"
+                                  }`}
+                                  style={style}
+                                  title={`${r.activity_name} • ${r.activity_type} • ${
+                                    r.staff_name || r.staff_id || "Unassigned"
+                                  } • ${r.start_time.slice(0, 5)}–${r.end_time.slice(0, 5)}`}
+                                >
+                                  <div className="text-[11px] font-medium truncate">
+                                    {r.activity_name}
                                   </div>
-                                );
-                              })}
-                          </div>
-                        ),
-                      )}
+                                  <div className="text-[10px] text-gray-700 truncate">
+                                    {(r.staff_name || r.staff_id || "Unassigned").toString()} ·{" "}
+                                    {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-3 px-4 py-3 text-xs text-gray-600">
                   <span className="inline-flex items-center gap-1">
-                    <span className="h-3 w-3 rounded bg-emerald-200 ring-1 ring-emerald-300" />{" "}
-                    OK
+                    <span className="h-3 w-3 rounded bg-emerald-200 ring-1 ring-emerald-300" /> OK
                   </span>
                   <span className="inline-flex items-center gap-1">
-                    <span className="h-3 w-3 rounded bg-rose-200 ring-1 ring-rose-300" />{" "}
-                    Conflict (same staff overlapping)
+                    <span className="h-3 w-3 rounded bg-rose-200 ring-1 ring-rose-300" /> Conflict
+                    (same staff overlapping)
                   </span>
                 </div>
               </div>
@@ -845,24 +761,17 @@ export default function PreviewPage() {
                       ["total_hours", "Hours"],
                     ] as const
                   ).map(([key, label]) => {
-                    const k =
-                      key === "staff" ? "" : (key as keyof TimetableRow | "");
+                    const k = key === "staff" ? "" : (key as keyof TimetableRow | "");
                     const active = k && sortKey === k;
                     return (
                       <th
                         key={key}
-                        className={`py-2 pr-4 font-medium ${
-                          k ? "cursor-pointer select-none" : ""
-                        }`}
+                        className={`py-2 pr-4 font-medium ${k ? "cursor-pointer select-none" : ""}`}
                         onClick={k ? () => toggleSort(k) : undefined}
                       >
                         <div className="flex items-center gap-1">
                           {label}
-                          {active && (
-                            <span className="text-xs">
-                              {sortAsc ? "▲" : "▼"}
-                            </span>
-                          )}
+                          {active && <span className="text-xs">{sortAsc ? "▲" : "▼"}</span>}
                         </div>
                       </th>
                     );
@@ -888,9 +797,7 @@ export default function PreviewPage() {
                       <td className="py-2 pr-4">{r.end_time}</td>
                       <td className="py-2 pr-4">{r.activity_name}</td>
                       <td className="py-2 pr-4">{r.activity_type}</td>
-                      <td className="py-2 pr-4">
-                        {r.staff_name || r.staff_id || "—"}
-                      </td>
+                      <td className="py-2 pr-4">{r.staff_name || r.staff_id || "—"}</td>
                       <td className="py-2 pr-4">{r.row_count}</td>
                       <td className="py-2 pr-4">{r.total_hours ?? "—"}</td>
                     </tr>
@@ -924,11 +831,7 @@ export default function PreviewPage() {
               <div className="p-3 text-sm text-gray-500">Loading…</div>
             ) : (
               <pre className="text-xs overflow-auto max-h-96 bg-gray-50 p-3 rounded">
-                {JSON.stringify(
-                  (data?.preview.raw ?? []).slice(0, 100),
-                  null,
-                  2,
-                )}
+                {JSON.stringify((data?.preview.raw ?? []).slice(0, 100), null, 2)}
               </pre>
             )}
           </div>
@@ -940,15 +843,10 @@ export default function PreviewPage() {
         <div className="p-5 w-80">
           <h3 className="font-semibold mb-2">Discard this batch?</h3>
           <p className="text-sm text-gray-600 mb-4">
-            This will remove all staged rows for batch #{id}. This action cannot
-            be undone.
+            This will remove all staged rows for batch #{id}. This action cannot be undone.
           </p>
           <div className="flex justify-end gap-2">
-            <Button
-              tone="neutral"
-              type="button"
-              onClick={() => discardRef.current?.close()}
-            >
+            <Button tone="neutral" type="button" onClick={() => discardRef.current?.close()}>
               Cancel
             </Button>
             <Button
@@ -970,15 +868,11 @@ export default function PreviewPage() {
         <div className="p-5 w-80">
           <h3 className="font-semibold mb-2">Commit this batch?</h3>
           <p className="text-sm text-gray-600 mb-4">
-            We’ll run the ETL and upsert data into normalized tables. Make sure
-            validation looks good.
+            We’ll run the ETL and upsert data into normalized tables. Make sure validation looks
+            good.
           </p>
           <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              tone="neutral"
-              onClick={() => commitRef.current?.close()}
-            >
+            <Button type="button" tone="neutral" onClick={() => commitRef.current?.close()}>
               Cancel
             </Button>
             <Button

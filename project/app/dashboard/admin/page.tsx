@@ -27,9 +27,7 @@ interface HistoryState {
 }
 
 /* ========= Helpers ========= */
-const statusColor = (
-  s?: string,
-): "default" | "success" | "warning" | "error" => {
+const statusColor = (s?: string): "default" | "success" | "warning" | "error" => {
   switch ((s || "").toLowerCase()) {
     case "confirmed":
     case "committed":
@@ -53,10 +51,7 @@ const fmtDateTime = (v: unknown) => {
 
 const kvPreview = (obj: unknown, limit = 4) => {
   if (!obj || typeof obj !== "object") return <>—</>;
-  const entries = Object.entries(obj as Record<string, unknown>).slice(
-    0,
-    limit,
-  );
+  const entries = Object.entries(obj as Record<string, unknown>).slice(0, limit);
   return (
     <Stack spacing={0.25}>
       {entries.map(([k, v]) => (
@@ -88,10 +83,7 @@ export default function AdminPage() {
   const [historyTotals, setHistoryTotals] = useState({ staged: 0, runs: 0 });
   const [alignment, setAlignment] = useState<"staged" | "runs">("staged");
 
-  const handleChange = (
-    _: React.MouseEvent<HTMLElement>,
-    next: "staged" | "runs" | null,
-  ) => {
+  const handleChange = (_: React.MouseEvent<HTMLElement>, next: "staged" | "runs" | null) => {
     if (next) setAlignment(next);
   };
 
@@ -116,9 +108,8 @@ export default function AdminPage() {
       });
       const dropBy = <T extends { by?: unknown }>(rows: T[]): Omit<T, "by">[] =>
         rows.map(({ by, ...rest }) => rest);
-      const dropCounts = <T extends { counts?: unknown }>(
-        rows: T[],
-      ): Omit<T, "counts">[] => rows.map(({ counts, ...rest }) => rest);
+      const dropCounts = <T extends { counts?: unknown }>(rows: T[]): Omit<T, "counts">[] =>
+        rows.map(({ counts, ...rest }) => rest);
 
       setHistoryRows({
         staged: dropBy(res.data.staged),
@@ -256,10 +247,7 @@ export default function AdminPage() {
                   borderColor: "divider",
                 }}
               >
-                <Typography
-                  variant="subtitle1"
-                  sx={{ fontWeight: "bold", mb: 1 }}
-                >
+                <Typography variant="subtitle1" sx={{ fontWeight: "bold", mb: 1 }}>
                   User &amp; Role Management
                 </Typography>
 
@@ -272,12 +260,7 @@ export default function AdminPage() {
                       Array.isArray(value) ? (
                         <Stack direction="row" spacing={0.5} flexWrap="wrap">
                           {value.map((r, i) => (
-                            <Chip
-                              key={i}
-                              size="small"
-                              variant="outlined"
-                              label={String(r)}
-                            />
+                            <Chip key={i} size="small" variant="outlined" label={String(r)} />
                           ))}
                         </Stack>
                       ) : (
@@ -342,17 +325,9 @@ export default function AdminPage() {
 
                 <DynamicTable
                   key={alignment}
-                  rows={
-                    alignment === "staged"
-                      ? historyRows.staged
-                      : historyRows.runs
-                  }
+                  rows={alignment === "staged" ? historyRows.staged : historyRows.runs}
                   enablePagination
-                  totalCount={
-                    alignment === "staged"
-                      ? historyTotals.staged
-                      : historyTotals.runs
-                  }
+                  totalCount={alignment === "staged" ? historyTotals.staged : historyTotals.runs}
                   columnRenderers={{
                     status: (value) => (
                       <Chip

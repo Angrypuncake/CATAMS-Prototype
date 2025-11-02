@@ -1,10 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
-export async function GET(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const activityId = Number(id);
 
@@ -24,7 +21,7 @@ export async function GET(
         ${futureOnly ? "AND session_date >= CURRENT_DATE" : ""}
       ORDER BY session_date NULLS LAST, start_at NULLS LAST, occurrence_id
       `,
-      [activityId],
+      [activityId]
     );
 
     const data = rows.map((r) => ({

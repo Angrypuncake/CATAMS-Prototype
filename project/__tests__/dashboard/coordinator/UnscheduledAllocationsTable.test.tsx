@@ -7,8 +7,7 @@ jest.mock("../../../app/services/allocationService", () => ({
   getAllUnscheduledAllocationsForUC: jest.fn(),
 }));
 
-const mockGetAllUnscheduledAllocationsForUC =
-  getAllUnscheduledAllocationsForUC as jest.Mock;
+const mockGetAllUnscheduledAllocationsForUC = getAllUnscheduledAllocationsForUC as jest.Mock;
 
 describe("UnscheduledAllocationsTable Component", () => {
   const mockMarkingAllocations = [
@@ -64,29 +63,21 @@ describe("UnscheduledAllocationsTable Component", () => {
   });
 
   test("should render loading state initially", () => {
-    mockGetAllUnscheduledAllocationsForUC.mockImplementation(
-      () => new Promise(() => {}),
-    );
+    mockGetAllUnscheduledAllocationsForUC.mockImplementation(() => new Promise(() => {}));
 
     render(<UnscheduledAllocationsTable />);
 
     expect(screen.getByRole("progressbar")).toBeInTheDocument();
-    expect(
-      screen.getByText(/Loading marking allocations…/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Loading marking allocations…/)).toBeInTheDocument();
   });
 
   test("should fetch and display marking allocations on mount", async () => {
-    mockGetAllUnscheduledAllocationsForUC.mockResolvedValue(
-      mockMarkingAllocations,
-    );
+    mockGetAllUnscheduledAllocationsForUC.mockResolvedValue(mockMarkingAllocations);
 
     render(<UnscheduledAllocationsTable />);
 
     await waitFor(() => {
-      expect(mockGetAllUnscheduledAllocationsForUC).toHaveBeenCalledWith(
-        "Marking",
-      );
+      expect(mockGetAllUnscheduledAllocationsForUC).toHaveBeenCalledWith("Marking");
     });
 
     await waitFor(() => {
@@ -115,19 +106,13 @@ describe("UnscheduledAllocationsTable Component", () => {
     render(<UnscheduledAllocationsTable />);
 
     await waitFor(() => {
-      expect(
-        screen.getByText("No marking hours allocated across your units."),
-      ).toBeInTheDocument();
+      expect(screen.getByText("No marking hours allocated across your units.")).toBeInTheDocument();
     });
   });
 
   test("should switch to consultation allocations when toggle is clicked", async () => {
-    mockGetAllUnscheduledAllocationsForUC.mockResolvedValueOnce(
-      mockMarkingAllocations,
-    );
-    mockGetAllUnscheduledAllocationsForUC.mockResolvedValueOnce(
-      mockConsultationAllocations,
-    );
+    mockGetAllUnscheduledAllocationsForUC.mockResolvedValueOnce(mockMarkingAllocations);
+    mockGetAllUnscheduledAllocationsForUC.mockResolvedValueOnce(mockConsultationAllocations);
 
     render(<UnscheduledAllocationsTable />);
 
@@ -144,17 +129,13 @@ describe("UnscheduledAllocationsTable Component", () => {
       expect(screen.getByText("Consultation Hours")).toBeInTheDocument();
     });
 
-    expect(mockGetAllUnscheduledAllocationsForUC).toHaveBeenCalledWith(
-      "Consultation",
-    );
+    expect(mockGetAllUnscheduledAllocationsForUC).toHaveBeenCalledWith("Consultation");
     expect(screen.getByText("COMP2017")).toBeInTheDocument();
     expect(screen.getByText("Alice Johnson")).toBeInTheDocument();
   });
 
   test("should not change type when toggle receives null value", async () => {
-    mockGetAllUnscheduledAllocationsForUC.mockResolvedValue(
-      mockMarkingAllocations,
-    );
+    mockGetAllUnscheduledAllocationsForUC.mockResolvedValue(mockMarkingAllocations);
 
     render(<UnscheduledAllocationsTable />);
 
@@ -173,9 +154,7 @@ describe("UnscheduledAllocationsTable Component", () => {
   });
 
   test("should refresh data when refresh button is clicked", async () => {
-    mockGetAllUnscheduledAllocationsForUC.mockResolvedValue(
-      mockMarkingAllocations,
-    );
+    mockGetAllUnscheduledAllocationsForUC.mockResolvedValue(mockMarkingAllocations);
 
     render(<UnscheduledAllocationsTable />);
 
@@ -194,27 +173,21 @@ describe("UnscheduledAllocationsTable Component", () => {
   });
 
   test("should handle fetch error gracefully", async () => {
-    const consoleErrorSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
 
-    mockGetAllUnscheduledAllocationsForUC.mockRejectedValue(
-      new Error("Network error"),
-    );
+    mockGetAllUnscheduledAllocationsForUC.mockRejectedValue(new Error("Network error"));
 
     render(<UnscheduledAllocationsTable />);
 
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "Failed to fetch UC unscheduled allocations:",
-        expect.any(Error),
+        expect.any(Error)
       );
     });
 
     // Should show empty state after error
-    expect(
-      screen.getByText("No marking hours allocated across your units."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("No marking hours allocated across your units.")).toBeInTheDocument();
 
     consoleErrorSpy.mockRestore();
   });
@@ -235,9 +208,7 @@ describe("UnscheduledAllocationsTable Component", () => {
   });
 
   test("should display note when present", async () => {
-    mockGetAllUnscheduledAllocationsForUC.mockResolvedValue([
-      mockMarkingAllocations[0],
-    ]);
+    mockGetAllUnscheduledAllocationsForUC.mockResolvedValue([mockMarkingAllocations[0]]);
 
     render(<UnscheduledAllocationsTable />);
 
@@ -247,9 +218,7 @@ describe("UnscheduledAllocationsTable Component", () => {
   });
 
   test("should render all table headers correctly", async () => {
-    mockGetAllUnscheduledAllocationsForUC.mockResolvedValue(
-      mockMarkingAllocations,
-    );
+    mockGetAllUnscheduledAllocationsForUC.mockResolvedValue(mockMarkingAllocations);
 
     render(<UnscheduledAllocationsTable />);
 
@@ -266,9 +235,7 @@ describe("UnscheduledAllocationsTable Component", () => {
   });
 
   test("should render multiple allocations with unique keys", async () => {
-    mockGetAllUnscheduledAllocationsForUC.mockResolvedValue(
-      mockMarkingAllocations,
-    );
+    mockGetAllUnscheduledAllocationsForUC.mockResolvedValue(mockMarkingAllocations);
 
     const { container } = render(<UnscheduledAllocationsTable />);
 
@@ -279,15 +246,11 @@ describe("UnscheduledAllocationsTable Component", () => {
   });
 
   test("should display correct activity type in loading message", async () => {
-    mockGetAllUnscheduledAllocationsForUC.mockImplementation(
-      () => new Promise(() => {}),
-    );
+    mockGetAllUnscheduledAllocationsForUC.mockImplementation(() => new Promise(() => {}));
 
     const { rerender } = render(<UnscheduledAllocationsTable />);
 
-    expect(
-      screen.getByText(/Loading marking allocations…/),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Loading marking allocations…/)).toBeInTheDocument();
 
     // Switch to consultation while loading
     mockGetAllUnscheduledAllocationsForUC.mockResolvedValue([]);
@@ -300,15 +263,13 @@ describe("UnscheduledAllocationsTable Component", () => {
 
     await waitFor(() => {
       expect(
-        screen.getByText("No consultation hours allocated across your units."),
+        screen.getByText("No consultation hours allocated across your units.")
       ).toBeInTheDocument();
     });
   });
 
   test("should render refresh button with tooltip", async () => {
-    mockGetAllUnscheduledAllocationsForUC.mockResolvedValue(
-      mockMarkingAllocations,
-    );
+    mockGetAllUnscheduledAllocationsForUC.mockResolvedValue(mockMarkingAllocations);
 
     render(<UnscheduledAllocationsTable />);
 
@@ -321,19 +282,13 @@ describe("UnscheduledAllocationsTable Component", () => {
   });
 
   test("should render toggle buttons for Marking and Consultation", async () => {
-    mockGetAllUnscheduledAllocationsForUC.mockResolvedValue(
-      mockMarkingAllocations,
-    );
+    mockGetAllUnscheduledAllocationsForUC.mockResolvedValue(mockMarkingAllocations);
 
     render(<UnscheduledAllocationsTable />);
 
     await waitFor(() => {
-      expect(
-        screen.getByRole("button", { name: "Marking" }),
-      ).toBeInTheDocument();
-      expect(
-        screen.getByRole("button", { name: "Consultation" }),
-      ).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Marking" })).toBeInTheDocument();
+      expect(screen.getByRole("button", { name: "Consultation" })).toBeInTheDocument();
     });
   });
 });

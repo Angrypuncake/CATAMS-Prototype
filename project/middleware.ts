@@ -10,11 +10,7 @@ interface CustomJWTPayload {
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/api/auth/login") ||
-    pathname === "/"
-  ) {
+  if (pathname.startsWith("/login") || pathname.startsWith("/api/auth/login") || pathname === "/") {
     return NextResponse.next();
   }
   const token = request.cookies.get("auth-token")?.value;
@@ -39,9 +35,7 @@ export async function middleware(request: NextRequest) {
 
     for (const [route, requiredRoles] of Object.entries(roleRoutes)) {
       if (pathname.startsWith(route)) {
-        const hasRequiredRole = requiredRoles.some((role) =>
-          decoded.roles.includes(role),
-        );
+        const hasRequiredRole = requiredRoles.some((role) => decoded.roles.includes(role));
 
         if (!hasRequiredRole) {
           return NextResponse.redirect(new URL("/portal", request.url));

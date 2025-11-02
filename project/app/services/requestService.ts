@@ -93,12 +93,9 @@ export async function getRequestById(id: string): Promise<TutorRequest> {
 
 export async function postCorrectionRequest(
   allocationId: string | number,
-  payload: TutorCorrectionPayload,
+  payload: TutorCorrectionPayload
 ) {
-  const res = await axios.post(
-    `/tutor/allocations/${allocationId}/requests/correction`,
-    payload,
-  );
+  const res = await axios.post(`/tutor/allocations/${allocationId}/requests/correction`, payload);
   return res.data;
 }
 
@@ -216,19 +213,17 @@ export interface RawRequestRow {
   created_at: string;
 }
 
-export async function getOpenRequestTypes(
-  allocationId: number,
-): Promise<string[]> {
+export async function getOpenRequestTypes(allocationId: number): Promise<string[]> {
   const response = await axios.get<{ data: RawRequestRow[] }>(
-    `/requests?allocationId=${allocationId}`,
+    `/requests?allocationId=${allocationId}`
   );
 
   const openTypes = Array.from(
     new Set(
       response.data.data
         .map((r) => r.request_type?.toLowerCase())
-        .filter((v): v is string => Boolean(v)),
-    ),
+        .filter((v): v is string => Boolean(v))
+    )
   );
 
   return openTypes;
@@ -239,15 +234,13 @@ export async function getOpenRequestTypes(
  */
 export async function getRequestsByAllocation(
   allocationId: number,
-  userId?: number,
+  userId?: number
 ): Promise<BasicRequest[]> {
-  const config = userId
-    ? { headers: { "x-user-id": String(userId) } }
-    : undefined;
+  const config = userId ? { headers: { "x-user-id": String(userId) } } : undefined;
 
   const response = await axios.get<{ data: RawRequestRow[] }>(
     `/requests?allocationId=${allocationId}`,
-    config,
+    config
   );
 
   const normalized: BasicRequest[] = response.data.data
@@ -256,12 +249,7 @@ export async function getRequestsByAllocation(
       requestId: r.request_id,
       requesterId: r.requester_id,
       allocationId: r.allocation_id,
-      requestType: r.request_type as
-        | "claim"
-        | "swap"
-        | "correction"
-        | "cancellation"
-        | "query",
+      requestType: r.request_type as "claim" | "swap" | "correction" | "cancellation" | "query",
       requestStatus: r.request_status,
       requestReason: r.request_reason,
       createdAt: r.created_at,
@@ -273,16 +261,14 @@ export async function getRequestsByAllocation(
 export async function getTutorRequests(
   page = 1,
   limit = 50,
-  userId?: number,
+  userId?: number
 ): Promise<PaginatedRequests> {
   const response = await axios.get<PaginatedRequests>("/tutor/requests", {
     params: { page, limit },
   });
   return response.data;
 }
-export async function getRequestsByUnit(
-  offeringId: number,
-): Promise<UCApprovalResponse> {
+export async function getRequestsByUnit(offeringId: number): Promise<UCApprovalResponse> {
   const res = await axios.get(`/offerings/${offeringId}/requests`);
   return res.data as UCApprovalResponse;
 }
@@ -295,9 +281,7 @@ export async function getRequestsByUC(): Promise<UCApproval[]> {
   if (offeringIds.length === 0) return [];
 
   // 2 Fetch all requests in parallel
-  const results = await Promise.all(
-    offeringIds.map((id) => getRequestsByUnit(id)),
-  );
+  const results = await Promise.all(offeringIds.map((id) => getRequestsByUnit(id)));
 
   // 3 Flatten into a single array of UCApproval
   const allRequests = results.flatMap((r) => r.approvals);
@@ -306,12 +290,7 @@ export async function getRequestsByUC(): Promise<UCApproval[]> {
 }
 export interface PatchTutorRequest {
   requestId: number;
-  requestStatus?:
-    | "pending_ta"
-    | "pending_uc"
-    | "approved"
-    | "rejected"
-    | "cancelled";
+  requestStatus?: "pending_ta" | "pending_uc" | "approved" | "rejected" | "cancelled";
   reviewer?: number | null;
   requestReason?: string | null;
   reviewerNote?: string | null; // 🆕 added
@@ -333,9 +312,7 @@ export interface PatchTutorResponse {
 // -------------------------------------------------------------
 // 🔹 Base PATCH call (non-breaking)
 // -------------------------------------------------------------
-export async function patchTutorRequest(
-  payload: PatchTutorRequest,
-): Promise<PatchTutorResponse> {
+export async function patchTutorRequest(payload: PatchTutorRequest): Promise<PatchTutorResponse> {
   const res = await axios.patch<PatchTutorResponse>("/requests", payload, {
     headers: { "Content-Type": "application/json" },
   });
@@ -357,10 +334,7 @@ function expectSuccess(res: PatchTutorResponse): PatchTutorResponseData {
 /**
  * Partially patch Claim details. Pass `null` to clear.
  */
-export async function patchClaimDetails(
-  requestId: number,
-  details: Partial<ClaimDetails> | null,
-) {
+export async function patchClaimDetails(requestId: number, details: Partial<ClaimDetails> | null) {
   const res = await patchTutorRequest({
     requestId,
     requestType: "claim",
@@ -372,10 +346,7 @@ export async function patchClaimDetails(
 /**
  * Partially patch Swap details. Pass `null` to clear.
  */
-export async function patchSwapDetails(
-  requestId: number,
-  details: Partial<SwapDetails> | null,
-) {
+export async function patchSwapDetails(requestId: number, details: Partial<SwapDetails> | null) {
   const res = await patchTutorRequest({
     requestId,
     requestType: "swap",
@@ -389,7 +360,7 @@ export async function patchSwapDetails(
  */
 export async function patchCorrectionDetails(
   requestId: number,
-  details: Partial<CorrectionDetails> | null,
+  details: Partial<CorrectionDetails> | null
 ) {
   const res = await patchTutorRequest({
     requestId,
@@ -404,7 +375,7 @@ export async function patchCorrectionDetails(
  */
 export async function patchCancellationDetails(
   requestId: number,
-  details: Partial<CancellationDetails> | null,
+  details: Partial<CancellationDetails> | null
 ) {
   const res = await patchTutorRequest({
     requestId,
@@ -431,7 +402,7 @@ export async function clearQueryDetails(requestId: number) {
  */
 export async function clearDetailsFor(
   requestId: number,
-  requestType: "claim" | "swap" | "correction" | "cancellation" | "query",
+  requestType: "claim" | "swap" | "correction" | "cancellation" | "query"
 ) {
   const res = await patchTutorRequest({
     requestId,
@@ -447,12 +418,7 @@ export async function clearDetailsFor(
 
 export async function setRequestStatus(
   requestId: number,
-  requestStatus:
-    | "pending_ta"
-    | "pending_uc"
-    | "approved"
-    | "rejected"
-    | "cancelled",
+  requestStatus: "pending_ta" | "pending_uc" | "approved" | "rejected" | "cancelled"
 ) {
   const res = await patchTutorRequest({ requestId, requestStatus });
   return expectSuccess(res);
@@ -463,18 +429,12 @@ export async function setReviewer(requestId: number, reviewer: number | null) {
   return expectSuccess(res);
 }
 
-export async function setRequestReason(
-  requestId: number,
-  requestReason: string | null,
-) {
+export async function setRequestReason(requestId: number, requestReason: string | null) {
   const res = await patchTutorRequest({ requestId, requestReason });
   return expectSuccess(res);
 }
 
-export async function setReviewerNote(
-  requestId: number,
-  reviewerNote: string | null,
-) {
+export async function setReviewerNote(requestId: number, reviewerNote: string | null) {
   const res = await patchTutorRequest({ requestId, reviewerNote });
   return expectSuccess(res);
 }
@@ -489,7 +449,7 @@ export async function setReviewerNote(
 export async function ucApproveRequest(
   requestId: number,
   reviewerId: number,
-  reviewerNote?: string,
+  reviewerNote?: string
 ) {
   const res = await patchTutorRequest({
     requestId,
@@ -507,7 +467,7 @@ export async function ucRejectRequest(
   requestId: number,
   reviewerId: number,
   reason?: string,
-  reviewerNote?: string,
+  reviewerNote?: string
 ) {
   const res = await patchTutorRequest({
     requestId,
@@ -530,7 +490,7 @@ export async function ucApproveWithDetails(
         /* force details presence on non-query */
       })
     | { requestType: "query"; details: null },
-  reviewerNote?: string,
+  reviewerNote?: string
 ) {
   const res = await patchTutorRequest({
     requestId,
@@ -551,12 +511,7 @@ export async function ucRejectWithNoteAndOptionalDetailsClear(
   reason: string | null,
   reviewerNote: string | null,
   clearDetails?: boolean,
-  requestTypeForClear?:
-    | "claim"
-    | "swap"
-    | "correction"
-    | "cancellation"
-    | "query",
+  requestTypeForClear?: "claim" | "swap" | "correction" | "cancellation" | "query"
 ) {
   const base = await patchTutorRequest({
     requestId,
@@ -585,7 +540,7 @@ export async function taForwardToUC(
   requestId: number,
   taReviewerId: number,
   reason?: string,
-  reviewerNote?: string,
+  reviewerNote?: string
 ) {
   const res = await patchTutorRequest({
     requestId,
@@ -604,7 +559,7 @@ export async function taRejectRequest(
   requestId: number,
   taReviewerId: number,
   reason?: string,
-  reviewerNote?: string,
+  reviewerNote?: string
 ) {
   const res = await patchTutorRequest({
     requestId,
@@ -619,24 +574,18 @@ export async function taRejectRequest(
 /**
  * TA: Edits claim/correction/swap details without changing status.
  */
-export async function taEditClaimDetails(
-  requestId: number,
-  partial: Partial<ClaimDetails>,
-) {
+export async function taEditClaimDetails(requestId: number, partial: Partial<ClaimDetails>) {
   return patchClaimDetails(requestId, partial);
 }
 
 export async function taEditCorrectionDetails(
   requestId: number,
-  partial: Partial<CorrectionDetails>,
+  partial: Partial<CorrectionDetails>
 ) {
   return patchCorrectionDetails(requestId, partial);
 }
 
-export async function taEditSwapDetails(
-  requestId: number,
-  partial: Partial<SwapDetails>,
-) {
+export async function taEditSwapDetails(requestId: number, partial: Partial<SwapDetails>) {
   return patchSwapDetails(requestId, partial);
 }
 
@@ -653,7 +602,7 @@ export async function taForwardWithDetails(
     | { requestType: "cancellation"; details: Partial<CancellationDetails> }
     | { requestType: "query"; details: null },
   reason?: string,
-  reviewerNote?: string,
+  reviewerNote?: string
 ) {
   const res = await patchTutorRequest({
     requestId,
@@ -686,7 +635,7 @@ export async function cancelRequest(requestId: number) {
  */
 export async function clearAllDetailsKnown(
   requestId: number,
-  types: Array<"claim" | "swap" | "correction" | "cancellation" | "query">,
+  types: Array<"claim" | "swap" | "correction" | "cancellation" | "query">
 ) {
   for (const t of types) {
     await clearDetailsFor(requestId, t);
@@ -699,16 +648,11 @@ export async function clearAllDetailsKnown(
 export async function updateCoreFields(
   requestId: number,
   opts: {
-    status?:
-      | "pending_ta"
-      | "pending_uc"
-      | "approved"
-      | "rejected"
-      | "cancelled";
+    status?: "pending_ta" | "pending_uc" | "approved" | "rejected" | "cancelled";
     reviewer?: number | null;
     reason?: string | null;
     note?: string | null;
-  },
+  }
 ) {
   const res = await patchTutorRequest({
     requestId,

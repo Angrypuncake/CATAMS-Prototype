@@ -56,11 +56,7 @@ export default function InitiatorCard({
           </Box>
 
           {sourceAllocation.note && (
-            <Box
-              mt={2}
-              p={1.5}
-              sx={{ bgcolor: "action.hover", borderRadius: 1 }}
-            >
+            <Box mt={2} p={1.5} sx={{ bgcolor: "action.hover", borderRadius: 1 }}>
               <Typography variant="subtitle2">Notes</Typography>
               <Typography variant="body2" color="text.secondary">
                 {sourceAllocation.note}

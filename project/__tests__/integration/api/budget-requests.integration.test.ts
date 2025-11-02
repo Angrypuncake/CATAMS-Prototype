@@ -18,30 +18,27 @@ describe("Budget and Request Integration Tests (trimmed)", () => {
 
   const q1 = (text: string, params?: unknown[]) => pool.query(text, params);
   const getUserId = async (email: string) =>
-    (await q1("SELECT user_id FROM test_users WHERE email=$1", [email])).rows[0]
-      .user_id;
+    (await q1("SELECT user_id FROM test_users WHERE email=$1", [email])).rows[0].user_id;
   const getOffering = async (unit = "SOFT3888") =>
     (
       await q1(
         "SELECT offering_id, budget, anticipated_enrolments, actual_enrolments FROM test_unit_offering WHERE course_unit_id=$1",
-        [unit],
+        [unit]
       )
     ).rows[0];
-  const getOfferingId = async (unit = "SOFT3888") =>
-    (await getOffering(unit)).offering_id;
+  const getOfferingId = async (unit = "SOFT3888") => (await getOffering(unit)).offering_id;
   const getAnyAllocationId = async () =>
-    (await q1("SELECT allocation_id FROM test_allocation LIMIT 1")).rows[0]
-      .allocation_id;
+    (await q1("SELECT allocation_id FROM test_allocation LIMIT 1")).rows[0].allocation_id;
   const insertRequest = async (
     requesterId: number,
     offeringId: number,
     type: string,
-    status: string,
+    status: string
   ) =>
     (
       await q1(
         "INSERT INTO test_request (requester_id, offering_id, request_type, request_status) VALUES ($1,$2,$3,$4) RETURNING request_id",
-        [requesterId, offeringId, type, status],
+        [requesterId, offeringId, type, status]
       )
     ).rows[0].request_id;
 
@@ -102,7 +99,7 @@ describe("Budget and Request Integration Tests (trimmed)", () => {
         LEFT JOIN test_paycode p ON a.paycode_id = p.code
         WHERE ta.unit_offering_id = $1
         `,
-        [offering.offering_id, offering.budget],
+        [offering.offering_id, offering.budget]
       );
       const totalAllocated = parseFloat(res.rows[0].total_allocated);
       const variance = parseFloat(res.rows[0].variance);
@@ -121,7 +118,7 @@ describe("Budget and Request Integration Tests (trimmed)", () => {
         VALUES ($1,'allocation',1,-150.00)
         RETURNING transaction_id, source, delta_amount
         `,
-        [offeringId],
+        [offeringId]
       );
       expect(result.rows).toHaveLength(1);
       expect(result.rows[0].source).toBe("allocation");
@@ -137,11 +134,11 @@ describe("Budget and Request Integration Tests (trimmed)", () => {
         ($1,'claim',1,-50.00),
         ($1,'adjustment',NULL,200.00)
         `,
-        [offeringId],
+        [offeringId]
       );
       const sum = await q1(
         "SELECT SUM(delta_amount) AS total_delta FROM test_budget_transaction WHERE offering_id=$1",
-        [offeringId],
+        [offeringId]
       );
       expect(parseFloat(sum.rows[0].total_delta)).toBe(50.0);
     });
@@ -157,7 +154,7 @@ describe("Budget and Request Integration Tests (trimmed)", () => {
         VALUES ($1,$2,'claim','pending')
         RETURNING request_id, request_type, request_status
         `,
-        [requesterId, offeringId],
+        [requesterId, offeringId]
       );
       expect(res.rows).toHaveLength(1);
       expect(res.rows[0].request_type).toBe("claim");
@@ -173,38 +170,27 @@ describe("Budget and Request Integration Tests (trimmed)", () => {
         ($1,$2,'claim','pending'),
         ($1,$2,'correction','approved')
         `,
-        [requesterId, offeringId],
+        [requesterId, offeringId]
       );
-      const res = await q1("SELECT * FROM test_request WHERE requester_id=$1", [
-        requesterId,
-      ]);
+      const res = await q1("SELECT * FROM test_request WHERE requester_id=$1", [requesterId]);
       expect(res.rows.length).toBeGreaterThanOrEqual(2);
     });
 
     it("updates request status", async () => {
-      const requesterId = (await q1("SELECT user_id FROM test_users LIMIT 1"))
-        .rows[0].user_id;
+      const requesterId = (await q1("SELECT user_id FROM test_users LIMIT 1")).rows[0].user_id;
       const offeringId = await getOfferingId();
-      const requestId = await insertRequest(
-        requesterId,
-        offeringId,
-        "query",
-        "pending",
-      );
-      await q1(
-        "UPDATE test_request SET request_status='approved' WHERE request_id=$1",
-        [requestId],
-      );
-      const res = await q1(
-        "SELECT request_status FROM test_request WHERE request_id=$1",
-        [requestId],
-      );
+      const requestId = await insertRequest(requesterId, offeringId, "query", "pending");
+      await q1("UPDATE test_request SET request_status='approved' WHERE request_id=$1", [
+        requestId,
+      ]);
+      const res = await q1("SELECT request_status FROM test_request WHERE request_id=$1", [
+        requestId,
+      ]);
       expect(res.rows[0].request_status).toBe("approved");
     });
 
     it("filters requests by status", async () => {
-      const requesterId = (await q1("SELECT user_id FROM test_users LIMIT 1"))
-        .rows[0].user_id;
+      const requesterId = (await q1("SELECT user_id FROM test_users LIMIT 1")).rows[0].user_id;
       const offeringId = await getOfferingId();
       await q1(
         `
@@ -213,11 +199,9 @@ describe("Budget and Request Integration Tests (trimmed)", () => {
         ($1,$2,'claim','approved'),
         ($1,$2,'claim','pending')
         `,
-        [requesterId, offeringId],
+        [requesterId, offeringId]
       );
-      const res = await q1(
-        "SELECT COUNT(*) FROM test_request WHERE request_status='pending'",
-      );
+      const res = await q1("SELECT COUNT(*) FROM test_request WHERE request_status='pending'");
       expect(parseInt(res.rows[0].count)).toBeGreaterThanOrEqual(2);
     });
   });
@@ -227,19 +211,14 @@ describe("Budget and Request Integration Tests (trimmed)", () => {
       const requesterId = await getUserId("testtutor@demo.edu");
       const offeringId = await getOfferingId();
       const allocationId = await getAnyAllocationId();
-      const requestId = await insertRequest(
-        requesterId,
-        offeringId,
-        "claim",
-        "pending",
-      );
+      const requestId = await insertRequest(requesterId, offeringId, "claim", "pending");
       const res = await q1(
         `
         INSERT INTO test_claimrequest (request_id, allocation_id, claimed_hours, claimed_paycode, comment)
         VALUES ($1,$2,3.5,'TUT01','Claim for additional hours')
         RETURNING request_id, claimed_hours, claimed_paycode
         `,
-        [requestId, allocationId],
+        [requestId, allocationId]
       );
       expect(res.rows).toHaveLength(1);
       expect(parseFloat(res.rows[0].claimed_hours)).toBe(3.5);
@@ -250,15 +229,10 @@ describe("Budget and Request Integration Tests (trimmed)", () => {
       const requesterId = await getUserId("testtutor@demo.edu");
       const offeringId = await getOfferingId();
       const allocationId = await getAnyAllocationId();
-      const requestId = await insertRequest(
-        requesterId,
-        offeringId,
-        "claim",
-        "pending",
-      );
+      const requestId = await insertRequest(requesterId, offeringId, "claim", "pending");
       await q1(
         "INSERT INTO test_claimrequest (request_id, allocation_id, claimed_hours, claimed_paycode) VALUES ($1,$2,2.0,'MARK')",
-        [requestId, allocationId],
+        [requestId, allocationId]
       );
       const res = await q1(
         `
@@ -274,28 +248,22 @@ describe("Budget and Request Integration Tests (trimmed)", () => {
         JOIN test_paycode p ON cr.claimed_paycode = p.code
         WHERE r.request_id=$1
         `,
-        [requestId],
+        [requestId]
       );
       expect(res.rows).toHaveLength(1);
       expect(parseFloat(res.rows[0].claimed_amount)).toBeGreaterThan(0);
     });
 
     it("enforces positive claimed hours", async () => {
-      const requesterId = (await q1("SELECT user_id FROM test_users LIMIT 1"))
-        .rows[0].user_id;
+      const requesterId = (await q1("SELECT user_id FROM test_users LIMIT 1")).rows[0].user_id;
       const offeringId = await getOfferingId();
       const allocationId = await getAnyAllocationId();
-      const requestId = await insertRequest(
-        requesterId,
-        offeringId,
-        "claim",
-        "pending",
-      );
+      const requestId = await insertRequest(requesterId, offeringId, "claim", "pending");
       await expect(
         q1(
           "INSERT INTO test_claimrequest (request_id, allocation_id, claimed_hours, claimed_paycode) VALUES ($1,$2,-1.0,'TUT01')",
-          [requestId, allocationId],
-        ),
+          [requestId, allocationId]
+        )
       ).rejects.toThrow();
     });
   });
@@ -317,7 +285,7 @@ describe("Budget and Request Integration Tests (trimmed)", () => {
         WHERE uo.offering_id=$1
         GROUP BY uo.offering_id, uo.budget
         `,
-        [offering.offering_id],
+        [offering.offering_id]
       );
       expect(res.rows).toHaveLength(1);
       expect(res.rows[0].total_budget).toBeDefined();
@@ -341,7 +309,7 @@ describe("Budget and Request Integration Tests (trimmed)", () => {
         GROUP BY ta.activity_type
         ORDER BY total_cost DESC NULLS LAST
         `,
-        [offeringId],
+        [offeringId]
       );
       expect(res.rows.length).toBeGreaterThan(0);
       expect(res.rows[0].activity_type).toBeDefined();

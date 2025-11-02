@@ -53,13 +53,7 @@ describe("HomePortalButton", () => {
     const link = screen.getByRole("link", { name: /go to portal/i });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute("href", "/portal");
-    expect(link).toHaveClass(
-      "fixed",
-      "left-4",
-      "bottom-4",
-      "z-[1000]",
-      "inline-flex",
-    );
+    expect(link).toHaveClass("fixed", "left-4", "bottom-4", "z-[1000]", "inline-flex");
 
     // The SVG icon should also exist
     const svg = link.querySelector("svg");

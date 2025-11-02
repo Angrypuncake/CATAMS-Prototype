@@ -6,19 +6,13 @@ export async function GET(req: Request) {
     // Extract user id from request headers (set by middleware)
     const requesterId = req.headers.get("x-user-id");
     if (!requesterId) {
-      return NextResponse.json(
-        { error: "Missing user authentication" },
-        { status: 401 },
-      );
+      return NextResponse.json({ error: "Missing user authentication" }, { status: 401 });
     }
 
     // Pagination
     const { searchParams } = new URL(req.url);
     const page = Math.max(1, Number(searchParams.get("page") ?? 1));
-    const limit = Math.min(
-      Math.max(1, Number(searchParams.get("limit") ?? 50)),
-      100,
-    );
+    const limit = Math.min(Math.max(1, Number(searchParams.get("limit") ?? 50)), 100);
     const offset = (page - 1) * limit;
 
     // Main query
@@ -64,9 +58,6 @@ export async function GET(req: Request) {
     });
   } catch (err) {
     console.error("Failed to fetch tutor requests:", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

@@ -16,9 +16,7 @@ type RequestRowProps = {
 export default function RequestRow({ req }: RequestRowProps) {
   // Optional: pretty date formatting
   const router = useRouter();
-  const formattedDate = req.createdAt
-    ? format(new Date(req.createdAt), "dd MMM yyyy")
-    : "";
+  const formattedDate = req.createdAt ? format(new Date(req.createdAt), "dd MMM yyyy") : "";
 
   // Optional: make statuses more readable
   const statusLabel = req.requestStatus
@@ -44,25 +42,14 @@ export default function RequestRow({ req }: RequestRowProps) {
         #{req.requestId}
       </Typography>
 
-      <Divider
-        orientation="vertical"
-        flexItem
-        sx={{ display: { xs: "none", sm: "block" } }}
-      />
+      <Divider orientation="vertical" flexItem sx={{ display: { xs: "none", sm: "block" } }} />
 
       {/* Request Type */}
-      <Typography
-        variant="body2"
-        sx={{ minWidth: 100, textTransform: "capitalize" }}
-      >
+      <Typography variant="body2" sx={{ minWidth: 100, textTransform: "capitalize" }}>
         {req.requestType}
       </Typography>
 
-      <Divider
-        orientation="vertical"
-        flexItem
-        sx={{ display: { xs: "none", sm: "block" } }}
-      />
+      <Divider orientation="vertical" flexItem sx={{ display: { xs: "none", sm: "block" } }} />
 
       {/* Status */}
       <Typography variant="body2" sx={{ color: "text.secondary", flexGrow: 1 }}>
@@ -74,11 +61,7 @@ export default function RequestRow({ req }: RequestRowProps) {
       <Button
         size="small"
         variant="outlined"
-        onClick={() =>
-          router.push(
-            `/dashboard/tutor/allocations/40/requests/${req.requestId}`,
-          )
-        }
+        onClick={() => router.push(`/dashboard/tutor/allocations/40/requests/${req.requestId}`)}
       >
         View
       </Button>

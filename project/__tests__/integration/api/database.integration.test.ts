@@ -73,10 +73,9 @@ describe("Database Connection Integration Test", () => {
 
   describe("Basic CRUD Operations", () => {
     it("should insert and retrieve data", async () => {
-      const result = await pool.query(
-        "SELECT * FROM test_users WHERE email = $1",
-        ["testtutor@demo.edu"],
-      );
+      const result = await pool.query("SELECT * FROM test_users WHERE email = $1", [
+        "testtutor@demo.edu",
+      ]);
 
       expect(result.rows).toHaveLength(1);
       expect(result.rows[0].email).toBe("testtutor@demo.edu");
@@ -99,10 +98,9 @@ describe("Database Connection Integration Test", () => {
 
       await pool.query("ROLLBACK");
 
-      const result = await pool.query(
-        "SELECT * FROM test_users WHERE email = $1",
-        ["transaction@test.edu"],
-      );
+      const result = await pool.query("SELECT * FROM test_users WHERE email = $1", [
+        "transaction@test.edu",
+      ]);
 
       expect(result.rows).toHaveLength(0);
     });
@@ -114,7 +112,7 @@ describe("Database Connection Integration Test", () => {
         pool.query(`
           INSERT INTO test_allocation (user_id, paycode_id, status, mode)
           VALUES (99999, 'TUT01', 'pending', 'scheduled')
-        `),
+        `)
       ).rejects.toThrow();
     });
 
@@ -125,26 +123,21 @@ describe("Database Connection Integration Test", () => {
         RETURNING user_id
       `);
 
-      const activity = await pool.query(
-        "SELECT activity_id FROM test_teaching_activity LIMIT 1",
-      );
+      const activity = await pool.query("SELECT activity_id FROM test_teaching_activity LIMIT 1");
 
       await pool.query(
         `
         INSERT INTO test_allocation (user_id, activity_id, paycode_id, status, mode, allocated_hours)
         VALUES ($1, $2, 'TUT01', 'pending', 'unscheduled', 5.0)
       `,
-        [user.rows[0].user_id, activity.rows[0].activity_id],
+        [user.rows[0].user_id, activity.rows[0].activity_id]
       );
 
-      await pool.query("DELETE FROM test_users WHERE user_id = $1", [
+      await pool.query("DELETE FROM test_users WHERE user_id = $1", [user.rows[0].user_id]);
+
+      const allocations = await pool.query("SELECT * FROM test_allocation WHERE user_id = $1", [
         user.rows[0].user_id,
       ]);
-
-      const allocations = await pool.query(
-        "SELECT * FROM test_allocation WHERE user_id = $1",
-        [user.rows[0].user_id],
-      );
 
       expect(allocations.rows).toHaveLength(0);
     });

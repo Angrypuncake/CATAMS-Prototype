@@ -2,10 +2,7 @@
 "use client";
 import React from "react";
 import { getActivityOccurrences } from "@/app/services/activityService";
-import {
-  OccurrenceRow,
-  PropagationPayload,
-} from "@/app/admin/allocations/types";
+import { OccurrenceRow, PropagationPayload } from "@/app/admin/allocations/types";
 import { Dow } from "@/app/_types/allocations";
 
 export function PropagationPanel({
@@ -22,9 +19,7 @@ export function PropagationPanel({
   const [weeks, setWeeks] = React.useState<OccurrenceRow[]>([]);
   const [selected, setSelected] = React.useState<Set<number>>(new Set());
   const [fields, setFields] = React.useState<PropagationPayload["fields"]>([]);
-  const [notesMode, setNotesMode] = React.useState<"overwrite" | "append">(
-    "overwrite",
-  );
+  const [notesMode, setNotesMode] = React.useState<"overwrite" | "append">("overwrite");
   const [moveDow, setMoveDow] = React.useState<boolean>(false);
 
   React.useEffect(() => {
@@ -87,16 +82,13 @@ export function PropagationPanel({
         Propagate across existing sessions
       </legend>
       <p className="text-xs text-gray-500 mb-3">
-        Tick weeks below to apply changes. Leave all unticked for “this session
-        only”.
+        Tick weeks below to apply changes. Leave all unticked for “this session only”.
       </p>
 
       <div className="grid grid-cols-5 gap-3">
         {/* DoW section */}
         <div className="col-span-2">
-          <label className="block text-sm font-medium mb-1">
-            Day of Week (derived)
-          </label>
+          <label className="block text-sm font-medium mb-1">Day of Week (derived)</label>
 
           {/* NEW: checkbox to include/exclude DOW propagation */}
           <label className="inline-flex items-center gap-2 mb-1 text-sm">
@@ -117,8 +109,8 @@ export function PropagationPanel({
             title="Derived from Date (this session)"
           />
           <div className="text-xs text-gray-500 mt-1">
-            Propagation uses the weekday derived from “Date (this session)”.
-            Change the date above to update this value.
+            Propagation uses the weekday derived from “Date (this session)”. Change the date above
+            to update this value.
           </div>
         </div>
 
@@ -253,9 +245,7 @@ export function PropagationPanel({
                     <input
                       type="checkbox"
                       checked={checked}
-                      onChange={(e) =>
-                        toggleOne(w.occurrence_id, e.target.checked)
-                      }
+                      onChange={(e) => toggleOne(w.occurrence_id, e.target.checked)}
                     />
                   </td>
                   <td className="px-3 py-2">Week {idx + 1}</td>

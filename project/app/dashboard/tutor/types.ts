@@ -19,12 +19,7 @@ export type NoticeRow = {
   actions: string | null;
 };
 
-export type SortableColumns =
-  | "session_date"
-  | "start_at"
-  | "location"
-  | "status"
-  | "unit_code";
+export type SortableColumns = "session_date" | "start_at" | "location" | "status" | "unit_code";
 
 export interface SortConfig {
   column: string;

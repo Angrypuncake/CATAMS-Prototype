@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
-export async function GET(
-  _req: Request,
-  context: { params: Promise<{ offeringId: string }> },
-) {
+export async function GET(_req: Request, context: { params: Promise<{ offeringId: string }> }) {
   const { offeringId } = await context.params;
   const id = Number(offeringId);
 
@@ -42,7 +39,7 @@ WHERE uo.offering_id = $1
 ORDER BY so.session_date, so.start_at;
 
       `,
-      [id],
+      [id]
     );
 
     const approvals = res.rows.map((row) => ({
@@ -60,9 +57,6 @@ ORDER BY so.session_date, so.start_at;
     return NextResponse.json({ approvals });
   } catch (err) {
     console.error("Error fetching UC approvals:", err);
-    return NextResponse.json(
-      { error: "Failed to fetch UC approvals" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch UC approvals" }, { status: 500 });
   }
 }

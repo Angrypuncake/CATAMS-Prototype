@@ -29,12 +29,7 @@ function setup(props?: Partial<React.ComponentProps<typeof PropagationPanel>>) {
   (getActivityOccurrences as jest.Mock).mockResolvedValueOnce(mockWeeks);
   onChangeMock.mockClear();
   return render(
-    <PropagationPanel
-      activityId={123}
-      derivedDow="Mon"
-      onChange={onChangeMock}
-      {...props}
-    />,
+    <PropagationPanel activityId={123} derivedDow="Mon" onChange={onChangeMock} {...props} />
   );
 }
 
@@ -131,16 +126,12 @@ describe("PropagationPanel (no user-event)", () => {
     fireEvent.click(screen.getByRole("button", { name: /Select All/i }));
     let last = onChangeMock.mock.calls.at(-1)?.[0];
     expect(last.occurrenceIds.sort()).toEqual([1, 2]);
-    expect(
-      screen.getByText(/Will apply to 2 occurrence\(s\)\./i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Will apply to 2 occurrence\(s\)\./i)).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: /Clear All/i }));
     last = onChangeMock.mock.calls.at(-1)?.[0];
     expect(last.occurrenceIds).toEqual([]);
-    expect(
-      screen.getByText(/No occurrences selected — this session only\./i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/No occurrences selected — this session only\./i)).toBeInTheDocument();
   });
 
   test("individual week checkbox updates occurrenceIds", async () => {
@@ -148,16 +139,12 @@ describe("PropagationPanel (no user-event)", () => {
     await screen.findByText("Week 1");
 
     const row1 = screen.getByText("Week 1").closest("tr")!;
-    const cb1 = row1.querySelector(
-      'input[type="checkbox"]',
-    ) as HTMLInputElement;
+    const cb1 = row1.querySelector('input[type="checkbox"]') as HTMLInputElement;
 
     fireEvent.click(cb1);
     let last = onChangeMock.mock.calls.at(-1)?.[0];
     expect(last.occurrenceIds).toEqual([1]);
-    expect(
-      screen.getByText(/Will apply to 1 occurrence\(s\)\./i),
-    ).toBeInTheDocument();
+    expect(screen.getByText(/Will apply to 1 occurrence\(s\)\./i)).toBeInTheDocument();
 
     fireEvent.click(cb1);
     last = onChangeMock.mock.calls.at(-1)?.[0];
@@ -166,15 +153,9 @@ describe("PropagationPanel (no user-event)", () => {
 
   test("empty state when no weeks", async () => {
     (getActivityOccurrences as jest.Mock).mockResolvedValueOnce([]);
-    render(
-      <PropagationPanel
-        activityId={456}
-        derivedDow="Mon"
-        onChange={onChangeMock}
-      />,
-    );
+    render(<PropagationPanel activityId={456} derivedDow="Mon" onChange={onChangeMock} />);
     expect(
-      await screen.findByText(/No existing weeks found for this activity\./i),
+      await screen.findByText(/No existing weeks found for this activity\./i)
     ).toBeInTheDocument();
   });
 

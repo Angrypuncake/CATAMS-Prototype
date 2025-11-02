@@ -14,7 +14,7 @@ export async function login(email: string, password: string) {
       useremail: email,
       password: password,
     },
-    { withCredentials: true },
+    { withCredentials: true }
   );
   return res.data;
 }

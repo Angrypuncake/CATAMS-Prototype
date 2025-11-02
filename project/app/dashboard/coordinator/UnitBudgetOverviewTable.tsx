@@ -20,9 +20,7 @@ interface BudgetOverviewTableProps {
   } | null;
 }
 
-const UnitBudgetOverviewTable = ({
-  computedData,
-}: BudgetOverviewTableProps) => {
+const UnitBudgetOverviewTable = ({ computedData }: BudgetOverviewTableProps) => {
   const AUD = new Intl.NumberFormat("en-AU", {
     style: "currency",
     currency: "AUD",
@@ -67,11 +65,7 @@ const UnitBudgetOverviewTable = ({
 
         <TableBody>
           {computedData?.rows.map((row) => (
-            <TableRow
-              key={row.unitCode}
-              hover
-              sx={{ "& td": { borderColor: "#000" } }}
-            >
+            <TableRow key={row.unitCode} hover sx={{ "& td": { borderColor: "#000" } }}>
               <TableCell sx={{ fontWeight: 600 }}>{row.unitCode}</TableCell>
               <TableCell>{row.year}</TableCell>
               <TableCell>{row.session}</TableCell>
@@ -92,22 +86,14 @@ const UnitBudgetOverviewTable = ({
           ))}
           {!computedData && (
             <TableRow>
-              <TableCell
-                colSpan={9}
-                align="center"
-                sx={{ py: 4, color: "text.secondary" }}
-              >
+              <TableCell colSpan={9} align="center" sx={{ py: 4, color: "text.secondary" }}>
                 Loading…
               </TableCell>
             </TableRow>
           )}
           {computedData && computedData.rows.length === 0 && (
             <TableRow>
-              <TableCell
-                colSpan={9}
-                align="center"
-                sx={{ py: 4, color: "text.secondary" }}
-              >
+              <TableCell colSpan={9} align="center" sx={{ py: 4, color: "text.secondary" }}>
                 No data for this session.
               </TableCell>
             </TableRow>

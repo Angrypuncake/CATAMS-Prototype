@@ -71,16 +71,8 @@ export function AllocationsTable({
           <thead className="bg-gray-50">
             {tab === "scheduled" ? (
               <tr className="text-left">
-                <SortableHeader
-                  column="so.session_date"
-                  label="Date*"
-                  className="w-[140px]"
-                />
-                <SortableHeader
-                  column="so.start_at"
-                  label="Start*"
-                  className="w-[110px]"
-                />
+                <SortableHeader column="so.session_date" label="Date*" className="w-[140px]" />
+                <SortableHeader column="so.start_at" label="Start*" className="w-[110px]" />
                 <SortableHeader column="cu.unit_code" label="Unit" />
                 <SortableHeader column="ta.activity_type" label="Activity" />
                 <SortableHeader column="u.last_name" label="Tutor" />
@@ -92,11 +84,7 @@ export function AllocationsTable({
               </tr>
             ) : (
               <tr className="text-left">
-                <SortableHeader
-                  column="a.hours"
-                  label="Allocated Hours*"
-                  className="w-[180px]"
-                />
+                <SortableHeader column="a.hours" label="Allocated Hours*" className="w-[180px]" />
                 <SortableHeader column="cu.unit_code" label="Unit" />
                 <SortableHeader column="ta.activity_type" label="Activity" />
                 <SortableHeader column="u.last_name" label="Tutor" />
@@ -127,15 +115,11 @@ export function AllocationsTable({
                 <tr key={r.id} className="border-t">
                   {tab === "scheduled" ? (
                     <>
-                      <td className="px-3 py-2">
-                        {toInputDate(r.session_date) || "—"}
-                      </td>
+                      <td className="px-3 py-2">{toInputDate(r.session_date) || "—"}</td>
                       <td className="px-3 py-2">
                         {toDisplayTime(r.start_at) || "—"}
                         {r.end_at && (
-                          <div className="text-xs text-gray-500">
-                            End: {r.end_at?.slice(0, 8)}
-                          </div>
+                          <div className="text-xs text-gray-500">End: {r.end_at?.slice(0, 8)}</div>
                         )}
                       </td>
                     </>
@@ -144,15 +128,11 @@ export function AllocationsTable({
                   )}
                   <td className="px-3 py-2">
                     <div className="font-medium">{r.unit_code ?? "—"}</div>
-                    <div className="text-xs text-gray-500">
-                      {r.unit_name ?? ""}
-                    </div>
+                    <div className="text-xs text-gray-500">{r.unit_name ?? ""}</div>
                   </td>
                   <td className="px-3 py-2">
                     <div className="font-medium">{r.activity_type ?? "—"}</div>
-                    <div className="text-xs text-gray-500">
-                      {r.activity_name ?? ""}
-                    </div>
+                    <div className="text-xs text-gray-500">{r.activity_name ?? ""}</div>
                   </td>
                   <td className="px-3 py-2">
                     <div className="font-medium">{labelName(r)}</div>
@@ -160,12 +140,8 @@ export function AllocationsTable({
                   </td>
                   <td className="px-3 py-2">{r.paycode_id ?? "—"}</td>
                   <td className="px-3 py-2">{r.status ?? "—"}</td>
-                  {tab === "scheduled" && (
-                    <td className="px-3 py-2">{r.location ?? "—"}</td>
-                  )}
-                  <td className="px-3 py-2 truncate max-w-[360px]">
-                    {r.note ?? "—"}
-                  </td>
+                  {tab === "scheduled" && <td className="px-3 py-2">{r.location ?? "—"}</td>}
+                  <td className="px-3 py-2 truncate max-w-[360px]">{r.note ?? "—"}</td>
                   <td className="px-3 py-2">
                     <Button
                       variant="outlined"

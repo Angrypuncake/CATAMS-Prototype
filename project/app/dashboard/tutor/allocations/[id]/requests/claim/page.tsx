@@ -120,9 +120,7 @@ export default function ClaimForm() {
         <textarea
           className="border rounded w-full px-2 py-1 mt-1"
           placeholder={
-            hoursChanged || paycodeChanged
-              ? "Explain reason for change..."
-              : "Optional comment"
+            hoursChanged || paycodeChanged ? "Explain reason for change..." : "Optional comment"
           }
           value={comment}
           onChange={(e) => setComment(e.target.value)}
@@ -137,16 +135,10 @@ export default function ClaimForm() {
           paycodeChanged || hoursChanged ? "bg-yellow-600" : "bg-blue-600"
         }`}
       >
-        {paycodeChanged || hoursChanged
-          ? "Submit Claim Request"
-          : "Submit Claim"}
+        {paycodeChanged || hoursChanged ? "Submit Claim Request" : "Submit Claim"}
       </button>
 
-      {paycodeChanged && (
-        <p className="text-sm text-red-600 mt-2">
-          Entered Paycode is different
-        </p>
-      )}
+      {paycodeChanged && <p className="text-sm text-red-600 mt-2">Entered Paycode is different</p>}
     </div>
   );
 }

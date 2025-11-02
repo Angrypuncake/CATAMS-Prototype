@@ -24,7 +24,7 @@ test("login posts credentials with withCredentials and returns data", async () =
   expect(mockedAxios.post).toHaveBeenCalledWith(
     "/auth/login",
     { useremail: "a@b.com", password: "secret" },
-    { withCredentials: true },
+    { withCredentials: true }
   );
   expect(res).toEqual({ ok: true });
 });
@@ -32,9 +32,5 @@ test("login posts credentials with withCredentials and returns data", async () =
 test("logout posts to /auth/logout with withCredentials", async () => {
   mockedAxios.post.mockResolvedValueOnce({ data: {} });
   await logout();
-  expect(mockedAxios.post).toHaveBeenCalledWith(
-    "/auth/logout",
-    {},
-    { withCredentials: true },
-  );
+  expect(mockedAxios.post).toHaveBeenCalledWith("/auth/logout", {}, { withCredentials: true });
 });

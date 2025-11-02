@@ -5,11 +5,8 @@ import { query } from "@/lib/db";
 export async function POST(req: NextRequest) {
   try {
     const { runId } = await req.json();
-    if (!runId)
-      return NextResponse.json({ error: "Missing runId" }, { status: 400 });
-    const { rows } = await query(`SELECT * FROM public.etl_rollback_run($1)`, [
-      runId,
-    ]);
+    if (!runId) return NextResponse.json({ error: "Missing runId" }, { status: 400 });
+    const { rows } = await query(`SELECT * FROM public.etl_rollback_run($1)`, [runId]);
     return NextResponse.json({
       rolledBack: true,
       runId,

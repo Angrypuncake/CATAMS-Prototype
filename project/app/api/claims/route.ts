@@ -7,10 +7,7 @@ export async function POST(req: NextRequest) {
     const { allocation_id, requester_id, paycode, claimed_hours } = body;
 
     if (!allocation_id || !requester_id || !paycode || !claimed_hours) {
-      return NextResponse.json(
-        { error: "Missing required fields" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
     // 1Fetch paycode rate for the current financial year
@@ -23,7 +20,7 @@ export async function POST(req: NextRequest) {
         AND CURRENT_DATE <= make_date(end_year, 6, 30)
       LIMIT 1;
       `,
-      [paycode],
+      [paycode]
     );
 
     if (payrateRows.length === 0) {
@@ -41,15 +38,12 @@ export async function POST(req: NextRequest) {
       VALUES ($1, $2, $3, $4, $5)
       RETURNING *;
       `,
-      [allocation_id, requester_id, paycode, claimed_hours, claimed_amount],
+      [allocation_id, requester_id, paycode, claimed_hours, claimed_amount]
     );
 
     return NextResponse.json({ data: rows[0] }, { status: 201 });
   } catch (err) {
     console.error("Error creating claim:", err);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

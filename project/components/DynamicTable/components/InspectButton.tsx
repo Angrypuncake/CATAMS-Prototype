@@ -31,12 +31,7 @@ export const InspectButton = ({ value }: InspectButtonProps) => {
           <SearchIcon fontSize="inherit" />
         </IconButton>
       </Tooltip>
-      <Dialog
-        open={open}
-        onClose={() => setOpen(false)}
-        maxWidth="md"
-        fullWidth
-      >
+      <Dialog open={open} onClose={() => setOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Cell details</DialogTitle>
         <DialogContent dividers>
           <pre

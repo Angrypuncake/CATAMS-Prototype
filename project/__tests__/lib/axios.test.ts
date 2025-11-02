@@ -1,9 +1,5 @@
 import api from "@/lib/axios";
-import type {
-  AxiosAdapter,
-  AxiosResponse,
-  InternalAxiosRequestConfig,
-} from "axios";
+import type { AxiosAdapter, AxiosResponse, InternalAxiosRequestConfig } from "axios";
 
 type TestAxiosError = Error & {
   isAxiosError?: boolean;
@@ -11,9 +7,7 @@ type TestAxiosError = Error & {
   response?: { status?: number; data?: unknown };
 };
 
-function setAdapter(
-  fn: (config: InternalAxiosRequestConfig) => Promise<AxiosResponse>,
-) {
+function setAdapter(fn: (config: InternalAxiosRequestConfig) => Promise<AxiosResponse>) {
   api.defaults.adapter = fn as unknown as AxiosAdapter;
 }
 
@@ -31,11 +25,7 @@ function getHeaderValue(headers: unknown, key: string): string | undefined {
   const lower = key.toLowerCase();
 
   let v = obj[key] ?? obj[lower];
-  if (
-    v === undefined &&
-    typeof obj.common === "object" &&
-    obj.common !== null
-  ) {
+  if (v === undefined && typeof obj.common === "object" && obj.common !== null) {
     const common = obj.common as Record<string, unknown>;
     v = common[key] ?? common[lower];
   }
@@ -50,8 +40,7 @@ describe("axios instance (/lib/axios)", () => {
     // Clear all cookies by setting them to expire
     document.cookie.split(";").forEach((cookie) => {
       const eqPos = cookie.indexOf("=");
-      const name =
-        eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
+      const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
       document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/";
     });
     jest.spyOn(console, "groupCollapsed").mockImplementation(() => {});
@@ -74,9 +63,7 @@ describe("axios instance (/lib/axios)", () => {
     document.cookie = "auth-token=abc123";
 
     const adapter = jest.fn(
-      async (
-        config: InternalAxiosRequestConfig,
-      ): Promise<AxiosResponse<{ ok: true }>> => {
+      async (config: InternalAxiosRequestConfig): Promise<AxiosResponse<{ ok: true }>> => {
         const auth = getHeaderValue(config.headers, "Authorization");
         const ct =
           getHeaderValue(config.headers, "Content-Type") ??
@@ -92,7 +79,7 @@ describe("axios instance (/lib/axios)", () => {
           headers: {},
           config,
         };
-      },
+      }
     );
     setAdapter(adapter);
 
@@ -103,9 +90,7 @@ describe("axios instance (/lib/axios)", () => {
 
   test("request interceptor does not add Authorization when no token", async () => {
     const adapter = jest.fn(
-      async (
-        config: InternalAxiosRequestConfig,
-      ): Promise<AxiosResponse<{ ok: true }>> => {
+      async (config: InternalAxiosRequestConfig): Promise<AxiosResponse<{ ok: true }>> => {
         const auth = getHeaderValue(config.headers, "Authorization");
         expect(auth).toBeUndefined();
 
@@ -116,7 +101,7 @@ describe("axios instance (/lib/axios)", () => {
           headers: {},
           config,
         };
-      },
+      }
     );
     setAdapter(adapter);
 
@@ -138,7 +123,7 @@ describe("axios instance (/lib/axios)", () => {
 
     expect(console.groupCollapsed).toHaveBeenCalledWith(
       expect.stringMatching(/^\%c\[API ERROR\] GET \/oops$/),
-      expect.any(String),
+      expect.any(String)
     );
     expect(console.error).toHaveBeenCalled();
     expect(console.groupEnd).toHaveBeenCalled();
@@ -161,9 +146,7 @@ describe("axios instance (/lib/axios)", () => {
     const calls = (console.error as jest.Mock).mock.calls;
     const fallbackCall = calls.find(
       (args) =>
-        args[0] === "Non-serializable error details:" &&
-        args[1] &&
-        typeof args[1] === "object",
+        args[0] === "Non-serializable error details:" && args[1] && typeof args[1] === "object"
     );
 
     expect(fallbackCall).toBeTruthy();
@@ -185,12 +168,10 @@ describe("axios instance (/lib/axios)", () => {
     const adapter = jest.fn(async () => Promise.reject(err));
     setAdapter(adapter);
 
-    await expect(api.post("/serial", { x: 1 })).rejects.toThrow(
-      "Boom-serializable",
-    );
+    await expect(api.post("/serial", { x: 1 })).rejects.toThrow("Boom-serializable");
 
     const call = (console.error as jest.Mock).mock.calls.find(
-      ([arg0]) => typeof arg0 === "string" && arg0.startsWith("{"),
+      ([arg0]) => typeof arg0 === "string" && arg0.startsWith("{")
     );
     expect(call).toBeTruthy();
 
@@ -207,8 +188,7 @@ describe("axios instance (/lib/axios)", () => {
 
   test("sets default Content-Type header at instance creation", () => {
     const hdrs = api.defaults.headers as unknown;
-    const asObj = (v: unknown): v is Record<string, unknown> =>
-      typeof v === "object" && v !== null;
+    const asObj = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
 
     const val =
       (asObj(hdrs) && typeof hdrs["Content-Type"] === "string"
@@ -219,21 +199,13 @@ describe("axios instance (/lib/axios)", () => {
         : undefined) ??
       (asObj(hdrs) &&
       asObj((hdrs as Record<string, unknown>).common) &&
-      typeof (hdrs as Record<string, { [k: string]: unknown }>).common[
-        "Content-Type"
-      ] === "string"
-        ? ((hdrs as Record<string, { [k: string]: unknown }>).common[
-            "Content-Type"
-          ] as string)
+      typeof (hdrs as Record<string, { [k: string]: unknown }>).common["Content-Type"] === "string"
+        ? ((hdrs as Record<string, { [k: string]: unknown }>).common["Content-Type"] as string)
         : undefined) ??
       (asObj(hdrs) &&
       asObj((hdrs as Record<string, unknown>).common) &&
-      typeof (hdrs as Record<string, { [k: string]: unknown }>).common[
-        "content-type"
-      ] === "string"
-        ? ((hdrs as Record<string, { [k: string]: unknown }>).common[
-            "content-type"
-          ] as string)
+      typeof (hdrs as Record<string, { [k: string]: unknown }>).common["content-type"] === "string"
+        ? ((hdrs as Record<string, { [k: string]: unknown }>).common["content-type"] as string)
         : undefined);
 
     expect(val).toBe("application/json");
@@ -247,19 +219,14 @@ describe("axios instance (/lib/axios)", () => {
     const adapter = jest.fn(async () => Promise.reject(err));
     setAdapter(adapter);
 
-    await expect(api.get("/whatever")).rejects.toThrow(
-      "Bare error with missing props",
-    );
+    await expect(api.get("/whatever")).rejects.toThrow("Bare error with missing props");
 
     const jsonCall = (console.error as jest.Mock).mock.calls.find(
-      ([arg0]) => typeof arg0 === "string" && arg0.startsWith("{"),
+      ([arg0]) => typeof arg0 === "string" && arg0.startsWith("{")
     );
     expect(jsonCall).toBeTruthy();
 
-    const details = JSON.parse(jsonCall![0] as string) as Record<
-      string,
-      unknown
-    >;
+    const details = JSON.parse(jsonCall![0] as string) as Record<string, unknown>;
     expect(details).toEqual({
       message: "Bare error with missing props",
       url: "(no URL)",
@@ -271,7 +238,7 @@ describe("axios instance (/lib/axios)", () => {
 
     expect(console.groupCollapsed).toHaveBeenCalledWith(
       expect.stringMatching(/\[API ERROR] \(NO METHOD\) \(no URL\)$/),
-      expect.any(String),
+      expect.any(String)
     );
     expect(console.groupEnd).toHaveBeenCalled();
   });

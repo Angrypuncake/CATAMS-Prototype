@@ -37,8 +37,7 @@ export function Drawer({
   paycodes: PaycodeOption[];
 }) {
   // If backend sends mode use it; otherwise infer from presence of session fields
-  const isScheduled =
-    row?.mode === "scheduled" || (row?.mode == null && !!row?.session_date);
+  const isScheduled = row?.mode === "scheduled" || (row?.mode == null && !!row?.session_date);
 
   const [propPayload, setPropPayload] = useState<PropagationPayload>({
     fields: [],
@@ -65,7 +64,7 @@ export function Drawer({
   });
 
   // State for future occurrence-related features - currently set but not directly read
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const [weeksForActivity, setWeeksForActivity] = useState<OccurrenceRow[]>([]);
 
   // Hydrate Drawer from the row
@@ -121,11 +120,7 @@ export function Drawer({
   return (
     <div>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/40 z-40"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <div className="fixed inset-0 bg-black/40 z-40" onClick={onClose} aria-hidden="true" />
       {/* Panel */}
       <aside
         className="fixed right-0 top-0 h-full w-[480px] max-w-[95vw] bg-white shadow-2xl z-50 overflow-y-auto"
@@ -134,9 +129,7 @@ export function Drawer({
       >
         <div className="p-5 border-b">
           <h2 className="text-lg font-semibold">
-            {isScheduled
-              ? "Edit Scheduled Allocation"
-              : "Edit Unscheduled Allocation"}
+            {isScheduled ? "Edit Scheduled Allocation" : "Edit Unscheduled Allocation"}
           </h2>
           <p className="text-sm text-gray-500">
             Alloc #{row.id} • {row.unit_code ?? "—"} •{" "}
@@ -151,9 +144,7 @@ export function Drawer({
             <TutorCombo
               options={tutors}
               valueId={form.tutorId}
-              onChange={(sel) =>
-                setForm((f) => ({ ...f, tutorId: sel ? sel.user_id : null }))
-              }
+              onChange={(sel) => setForm((f) => ({ ...f, tutorId: sel ? sel.user_id : null }))}
             />
           </div>
 
@@ -163,9 +154,7 @@ export function Drawer({
             <PaycodeCombo
               options={paycodes}
               valueCode={form.paycode}
-              onChange={(sel) =>
-                setForm((f) => ({ ...f, paycode: sel ? sel.code : null }))
-              }
+              onChange={(sel) => setForm((f) => ({ ...f, paycode: sel ? sel.code : null }))}
             />
           </div>
 
@@ -176,9 +165,7 @@ export function Drawer({
               <select
                 className="w-full border rounded px-3 py-2"
                 value={form.status}
-                onChange={(e) =>
-                  setForm((f) => ({ ...f, status: e.target.value }))
-                }
+                onChange={(e) => setForm((f) => ({ ...f, status: e.target.value }))}
               >
                 <option value="">— Select status —</option>
                 {STATUS_OPTIONS.map((s) => (
@@ -196,9 +183,7 @@ export function Drawer({
             <textarea
               className="w-full border rounded px-3 py-2 min-h-[20px]"
               value={form.location}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, location: e.target.value }))
-              }
+              onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
             />
           </div>
 
@@ -207,9 +192,7 @@ export function Drawer({
             <>
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Date (this session)
-                  </label>
+                  <label className="block text-sm font-medium mb-1">Date (this session)</label>
                   <input
                     type="date"
                     className="w-full border rounded px-3 py-2"
@@ -220,16 +203,12 @@ export function Drawer({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Start
-                  </label>
+                  <label className="block text-sm font-medium mb-1">Start</label>
                   <input
                     type="time"
                     className="w-full border rounded px-3 py-2"
                     value={form.start}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, start: e.target.value }))
-                    }
+                    onChange={(e) => setForm((f) => ({ ...f, start: e.target.value }))}
                   />
                 </div>
                 <div>
@@ -238,30 +217,23 @@ export function Drawer({
                     type="time"
                     className="w-full border rounded px-3 py-2"
                     value={form.end}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, end: e.target.value }))
-                    }
+                    onChange={(e) => setForm((f) => ({ ...f, end: e.target.value }))}
                   />
                 </div>
               </div>
 
               {/* Notes (this session) */}
               <div>
-                <label className="block text-sm font-medium mb-1">
-                  Notes (this session)
-                </label>
+                <label className="block text-sm font-medium mb-1">Notes (this session)</label>
                 <textarea
                   className="w-full border rounded px-3 py-2 min-h-[84px]"
                   value={form.note}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, note: e.target.value }))
-                  }
+                  onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
                   placeholder="Anything specific about this occurrence…"
                 />
                 <div className="text-xs text-gray-500 mt-1">
-                  These note save to this session. To copy them to other weeks,
-                  tick <strong>Notes</strong> in “Fields to propagate” and
-                  choose overwrite/append.
+                  These note save to this session. To copy them to other weeks, tick{" "}
+                  <strong>Notes</strong> in “Fields to propagate” and choose overwrite/append.
                 </div>
               </div>
 
@@ -276,18 +248,14 @@ export function Drawer({
             <>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Allocated Hours*
-                  </label>
+                  <label className="block text-sm font-medium mb-1">Allocated Hours*</label>
                   <input
                     type="number"
                     min="0"
                     step="0.25"
                     className="w-full border rounded px-3 py-2"
                     value={form.allocatedHours}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, allocatedHours: e.target.value }))
-                    }
+                    onChange={(e) => setForm((f) => ({ ...f, allocatedHours: e.target.value }))}
                     placeholder="e.g. 2, 1.5"
                   />
                 </div>
@@ -303,9 +271,7 @@ export function Drawer({
                         }))
                       }
                     />
-                    <span className="text-sm">
-                      Manual hours only (no date/time)
-                    </span>
+                    <span className="text-sm">Manual hours only (no date/time)</span>
                   </label>
                 </div>
               </div>
@@ -315,9 +281,7 @@ export function Drawer({
                 <textarea
                   className="w-full border rounded px-3 py-2 min-h-[84px]"
                   value={form.note}
-                  onChange={(e) =>
-                    setForm((f) => ({ ...f, note: e.target.value }))
-                  }
+                  onChange={(e) => setForm((f) => ({ ...f, note: e.target.value }))}
                   placeholder="Internal note…"
                 />
               </div>
@@ -331,23 +295,17 @@ export function Drawer({
                     type="date"
                     className="w-full border rounded px-3 py-2"
                     value={form.date}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, date: e.target.value }))
-                    }
+                    onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))}
                     disabled={form.manualHoursOnly}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    Start
-                  </label>
+                  <label className="block text-sm font-medium mb-1">Start</label>
                   <input
                     type="time"
                     className="w-full border rounded px-3 py-2"
                     value={form.start}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, start: e.target.value }))
-                    }
+                    onChange={(e) => setForm((f) => ({ ...f, start: e.target.value }))}
                     disabled={form.manualHoursOnly}
                   />
                 </div>
@@ -357,9 +315,7 @@ export function Drawer({
                     type="time"
                     className="w-full border rounded px-3 py-2"
                     value={form.end}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, end: e.target.value }))
-                    }
+                    onChange={(e) => setForm((f) => ({ ...f, end: e.target.value }))}
                     disabled={form.manualHoursOnly}
                   />
                 </div>
@@ -407,9 +363,7 @@ export function Drawer({
                   start_at: null,
                   end_at: null,
                   location: form.location,
-                  hours: form.allocatedHours
-                    ? Number(form.allocatedHours)
-                    : null,
+                  hours: form.allocatedHours ? Number(form.allocatedHours) : null,
                 });
               }
               onClose();

@@ -1,7 +1,7 @@
 // types/request_patch.ts (or append to types/request.ts)
 
 // Reuse your existing RequestDetailsMap
-import type { RequestDetailsMap, RequestType } from "./request";
+import type { RequestDetailsMap } from "./request";
 
 // Build a "partial-or-null" map for details patching
 type PartialOrNull<T> = T extends null ? null : Partial<T> | null;
@@ -27,12 +27,7 @@ export type PatchDetailsUnion =
 // Base fields you might patch irrespective of details
 export interface PatchTutorRequestBase {
   requestId: number;
-  requestStatus?:
-    | "pending_ta"
-    | "pending_uc"
-    | "approved"
-    | "rejected"
-    | "cancelled";
+  requestStatus?: "pending_ta" | "pending_uc" | "approved" | "rejected" | "cancelled";
   reviewer?: number | null;
   requestReason?: string | null;
   reviewerNote?: string | null;

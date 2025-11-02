@@ -43,13 +43,9 @@ describe("QueryReview Component", () => {
     render(<QueryReview data={mockQueryRequest} />);
 
     expect(screen.getByText("Query Request Review")).toBeInTheDocument();
-    expect(
-      screen.getByText("Question about allocation schedule"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Question about allocation schedule")).toBeInTheDocument();
     expect(screen.getByText("Close / Reject")).toBeInTheDocument();
-    expect(
-      screen.getByPlaceholderText("Reviewer response"),
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Reviewer response")).toBeInTheDocument();
 
     await waitFor(() => {
       expect(mockGetTutorById).toHaveBeenCalled();
@@ -95,9 +91,7 @@ describe("QueryReview Component", () => {
   test("should render reviewer note field", async () => {
     render(<QueryReview data={mockQueryRequest} />);
 
-    const reviewerNoteField = screen.getByPlaceholderText(
-      "Reviewer note (not shown to tutor)",
-    );
+    const reviewerNoteField = screen.getByPlaceholderText("Reviewer note (not shown to tutor)");
 
     expect(reviewerNoteField).toBeInTheDocument();
 
@@ -141,10 +135,7 @@ describe("QueryReview Component", () => {
     render(<QueryReview data={mockQueryRequest} />);
 
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "Failed to fetch tutor:",
-        expect.any(Error),
-      );
+      expect(consoleSpy).toHaveBeenCalledWith("Failed to fetch tutor:", expect.any(Error));
     });
 
     consoleSpy.mockRestore();

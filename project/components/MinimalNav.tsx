@@ -47,9 +47,8 @@ const MinimalNav: React.FC<Props> = ({
   }, [router]);
 
   const cleanedActions = React.useMemo(
-    () =>
-      (actions ?? []).filter((a) => a.label.trim().toLowerCase() !== "logout"),
-    [actions],
+    () => (actions ?? []).filter((a) => a.label.trim().toLowerCase() !== "logout"),
+    [actions]
   );
 
   const inlineGap =
@@ -70,7 +69,7 @@ const MinimalNav: React.FC<Props> = ({
           className={cx(
             "mx-auto w-full",
             maxWidthClass,
-            "flex items-center justify-between px-4 py-2 sm:py-3",
+            "flex items-center justify-between px-4 py-2 sm:py-3"
           )}
         >
           {/* left: logo */}
@@ -110,7 +109,7 @@ const MinimalNav: React.FC<Props> = ({
                   >
                     {a.label}
                   </Button>
-                ),
+                )
               )}
               {!pathname?.startsWith("/portal/") && (
                 <Button
@@ -158,9 +157,7 @@ const MinimalNav: React.FC<Props> = ({
       </div>
 
       <div className="h-px w-full" style={{ backgroundColor: GREY }} />
-      {showOrangeAccent && (
-        <div className="h-[2px] w-full" style={{ backgroundColor: ORANGE }} />
-      )}
+      {showOrangeAccent && <div className="h-[2px] w-full" style={{ backgroundColor: ORANGE }} />}
     </header>
   );
 };

@@ -1,13 +1,9 @@
 export const isPrimitive = (v: unknown) =>
-  v === null ||
-  v === undefined ||
-  ["string", "number", "boolean"].includes(typeof v);
+  v === null || v === undefined || ["string", "number", "boolean"].includes(typeof v);
 
-export const truncate = (s: string, n = 80) =>
-  s.length > n ? s.slice(0, n) + "…" : s;
+export const truncate = (s: string, n = 80) => (s.length > n ? s.slice(0, n) + "…" : s);
 
-export const isDate = (v: unknown): v is Date =>
-  v instanceof Date && !isNaN(v.getTime());
+export const isDate = (v: unknown): v is Date => v instanceof Date && !isNaN(v.getTime());
 
 export const formatDate = (date: Date): string => {
   return date.toLocaleString();
@@ -64,11 +60,7 @@ export const searchInValue = (value: unknown, searchTerm: string): boolean => {
   return false;
 };
 
-export const compareValues = (
-  a: unknown,
-  b: unknown,
-  direction: "asc" | "desc",
-): number => {
+export const compareValues = (a: unknown, b: unknown, direction: "asc" | "desc"): number => {
   // Handle null/undefined
   if (a === null || a === undefined) return direction === "asc" ? 1 : -1;
   if (b === null || b === undefined) return direction === "asc" ? -1 : 1;
@@ -127,7 +119,7 @@ const formatCSVCell = (value: unknown): string => {
 export function exportToJSON<T = Record<string, unknown>>(
   data: T[],
   filename = "export.json",
-  excludeKeys: string[] = ["id"],
+  excludeKeys: string[] = ["id"]
 ): void {
   if (!data?.length) {
     console.warn("No data to export");
@@ -160,7 +152,7 @@ export function exportToCSV<T = Record<string, unknown>>(
   data: T[],
   filename = "export.csv",
   excludeKeys: string[] = ["id"],
-  columnOrder?: string[],
+  columnOrder?: string[]
 ): void {
   if (!data?.length) {
     console.warn("No data to export");
@@ -174,9 +166,7 @@ export function exportToCSV<T = Record<string, unknown>>(
   const filteredKeys = allKeys.filter((key) => !excludeKeys.includes(key));
 
   // Use provided column order or default to filtered keys
-  const keys = columnOrder
-    ? columnOrder.filter((key) => filteredKeys.includes(key))
-    : filteredKeys;
+  const keys = columnOrder ? columnOrder.filter((key) => filteredKeys.includes(key)) : filteredKeys;
 
   // Create CSV header
   let csvString = keys.join(",") + "\n";

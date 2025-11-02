@@ -4,13 +4,12 @@ import { query } from "@/lib/db";
 
 export async function GET(req: NextRequest) {
   const stagingId = Number(new URL(req.url).searchParams.get("stagingId"));
-  if (!stagingId)
-    return NextResponse.json({ error: "Missing stagingId" }, { status: 400 });
+  if (!stagingId) return NextResponse.json({ error: "Missing stagingId" }, { status: 400 });
 
   // Raw grid preview
   const { rows: raw } = await query(
     `SELECT * FROM allocations_staging WHERE batch_id=$1 ORDER BY id LIMIT 100`,
-    [stagingId],
+    [stagingId]
   );
 
   // Lightweight validation (server-side double check)
@@ -24,7 +23,7 @@ export async function GET(req: NextRequest) {
       count(*) FILTER (WHERE activity_start IS NULL OR activity_end IS NULL) AS missing_times
     FROM s
     `,
-    [stagingId],
+    [stagingId]
   );
 
   // Timetable aggregation (what users care about)
@@ -45,7 +44,7 @@ export async function GET(req: NextRequest) {
     GROUP BY 1,2,3,4,5,6,7,8
     ORDER BY date, start_time, activity_name
     `,
-    [stagingId],
+    [stagingId]
   );
 
   return NextResponse.json({

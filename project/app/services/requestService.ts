@@ -1,11 +1,19 @@
 import type {
   BasicRequest,
+  CancellationDetails,
+  ClaimDetails,
+  CorrectionDetails,
   CreateRequestPayload,
   PaginatedRequests,
+  SwapDetails,
   TutorCorrectionPayload,
   TutorRequest,
+  UCApproval,
+  UCApprovalResponse,
 } from "@/app/_types/request";
 import axios from "@/lib/axios";
+import { getCoordinatorUnits } from "./unitService";
+import { PatchDetailsUnion } from "../_types/requestsPatch";
 
 export async function getRequestByRequestId(id: string): Promise<TutorRequest> {
   const res = await axios.get(`requests/${id}`);
@@ -271,4 +279,443 @@ export async function getTutorRequests(
     params: { page, limit },
   });
   return response.data;
+}
+export async function getRequestsByUnit(
+  offeringId: number,
+): Promise<UCApprovalResponse> {
+  const res = await axios.get(`/offerings/${offeringId}/requests`);
+  return res.data as UCApprovalResponse;
+}
+
+export async function getRequestsByUC(): Promise<UCApproval[]> {
+  // 1 Get all unit offering IDs for this UC
+  const rawOfferings = await getCoordinatorUnits();
+  const offeringIds = rawOfferings.map((r) => r.offering_id);
+
+  if (offeringIds.length === 0) return [];
+
+  // 2 Fetch all requests in parallel
+  const results = await Promise.all(
+    offeringIds.map((id) => getRequestsByUnit(id)),
+  );
+
+  // 3 Flatten into a single array of UCApproval
+  const allRequests = results.flatMap((r) => r.approvals);
+
+  return allRequests;
+}
+export interface PatchTutorRequest {
+  requestId: number;
+  requestStatus?:
+    | "pending_ta"
+    | "pending_uc"
+    | "approved"
+    | "rejected"
+    | "cancelled";
+  reviewer?: number | null;
+  requestReason?: string | null;
+  reviewerNote?: string | null; // 🆕 added
+}
+
+export interface PatchTutorResponse {
+  success: boolean;
+  data?: {
+    request_id: number;
+    request_status: string;
+    reviewer: number | null;
+    request_reason: string | null;
+    reviewer_note: string | null; // 🆕 included in return
+    updated_at: string;
+  };
+  error?: string;
+}
+
+// -------------------------------------------------------------
+// 🔹 Base PATCH call (non-breaking)
+// -------------------------------------------------------------
+export async function patchTutorRequest(
+  payload: PatchTutorRequest,
+): Promise<PatchTutorResponse> {
+  const res = await axios.patch<PatchTutorResponse>("/requests", payload, {
+    headers: { "Content-Type": "application/json" },
+  });
+  return res.data;
+}
+
+// Optional: small helper to throw on error and return data directly
+function expectSuccess(res: PatchTutorResponse): PatchTutorResponseData {
+  if (!res.success || !res.data) {
+    throw new Error(res.error ?? "Unknown error patching request");
+  }
+  return res.data;
+}
+
+// =============================================================
+//  A) DETAILS PATCHERS (typed, no `any`)
+// =============================================================
+
+/**
+ * Partially patch Claim details. Pass `null` to clear.
+ */
+export async function patchClaimDetails(
+  requestId: number,
+  details: Partial<ClaimDetails> | null,
+) {
+  const res = await patchTutorRequest({
+    requestId,
+    requestType: "claim",
+    details,
+  });
+  return expectSuccess(res);
+}
+
+/**
+ * Partially patch Swap details. Pass `null` to clear.
+ */
+export async function patchSwapDetails(
+  requestId: number,
+  details: Partial<SwapDetails> | null,
+) {
+  const res = await patchTutorRequest({
+    requestId,
+    requestType: "swap",
+    details,
+  });
+  return expectSuccess(res);
+}
+
+/**
+ * Partially patch Correction details. Pass `null` to clear.
+ */
+export async function patchCorrectionDetails(
+  requestId: number,
+  details: Partial<CorrectionDetails> | null,
+) {
+  const res = await patchTutorRequest({
+    requestId,
+    requestType: "correction",
+    details,
+  });
+  return expectSuccess(res);
+}
+
+/**
+ * Partially patch Cancellation details. Pass `null` to clear.
+ */
+export async function patchCancellationDetails(
+  requestId: number,
+  details: Partial<CancellationDetails> | null,
+) {
+  const res = await patchTutorRequest({
+    requestId,
+    requestType: "cancellation",
+    details,
+  });
+  return expectSuccess(res);
+}
+
+/**
+ * Ensure Query requests have no details (sets to NULL).
+ */
+export async function clearQueryDetails(requestId: number) {
+  const res = await patchTutorRequest({
+    requestId,
+    requestType: "query",
+    details: null,
+  });
+  return expectSuccess(res);
+}
+
+/**
+ * Clear details for any request type explicitly.
+ */
+export async function clearDetailsFor(
+  requestId: number,
+  requestType: "claim" | "swap" | "correction" | "cancellation" | "query",
+) {
+  const res = await patchTutorRequest({
+    requestId,
+    requestType,
+    details: null,
+  });
+  return expectSuccess(res);
+}
+
+// =============================================================
+//  B) GENERIC FIELD PATCHERS
+// =============================================================
+
+export async function setRequestStatus(
+  requestId: number,
+  requestStatus:
+    | "pending_ta"
+    | "pending_uc"
+    | "approved"
+    | "rejected"
+    | "cancelled",
+) {
+  const res = await patchTutorRequest({ requestId, requestStatus });
+  return expectSuccess(res);
+}
+
+export async function setReviewer(requestId: number, reviewer: number | null) {
+  const res = await patchTutorRequest({ requestId, reviewer });
+  return expectSuccess(res);
+}
+
+export async function setRequestReason(
+  requestId: number,
+  requestReason: string | null,
+) {
+  const res = await patchTutorRequest({ requestId, requestReason });
+  return expectSuccess(res);
+}
+
+export async function setReviewerNote(
+  requestId: number,
+  reviewerNote: string | null,
+) {
+  const res = await patchTutorRequest({ requestId, reviewerNote });
+  return expectSuccess(res);
+}
+
+// =============================================================
+//  C) UC HELPERS (keep existing signatures)
+// =============================================================
+
+/**
+ * UC: Approves a tutor request.
+ */
+export async function ucApproveRequest(
+  requestId: number,
+  reviewerId: number,
+  reviewerNote?: string,
+) {
+  const res = await patchTutorRequest({
+    requestId,
+    requestStatus: "approved",
+    reviewer: reviewerId,
+    reviewerNote: reviewerNote ?? null,
+  });
+  return expectSuccess(res);
+}
+
+/**
+ * UC: Rejects a tutor request.
+ */
+export async function ucRejectRequest(
+  requestId: number,
+  reviewerId: number,
+  reason?: string,
+  reviewerNote?: string,
+) {
+  const res = await patchTutorRequest({
+    requestId,
+    requestStatus: "rejected",
+    reviewer: reviewerId,
+    requestReason: reason ?? null,
+    reviewerNote: reviewerNote ?? null,
+  });
+  return expectSuccess(res);
+}
+
+/**
+ * UC: Approve + patch details in one atomic call (optional).
+ */
+export async function ucApproveWithDetails(
+  requestId: number,
+  reviewerId: number,
+  details:
+    | (PatchDetailsUnion & {
+        /* force details presence on non-query */
+      })
+    | { requestType: "query"; details: null },
+  reviewerNote?: string,
+) {
+  const res = await patchTutorRequest({
+    requestId,
+    requestStatus: "approved",
+    reviewer: reviewerId,
+    reviewerNote: reviewerNote ?? null,
+    ...(details as PatchDetailsUnion),
+  });
+  return expectSuccess(res);
+}
+
+/**
+ * UC: Reject + patch reviewer note / reason + optional details clear.
+ */
+export async function ucRejectWithNoteAndOptionalDetailsClear(
+  requestId: number,
+  reviewerId: number,
+  reason: string | null,
+  reviewerNote: string | null,
+  clearDetails?: boolean,
+  requestTypeForClear?:
+    | "claim"
+    | "swap"
+    | "correction"
+    | "cancellation"
+    | "query",
+) {
+  const base = await patchTutorRequest({
+    requestId,
+    requestStatus: "rejected",
+    reviewer: reviewerId,
+    requestReason: reason,
+    reviewerNote,
+  });
+  const data = expectSuccess(base);
+
+  if (clearDetails && requestTypeForClear) {
+    await clearDetailsFor(requestId, requestTypeForClear);
+  }
+
+  return data;
+}
+
+// =============================================================
+//  D) TA HELPERS (keep existing signatures)
+// =============================================================
+
+/**
+ * TA: Forwards a request to UC for approval (their version of “approve”).
+ */
+export async function taForwardToUC(
+  requestId: number,
+  taReviewerId: number,
+  reason?: string,
+  reviewerNote?: string,
+) {
+  const res = await patchTutorRequest({
+    requestId,
+    requestStatus: "pending_uc",
+    reviewer: taReviewerId,
+    requestReason: reason ?? null,
+    reviewerNote: reviewerNote ?? null,
+  });
+  return expectSuccess(res);
+}
+
+/**
+ * TA: Rejects a tutor request directly (e.g., invalid claim before UC review).
+ */
+export async function taRejectRequest(
+  requestId: number,
+  taReviewerId: number,
+  reason?: string,
+  reviewerNote?: string,
+) {
+  const res = await patchTutorRequest({
+    requestId,
+    requestStatus: "rejected",
+    reviewer: taReviewerId,
+    requestReason: reason ?? null,
+    reviewerNote: reviewerNote ?? null,
+  });
+  return expectSuccess(res);
+}
+
+/**
+ * TA: Edits claim/correction/swap details without changing status.
+ */
+export async function taEditClaimDetails(
+  requestId: number,
+  partial: Partial<ClaimDetails>,
+) {
+  return patchClaimDetails(requestId, partial);
+}
+
+export async function taEditCorrectionDetails(
+  requestId: number,
+  partial: Partial<CorrectionDetails>,
+) {
+  return patchCorrectionDetails(requestId, partial);
+}
+
+export async function taEditSwapDetails(
+  requestId: number,
+  partial: Partial<SwapDetails>,
+) {
+  return patchSwapDetails(requestId, partial);
+}
+
+/**
+ * TA: Forward + details edit in one call (optional).
+ */
+export async function taForwardWithDetails(
+  requestId: number,
+  taReviewerId: number,
+  details:
+    | { requestType: "claim"; details: Partial<ClaimDetails> }
+    | { requestType: "swap"; details: Partial<SwapDetails> }
+    | { requestType: "correction"; details: Partial<CorrectionDetails> }
+    | { requestType: "cancellation"; details: Partial<CancellationDetails> }
+    | { requestType: "query"; details: null },
+  reason?: string,
+  reviewerNote?: string,
+) {
+  const res = await patchTutorRequest({
+    requestId,
+    requestStatus: "pending_uc",
+    reviewer: taReviewerId,
+    requestReason: reason ?? null,
+    reviewerNote: reviewerNote ?? null,
+    ...details,
+  });
+  return expectSuccess(res);
+}
+
+// =============================================================
+//  E) REQUESTER/GENERAL HELPERS (optional)
+// =============================================================
+
+/**
+ * Requester: withdraw/cancel their request (maps to your DB enum).
+ */
+export async function cancelRequest(requestId: number) {
+  const res = await patchTutorRequest({
+    requestId,
+    requestStatus: "cancelled",
+  });
+  return expectSuccess(res);
+}
+
+/**
+ * Clear all details safely for known types.
+ */
+export async function clearAllDetailsKnown(
+  requestId: number,
+  types: Array<"claim" | "swap" | "correction" | "cancellation" | "query">,
+) {
+  for (const t of types) {
+    await clearDetailsFor(requestId, t);
+  }
+}
+
+/**
+ * Convenience: set multiple core fields without touching details.
+ */
+export async function updateCoreFields(
+  requestId: number,
+  opts: {
+    status?:
+      | "pending_ta"
+      | "pending_uc"
+      | "approved"
+      | "rejected"
+      | "cancelled";
+    reviewer?: number | null;
+    reason?: string | null;
+    note?: string | null;
+  },
+) {
+  const res = await patchTutorRequest({
+    requestId,
+    requestStatus: opts.status,
+    reviewer: opts.reviewer,
+    requestReason: opts.reason,
+    reviewerNote: opts.note,
+  });
+  return expectSuccess(res);
 }

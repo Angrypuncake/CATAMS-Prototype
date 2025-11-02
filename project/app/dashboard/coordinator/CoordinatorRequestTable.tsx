@@ -88,7 +88,7 @@ export default function UCRequestsTable({
         size="small"
         color="warning" // ⬅️ MUI orange accent
         onClick={() =>
-          router.push(`/dashboard/assistant/review/${row.requestId}`)
+          router.push(`/dashboard/coordinator/review/${row.requestId}`)
         }
       >
         Review

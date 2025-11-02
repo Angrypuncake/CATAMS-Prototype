@@ -1,84 +1,107 @@
 "use client";
-import React from "react";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
-  Paper,
-} from "@mui/material";
 
-interface AllocationRow {
-  unit: string;
-  week: string;
-  sessions: number;
-  assigned: number;
-  unassigned: number;
-  hours: number;
-  lastChange: string;
-  status: "Open" | "Attention";
-}
+import { AdminAllocationRow } from "@/app/_types/allocations";
+import DynamicTable from "@/components/DynamicTable/DynamicTable";
+import { Chip, Button } from "@mui/material";
+import { JSX } from "react";
+import { useRouter } from "next/navigation";
 
-interface AllocationsTableProps {
-  data: AllocationRow[];
-}
+export default function TAAllocationsTable({
+  allocations,
+}: {
+  allocations: AdminAllocationRow[];
+}) {
+  const router = useRouter();
 
-const AllocationsTable: React.FC<AllocationsTableProps> = ({ data }) => {
+  // -------------------------------------------------
+  // 🔹 Define columns to show
+  // -------------------------------------------------
+  const columns: { key: keyof AdminAllocationRow | "view"; label: string }[] = [
+    { key: "activity_name", label: "Activity" },
+    { key: "activity_type", label: "Type" },
+    { key: "session_date", label: "Date" },
+    { key: "start_at", label: "Start" },
+    { key: "end_at", label: "End" },
+    { key: "location", label: "Location" },
+    { key: "hours", label: "Hours" },
+    { key: "status", label: "Status" },
+    { key: "teaching_role", label: "Role" },
+    { key: "view", label: "Details" },
+  ];
+
+  // -------------------------------------------------
+  // 🔹 Status display map
+  // -------------------------------------------------
+  const STATUS_LABELS: Record<string, string> = {
+    pending: "Pending",
+    approved: "Approved",
+    rejected: "Rejected",
+    cancelled: "Cancelled",
+  };
+
+  // -------------------------------------------------
+  // 🔹 Column renderers
+  // -------------------------------------------------
+  const columnRenderers: Partial<
+    Record<
+      keyof AdminAllocationRow | "view",
+      (
+        value: AdminAllocationRow[keyof AdminAllocationRow],
+        row: AdminAllocationRow,
+      ) => JSX.Element | string
+    >
+  > = {
+    status: (value) => {
+      if (typeof value !== "string") return "";
+      const label = STATUS_LABELS[value] ?? value;
+      const color =
+        value === "approved"
+          ? "success"
+          : value === "pending"
+            ? "warning"
+            : value === "rejected"
+              ? "error"
+              : "default";
+      return <Chip label={label} color={color} variant="outlined" />;
+    },
+
+    session_date: (value) => {
+      if (typeof value !== "string") return "";
+      return new Date(value).toLocaleDateString("en-AU", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    },
+
+    start_at: (value) => (typeof value === "string" ? value.slice(0, 5) : ""),
+    end_at: (value) => (typeof value === "string" ? value.slice(0, 5) : ""),
+
+    view: (_, row) => (
+      <Button
+        variant="outlined"
+        size="small"
+        color="primary"
+        onClick={() => router.push(`/dashboard/ta/allocations/${row.id}`)}
+      >
+        View
+      </Button>
+    ),
+  };
+
+  // -------------------------------------------------
+  // 🔹 Render table
+  // -------------------------------------------------
   return (
-    <TableContainer component={Paper}>
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Unit</TableCell>
-            <TableCell>Week</TableCell>
-            <TableCell>Sessions</TableCell>
-            <TableCell>Assigned</TableCell>
-            <TableCell>Unassigned</TableCell>
-            <TableCell>Hours</TableCell>
-            <TableCell>Last Change</TableCell>
-            <TableCell>Status</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {data.map((row: AllocationRow, idx: number) => (
-            <TableRow key={idx}>
-              <TableCell style={{ fontWeight: 700 }}>{row.unit}</TableCell>
-              <TableCell>{row.week}</TableCell>
-              <TableCell>{row.sessions}</TableCell>
-              <TableCell>{row.assigned}</TableCell>
-              <TableCell>{row.unassigned}</TableCell>
-              <TableCell>{row.hours}</TableCell>
-              <TableCell>{row.lastChange}</TableCell>
-              <TableCell>
-                {/* Minimal monochrome pill (orange only when attention) */}
-                <span
-                  style={{
-                    display: "inline-block",
-                    padding: "2px 8px",
-                    borderRadius: 9999,
-                    fontSize: "0.75rem",
-                    fontWeight: 600,
-                    border: "1px solid",
-                    borderColor:
-                      row.status === "Attention" ? "#F97316" : "#111111",
-                    color: row.status === "Attention" ? "#F97316" : "#111111",
-                    background:
-                      row.status === "Attention"
-                        ? "rgba(249,115,22,0.06)"
-                        : "transparent",
-                  }}
-                >
-                  {row.status}
-                </span>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <DynamicTable<AdminAllocationRow>
+      rows={allocations}
+      columns={columns}
+      columnRenderers={columnRenderers}
+      defaultSortColumn="session_date"
+      defaultSortDirection="asc"
+      enablePagination
+      enableSearch
+      exportFilename="ta_allocations"
+    />
   );
-};
-
-export default AllocationsTable;
+}

@@ -498,3 +498,58 @@ export async function getAllUnscheduledAllocationsForUC(
     throw err;
   }
 }
+
+/**
+ * Fetch all allocations for a specific offering
+ * @param offeringId The ID of the unit offering
+ * @returns Promise resolving to an array of AdminAllocationRow
+ */
+export async function getAllocationsByOffering(
+  offeringId: number,
+): Promise<AdminAllocationRow[]> {
+  const res = await axios.get(`/offerings/${offeringId}/allocations`);
+  return res.data as AdminAllocationRow[];
+}
+
+/**
+ * Fetch all allocations across all offerings that this UC coordinates.
+ * Simplified: no enrichment, just merged list from each offering.
+ */
+export async function getAllAllocationsForUC(): Promise<AdminAllocationRow[]> {
+  try {
+    // 1️⃣ Fetch offerings this UC coordinates
+    const coordinatorUnits = await getCoordinatorUnits();
+    const offeringIds = coordinatorUnits.map((u) => u.offering_id);
+
+    if (offeringIds.length === 0) return [];
+
+    // 2️⃣ Fetch allocations for each offering in parallel
+    const results = await Promise.all(
+      offeringIds.map((id) => getAllocationsByOffering(id)),
+    );
+
+    // 3️⃣ Flatten all results
+    const merged = results.flat();
+
+    return merged;
+  } catch (err) {
+    console.error("Failed to fetch all UC allocations:", err);
+    throw err;
+  }
+}
+
+export async function getAdminAllocationById(
+  id: string,
+): Promise<AdminAllocationRow> {
+  const res = await axios.get(`/allocations/${encodeURIComponent(id)}`);
+  const row = res.data?.data;
+  if (!row) throw new Error(`Allocation ${id} not found`);
+  return row;
+}
+
+// app/services/allocationService.ts
+
+export async function swapAllocations(allocA_id: number, allocB_id: number) {
+  const res = await axios.patch("/allocations/swap", { allocA_id, allocB_id });
+  return res.data;
+}

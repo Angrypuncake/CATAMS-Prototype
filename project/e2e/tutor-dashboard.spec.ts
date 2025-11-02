@@ -132,9 +132,7 @@ test("tutor can search, sort and paginate allocations", async ({ page }) => {
   }
 });
 
-test("tutor can view action required and notices sections", async ({
-  page,
-}) => {
+test("tutor can view dashboard sections", async ({ page }) => {
   await page.goto("/login");
   await page.getByLabel(/username/i).fill("demouser@demo.edu");
   await page.getByLabel(/password/i).fill("10");
@@ -145,7 +143,7 @@ test("tutor can view action required and notices sections", async ({
   await page.waitForURL("**/dashboard/tutor");
 
   await expect(
-    page.getByRole("heading", { name: /action required/i }),
+    page.getByRole("heading", { name: /my allocations/i }),
   ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: /my requests/i }),

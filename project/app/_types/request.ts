@@ -15,6 +15,7 @@ export type ClaimDetails = {
 
 export type SwapDetails = {
   suggested_tutor_id: number | null;
+  suggested_alloc_id: number | null;
 };
 
 export type CorrectionDetails = {
@@ -104,4 +105,20 @@ export interface PaginatedRequests {
   limit: number;
   total: number;
   data: RequestRow[];
+}
+
+export interface UCApproval {
+  requestId: number;
+  requestType: string;
+  sessionDate: string;
+  startAt: string;
+  endAt: string;
+  activityName: string;
+  requesterName: string;
+  reviewerName: number | null;
+  requestStatus: string;
+}
+
+export interface UCApprovalResponse {
+  approvals: UCApproval[];
 }

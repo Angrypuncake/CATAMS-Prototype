@@ -1,5 +1,9 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
+import {
+  PatchDetailsUnion,
+  PatchTutorRequestBase,
+} from "@/app/_types/requestsPatch";
 
 /**
  * Generic endpoint to create a tutor request (claim, swap, correction, cancellation, query)
@@ -57,10 +61,10 @@ export async function POST(req: Request) {
     // Assign status based on request type (you can refine later)
     const defaultStatusMap: Record<string, string> = {
       claim: "pending_ta",
-      swap: "pending_uc",
+      swap: "pending_ta",
       correction: "pending_ta",
-      cancellation: "pending_uc",
-      query: "pending_uc",
+      cancellation: "pending_ta",
+      query: "pending_ta",
     };
     const requestStatus = defaultStatusMap[requestType] ?? "pending_uc";
 
@@ -137,6 +141,94 @@ export async function GET(req: Request) {
     return NextResponse.json({ data: rows });
   } catch (error) {
     console.error("Error fetching open requests:", error);
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
+  }
+}
+
+// -----------------------------------------------
+// 🔹 PATCH — update an existing request
+// -----------------------------------------------
+
+type PatchBody =
+  | PatchTutorRequestBase
+  | (PatchTutorRequestBase & PatchDetailsUnion);
+
+export async function PATCH(req: Request) {
+  try {
+    const body: PatchBody = await req.json();
+
+    const userId = req.headers.get("x-user-id");
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (!body.requestId) {
+      return NextResponse.json({ error: "Missing requestId" }, { status: 400 });
+    }
+
+    const updates: string[] = [];
+    const values: Array<string | number | null> = [];
+
+    if (body.requestStatus) {
+      updates.push(`request_status = $${updates.length + 1}`);
+      values.push(body.requestStatus);
+    }
+
+    if (body.reviewerNote !== undefined) {
+      updates.push(`reviewer_note = $${updates.length + 1}`);
+      values.push(body.reviewerNote);
+    }
+
+    if (body.reviewer !== undefined) {
+      updates.push(`reviewer = $${updates.length + 1}`);
+      values.push(body.reviewer);
+    }
+
+    if (body.requestReason !== undefined) {
+      updates.push(`request_reason = $${updates.length + 1}`);
+      values.push(body.requestReason);
+    }
+
+    // Details patching is allowed only when both discriminator and payload exist
+    if ("requestType" in body && "details" in body) {
+      if (body.details === null || body.requestType === "query") {
+        // explicit clear (or query has no details)
+        updates.push(`details = NULL`);
+      } else {
+        // shallow-merge JSON (preserve unspecified keys)
+        updates.push(
+          `details = COALESCE(details, '{}'::jsonb) || $${updates.length + 1}::jsonb`,
+        );
+        values.push(JSON.stringify(body.details));
+      }
+    }
+
+    if (updates.length === 0) {
+      return NextResponse.json(
+        { error: "No fields provided for update" },
+        { status: 400 },
+      );
+    }
+
+    const sql = `
+      UPDATE request
+      SET ${updates.join(", ")}, updated_at = NOW()
+      WHERE request_id = $${updates.length + 1}
+      RETURNING request_id, request_status, reviewer, request_reason, reviewer_note, details, updated_at;
+    `;
+    values.push(body.requestId);
+
+    const { rows } = await query(sql, values);
+    if (rows.length === 0) {
+      return NextResponse.json({ error: "Request not found" }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, data: rows[0] });
+  } catch (error) {
+    console.error("Error updating request:", error);
     return NextResponse.json(
       { error: "Internal Server Error" },
       { status: 500 },

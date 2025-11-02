@@ -1,6 +1,7 @@
 "use client";
 import { Button, Divider, Stack, Typography } from "@mui/material";
 import { format } from "date-fns"; // optional, for nice date formatting
+import { useRouter } from "next/navigation";
 
 type RequestRowProps = {
   req: {
@@ -14,6 +15,7 @@ type RequestRowProps = {
 
 export default function RequestRow({ req }: RequestRowProps) {
   // Optional: pretty date formatting
+  const router = useRouter();
   const formattedDate = req.createdAt
     ? format(new Date(req.createdAt), "dd MMM yyyy")
     : "";
@@ -69,8 +71,16 @@ export default function RequestRow({ req }: RequestRowProps) {
       </Typography>
 
       {/* View/Edit Button */}
-      <Button size="small" variant="outlined">
-        View / Edit
+      <Button
+        size="small"
+        variant="outlined"
+        onClick={() =>
+          router.push(
+            `/dashboard/tutor/allocations/40/requests/${req.requestId}`,
+          )
+        }
+      >
+        View
       </Button>
     </Stack>
   );

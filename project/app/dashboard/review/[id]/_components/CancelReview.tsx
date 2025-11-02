@@ -1,5 +1,4 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import {
   Box,
@@ -16,9 +15,27 @@ import { getAllocationById } from "@/app/services/allocationService";
 import { TutorAllocationRow } from "@/app/_types/allocations";
 import { Tutor } from "@/app/_types/tutor";
 import { getTutorById, getTutorsByUnit } from "@/app/services/userService";
-import { formatDate } from "./SwapReview";
+import { formatDate } from "./swapcomponents/formatDate";
+import {
+  ucApproveRequest,
+  ucRejectRequest,
+  taForwardToUC,
+  taRejectRequest,
+} from "@/app/services/requestService";
 
-export default function CancellationReview({ data }: { data: TutorRequest }) {
+type ReviewRole = "UC" | "TA" | "USER";
+
+export default function CancellationReview({
+  data,
+  role = "UC",
+  readOnly = false,
+  currentUserId,
+}: {
+  data: TutorRequest;
+  role?: ReviewRole;
+  readOnly?: boolean;
+  currentUserId?: number;
+}) {
   const {
     allocationId,
     requestStatus,
@@ -30,14 +47,14 @@ export default function CancellationReview({ data }: { data: TutorRequest }) {
 
   const [tutor, setTutor] = useState<Tutor | null>(null);
   const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
-  const [comment, setComment] = useState("");
+  const [reviewerNote, setReviewerNote] = useState("");
   const [availableTutors, setAvailableTutors] = useState<Tutor[]>([]);
   const [selectedTutor, setSelectedTutor] = useState<Tutor | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // -------------------------------
-  //  Data Fetch
-  // -------------------------------
+  const isReadOnly = readOnly || role === "USER";
+  const canAct = !isReadOnly && (role === "UC" || role === "TA");
+
   useEffect(() => {
     async function fetchData() {
       try {
@@ -52,7 +69,6 @@ export default function CancellationReview({ data }: { data: TutorRequest }) {
           const tutors = await getTutorsByUnit(alloc.unit_code);
           setAvailableTutors(tutors);
         } else {
-          console.warn("Allocation has no unit_code — skipping tutor fetch.");
           setAvailableTutors([]);
         }
       } catch (err) {
@@ -64,26 +80,41 @@ export default function CancellationReview({ data }: { data: TutorRequest }) {
     fetchData();
   }, [allocationId, requesterId]);
 
-  // -------------------------------
-  //  Event Handlers
-  // -------------------------------
-  const handleApprove = () => {
-    console.log("Approve cancellation:", {
-      requestId,
-      selectedReplacementTutorId: selectedTutor?.user_id ?? null,
-      comment,
-    });
+  // ---- Actions ----
+  const approveUC = async () => {
+    if (!currentUserId) return;
+    await ucApproveRequest(Number(requestId), currentUserId, reviewerNote);
   };
-
-  const handleReject = () => {
-    console.log("Reject cancellation:", { requestId, comment });
+  const rejectUC = async () => {
+    if (!currentUserId) return;
+    await ucRejectRequest(
+      Number(requestId),
+      currentUserId,
+      undefined,
+      reviewerNote,
+    );
+  };
+  const forwardTA = async () => {
+    if (!currentUserId) return;
+    await taForwardToUC(
+      Number(requestId),
+      currentUserId,
+      requestReason ?? undefined,
+      reviewerNote,
+    );
+  };
+  const rejectTA = async () => {
+    if (!currentUserId) return;
+    await taRejectRequest(
+      Number(requestId),
+      currentUserId,
+      requestReason ?? undefined,
+      reviewerNote,
+    );
   };
 
   if (data.requestType !== "cancellation") return null;
 
-  // -------------------------------
-  //  Render
-  // -------------------------------
   return (
     <Paper elevation={2} sx={{ p: 4, mb: 6 }}>
       {/* HEADER */}
@@ -186,110 +217,124 @@ export default function CancellationReview({ data }: { data: TutorRequest }) {
         </Typography>
       </Paper>
 
-      {/* REPLACEMENT TUTOR */}
-      <Divider sx={{ my: 3 }} />
-      <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-        Optional Replacement Tutor
-      </Typography>
+      {/* Optional Replacement Tutor — only visible to UC/TA */}
+      {role !== "USER" && (
+        <>
+          <Divider sx={{ my: 3 }} />
+          <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+            Optional Replacement Tutor
+          </Typography>
 
-      {loading ? (
-        <Box display="flex" justifyContent="center" py={3}>
-          <CircularProgress size={28} />
-        </Box>
-      ) : (
-        <Paper variant="outlined" sx={{ overflowX: "auto" }}>
-          <table className="min-w-full text-sm border-collapse">
-            <thead>
-              <tr style={{ backgroundColor: "#f5f5f5" }}>
-                <th className="px-3 py-2 text-left font-semibold">Tutor ID</th>
-                <th className="px-3 py-2 text-left font-semibold">Name</th>
-                <th className="px-3 py-2 text-left font-semibold">Email</th>
-                <th className="px-3 py-2"></th>
-              </tr>
-            </thead>
-            <tbody>
-              {availableTutors.length === 0 ? (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="px-3 py-3 text-center text-gray-500"
-                  >
-                    No available tutors found for this unit
-                  </td>
-                </tr>
-              ) : (
-                availableTutors.map((t) => (
-                  <tr
-                    key={t.user_id}
-                    style={{
-                      backgroundColor:
-                        selectedTutor?.user_id === t.user_id
-                          ? "#e8f5e9"
-                          : "transparent",
-                    }}
-                  >
-                    <td className="px-3 py-2">{t.user_id}</td>
-                    <td className="px-3 py-2">
-                      {t.first_name} {t.last_name}
-                    </td>
-                    <td className="px-3 py-2">{t.email}</td>
-                    <td className="px-3 py-2 text-right">
-                      <Button
-                        size="small"
-                        variant={
-                          selectedTutor?.user_id === t.user_id
-                            ? "contained"
-                            : "outlined"
-                        }
-                        onClick={() => setSelectedTutor(t)}
-                      >
-                        {selectedTutor?.user_id === t.user_id
-                          ? "Selected"
-                          : "Select"}
-                      </Button>
-                    </td>
+          {loading ? (
+            <Box display="flex" justifyContent="center" py={3}>
+              <CircularProgress size={28} />
+            </Box>
+          ) : (
+            <Paper variant="outlined" sx={{ overflowX: "auto" }}>
+              <table className="min-w-full text-sm border-collapse">
+                <thead>
+                  <tr style={{ backgroundColor: "#f5f5f5" }}>
+                    <th className="px-3 py-2 text-left font-semibold">
+                      Tutor ID
+                    </th>
+                    <th className="px-3 py-2 text-left font-semibold">Name</th>
+                    <th className="px-3 py-2 text-left font-semibold">Email</th>
+                    <th className="px-3 py-2"></th>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </Paper>
+                </thead>
+                <tbody>
+                  {availableTutors.length === 0 ? (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="px-3 py-3 text-center text-gray-500"
+                      >
+                        No available tutors found for this unit
+                      </td>
+                    </tr>
+                  ) : (
+                    availableTutors.map((t) => (
+                      <tr
+                        key={t.user_id}
+                        style={{
+                          backgroundColor:
+                            selectedTutor?.user_id === t.user_id
+                              ? "#e8f5e9"
+                              : "transparent",
+                        }}
+                      >
+                        <td className="px-3 py-2">{t.user_id}</td>
+                        <td className="px-3 py-2">
+                          {t.first_name} {t.last_name}
+                        </td>
+                        <td className="px-3 py-2">{t.email}</td>
+                        <td className="px-3 py-2 text-right">
+                          {!isReadOnly && (
+                            <Button
+                              size="small"
+                              variant={
+                                selectedTutor?.user_id === t.user_id
+                                  ? "contained"
+                                  : "outlined"
+                              }
+                              onClick={() => setSelectedTutor(t)}
+                            >
+                              {selectedTutor?.user_id === t.user_id
+                                ? "Selected"
+                                : "Select"}
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </Paper>
+          )}
+        </>
       )}
 
-      {/* REVIEWER COMMENT */}
+      {/* REVIEWER NOTE */}
       <Divider sx={{ my: 3 }} />
       <Typography variant="subtitle1" fontWeight={600} gutterBottom>
-        Reviewer Comment
+        Reviewer Note
       </Typography>
       <TextField
         fullWidth
         multiline
         minRows={3}
-        value={comment}
-        onChange={(e) => setComment(e.target.value)}
-        placeholder="Add notes or remarks for this decision..."
+        value={reviewerNote}
+        onChange={(e) => setReviewerNote(e.target.value)}
+        placeholder="Add notes or remarks..."
         sx={{ mb: 3 }}
+        disabled={isReadOnly}
       />
 
       {/* ACTION BUTTONS */}
-      <Box display="flex" gap={2}>
-        <Button
-          variant="contained"
-          color="success"
-          onClick={handleApprove}
-          disabled={loading}
-        >
-          Approve Cancellation
-        </Button>
-        <Button
-          variant="outlined"
-          color="error"
-          onClick={handleReject}
-          disabled={loading}
-        >
-          Reject
-        </Button>
-      </Box>
+      {canAct && (
+        <Box display="flex" gap={2}>
+          {role === "UC" ? (
+            <>
+              <Button variant="contained" color="success" onClick={approveUC}>
+                Approve Cancellation
+              </Button>
+              <Button variant="outlined" color="error" onClick={rejectUC}>
+                Reject
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="contained" color="primary" onClick={forwardTA}>
+                Forward to UC
+              </Button>
+              <Button variant="outlined" color="error" onClick={rejectTA}>
+                Reject
+              </Button>
+            </>
+          )}
+        </Box>
+      )}
     </Paper>
   );
 }

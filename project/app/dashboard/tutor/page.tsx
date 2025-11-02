@@ -178,36 +178,6 @@ const Page = () => {
           />
         </Paper>
 
-        {/* Action Required */}
-        <Paper sx={{ ...cardSx, mb: 3 }}>
-          <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>
-            Action Required
-          </Typography>
-          <DynamicTable<ActionRequiredRow>
-            rows={actions as TableRowData<ActionRequiredRow>[]}
-            columns={[
-              { key: "session_date", label: "Date" },
-              { key: "time", label: "Time" },
-              { key: "unit", label: "Unit" },
-              { key: "hours", label: "Hours" },
-              { key: "desc", label: "Description" },
-              { key: "status", label: "Status" },
-              { key: "actions", label: "Actions" },
-            ]}
-            columnRenderers={{
-              actions: (value) => (
-                <Box display="flex" justifyContent="center">
-                  <Button variant="contained" size="small">
-                    {value}
-                  </Button>
-                </Box>
-              ),
-            }}
-            defaultRowsPerPage={5}
-            rowsPerPageOptions={[5, 10, 25]}
-          />
-        </Paper>
-
         {/* Requests */}
         <Paper sx={{ ...cardSx, mb: 3 }}>
           <Typography variant="h6" fontWeight="bold" sx={{ mb: 2 }}>

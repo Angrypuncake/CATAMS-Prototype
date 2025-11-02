@@ -1,10 +1,6 @@
 import "@testing-library/jest-dom";
 import { render, screen, waitFor } from "@testing-library/react";
-import ReviewPage from "../../../app/dashboard/review/[id]/page";
-
-jest.mock("next/navigation", () => ({
-  useParams: jest.fn(() => ({ id: "123" })),
-}));
+import ReviewShell from "../../../app/dashboard/review/[id]/page";
 
 const mockGetRequestById = jest.fn();
 const mockGetRequestByRequestId = jest.fn();
@@ -83,21 +79,36 @@ describe("ReviewPage", () => {
     mockGetAllocationById.mockResolvedValue(mockAllocation);
   });
 
-  test("should render loading state initially", async () => {
-    render(<ReviewPage />);
+  test("should render review page component with loading state", async () => {
+    render(
+      <ReviewShell
+        role="UC"
+        currentUserId={5}
+        requestId="123"
+        readOnly={false}
+      />,
+    );
 
+    // Verify component mounts and shows loading state
     expect(screen.getByRole("progressbar")).toBeInTheDocument();
 
-    await waitFor(() => {
-      expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
-    });
-  });
+    // Wait for the correct mock to be called
+    await waitFor(
+      () => {
+        expect(mockGetRequestByRequestId).toHaveBeenCalledWith("123");
+      },
+      { timeout: 3000 },
+    );
 
-  test("should render review page after loading", async () => {
-    render(<ReviewPage />);
+    // Wait for loading to complete
+    await waitFor(
+      () => {
+        expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+      },
+      { timeout: 3000 },
+    );
 
-    await waitFor(() => {
-      expect(screen.getByText("Claim Request Review")).toBeInTheDocument();
-    });
+    // Verify claim review content appears
+    expect(screen.getByText("Claim Request Review")).toBeInTheDocument();
   });
 });

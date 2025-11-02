@@ -6,6 +6,10 @@ import type { TutorRequest } from "../../../app/_types/request";
 const mockGetTutorById = jest.fn();
 const mockGetAllocationById = jest.fn();
 const mockGetTutorsByUnit = jest.fn();
+const mockUcApproveRequest = jest.fn();
+const mockUcRejectRequest = jest.fn();
+const mockTaForwardToUC = jest.fn();
+const mockTaRejectRequest = jest.fn();
 
 jest.mock("../../../app/services/userService", () => ({
   getTutorById: (...args: unknown[]) => mockGetTutorById(...args),
@@ -14,6 +18,13 @@ jest.mock("../../../app/services/userService", () => ({
 
 jest.mock("../../../app/services/allocationService", () => ({
   getAllocationById: (...args: unknown[]) => mockGetAllocationById(...args),
+}));
+
+jest.mock("../../../app/services/requestService", () => ({
+  ucApproveRequest: (...args: unknown[]) => mockUcApproveRequest(...args),
+  ucRejectRequest: (...args: unknown[]) => mockUcRejectRequest(...args),
+  taForwardToUC: (...args: unknown[]) => mockTaForwardToUC(...args),
+  taRejectRequest: (...args: unknown[]) => mockTaRejectRequest(...args),
 }));
 
 const mockAllocation = {
@@ -174,9 +185,9 @@ describe("CancelReview Component", () => {
   });
 
   test("should handle approve button click", async () => {
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+    mockUcApproveRequest.mockResolvedValue({});
 
-    render(<CancelReview data={mockCancelRequest} />);
+    render(<CancelReview data={mockCancelRequest} currentUserId={5} />);
 
     await waitFor(() => {
       expect(screen.getByText("Unable to attend session")).toBeInTheDocument();
@@ -185,21 +196,15 @@ describe("CancelReview Component", () => {
     const approveButton = screen.getByText("Approve Cancellation");
     fireEvent.click(approveButton);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      "Approve cancellation:",
-      expect.objectContaining({
-        requestId: 4,
-        comment: "",
-      }),
-    );
-
-    consoleSpy.mockRestore();
+    await waitFor(() => {
+      expect(mockUcApproveRequest).toHaveBeenCalledWith(4, 5, "");
+    });
   });
 
   test("should handle reject button click", async () => {
-    const consoleSpy = jest.spyOn(console, "log").mockImplementation();
+    mockUcRejectRequest.mockResolvedValue({});
 
-    render(<CancelReview data={mockCancelRequest} />);
+    render(<CancelReview data={mockCancelRequest} currentUserId={5} />);
 
     await waitFor(() => {
       expect(screen.getByText("Unable to attend session")).toBeInTheDocument();
@@ -208,15 +213,9 @@ describe("CancelReview Component", () => {
     const rejectButton = screen.getByText("Reject");
     fireEvent.click(rejectButton);
 
-    expect(consoleSpy).toHaveBeenCalledWith(
-      "Reject cancellation:",
-      expect.objectContaining({
-        requestId: 4,
-        comment: "",
-      }),
-    );
-
-    consoleSpy.mockRestore();
+    await waitFor(() => {
+      expect(mockUcRejectRequest).toHaveBeenCalledWith(4, 5, undefined, "");
+    });
   });
 
   test("should return null for non-cancellation request types", () => {
@@ -234,8 +233,6 @@ describe("CancelReview Component", () => {
   });
 
   test("should handle allocation without unit_code", async () => {
-    const consoleSpy = jest.spyOn(console, "warn").mockImplementation();
-
     mockGetAllocationById.mockResolvedValue({
       ...mockAllocation,
       unit_code: null,
@@ -244,14 +241,12 @@ describe("CancelReview Component", () => {
     render(<CancelReview data={mockCancelRequest} />);
 
     await waitFor(() => {
-      expect(consoleSpy).toHaveBeenCalledWith(
-        "Allocation has no unit_code — skipping tutor fetch.",
-      );
+      expect(mockGetTutorById).toHaveBeenCalled();
+      expect(mockGetAllocationById).toHaveBeenCalled();
     });
 
+    // Should not call getTutorsByUnit when unit_code is null
     expect(mockGetTutorsByUnit).not.toHaveBeenCalled();
-
-    consoleSpy.mockRestore();
   });
 
   test("should handle API errors gracefully", async () => {

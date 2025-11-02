@@ -1,4 +1,3 @@
-// app/dashboard/review/[id]/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -7,25 +6,32 @@ import { CircularProgress, Typography, Box } from "@mui/material";
 
 import { getRequestByRequestId } from "@/app/services/requestService";
 import { getFormattedAllocationById } from "@/app/services/allocationService";
+import { getTutorsByUnit } from "@/app/services/userService";
 
 import type { TutorRequest } from "@/app/_types/request";
 import type { Tutor } from "@/app/_types/tutor";
-
-// Review Components
+import type { TutorAllocationRow } from "@/app/_types/allocations";
 import ClaimReview from "./_components/ClaimReview";
-// import SwapReview from "./_components/SwapReview";
+import SwapReview from "./_components/SwapReview";
 import CancelReview from "./_components/CancelReview";
 import CorrectionReview from "./_components/CorrectionReview";
 import QueryReview from "./_components/QueryReview";
 import ReviewFallback from "./_components/ReviewFallback";
-import { getTutorsByUnit } from "@/app/services/userService";
-import { TutorAllocationRow } from "@/app/_types/allocations";
-import SwapReview from "./_components/SwapReview";
 
-export default function ReviewPage() {
-  const params = useParams<{ id: string }>();
-  const id = Array.isArray(params?.id) ? params.id[0] : params?.id;
+export type ReviewRole = "UC" | "TA" | "USER";
 
+export default function ReviewShell({
+  role,
+  readOnly = role === "USER",
+  currentUserId,
+  requestId,
+}: {
+  role: ReviewRole;
+  readOnly?: boolean;
+  currentUserId?: number;
+  requestId: string;
+}) {
+  const id = requestId;
   const [data, setData] = useState<TutorRequest | null>(null);
   const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
   const [tutors, setTutors] = useState<Tutor[]>([]);
@@ -36,30 +42,21 @@ export default function ReviewPage() {
     if (!id) return;
     let cancelled = false;
 
-    async function run() {
+    (async () => {
       try {
-        if (!cancelled) {
-          setLoading(true);
-          setErr(null);
-        }
+        setLoading(true);
+        setErr(null);
 
-        // Step 1 — Fetch request data
-        const requestData = await getRequestByRequestId(id);
+        const req = await getRequestByRequestId(id);
         if (cancelled) return;
+        setData(req);
 
-        setData(requestData);
-        // console.log(requestData);
-        // console.log(requestData.allocationId);
-
-        // Step 2 — Fetch allocation
         const alloc = await getFormattedAllocationById(
-          String(requestData.allocationId),
+          String(req.allocationId),
         );
         if (cancelled) return;
-
         setAllocation(alloc);
 
-        // Step 3 — Optionally fetch tutors for that unit
         if (alloc?.unit_code) {
           const unitTutors = await getTutorsByUnit(alloc.unit_code);
           if (!cancelled) setTutors(unitTutors);
@@ -70,30 +67,30 @@ export default function ReviewPage() {
       } finally {
         if (!cancelled) setLoading(false);
       }
-    }
+    })();
 
-    run();
     return () => {
       cancelled = true;
     };
   }, [id]);
 
-  // ---- Render States ----
-  if (loading)
+  if (loading) {
     return (
       <Box sx={{ display: "flex", justifyContent: "center", mt: 8 }}>
         <CircularProgress />
       </Box>
     );
+  }
 
-  if (err)
+  if (err) {
     return (
       <Box p={3}>
         <Typography color="error">{err}</Typography>
       </Box>
     );
+  }
 
-  if (!data || !allocation)
+  if (!data || !allocation) {
     return (
       <Box p={3}>
         <Typography color="error">
@@ -101,14 +98,16 @@ export default function ReviewPage() {
         </Typography>
       </Box>
     );
+  }
 
-  // ---- Core Review Logic ----
   const { requestType } = data;
-
   const componentProps = {
     data,
     allocation,
     tutors,
+    role,
+    readOnly,
+    currentUserId,
   };
 
   return (

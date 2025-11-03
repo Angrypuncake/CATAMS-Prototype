@@ -2,19 +2,14 @@
 import React, { useEffect, useState } from "react";
 import { Box, Button, Paper, Stack, Typography } from "@mui/material";
 import StyledBox from "./components";
-import {
-  getTutorAllocations,
-  getCurrentUser,
-} from "@/app/services/allocationService";
+import { getTutorAllocations, getCurrentUser } from "@/app/services/allocationService";
 import AllocationQuickviewModal from "./AllocationQuickviewModal";
-import type { AllocationRow, ActionRequiredRow, NoticeRow } from "./types";
+import type { AllocationRow, NoticeRow } from "./types";
 import { mapToRequestRow, hoursBetween, niceTime } from "./utils";
-import { actions, notices } from "./mockData";
+import { notices } from "./mockData";
 import { getTutorRequests } from "@/app/services/requestService";
 import { RequestRow } from "@/app/_types/request";
-import DynamicTable, {
-  TableRowData,
-} from "@/components/DynamicTable/DynamicTable";
+import DynamicTable, { TableRowData } from "@/components/DynamicTable/DynamicTable";
 
 /* Shared styling */
 const cardSx = {
@@ -51,14 +46,13 @@ const Page = () => {
           rowsPerPage,
           searchTerm,
           sortColumn,
-          sortDirection,
+          sortDirection
         );
         setTutorSessions(allocationsData.data);
         setTotalSessions(allocationsData.total);
 
         const requestsData = await getTutorRequests(page + 1, rowsPerPage);
-        const mappedRequests: RequestRow[] =
-          requestsData.data.map(mapToRequestRow);
+        const mappedRequests: RequestRow[] = requestsData.data.map(mapToRequestRow);
         setTutorRequests(mappedRequests);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
@@ -131,9 +125,7 @@ const Page = () => {
               { key: "status", label: "Status" },
             ]}
             columnRenderers={{
-              session_date: (value) => (
-                <span>{value ? String(value).slice(0, 10) : "N/A"}</span>
-              ),
+              session_date: (value) => <span>{value ? String(value).slice(0, 10) : "N/A"}</span>,
               start_at: (_value, row) => (
                 <span>
                   {row.start_at && row.end_at
@@ -142,12 +134,7 @@ const Page = () => {
                 </span>
               ),
               hours: (_value, row) => (
-                <span>
-                  {hoursBetween(
-                    row.start_at ?? undefined,
-                    row.end_at ?? undefined,
-                  )}
-                </span>
+                <span>{hoursBetween(row.start_at ?? undefined, row.end_at ?? undefined)}</span>
               ),
             }}
             enableServerSidePagination
@@ -193,9 +180,7 @@ const Page = () => {
               { key: "actions", label: "Actions" },
             ]}
             columnRenderers={{
-              createdAt: (value) => (
-                <span>{value ? String(value).slice(0, 10) : "N/A"}</span>
-              ),
+              createdAt: (value) => <span>{value ? String(value).slice(0, 10) : "N/A"}</span>,
               actions: (value) => (
                 <Box display="flex" justifyContent="center">
                   <Button variant="contained" size="small">
@@ -237,11 +222,7 @@ const Page = () => {
         </Paper>
 
         {/* Modal */}
-        <AllocationQuickviewModal
-          open={open}
-          setOpen={setOpen}
-          session={session}
-        />
+        <AllocationQuickviewModal open={open} setOpen={setOpen} session={session} />
       </Box>
     </Box>
   );

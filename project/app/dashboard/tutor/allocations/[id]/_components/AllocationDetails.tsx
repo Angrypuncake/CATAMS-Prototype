@@ -1,20 +1,9 @@
 "use client";
 import * as React from "react";
-import {
-  Box,
-  Card,
-  CardContent,
-  Chip,
-  Divider,
-  Stack,
-  Typography,
-} from "@mui/material";
+import { Box, Card, CardContent, Chip, Divider, Stack, Typography } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import DetailRow from "../../_components/DetailRow";
-import type {
-  AllocationBase,
-  TutorAllocationRow,
-} from "@/app/_types/allocations";
+import type { AllocationBase } from "@/app/_types/allocations";
 
 interface Props {
   allocation: AllocationBase;

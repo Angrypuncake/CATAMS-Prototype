@@ -58,9 +58,7 @@ describe("AllocationsTable", () => {
   const mockOnPageChange = jest.fn();
   const mockOnSort = jest.fn();
 
-  const renderTable = (
-    props?: Partial<React.ComponentProps<typeof AllocationsTable>>,
-  ) =>
+  const renderTable = (props?: Partial<React.ComponentProps<typeof AllocationsTable>>) =>
     render(
       <AllocationsTable
         tab="scheduled"
@@ -75,7 +73,7 @@ describe("AllocationsTable", () => {
         sortDir="asc"
         onSort={mockOnSort}
         {...props}
-      />,
+      />
     );
 
   beforeEach(() => jest.clearAllMocks());
@@ -125,7 +123,7 @@ describe("AllocationsTable", () => {
         sort="so.session_date"
         sortDir="desc"
         onSort={mockOnSort}
-      />,
+      />
     );
     expect(screen.getByTestId("ArrowDownwardIcon")).toBeInTheDocument();
   });
@@ -161,9 +159,7 @@ describe("AllocationsTable", () => {
 
   test("renders end time", () => {
     renderTable();
-    expect(
-      screen.getByText((content) => content.includes("End:")),
-    ).toBeInTheDocument(); // fix: partial matcher
+    expect(screen.getByText((content) => content.includes("End:"))).toBeInTheDocument(); // fix: partial matcher
   });
 
   test("renders unscheduled row hours and note", () => {

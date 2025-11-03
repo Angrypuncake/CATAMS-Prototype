@@ -25,7 +25,7 @@ jest.mock("../../app/services/budgetService", () => ({
       threshold: 0.9,
       rows: [],
       alerts: [],
-    }),
+    })
   ),
 }));
 

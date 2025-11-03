@@ -24,8 +24,7 @@ export default function ImportHistoryPage() {
       setStaged(data.staged || []);
       setRuns(data.runs || []);
     } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to load history";
+      const message = error instanceof Error ? error.message : "Failed to load history";
       setMsg(message);
     }
   }
@@ -44,7 +43,7 @@ export default function ImportHistoryPage() {
 
       setMsg(
         `Rolled back run #${payload.runId}. 
-         Deleted: allocations=${d_alloc}, sessions=${d_sess}, activities=${d_teach}`,
+         Deleted: allocations=${d_alloc}, sessions=${d_sess}, activities=${d_teach}`
       );
 
       await load();
@@ -77,9 +76,7 @@ export default function ImportHistoryPage() {
         </Link>
       </header>
 
-      {msg && (
-        <div className="text-sm border rounded bg-gray-50 p-3">{msg}</div>
-      )}
+      {msg && <div className="text-sm border rounded bg-gray-50 p-3">{msg}</div>}
 
       {/* Staged batches (resume/commit) */}
       <section className="border rounded-xl p-4">
@@ -117,20 +114,14 @@ export default function ImportHistoryPage() {
                 return (
                   <tr key={b.batch_id} className="border-b">
                     <td className="py-2 pr-4 font-mono">#{b.batch_id}</td>
-                    <td className="py-2 pr-4">
-                      {new Date(b.created_at).toLocaleString()}
-                    </td>
+                    <td className="py-2 pr-4">{new Date(b.created_at).toLocaleString()}</td>
                     <td className="py-2 pr-4">{b.row_count ?? "—"}</td>
                     <td className="py-2 pr-4">
                       {by ? (
                         <>
-                          <div className="font-medium">
-                            {by.name || by.email}
-                          </div>
+                          <div className="font-medium">{by.name || by.email}</div>
                           {by.name && by.email && (
-                            <div className="text-xs text-gray-500">
-                              {by.email}
-                            </div>
+                            <div className="text-xs text-gray-500">{by.email}</div>
                           )}
                         </>
                       ) : (
@@ -207,13 +198,9 @@ export default function ImportHistoryPage() {
                         #{r.batch_id}
                       </Link>
                     </td>
+                    <td className="py-2 pr-4">{new Date(r.started_at).toLocaleString()}</td>
                     <td className="py-2 pr-4">
-                      {new Date(r.started_at).toLocaleString()}
-                    </td>
-                    <td className="py-2 pr-4">
-                      {r.finished_at
-                        ? new Date(r.finished_at).toLocaleString()
-                        : "—"}
+                      {r.finished_at ? new Date(r.finished_at).toLocaleString() : "—"}
                     </td>
                     <td className="py-2 pr-4">
                       {r.status === "committed" && (
@@ -233,19 +220,15 @@ export default function ImportHistoryPage() {
                       )}
                     </td>
                     <td className="py-2 pr-4">
-                      TA: {c.teaching_activity ?? 0} • SO:{" "}
-                      {c.session_occurrence ?? 0} • AL: {c.allocation ?? 0}
+                      TA: {c.teaching_activity ?? 0} • SO: {c.session_occurrence ?? 0} • AL:{" "}
+                      {c.allocation ?? 0}
                     </td>
                     <td className="py-2 pr-4">
                       {by ? (
                         <>
-                          <div className="font-medium">
-                            {by.name || by.email}
-                          </div>
+                          <div className="font-medium">{by.name || by.email}</div>
                           {by.name && by.email && (
-                            <div className="text-xs text-gray-500">
-                              {by.email}
-                            </div>
+                            <div className="text-xs text-gray-500">{by.email}</div>
                           )}
                         </>
                       ) : (
@@ -261,11 +244,7 @@ export default function ImportHistoryPage() {
                           setPendingRunId(r.run_id);
                           confirmRollback.current?.showModal();
                         }}
-                        title={
-                          canRollback
-                            ? "Rollback this commit"
-                            : "Nothing to rollback"
-                        }
+                        title={canRollback ? "Rollback this commit" : "Nothing to rollback"}
                       >
                         Rollback
                       </button>
@@ -283,8 +262,7 @@ export default function ImportHistoryPage() {
         <div className="p-5 w-96">
           <h3 className="font-semibold mb-2">Rollback run #{pendingRunId}?</h3>
           <p className="text-sm text-gray-600 mb-4">
-            This deletes rows created by that run (when safe). Shared rows are
-            preserved.
+            This deletes rows created by that run (when safe). Shared rows are preserved.
           </p>
           <div className="flex justify-end gap-2">
             <button

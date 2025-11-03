@@ -49,9 +49,7 @@ export async function GET(req: Request) {
       whereParts.push(`r.role_name = $${params.length}`);
     }
 
-    const whereSQL = whereParts.length
-      ? `WHERE ${whereParts.join(" AND ")}`
-      : "";
+    const whereSQL = whereParts.length ? `WHERE ${whereParts.join(" AND ")}` : "";
 
     console.log(whereSQL);
 

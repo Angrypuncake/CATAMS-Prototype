@@ -7,10 +7,7 @@ export const timeConverter = (time: string): number => {
   return hours * 60 + minutes;
 };
 
-export function hoursBetween(
-  start?: string | null,
-  end?: string | null,
-): number | string {
+export function hoursBetween(start?: string | null, end?: string | null): number | string {
   if (!start || !end) return 0;
   const [sh, sm, ss] = start.split(":").map(Number);
   const [eh, em, es] = end.split(":").map(Number);
@@ -21,10 +18,7 @@ export function hoursBetween(
   return Number(diff.toFixed(2));
 }
 
-export function toDate(
-  dateStr?: string | null,
-  time?: string | null,
-): Date | null {
+export function toDate(dateStr?: string | null, time?: string | null): Date | null {
   if (!dateStr) return null;
   const d = new Date(dateStr);
   if (Number.isNaN(d.getTime())) return null;

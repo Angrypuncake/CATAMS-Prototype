@@ -10,11 +10,7 @@ interface PaycodeComboProps {
   onChange: (opt: PaycodeOption | null) => void;
 }
 
-export function PaycodeCombo({
-  options,
-  valueCode,
-  onChange,
-}: PaycodeComboProps) {
+export function PaycodeCombo({ options, valueCode, onChange }: PaycodeComboProps) {
   const [open, setOpen] = useState(false);
   const [q, setQ] = useState("");
   const boxRef = React.useRef<HTMLDivElement>(null);
@@ -29,7 +25,7 @@ export function PaycodeCombo({
       .filter(
         (p) =>
           p.code.toLowerCase().includes(ql) ||
-          (p.paycode_description ?? "").toLowerCase().includes(ql),
+          (p.paycode_description ?? "").toLowerCase().includes(ql)
       )
       .slice(0, 100);
   }, [q, options]);
@@ -43,9 +39,7 @@ export function PaycodeCombo({
       >
         {selected
           ? `${selected.code}` +
-            (selected.paycode_description
-              ? ` — ${selected.paycode_description}`
-              : "")
+            (selected.paycode_description ? ` — ${selected.paycode_description}` : "")
           : "Select paycode…"}
       </button>
       {open && (
@@ -73,8 +67,7 @@ export function PaycodeCombo({
                   <div className="font-medium">{p.code}</div>
                   {(p.paycode_description || p.amount) && (
                     <div className="text-xs text-gray-500">
-                      {p.paycode_description ?? ""}{" "}
-                      {p.amount ? `• $${p.amount}` : ""}
+                      {p.paycode_description ?? ""} {p.amount ? `• $${p.amount}` : ""}
                     </div>
                   )}
                 </button>

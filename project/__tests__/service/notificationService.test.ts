@@ -1,8 +1,4 @@
-import {
-  notifyTA,
-  notifyTutor,
-  notifyUC,
-} from "../../app/services/notificationService";
+import { notifyTA, notifyTutor, notifyUC } from "../../app/services/notificationService";
 
 test("notifyTA resolves to undefined", async () => {
   await expect(notifyTA(123)).resolves.toBeUndefined();

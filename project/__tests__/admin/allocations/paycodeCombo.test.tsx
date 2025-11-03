@@ -17,64 +17,36 @@ describe("PaycodeCombo Component", () => {
   });
 
   test("should render with placeholder text when no value selected", () => {
-    render(
-      <PaycodeCombo
-        options={mockOptions}
-        valueCode={null}
-        onChange={mockOnChange}
-      />,
-    );
+    render(<PaycodeCombo options={mockOptions} valueCode={null} onChange={mockOnChange} />);
 
     expect(screen.getByText("Select paycode…")).toBeInTheDocument();
   });
 
   test("should display selected paycode", () => {
-    render(
-      <PaycodeCombo
-        options={mockOptions}
-        valueCode="CASUAL"
-        onChange={mockOnChange}
-      />,
-    );
+    render(<PaycodeCombo options={mockOptions} valueCode="CASUAL" onChange={mockOnChange} />);
 
     expect(screen.getByText("CASUAL — Casual hourly rate")).toBeInTheDocument();
   });
 
   test("should open dropdown when button is clicked", () => {
-    render(
-      <PaycodeCombo
-        options={mockOptions}
-        valueCode={null}
-        onChange={mockOnChange}
-      />,
-    );
+    render(<PaycodeCombo options={mockOptions} valueCode={null} onChange={mockOnChange} />);
 
     const button = screen.getByText("Select paycode…");
     fireEvent.click(button);
 
-    expect(
-      screen.getByPlaceholderText("Search code or description…"),
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Search code or description…")).toBeInTheDocument();
     expect(screen.getByText("CASUAL")).toBeInTheDocument();
     expect(screen.getByText("MARKING")).toBeInTheDocument();
     expect(screen.getByText("TUTORING")).toBeInTheDocument();
   });
 
   test("should filter options based on search query", () => {
-    render(
-      <PaycodeCombo
-        options={mockOptions}
-        valueCode={null}
-        onChange={mockOnChange}
-      />,
-    );
+    render(<PaycodeCombo options={mockOptions} valueCode={null} onChange={mockOnChange} />);
 
     const button = screen.getByText("Select paycode…");
     fireEvent.click(button);
 
-    const searchInput = screen.getByPlaceholderText(
-      "Search code or description…",
-    );
+    const searchInput = screen.getByPlaceholderText("Search code or description…");
     fireEvent.change(searchInput, { target: { value: "mark" } });
 
     expect(screen.getByText("MARKING")).toBeInTheDocument();
@@ -83,13 +55,7 @@ describe("PaycodeCombo Component", () => {
   });
 
   test("should call onChange when option is selected", () => {
-    render(
-      <PaycodeCombo
-        options={mockOptions}
-        valueCode={null}
-        onChange={mockOnChange}
-      />,
-    );
+    render(<PaycodeCombo options={mockOptions} valueCode={null} onChange={mockOnChange} />);
 
     const button = screen.getByText("Select paycode…");
     fireEvent.click(button);
@@ -101,27 +67,17 @@ describe("PaycodeCombo Component", () => {
   });
 
   test("should close dropdown after selection", () => {
-    render(
-      <PaycodeCombo
-        options={mockOptions}
-        valueCode={null}
-        onChange={mockOnChange}
-      />,
-    );
+    render(<PaycodeCombo options={mockOptions} valueCode={null} onChange={mockOnChange} />);
 
     const button = screen.getByText("Select paycode…");
     fireEvent.click(button);
 
-    expect(
-      screen.getByPlaceholderText("Search code or description…"),
-    ).toBeInTheDocument();
+    expect(screen.getByPlaceholderText("Search code or description…")).toBeInTheDocument();
 
     const casualOption = screen.getByText("CASUAL");
     fireEvent.click(casualOption);
 
-    expect(
-      screen.queryByPlaceholderText("Search code or description…"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText("Search code or description…")).not.toBeInTheDocument();
   });
 
   test("should handle paycode with null description", () => {
@@ -131,11 +87,7 @@ describe("PaycodeCombo Component", () => {
     ];
 
     render(
-      <PaycodeCombo
-        options={optionsWithNull}
-        valueCode="NULL_DESC"
-        onChange={mockOnChange}
-      />,
+      <PaycodeCombo options={optionsWithNull} valueCode="NULL_DESC" onChange={mockOnChange} />
     );
 
     // Should display just the code without description (line 48)
@@ -148,21 +100,13 @@ describe("PaycodeCombo Component", () => {
       { code: "CASUAL", paycode_description: "Casual rate", amount: 50 },
     ];
 
-    render(
-      <PaycodeCombo
-        options={optionsWithNull}
-        valueCode={null}
-        onChange={mockOnChange}
-      />,
-    );
+    render(<PaycodeCombo options={optionsWithNull} valueCode={null} onChange={mockOnChange} />);
 
     const button = screen.getByText("Select paycode…");
     fireEvent.click(button);
 
     // Search for something that won't match null description (line 32)
-    const searchInput = screen.getByPlaceholderText(
-      "Search code or description…",
-    );
+    const searchInput = screen.getByPlaceholderText("Search code or description…");
     fireEvent.change(searchInput, { target: { value: "casual" } });
 
     // Should only show CASUAL, not NULL_DESC
@@ -171,13 +115,7 @@ describe("PaycodeCombo Component", () => {
   });
 
   test("should display amount with dollar sign in dropdown", () => {
-    render(
-      <PaycodeCombo
-        options={mockOptions}
-        valueCode={null}
-        onChange={mockOnChange}
-      />,
-    );
+    render(<PaycodeCombo options={mockOptions} valueCode={null} onChange={mockOnChange} />);
 
     const button = screen.getByText("Select paycode…");
     fireEvent.click(button);
@@ -193,11 +131,7 @@ describe("PaycodeCombo Component", () => {
     ];
 
     render(
-      <PaycodeCombo
-        options={optionsWithAmountOnly}
-        valueCode={null}
-        onChange={mockOnChange}
-      />,
+      <PaycodeCombo options={optionsWithAmountOnly} valueCode={null} onChange={mockOnChange} />
     );
 
     const button = screen.getByText("Select paycode…");
@@ -213,13 +147,7 @@ describe("PaycodeCombo Component", () => {
       { code: "DESC_ONLY", paycode_description: "Description only", amount: 0 },
     ];
 
-    render(
-      <PaycodeCombo
-        options={optionsWithDescOnly}
-        valueCode={null}
-        onChange={mockOnChange}
-      />,
-    );
+    render(<PaycodeCombo options={optionsWithDescOnly} valueCode={null} onChange={mockOnChange} />);
 
     const button = screen.getByText("Select paycode…");
     fireEvent.click(button);

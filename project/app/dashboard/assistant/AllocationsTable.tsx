@@ -6,11 +6,7 @@ import { Chip, Button } from "@mui/material";
 import { JSX } from "react";
 import { useRouter } from "next/navigation";
 
-export default function TAAllocationsTable({
-  allocations,
-}: {
-  allocations: AdminAllocationRow[];
-}) {
+export default function TAAllocationsTable({ allocations }: { allocations: AdminAllocationRow[] }) {
   const router = useRouter();
 
   // -------------------------------------------------
@@ -47,7 +43,7 @@ export default function TAAllocationsTable({
       keyof AdminAllocationRow | "view",
       (
         value: AdminAllocationRow[keyof AdminAllocationRow],
-        row: AdminAllocationRow,
+        row: AdminAllocationRow
       ) => JSX.Element | string
     >
   > = {

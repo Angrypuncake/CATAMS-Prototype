@@ -77,9 +77,10 @@ export default function CorrectionRequestPage() {
   const formatDate = (origDate: string): string => {
     const d = new Date(origDate);
     if (isNaN(d.getTime())) return "—";
-    return `${String(d.getDate()).padStart(2, "0")}-${String(
-      d.getMonth() + 1,
-    ).padStart(2, "0")}-${d.getFullYear()}`;
+    return `${String(d.getDate()).padStart(2, "0")}-${String(d.getMonth() + 1).padStart(
+      2,
+      "0"
+    )}-${d.getFullYear()}`;
   };
 
   // Fetch the current logged in user
@@ -128,9 +129,7 @@ export default function CorrectionRequestPage() {
   }, [allocationId]);
 
   /** Input handlers */
-  const handleTextChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
   };
@@ -159,17 +158,11 @@ export default function CorrectionRequestPage() {
       requestReason: form.justification.trim(),
       details: {
         date: corrections.date ? form.date : (allocation.session_date ?? ""),
-        start_at: corrections.time
-          ? form.startTime
-          : (allocation.start_at ?? ""),
+        start_at: corrections.time ? form.startTime : (allocation.start_at ?? ""),
         end_at: corrections.time ? form.endTime : (allocation.end_at ?? ""),
-        location: corrections.location
-          ? form.location
-          : (allocation.location ?? ""),
+        location: corrections.location ? form.location : (allocation.location ?? ""),
         hours: corrections.hours ? form.hours : String(allocation.hours ?? ""),
-        session_type: corrections.session
-          ? form.session
-          : (allocation.activity_type ?? ""),
+        session_type: corrections.session ? form.session : (allocation.activity_type ?? ""),
       },
     };
 
@@ -236,20 +229,13 @@ export default function CorrectionRequestPage() {
         Correction Request
       </Typography>
       <Typography variant="body2" sx={{ mb: 3, color: "text.secondary" }}>
-        Use this when allocation details are incorrect (date, time, location,
-        hours, or session type).
+        Use this when allocation details are incorrect (date, time, location, hours, or session
+        type).
       </Typography>
 
       {/* Summary */}
-      <Paper
-        variant="outlined"
-        sx={{ p: 2, mb: 3, backgroundColor: "#f9f9f9" }}
-      >
-        <Stack
-          direction="row"
-          justifyContent="space-between"
-          alignItems="center"
-        >
+      <Paper variant="outlined" sx={{ p: 2, mb: 3, backgroundColor: "#f9f9f9" }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="center">
           <Typography fontWeight={600}>
             {allocation.unit_code} – {allocation.unit_name}
           </Typography>
@@ -260,22 +246,15 @@ export default function CorrectionRequestPage() {
           />
         </Stack>
         <Typography variant="body2" sx={{ mt: 1 }}>
-          Date: {formatDate(allocation.session_date ?? "—")} • Time:{" "}
-          {allocation.start_at ?? "—"} – {allocation.end_at ?? "—"} • Location:{" "}
-          {allocation.location ?? "—"} • Hours: {allocation.hours ?? "—"} •
-          Session:{" "}
-          {sessionTypeMap[allocation.activity_type ?? ""] ??
-            allocation.activity_type ??
-            "—"}
+          Date: {formatDate(allocation.session_date ?? "—")} • Time: {allocation.start_at ?? "—"} –{" "}
+          {allocation.end_at ?? "—"} • Location: {allocation.location ?? "—"} • Hours:{" "}
+          {allocation.hours ?? "—"} • Session:{" "}
+          {sessionTypeMap[allocation.activity_type ?? ""] ?? allocation.activity_type ?? "—"}
         </Typography>
       </Paper>
 
       {/* System vs Correction */}
-      <Stack
-        direction={{ xs: "column", md: "row" }}
-        spacing={3}
-        alignItems="stretch"
-      >
+      <Stack direction={{ xs: "column", md: "row" }} spacing={3} alignItems="stretch">
         {/* System Record */}
         <Paper variant="outlined" sx={{ p: 2, flex: 1 }}>
           <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 1 }}>
@@ -294,9 +273,7 @@ export default function CorrectionRequestPage() {
             <dd>{allocation.hours ?? "—"}</dd>
             <dt>Session:</dt>
             <dd>
-              {sessionTypeMap[allocation.activity_type ?? ""] ??
-                allocation.activity_type ??
-                "—"}
+              {sessionTypeMap[allocation.activity_type ?? ""] ?? allocation.activity_type ?? "—"}
             </dd>
           </dl>
         </Paper>
@@ -443,20 +420,12 @@ export default function CorrectionRequestPage() {
       {/* Action Buttons */}
       <Box sx={{ mt: 4, display: "flex", justifyContent: "flex-end", gap: 2 }}>
         <Tooltip
-          title={
-            isSubmitDisabled
-              ? "Please enter a justification to enable submission"
-              : ""
-          }
+          title={isSubmitDisabled ? "Please enter a justification to enable submission" : ""}
           placement="top"
         >
           {/* span is needed because disabled buttons don't trigger tooltips */}
           <span>
-            <Button
-              variant="contained"
-              onClick={handleSubmit}
-              disabled={isSubmitDisabled}
-            >
+            <Button variant="contained" onClick={handleSubmit} disabled={isSubmitDisabled}>
               Submit Correction Request
             </Button>
           </span>

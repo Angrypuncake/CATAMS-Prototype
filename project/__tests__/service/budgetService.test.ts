@@ -18,9 +18,7 @@ jest.mock("@/app/services/unitService", () => ({
 }));
 
 const mockedAxios = axios as jest.Mocked<typeof axios>;
-const { getUnitOffering, getCoordinatorUnits } = jest.requireMock(
-  "@/app/services/unitService",
-);
+const { getUnitOffering, getCoordinatorUnits } = jest.requireMock("@/app/services/unitService");
 
 beforeEach(() => {
   jest.resetAllMocks();
@@ -36,9 +34,7 @@ test("getBudgetByOfferingId hits correct endpoint and returns data", async () =>
 test("getAllocatedBudgetByOfferingId hits correct endpoint and returns data", async () => {
   mockedAxios.get.mockResolvedValueOnce({ data: { allocatedAmount: 600 } });
   const res = await getAllocatedBudgetByOfferingId(5);
-  expect(mockedAxios.get).toHaveBeenCalledWith(
-    "/offerings/5/budget/allocations",
-  );
+  expect(mockedAxios.get).toHaveBeenCalledWith("/offerings/5/budget/allocations");
   expect(res).toEqual({ allocatedAmount: 600 });
 });
 
@@ -194,9 +190,6 @@ test("getUnitBudgetOverviews logs and rethrows on error", async () => {
   const errSpy = jest.spyOn(console, "error").mockImplementation(() => {});
   (getCoordinatorUnits as jest.Mock).mockRejectedValueOnce(new Error("fail"));
   await expect(getUnitBudgetOverviews(2025, "T1")).rejects.toThrow("fail");
-  expect(errSpy).toHaveBeenCalledWith(
-    "Failed to compile UC budget overview:",
-    expect.any(Error),
-  );
+  expect(errSpy).toHaveBeenCalledWith("Failed to compile UC budget overview:", expect.any(Error));
   errSpy.mockRestore();
 });

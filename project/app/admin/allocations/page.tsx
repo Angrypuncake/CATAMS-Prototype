@@ -14,10 +14,7 @@ import { Tutor } from "@/app/_types/tutor";
 import { Button, ButtonGroup } from "@mui/material";
 
 // Import services
-import {
-  getAdminAllocations,
-  patchAdminAllocation,
-} from "@/app/services/allocationService";
+import { getAdminAllocations, patchAdminAllocation } from "@/app/services/allocationService";
 import { getTutors } from "@/app/services/userService";
 import { getPaycodes } from "@/app/services/paycodeService";
 import {
@@ -113,8 +110,7 @@ export default function AdminAllAllocationsPage() {
     const sched: AllocationRow[] = [];
     const unsched: AllocationRow[] = [];
     for (const r of rows) {
-      const isScheduled =
-        r.mode === "scheduled" || (r.mode == null && !!r.session_date);
+      const isScheduled = r.mode === "scheduled" || (r.mode == null && !!r.session_date);
       if (isScheduled) sched.push(r);
       else unsched.push(r);
     }
@@ -125,19 +121,15 @@ export default function AdminAllAllocationsPage() {
 
   /* ------- Timeline derivations (only meaningful for scheduled tab) ------- */
   const termStart = useMemo(() => {
-    const dts = visible
-      .map((r) => parseDateSafe(r.session_date))
-      .filter((d): d is Date => !!d);
-    const min = dts.length
-      ? new Date(Math.min(...dts.map((d) => d.getTime())))
-      : new Date();
+    const dts = visible.map((r) => parseDateSafe(r.session_date)).filter((d): d is Date => !!d);
+    const min = dts.length ? new Date(Math.min(...dts.map((d) => d.getTime()))) : new Date();
     return startOfWeekMonday(min);
   }, [visible]);
 
   const weeks: WeekDef[] = useMemo(() => buildWeeksRange(-6, 13, "S1"), []);
   const timelineActivities: ActivityRow[] = useMemo(
     () => rowsToTimelineActivities(visible, { termStart, termLabel: "S1" }),
-    [visible, termStart],
+    [visible, termStart]
   );
 
   /** ========= NEW: map tooltip “Edit this allocation” -> open Drawer ========= */
@@ -154,9 +146,7 @@ export default function AdminAllAllocationsPage() {
     // activity.name is built via activityName(); activityKey() uses unit+type+name joined by " • "
     const match = scheduledRows.find((r) => {
       const actKey = activityKey(r);
-      const wk = r.session_date
-        ? weekKeyFor(new Date(r.session_date.slice(0, 10)), termStart)
-        : "";
+      const wk = r.session_date ? weekKeyFor(new Date(r.session_date.slice(0, 10)), termStart) : "";
       return (
         wk === args.week.key &&
         (labelName(r) === tutorName || tutorName === "") &&
@@ -232,10 +222,7 @@ export default function AdminAllAllocationsPage() {
       {/* Scheduled / Unscheduled toggle */}
       {/* Tab tells the backend which types of allocations to fetch */}
       <div className="mb-3">
-        <ButtonGroup
-          variant="outlined"
-          sx={{ borderRadius: "1px", overflow: "hidden" }}
-        >
+        <ButtonGroup variant="outlined" sx={{ borderRadius: "1px", overflow: "hidden" }}>
           <Button
             variant={tab === "scheduled" ? "contained" : "outlined"}
             color="primary"
@@ -301,7 +288,7 @@ export default function AdminAllAllocationsPage() {
                     const set = new Set(
                       Object.values(a.allocations)
                         .flatMap((v) => (Array.isArray(v) ? v : v ? [v] : []))
-                        .map((x) => x.tutor),
+                        .map((x) => x.tutor)
                     );
                     return <span className="text-xs">{set.size}</span>;
                   },

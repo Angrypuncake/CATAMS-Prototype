@@ -1,11 +1,6 @@
 // types/request.ts
 
-export type RequestStatus =
-  | "pending"
-  | "approved"
-  | "rejected"
-  | "withdrawn"
-  | "in_review";
+export type RequestStatus = "pending" | "approved" | "rejected" | "withdrawn" | "in_review";
 
 // types/request.ts
 export type ClaimDetails = {

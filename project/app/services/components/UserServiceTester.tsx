@@ -1,12 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  getUsers,
-  getUserById,
-  getUserRoles,
-  getUserUnits,
-} from "@/app/services/userService";
+import { getUsers, getUserById, getUserRoles, getUserUnits } from "@/app/services/userService";
 
 type User = {
   user_id: number;
@@ -30,13 +25,7 @@ type UserUnit = {
 };
 
 // Result can be a single user, an array of users, roles, units, or null
-type FetchResult =
-  | User
-  | User[]
-  | UserRole[]
-  | UserUnit[]
-  | { error: string }
-  | null;
+type FetchResult = User | User[] | UserRole[] | UserUnit[] | { error: string } | null;
 
 export default function UserServiceTester() {
   const [userId, setUserId] = useState("");
@@ -134,8 +123,7 @@ export default function UserServiceTester() {
           </button>
         </div>
         <p className="text-xs text-gray-500 mt-1">
-          🔍 You can search by <b>first name</b>, <b>last name</b>, or{" "}
-          <b>email substring</b>.
+          🔍 You can search by <b>first name</b>, <b>last name</b>, or <b>email substring</b>.
         </p>
       </div>
 

@@ -8,12 +8,7 @@ interface SelectFieldProps {
   onChange: (value: string) => void;
 }
 
-const SelectField: React.FC<SelectFieldProps> = ({
-  value,
-  label,
-  options,
-  onChange,
-}) => {
+const SelectField: React.FC<SelectFieldProps> = ({ value, label, options, onChange }) => {
   return (
     <div className="flex items-center gap-2">
       <label className="text-sm text-gray-700">{label}:</label>

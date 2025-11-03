@@ -88,21 +88,11 @@ export default function CorrectionReview({
   };
   const rejectUC = async () => {
     if (!currentUserId) return;
-    await ucRejectRequest(
-      Number(requestId),
-      currentUserId,
-      undefined,
-      reviewerNote,
-    );
+    await ucRejectRequest(Number(requestId), currentUserId, undefined, reviewerNote);
   };
   const forwardTA = async () => {
     if (!currentUserId) return;
-    await taForwardToUC(
-      Number(requestId),
-      currentUserId,
-      requestReason ?? undefined,
-      reviewerNote,
-    );
+    await taForwardToUC(Number(requestId), currentUserId, requestReason ?? undefined, reviewerNote);
   };
   const rejectTA = async () => {
     if (!currentUserId) return;
@@ -110,7 +100,7 @@ export default function CorrectionReview({
       Number(requestId),
       currentUserId,
       requestReason ?? undefined,
-      reviewerNote,
+      reviewerNote
     );
   };
 
@@ -134,8 +124,7 @@ export default function CorrectionReview({
       </Box>
 
       <Typography variant="body2" color="text.secondary" mt={0.5}>
-        Request ID: {requestId} • Created:{" "}
-        {new Date(createdAt).toLocaleString()}
+        Request ID: {requestId} • Created: {new Date(createdAt).toLocaleString()}
       </Typography>
 
       <Divider sx={{ my: 3 }} />
@@ -201,17 +190,9 @@ export default function CorrectionReview({
       ) : (
         <>
           {/* INITIATOR + ALLOCATION */}
-          <Box
-            display="flex"
-            flexDirection={{ xs: "column", md: "row" }}
-            gap={3}
-            mb={3}
-          >
+          <Box display="flex" flexDirection={{ xs: "column", md: "row" }} gap={3} mb={3}>
             {/* Initiator */}
-            <Paper
-              variant="outlined"
-              sx={{ flex: 1, p: 3, minWidth: { xs: "100%", md: "30%" } }}
-            >
+            <Paper variant="outlined" sx={{ flex: 1, p: 3, minWidth: { xs: "100%", md: "30%" } }}>
               <Typography variant="subtitle1" fontWeight={700} gutterBottom>
                 Initiator Details
               </Typography>
@@ -235,10 +216,7 @@ export default function CorrectionReview({
             </Paper>
 
             {/* Original Allocation */}
-            <Paper
-              variant="outlined"
-              sx={{ flex: 2, p: 3, minWidth: { xs: "100%", md: "65%" } }}
-            >
+            <Paper variant="outlined" sx={{ flex: 2, p: 3, minWidth: { xs: "100%", md: "65%" } }}>
               <Typography variant="subtitle1" fontWeight={700} gutterBottom>
                 Original Allocation
               </Typography>
@@ -336,10 +314,7 @@ export default function CorrectionReview({
                 Corrected
               </Typography>
               <Typography variant="body2" sx={{ color: "success.main" }}>
-                Date:{" "}
-                {details.date
-                  ? new Date(details.date).toLocaleDateString()
-                  : "N/A"}
+                Date: {details.date ? new Date(details.date).toLocaleDateString() : "N/A"}
               </Typography>
               <Typography variant="body2" sx={{ color: "success.main" }}>
                 Hours: {details.hours ?? "N/A"} hrs
@@ -356,10 +331,7 @@ export default function CorrectionReview({
           <Typography variant="subtitle1" fontWeight={600} gutterBottom>
             Request Reason
           </Typography>
-          <Paper
-            variant="outlined"
-            sx={{ p: 2, mb: 3, bgcolor: "action.hover" }}
-          >
+          <Paper variant="outlined" sx={{ p: 2, mb: 3, bgcolor: "action.hover" }}>
             <Typography variant="body2" color="text.secondary">
               {requestReason || "No reason provided"}
             </Typography>
@@ -386,11 +358,7 @@ export default function CorrectionReview({
             <Box display="flex" gap={2}>
               {role === "UC" ? (
                 <>
-                  <Button
-                    variant="contained"
-                    color="success"
-                    onClick={approveUC}
-                  >
+                  <Button variant="contained" color="success" onClick={approveUC}>
                     Approve Correction
                   </Button>
                   <Button variant="outlined" color="error" onClick={rejectUC}>
@@ -399,11 +367,7 @@ export default function CorrectionReview({
                 </>
               ) : (
                 <>
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    onClick={forwardTA}
-                  >
+                  <Button variant="contained" color="primary" onClick={forwardTA}>
                     Forward to UC
                   </Button>
                   <Button variant="outlined" color="error" onClick={rejectTA}>

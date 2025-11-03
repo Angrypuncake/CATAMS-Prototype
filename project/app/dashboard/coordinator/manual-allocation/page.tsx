@@ -15,10 +15,7 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import {
-  getCoordinatorUnits,
-  getUnitOffering,
-} from "@/app/services/unitService";
+import { getCoordinatorUnits, getUnitOffering } from "@/app/services/unitService";
 import { createUnscheduledAllocation } from "@/app/services/allocationService";
 import { Tutor } from "@/app/_types/tutor";
 import { getTutorsByUnit } from "@/app/services/userService";
@@ -111,7 +108,7 @@ export default function UCManualAllocationPage() {
       });
 
       setSuccess(
-        `✅ Allocation created successfully (Type: ${res.activityType}, Tutor ID: ${selectedTutor})`,
+        `✅ Allocation created successfully (Type: ${res.activityType}, Tutor ID: ${selectedTutor})`
       );
 
       // Optional: reset form fields
@@ -215,12 +212,7 @@ export default function UCManualAllocationPage() {
 
           {/* Submit */}
           <Box className="flex justify-end items-center gap-3 mt-3">
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={loading}
-              color="primary"
-            >
+            <Button type="submit" variant="contained" disabled={loading} color="primary">
               {loading ? (
                 <CircularProgress size={24} sx={{ color: "white" }} />
               ) : (
@@ -238,11 +230,7 @@ export default function UCManualAllocationPage() {
         onClose={() => setSuccess(null)}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert
-          onClose={() => setSuccess(null)}
-          severity="success"
-          sx={{ width: "100%" }}
-        >
+        <Alert onClose={() => setSuccess(null)} severity="success" sx={{ width: "100%" }}>
           {success}
         </Alert>
       </Snackbar>
@@ -254,11 +242,7 @@ export default function UCManualAllocationPage() {
         onClose={() => setErr(null)}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert
-          onClose={() => setErr(null)}
-          severity="error"
-          sx={{ width: "100%" }}
-        >
+        <Alert onClose={() => setErr(null)} severity="error" sx={{ width: "100%" }}>
           {err}
         </Alert>
       </Snackbar>

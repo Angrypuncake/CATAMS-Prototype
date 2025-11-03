@@ -7,13 +7,8 @@ import type {
   PreviewResponse,
   TutorAllocationRow,
   AdminAllocationRow,
-  AllocationBase,
 } from "@/app/_types/allocations";
-import {
-  getCoordinatorUnits,
-  getUnitOffering,
-  UnitOffering,
-} from "./unitService";
+import { getCoordinatorUnits, getUnitOffering, UnitOffering } from "./unitService";
 
 type By = {
   id: number | null;
@@ -52,7 +47,7 @@ export async function getTutorAllocations(
   limit = 10,
   searchTerm?: string,
   sortColumn?: string,
-  sortDirection?: "asc" | "desc",
+  sortDirection?: "asc" | "desc"
 ): Promise<{
   data: TutorAllocationRow[];
   total: number;
@@ -77,9 +72,7 @@ export async function getTutorAllocations(
   return res.data;
 }
 
-export async function getAllocationById(
-  id: string,
-): Promise<TutorAllocationRow> {
+export async function getAllocationById(id: string): Promise<TutorAllocationRow> {
   const res = await axios.get(`/tutor/allocations/${encodeURIComponent(id)}`);
   const row = res.data?.data;
   if (!row) throw new Error(`Allocation ${id} not found`);
@@ -105,9 +98,7 @@ export async function getAllocationById(
  * Higher-level formatter that wraps getAllocationById
  * and returns a ready-to-display object.
  */
-export async function getFormattedAllocationById(
-  id: string,
-): Promise<TutorAllocationRow> {
+export async function getFormattedAllocationById(id: string): Promise<TutorAllocationRow> {
   const a = await getAllocationById(id);
   return {
     id: a.id,
@@ -129,7 +120,7 @@ export async function getFormattedAllocationById(
 export async function getAllocationsByUnit(
   unitCode: string,
   page = 1,
-  limit = 50,
+  limit = 50
 ): Promise<TutorAllocationRow[]> {
   const res = await axios.get("/admin/allocations", {
     params: { unit_code: unitCode, page, limit },
@@ -142,7 +133,7 @@ export async function getAllocationsByUnitAndActivityType(
   activityType: string | null,
   excludeUserId?: number | string | null, // optional param
   page = 1,
-  limit = 50,
+  limit = 50
 ): Promise<AdminAllocationRow[]> {
   const res = await axios.get("/admin/allocations", {
     params: {
@@ -256,10 +247,7 @@ function computeHours(start: string | null, end: string | null): string {
 
 /* ------------------ ADMIN ------------------ */
 
-export async function patchAdminAllocation(
-  id: string | number,
-  updated: SaveAllocationPayload,
-) {
+export async function patchAdminAllocation(id: string | number, updated: SaveAllocationPayload) {
   const res = await axios.patch(`/admin/allocations/${id}`, updated);
   return res.data;
 }
@@ -285,9 +273,7 @@ export async function commitImport(stagingId: number): Promise<CommitResponse> {
   return res.data;
 }
 
-export async function discardImport(
-  stagingId: number,
-): Promise<DiscardResponse> {
+export async function discardImport(stagingId: number): Promise<DiscardResponse> {
   const res = await axios.post<DiscardResponse>("/admin/discard", {
     stagingId,
   });
@@ -296,7 +282,7 @@ export async function discardImport(
 
 export async function getPreview(
   stagingId: number,
-  signal?: AbortSignal,
+  signal?: AbortSignal
 ): Promise<PreviewResponse> {
   const res = await axios.get<PreviewResponse>(`/admin/preview`, {
     params: { stagingId },
@@ -360,11 +346,11 @@ export interface UnscheduledAllocationResponse {
  * }
  */
 export async function createUnscheduledAllocation(
-  payload: UnscheduledAllocationPayload,
+  payload: UnscheduledAllocationPayload
 ): Promise<UnscheduledAllocationResponse> {
   const { data } = await axios.post<UnscheduledAllocationResponse>(
     "/allocations/unscheduled",
-    payload,
+    payload
   );
   return data;
 }
@@ -377,7 +363,7 @@ export async function updateUnscheduledAllocation(
     note?: string;
     location?: string;
     status?: string;
-  },
+  }
 ) {
   const res = await fetch(`/allocations/${allocationId}`, {
     method: "PATCH",
@@ -394,12 +380,9 @@ export async function deleteUnscheduledAllocation(allocationId: number) {
 }
 
 // Get all unscheduled allocations for a unit
-export async function getUnscheduledAllocations(
-  offeringId: number,
-  activityType = "Marking",
-) {
+export async function getUnscheduledAllocations(offeringId: number, activityType = "Marking") {
   const res = await fetch(
-    `/api/allocations/unscheduled?offeringId=${offeringId}&activityType=${activityType}`,
+    `/api/allocations/unscheduled?offeringId=${offeringId}&activityType=${activityType}`
   );
   return res.json();
 }
@@ -425,7 +408,7 @@ export interface UnscheduledAllocation {
  */
 export async function getUnscheduledAllocationsByOffering(
   offeringId: number,
-  activityType = "Marking",
+  activityType = "Marking"
 ): Promise<UnscheduledAllocation[]> {
   const res = await axios.get("/allocations/unscheduled", {
     params: {
@@ -440,9 +423,7 @@ export async function getUnscheduledAllocationsByOffering(
  * Fetch all unscheduled allocations (e.g. Marking, Consultation)
  * across all units that this Unit Coordinator manages.
  */
-export async function getAllUnscheduledAllocationsForUC(
-  activityType = "Marking",
-): Promise<
+export async function getAllUnscheduledAllocationsForUC(activityType = "Marking"): Promise<
   (UnscheduledAllocation & {
     offeringId: number;
     unitCode: string;
@@ -460,7 +441,7 @@ export async function getAllUnscheduledAllocationsForUC(
 
     // 2️⃣ Enrich offerings → get full unit metadata
     const enrichedOfferings: UnitOffering[] = await Promise.all(
-      offeringIds.map((id) => getUnitOffering(id)),
+      offeringIds.map((id) => getUnitOffering(id))
     );
 
     // 3️⃣ For each offering, fetch unscheduled allocations in parallel
@@ -481,7 +462,7 @@ export async function getAllUnscheduledAllocationsForUC(
           year: unit.year,
           session: unit.session,
         }));
-      }),
+      })
     );
 
     // 4️⃣ Flatten & sort
@@ -489,7 +470,7 @@ export async function getAllUnscheduledAllocationsForUC(
     merged.sort((a, b) =>
       a.unitCode === b.unitCode
         ? a.last_name.localeCompare(b.last_name)
-        : a.unitCode.localeCompare(b.unitCode),
+        : a.unitCode.localeCompare(b.unitCode)
     );
 
     return merged;
@@ -504,9 +485,7 @@ export async function getAllUnscheduledAllocationsForUC(
  * @param offeringId The ID of the unit offering
  * @returns Promise resolving to an array of AdminAllocationRow
  */
-export async function getAllocationsByOffering(
-  offeringId: number,
-): Promise<AdminAllocationRow[]> {
+export async function getAllocationsByOffering(offeringId: number): Promise<AdminAllocationRow[]> {
   const res = await axios.get(`/offerings/${offeringId}/allocations`);
   return res.data as AdminAllocationRow[];
 }
@@ -524,9 +503,7 @@ export async function getAllAllocationsForUC(): Promise<AdminAllocationRow[]> {
     if (offeringIds.length === 0) return [];
 
     // 2️⃣ Fetch allocations for each offering in parallel
-    const results = await Promise.all(
-      offeringIds.map((id) => getAllocationsByOffering(id)),
-    );
+    const results = await Promise.all(offeringIds.map((id) => getAllocationsByOffering(id)));
 
     // 3️⃣ Flatten all results
     const merged = results.flat();
@@ -538,9 +515,7 @@ export async function getAllAllocationsForUC(): Promise<AdminAllocationRow[]> {
   }
 }
 
-export async function getAdminAllocationById(
-  id: string,
-): Promise<AdminAllocationRow> {
+export async function getAdminAllocationById(id: string): Promise<AdminAllocationRow> {
   const res = await axios.get(`/allocations/${encodeURIComponent(id)}`);
   const row = res.data?.data;
   if (!row) throw new Error(`Allocation ${id} not found`);

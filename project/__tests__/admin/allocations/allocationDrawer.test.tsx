@@ -1,17 +1,13 @@
 import "@testing-library/jest-dom";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { Drawer } from "../../../app/admin/allocations/components/AllocationDrawer";
-import {
-  AllocationRow,
-  PaycodeOption,
-} from "../../../app/admin/allocations/types";
+import { AllocationRow, PaycodeOption } from "../../../app/admin/allocations/types";
 import { Tutor } from "../../../app/_types/tutor";
 
 const mockGetActivityOccurrences = jest.fn();
 
 jest.mock("../../../app/services/activityService", () => ({
-  getActivityOccurrences: (...args: unknown[]) =>
-    mockGetActivityOccurrences(...args),
+  getActivityOccurrences: (...args: unknown[]) => mockGetActivityOccurrences(...args),
 }));
 
 describe("AllocationDrawer", () => {
@@ -74,7 +70,7 @@ describe("AllocationDrawer", () => {
         onSave={mockOnSave}
         tutors={mockTutors}
         paycodes={mockPaycodes}
-      />,
+      />
     );
     expect(container.firstChild).toBeNull();
   });
@@ -88,7 +84,7 @@ describe("AllocationDrawer", () => {
         onSave={mockOnSave}
         tutors={mockTutors}
         paycodes={mockPaycodes}
-      />,
+      />
     );
     await waitFor(() => expect(screen.getByText("Save")).toBeInTheDocument());
   });
@@ -102,7 +98,7 @@ describe("AllocationDrawer", () => {
         onSave={mockOnSave}
         tutors={mockTutors}
         paycodes={mockPaycodes}
-      />,
+      />
     );
     await waitFor(() => screen.getByText("Cancel"));
     fireEvent.click(screen.getByText("Cancel"));
@@ -118,7 +114,7 @@ describe("AllocationDrawer", () => {
         onSave={mockOnSave}
         tutors={mockTutors}
         paycodes={mockPaycodes}
-      />,
+      />
     );
     await waitFor(() => screen.getByText("Save"));
     fireEvent.click(screen.getByText("Save"));
@@ -134,11 +130,9 @@ describe("AllocationDrawer", () => {
         onSave={mockOnSave}
         tutors={mockTutors}
         paycodes={mockPaycodes}
-      />,
+      />
     );
-    await waitFor(() =>
-      expect(mockGetActivityOccurrences).toHaveBeenCalledWith(101),
-    );
+    await waitFor(() => expect(mockGetActivityOccurrences).toHaveBeenCalledWith(101));
   });
 
   test("does not fetch occurrences for unscheduled allocation", async () => {
@@ -158,11 +152,9 @@ describe("AllocationDrawer", () => {
         onSave={mockOnSave}
         tutors={mockTutors}
         paycodes={mockPaycodes}
-      />,
+      />
     );
-    await waitFor(() =>
-      expect(mockGetActivityOccurrences).not.toHaveBeenCalled(),
-    );
+    await waitFor(() => expect(mockGetActivityOccurrences).not.toHaveBeenCalled());
   });
 
   test("handles unscheduled allocation fields", async () => {
@@ -182,7 +174,7 @@ describe("AllocationDrawer", () => {
         onSave={mockOnSave}
         tutors={mockTutors}
         paycodes={mockPaycodes}
-      />,
+      />
     );
     await waitFor(() => expect(screen.getByText("Save")).toBeInTheDocument());
     expect(screen.queryByDisplayValue("3")).toBeInTheDocument();
@@ -206,7 +198,7 @@ describe("AllocationDrawer", () => {
         onSave={mockOnSave}
         tutors={mockTutors}
         paycodes={mockPaycodes}
-      />,
+      />
     );
     await waitFor(() => screen.getByText("Save"));
     fireEvent.click(screen.getByText("Save"));
@@ -225,7 +217,7 @@ describe("AllocationDrawer", () => {
         onSave={mockOnSave}
         tutors={mockTutors}
         paycodes={mockPaycodes}
-      />,
+      />
     );
     await waitFor(() => screen.getByText("Save"));
     fireEvent.click(screen.getByText("Save"));
@@ -247,7 +239,7 @@ describe("AllocationDrawer", () => {
         onSave={mockOnSave}
         tutors={mockTutors}
         paycodes={mockPaycodes}
-      />,
+      />
     );
     await waitFor(() => expect(spy).toHaveBeenCalled());
     spy.mockRestore();
@@ -262,7 +254,7 @@ describe("AllocationDrawer", () => {
         onSave={mockOnSave}
         tutors={mockTutors}
         paycodes={mockPaycodes}
-      />,
+      />
     );
     await waitFor(() => screen.getByText("Save"));
     const locationInputs = screen.getAllByDisplayValue("Room 101");
@@ -280,12 +272,11 @@ describe("AllocationDrawer", () => {
         onSave={mockOnSave}
         tutors={mockTutors}
         paycodes={mockPaycodes}
-      />,
+      />
     );
     await waitFor(() => screen.getByText("Save"));
     const dateInput = screen.queryByDisplayValue("2025-03-15");
-    if (dateInput)
-      fireEvent.change(dateInput, { target: { value: "2025-03-20" } });
+    if (dateInput) fireEvent.change(dateInput, { target: { value: "2025-03-20" } });
   });
 
   test("handles unscheduled date/time input changes", async () => {
@@ -305,7 +296,7 @@ describe("AllocationDrawer", () => {
         onSave={mockOnSave}
         tutors={mockTutors}
         paycodes={mockPaycodes}
-      />,
+      />
     );
     await waitFor(() => screen.getByText("Save"));
     const date = container.querySelector('input[type="date"]');
@@ -326,12 +317,11 @@ describe("AllocationDrawer", () => {
         onSave={mockOnSave}
         tutors={mockTutors}
         paycodes={mockPaycodes}
-      />,
+      />
     );
     await waitFor(() => screen.getByText("Save"));
     const selects = document.querySelectorAll("select");
-    if (selects.length > 0)
-      fireEvent.change(selects[0], { target: { value: "Draft" } });
+    if (selects.length > 0) fireEvent.change(selects[0], { target: { value: "Draft" } });
   });
 
   test("handles checkbox toggle for manual hours", async () => {
@@ -351,7 +341,7 @@ describe("AllocationDrawer", () => {
         onSave={mockOnSave}
         tutors={mockTutors}
         paycodes={mockPaycodes}
-      />,
+      />
     );
     await waitFor(() => screen.getByText("Save"));
     const checkboxes = document.querySelectorAll('input[type="checkbox"]');
@@ -376,12 +366,11 @@ describe("AllocationDrawer", () => {
         onSave={mockOnSave}
         tutors={mockTutors}
         paycodes={mockPaycodes}
-      />,
+      />
     );
     await waitFor(() => screen.getByText("Save"));
     const textareas = document.querySelectorAll("textarea");
-    if (textareas.length > 1)
-      fireEvent.change(textareas[1], { target: { value: "New note" } });
+    if (textareas.length > 1) fireEvent.change(textareas[1], { target: { value: "New note" } });
   });
 
   test("saves unscheduled allocation with null hours", async () => {
@@ -402,7 +391,7 @@ describe("AllocationDrawer", () => {
         onSave={mockOnSave}
         tutors={mockTutors}
         paycodes={mockPaycodes}
-      />,
+      />
     );
     await waitFor(() => screen.getByText("Save"));
     fireEvent.click(screen.getByText("Save"));

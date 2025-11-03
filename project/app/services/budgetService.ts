@@ -51,9 +51,7 @@ export interface CoordinatorBudgetOverview {
 }
 
 /** === Aggregated overview === */
-export async function getUnitBudgetRow(
-  offeringId: number,
-): Promise<UnitBudgetRow> {
+export async function getUnitBudgetRow(offeringId: number): Promise<UnitBudgetRow> {
   try {
     //  Fetch all data in parallel
     const [offering, budgetRes, allocRes, claimRes] = await Promise.all([
@@ -87,10 +85,7 @@ export async function getUnitBudgetRow(
       variance,
     };
   } catch (err) {
-    console.error(
-      `Failed to assemble budget overview for offering ${offeringId}`,
-      err,
-    );
+    console.error(`Failed to assemble budget overview for offering ${offeringId}`, err);
     throw err;
   }
 }
@@ -99,7 +94,7 @@ export async function getUnitBudgetRow(
 export async function getUnitBudgetOverviews(
   year: number,
   session: string,
-  threshold = 0.9,
+  threshold = 0.9
 ): Promise<CoordinatorBudgetOverview> {
   try {
     // 1 Get all unit offering IDs for this UC
@@ -107,9 +102,7 @@ export async function getUnitBudgetOverviews(
     const offeringIds = rawOfferings.map((r) => r.offering_id);
 
     // 2 For each unit, fetch its budget row in parallel
-    const rows = await Promise.all(
-      offeringIds.map((id) => getUnitBudgetRow(id)),
-    );
+    const rows = await Promise.all(offeringIds.map((id) => getUnitBudgetRow(id)));
 
     // 3Generate alert objects for rows exceeding threshold
     const alerts = rows

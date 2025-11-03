@@ -94,9 +94,7 @@ describe("Allocation Utility Functions", () => {
 
   describe("labelName", () => {
     test("should combine first and last name", () => {
-      expect(labelName({ first_name: "John", last_name: "Doe" })).toBe(
-        "John Doe",
-      );
+      expect(labelName({ first_name: "John", last_name: "Doe" })).toBe("John Doe");
     });
 
     test("should handle missing first name", () => {

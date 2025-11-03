@@ -1,20 +1,8 @@
 // src/components/TeachingOperationsHeader.tsx
 "use client";
 
-import {
-  Typography,
-  Button,
-  InputAdornment,
-  Stack,
-  Box,
-  TextField,
-} from "@mui/material";
-import {
-  Download,
-  Download as DownloadIcon,
-  Search,
-  Search as SearchIcon,
-} from "@mui/icons-material";
+import { Typography, Button, InputAdornment, Stack, Box, TextField } from "@mui/material";
+import { Download, Search } from "@mui/icons-material";
 import SelectField from "./SelectField";
 
 type TeachingOperationsHeaderProps = {

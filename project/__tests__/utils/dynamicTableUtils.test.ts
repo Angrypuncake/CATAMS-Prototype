@@ -189,16 +189,12 @@ describe("DynamicTable Utils", () => {
       const originalCreate = document.createElement.bind(document);
       clickSpy = jest.fn();
 
-      jest.spyOn(document, "createElement").mockImplementation(((
-        tagName: string,
-      ) => {
+      jest.spyOn(document, "createElement").mockImplementation(((tagName: string) => {
         const el = originalCreate(tagName);
         if (tagName.toLowerCase() === "a") {
-          jest
-            .spyOn(el as HTMLAnchorElement, "click")
-            .mockImplementation(() => {
-              clickSpy();
-            });
+          jest.spyOn(el as HTMLAnchorElement, "click").mockImplementation(() => {
+            clickSpy();
+          });
         }
         return el;
       }) as typeof document.createElement);
@@ -263,16 +259,12 @@ describe("DynamicTable Utils", () => {
       const originalCreate = document.createElement.bind(document);
       clickSpy = jest.fn();
 
-      jest.spyOn(document, "createElement").mockImplementation(((
-        tagName: string,
-      ) => {
+      jest.spyOn(document, "createElement").mockImplementation(((tagName: string) => {
         const el = originalCreate(tagName);
         if (tagName.toLowerCase() === "a") {
-          jest
-            .spyOn(el as HTMLAnchorElement, "click")
-            .mockImplementation(() => {
-              clickSpy();
-            });
+          jest.spyOn(el as HTMLAnchorElement, "click").mockImplementation(() => {
+            clickSpy();
+          });
         }
         return el;
       }) as typeof document.createElement);

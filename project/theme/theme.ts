@@ -238,11 +238,10 @@ const themeOptions: ThemeOptions = {
           "& .MuiOutlinedInput-root:hover .MuiOutlinedInput-notchedOutline": {
             borderColor: "#111111",
           },
-          "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
-            {
-              borderColor: "#000000",
-              borderWidth: 1,
-            },
+          "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline": {
+            borderColor: "#000000",
+            borderWidth: 1,
+          },
         },
       },
     },

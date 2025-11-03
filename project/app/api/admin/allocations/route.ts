@@ -18,17 +18,11 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
 
     const page = Math.max(1, Number(searchParams.get("page") ?? 1));
-    const limit = Math.min(
-      Math.max(1, Number(searchParams.get("limit") ?? 25)),
-      200,
-    );
+    const limit = Math.min(Math.max(1, Number(searchParams.get("limit") ?? 25)), 200);
     const offset = (page - 1) * limit;
 
     const sort = (searchParams.get("sort") ?? "so.session_date").toString();
-    const dir =
-      (searchParams.get("dir") ?? "asc").toLowerCase() === "desc"
-        ? "DESC"
-        : "ASC";
+    const dir = (searchParams.get("dir") ?? "asc").toLowerCase() === "desc" ? "DESC" : "ASC";
     const q = searchParams.get("q");
 
     // Collect exact-match filters
@@ -80,9 +74,7 @@ export async function GET(req: Request) {
       whereParts.push(`${f.col} = $${params.length}`);
     }
 
-    const whereSQL = whereParts.length
-      ? `WHERE ${whereParts.join(" AND ")}`
-      : "";
+    const whereSQL = whereParts.length ? `WHERE ${whereParts.join(" AND ")}` : "";
 
     // Whitelist sortable columns (UI may send aliases like "date")
     const sortable: Record<string, string> = {

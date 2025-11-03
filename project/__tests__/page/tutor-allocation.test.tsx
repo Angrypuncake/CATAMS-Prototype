@@ -35,7 +35,7 @@ jest.mock("../../app/services/allocationService", () => ({
       status: "Confirmed",
       location: "Room 101",
       note: null,
-    }),
+    })
   ),
 }));
 
@@ -51,7 +51,7 @@ jest.mock("../../app/services/authService", () => ({
       firstName: "John",
       lastName: "Doe",
       email: "john@test.com",
-    }),
+    })
   ),
 }));
 

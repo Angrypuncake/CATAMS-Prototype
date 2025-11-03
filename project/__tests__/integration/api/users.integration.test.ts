@@ -40,10 +40,9 @@ describe("User and Role Integration Tests", () => {
 
   describe("User CRUD Operations", () => {
     it("should create and retrieve user by email", async () => {
-      const result = await pool.query(
-        "SELECT * FROM test_users WHERE email = $1",
-        ["testtutor@demo.edu"],
-      );
+      const result = await pool.query("SELECT * FROM test_users WHERE email = $1", [
+        "testtutor@demo.edu",
+      ]);
 
       expect(result.rows).toHaveLength(1);
       expect(result.rows[0].first_name).toBe("Test");
@@ -62,24 +61,17 @@ describe("User and Role Integration Tests", () => {
         pool.query(`
           INSERT INTO test_users (first_name, last_name, email) VALUES
           ('Duplicate', 'User', 'testtutor@demo.edu')
-        `),
+        `)
       ).rejects.toThrow();
     });
   });
 
   describe("Role Management", () => {
     it("should retrieve all roles", async () => {
-      const result = await pool.query(
-        "SELECT * FROM test_role ORDER BY role_name",
-      );
+      const result = await pool.query("SELECT * FROM test_role ORDER BY role_name");
 
       expect(result.rows).toHaveLength(4);
-      expect(result.rows.map((r) => r.role_name)).toEqual([
-        "admin",
-        "ta",
-        "tutor",
-        "uc",
-      ]);
+      expect(result.rows.map((r) => r.role_name)).toEqual(["admin", "ta", "tutor", "uc"]);
     });
 
     it("should enforce unique role name constraint", async () => {
@@ -87,17 +79,16 @@ describe("User and Role Integration Tests", () => {
         pool.query(`
           INSERT INTO test_role (role_name, role_description) VALUES
           ('tutor', 'Duplicate tutor role')
-        `),
+        `)
       ).rejects.toThrow();
     });
   });
 
   describe("User Role Assignment", () => {
     it("should assign user to role for specific offering", async () => {
-      const user = await pool.query(
-        "SELECT user_id FROM test_users WHERE email = $1",
-        ["testtutor@demo.edu"],
-      );
+      const user = await pool.query("SELECT user_id FROM test_users WHERE email = $1", [
+        "testtutor@demo.edu",
+      ]);
       const userId = user.rows[0].user_id;
 
       const result = await pool.query(
@@ -109,7 +100,7 @@ describe("User and Role Integration Tests", () => {
         JOIN test_course_unit cu ON uo.course_unit_id = cu.unit_code
         WHERE ur.user_id = $1
       `,
-        [userId],
+        [userId]
       );
 
       expect(result.rows).toHaveLength(1);
@@ -118,10 +109,9 @@ describe("User and Role Integration Tests", () => {
     });
 
     it("should retrieve user roles with unit context", async () => {
-      const user = await pool.query(
-        "SELECT user_id FROM test_users WHERE email = $1",
-        ["testuc@demo.edu"],
-      );
+      const user = await pool.query("SELECT user_id FROM test_users WHERE email = $1", [
+        "testuc@demo.edu",
+      ]);
       const userId = user.rows[0].user_id;
 
       const result = await pool.query(
@@ -131,7 +121,7 @@ describe("User and Role Integration Tests", () => {
         JOIN test_role r ON ur.role_id = r.role_id
         WHERE ur.user_id = $1
       `,
-        [userId],
+        [userId]
       );
 
       expect(result.rows).toHaveLength(1);
@@ -139,17 +129,13 @@ describe("User and Role Integration Tests", () => {
     });
 
     it("should prevent duplicate role assignments", async () => {
-      const user = await pool.query(
-        "SELECT user_id FROM test_users WHERE email = $1",
-        ["testtutor@demo.edu"],
-      );
-      const role = await pool.query(
-        "SELECT role_id FROM test_role WHERE role_name = $1",
-        ["tutor"],
-      );
-      const offering = await pool.query(
-        "SELECT offering_id FROM test_unit_offering LIMIT 1",
-      );
+      const user = await pool.query("SELECT user_id FROM test_users WHERE email = $1", [
+        "testtutor@demo.edu",
+      ]);
+      const role = await pool.query("SELECT role_id FROM test_role WHERE role_name = $1", [
+        "tutor",
+      ]);
+      const offering = await pool.query("SELECT offering_id FROM test_unit_offering LIMIT 1");
 
       await expect(
         pool.query(
@@ -157,12 +143,8 @@ describe("User and Role Integration Tests", () => {
           INSERT INTO test_user_role (user_id, role_id, unit_offering_id) VALUES
           ($1, $2, $3)
         `,
-          [
-            user.rows[0].user_id,
-            role.rows[0].role_id,
-            offering.rows[0].offering_id,
-          ],
-        ),
+          [user.rows[0].user_id, role.rows[0].role_id, offering.rows[0].offering_id]
+        )
       ).rejects.toThrow();
     });
   });
@@ -174,7 +156,7 @@ describe("User and Role Integration Tests", () => {
         SELECT * FROM test_users
         WHERE first_name ILIKE $1 OR last_name ILIKE $1
       `,
-        ["%Admin%"],
+        ["%Admin%"]
       );
 
       expect(result.rows).toHaveLength(1);
@@ -190,7 +172,7 @@ describe("User and Role Integration Tests", () => {
         JOIN test_role r ON ur.role_id = r.role_id
         WHERE r.role_name = $1
       `,
-        ["tutor"],
+        ["tutor"]
       );
 
       expect(result.rows).toHaveLength(1);

@@ -26,17 +26,13 @@ describe("TableHeader", () => {
         onSort={(_: keyof Row & string) => {}}
         hasActions={true}
         actionsLabel="Actions"
-      />,
+      />
     );
 
     expect(screen.getByText("Name")).toBeInTheDocument();
     expect(screen.getByText("Age")).toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /name/i }),
-    ).not.toBeInTheDocument();
-    expect(
-      screen.queryByRole("button", { name: /age/i }),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /name/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /age/i })).not.toBeInTheDocument();
     expect(screen.getByText("Actions")).toBeInTheDocument();
   });
 
@@ -56,7 +52,7 @@ describe("TableHeader", () => {
         onSort={onSort}
         hasActions={false}
         actionsLabel="Actions"
-      />,
+      />
     );
 
     const nameSortBtn = screen.getByRole("button", { name: "Name" });
@@ -70,10 +66,7 @@ describe("TableHeader", () => {
   });
 
   test("shows key as fallback label when no label provided (non-sorting branch)", () => {
-    const columns: Array<{ key: keyof Row & string }> = [
-      { key: "name" },
-      { key: "age" },
-    ];
+    const columns: Array<{ key: keyof Row & string }> = [{ key: "name" }, { key: "age" }];
 
     renderWithTable(
       <TableHeader<Row>
@@ -84,7 +77,7 @@ describe("TableHeader", () => {
         onSort={(_: keyof Row & string) => {}}
         hasActions={false}
         actionsLabel="Actions"
-      />,
+      />
     );
 
     const row = screen.getByRole("row");

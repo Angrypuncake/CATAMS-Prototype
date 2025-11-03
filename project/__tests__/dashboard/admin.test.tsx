@@ -1,11 +1,5 @@
 import "@testing-library/jest-dom";
-import {
-  render,
-  screen,
-  waitFor,
-  act,
-  fireEvent,
-} from "@testing-library/react";
+import { render, screen, waitFor, act, fireEvent } from "@testing-library/react";
 import AdminDashboard from "../../app/dashboard/admin/page";
 import AdminInfoBox from "@/app/dashboard/admin/AdminInfoBox";
 import AdminBudgetBox from "@/app/dashboard/admin/AdminBudgetBox";
@@ -62,7 +56,7 @@ jest.mock("axios", () => ({
           },
         ],
       },
-    }),
+    })
   ),
 }));
 
@@ -84,9 +78,7 @@ describe("AdminDashboard", () => {
     expect(screen.getByText("User & Role Management")).toBeInTheDocument();
     expect(screen.getByText("Budgets Loaded")).toBeInTheDocument();
     expect(screen.getByText("Validation Reports")).toBeInTheDocument();
-    expect(
-      screen.getByText("Recent Jobs (Import/Exports)"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Recent Jobs (Import/Exports)")).toBeInTheDocument();
 
     // Make sure the action buttons are there for admin workflows
     expect(screen.getByText("Refresh")).toBeInTheDocument();
@@ -107,9 +99,7 @@ describe("AdminDashboard", () => {
     const mainBoxes = container!.querySelectorAll('[class*="MuiBox-root"]');
     expect(mainBoxes.length).toBeGreaterThan(0);
 
-    const paperSections = container!.querySelectorAll(
-      '[class*="MuiPaper-root"]',
-    );
+    const paperSections = container!.querySelectorAll('[class*="MuiPaper-root"]');
     expect(paperSections.length).toBeGreaterThan(0);
   });
 
@@ -179,10 +169,7 @@ describe("AdminDashboard", () => {
 
     // Make sure errors are properly logged instead of breaking the app
     await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        "Error loading overview:",
-        expect.any(Error),
-      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith("Error loading overview:", expect.any(Error));
     });
 
     consoleErrorSpy.mockRestore();
@@ -208,19 +195,14 @@ describe("AdminDashboard", () => {
   test("should render info boxes with correct data and styling", () => {
     render(
       <div>
-        <AdminInfoBox
-          adminStatistic={42}
-          title="Users"
-          bubbleText="directory"
-          bubbleColor="red"
-        />
+        <AdminInfoBox adminStatistic={42} title="Users" bubbleText="directory" bubbleColor="red" />
         <AdminInfoBox
           adminStatistic={100}
           title="Success"
           bubbleText="request"
           bubbleColor="green"
         />
-      </div>,
+      </div>
     );
 
     expect(screen.getByText("Users")).toBeInTheDocument();
@@ -252,11 +234,7 @@ describe("AdminDashboard", () => {
 
   test("should render budget boxes as links or buttons based on href prop", () => {
     const { rerender } = render(
-      <AdminBudgetBox
-        title="Test Budget"
-        description="Test description"
-        href="/test-link"
-      />,
+      <AdminBudgetBox title="Test Budget" description="Test description" href="/test-link" />
     );
 
     expect(screen.getByText("Test Budget")).toBeInTheDocument();
@@ -265,12 +243,7 @@ describe("AdminDashboard", () => {
     const buttonWithHref = screen.getByText("Open");
     expect(buttonWithHref.closest("a")).toHaveAttribute("href", "/test-link");
 
-    rerender(
-      <AdminBudgetBox
-        title="No Link Budget"
-        description="No link description"
-      />,
-    );
+    rerender(<AdminBudgetBox title="No Link Budget" description="No link description" />);
 
     const buttonWithoutHref = screen.getByText("Open");
     expect(buttonWithoutHref.tagName).toBe("BUTTON");

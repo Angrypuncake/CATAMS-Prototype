@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import { Box, Paper, Stack, Typography } from "@mui/material";
 import TeachingOperationsHeader from "./TeachingOperationsHeader";
-import UCRequestsTable from "../coordinator/CoordinatorRequestTable";
 
 import { getRequestsByUC } from "@/app/services/requestService";
 import { getAllAllocationsForUC } from "@/app/services/allocationService";
@@ -71,12 +70,7 @@ const TeachingOperations: React.FC = () => {
         }}
       >
         {/* Header */}
-        <Stack
-          direction="row"
-          alignItems="center"
-          justifyContent="space-between"
-          sx={{ mb: 3 }}
-        >
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 3 }}>
           <TeachingOperationsHeader
             termValue={termValue}
             unitValue={unitValue}
@@ -91,12 +85,7 @@ const TeachingOperations: React.FC = () => {
 
         {/* --- 🧾 Requests Section --- */}
         <Paper sx={{ ...cardSx, mb: 3 }}>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            sx={{ mb: 1 }}
-          >
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
             <Box>
               <Typography variant="h6">Requests</Typography>
               <Typography variant="body2" color="text.secondary">
@@ -109,12 +98,7 @@ const TeachingOperations: React.FC = () => {
 
         {/* --- 📘 Allocations Section --- */}
         <Paper sx={{ ...cardSx }}>
-          <Stack
-            direction="row"
-            justifyContent="space-between"
-            alignItems="center"
-            sx={{ mb: 1 }}
-          >
+          <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 1 }}>
             <Box>
               <Typography variant="h6">Allocations</Typography>
               <Typography variant="body2" color="text.secondary">

@@ -3,7 +3,7 @@ import { useEffect } from "react";
 
 export function useOutsideClick<T extends HTMLElement>(
   ref: React.RefObject<T | null>,
-  onClickAway: () => void,
+  onClickAway: () => void
 ) {
   useEffect(() => {
     function onClick(e: MouseEvent) {

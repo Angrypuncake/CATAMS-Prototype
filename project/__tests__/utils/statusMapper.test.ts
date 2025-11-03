@@ -1,7 +1,4 @@
-import {
-  mapLegacyStatus,
-  type SimplifiedStatus,
-} from "../../app/utils/statusMapper";
+import { mapLegacyStatus, type SimplifiedStatus } from "../../app/utils/statusMapper";
 
 describe("statusMapper", () => {
   describe("mapLegacyStatus", () => {
@@ -129,12 +126,7 @@ describe("statusMapper", () => {
 
     describe("Type safety", () => {
       test("should return valid SimplifiedStatus type", () => {
-        const statuses: SimplifiedStatus[] = [
-          "Draft",
-          "Approved",
-          "Claimed",
-          "Cancelled",
-        ];
+        const statuses: SimplifiedStatus[] = ["Draft", "Approved", "Claimed", "Cancelled"];
         const result = mapLegacyStatus("approved allocation");
 
         expect(statuses).toContain(result);

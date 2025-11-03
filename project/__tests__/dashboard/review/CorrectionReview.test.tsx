@@ -113,17 +113,13 @@ describe("CorrectionReview Component", () => {
   });
 
   test("should render nothing when data is null", () => {
-    const { container } = render(
-      <CorrectionReview data={null as unknown as TutorRequest} />,
-    );
+    const { container } = render(<CorrectionReview data={null as unknown as TutorRequest} />);
 
     expect(container.firstChild).toBeNull();
   });
 
   test("should render nothing when data is undefined", () => {
-    const { container } = render(
-      <CorrectionReview data={undefined as unknown as TutorRequest} />,
-    );
+    const { container } = render(<CorrectionReview data={undefined as unknown as TutorRequest} />);
 
     expect(container.firstChild).toBeNull();
   });
@@ -155,20 +151,16 @@ describe("CorrectionReview Component", () => {
   });
 
   test("should handle error when fetching tutor and allocation data", async () => {
-    const consoleErrorSpy = jest
-      .spyOn(console, "error")
-      .mockImplementation(() => {});
+    const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation(() => {});
     mockGetTutorById.mockRejectedValue(new Error("Failed to fetch tutor"));
-    mockGetAllocationById.mockRejectedValue(
-      new Error("Failed to fetch allocation"),
-    );
+    mockGetAllocationById.mockRejectedValue(new Error("Failed to fetch allocation"));
 
     render(<CorrectionReview data={mockCorrectionRequest} />);
 
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "❌ Failed to load correction review:",
-        expect.any(Error),
+        expect.any(Error)
       );
     });
 
@@ -229,11 +221,7 @@ describe("CorrectionReview Component", () => {
     fireEvent.click(approveButton);
 
     await waitFor(() => {
-      expect(mockUcApproveRequest).toHaveBeenCalledWith(
-        2,
-        5,
-        "Looks good to approve",
-      );
+      expect(mockUcApproveRequest).toHaveBeenCalledWith(2, 5, "Looks good to approve");
     });
   });
 
@@ -259,16 +247,14 @@ describe("CorrectionReview Component", () => {
     await waitFor(() => {
       expect(screen.getByText("Original Allocation")).toBeInTheDocument();
       expect(screen.getByText(/INFO1110/)).toBeInTheDocument();
-      expect(
-        screen.getByText(/Introduction to Programming/),
-      ).toBeInTheDocument();
+      expect(screen.getByText(/Introduction to Programming/)).toBeInTheDocument();
     });
   });
 
   test("should disable buttons while loading", () => {
     // Set loading state by making the promise never resolve
     mockGetTutorById.mockImplementation(
-      () => new Promise(() => {}), // Never resolves
+      () => new Promise(() => {}) // Never resolves
     );
 
     render(<CorrectionReview data={mockCorrectionRequest} />);

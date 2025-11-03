@@ -17,18 +17,12 @@ import { query } from "@/lib/db";
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const {
-      offeringId,
-      tutorId,
-      hours,
-      activityType = "Marking",
-      note = null,
-    } = body;
+    const { offeringId, tutorId, hours, activityType = "Marking", note = null } = body;
 
     if (!offeringId || !tutorId) {
       return NextResponse.json(
         { error: "Missing required fields (offeringId, tutorId)" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -65,10 +59,7 @@ export async function POST(req: Request) {
         AND mode = 'unscheduled'
       LIMIT 1;
     `;
-    const { rows: existingActivities } = await query(findActivitySQL, [
-      offeringId,
-      activityType,
-    ]);
+    const { rows: existingActivities } = await query(findActivitySQL, [offeringId, activityType]);
 
     let activityId: number;
     if (existingActivities.length > 0) {

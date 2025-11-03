@@ -39,16 +39,9 @@ describe("DetailRow Component", () => {
   });
 
   test("should handle long label text", () => {
-    render(
-      <DetailRow
-        label="Very Long Label Name That Might Wrap"
-        value="Test Value"
-      />,
-    );
+    render(<DetailRow label="Very Long Label Name That Might Wrap" value="Test Value" />);
 
-    expect(
-      screen.getByText("Very Long Label Name That Might Wrap:"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Very Long Label Name That Might Wrap:")).toBeInTheDocument();
     expect(screen.getByText("Test Value")).toBeInTheDocument();
   });
 
@@ -57,14 +50,14 @@ describe("DetailRow Component", () => {
       <DetailRow
         label="Description"
         value="This is a very long description that might wrap across multiple lines in the display"
-      />,
+      />
     );
 
     expect(screen.getByText("Description:")).toBeInTheDocument();
     expect(
       screen.getByText(
-        "This is a very long description that might wrap across multiple lines in the display",
-      ),
+        "This is a very long description that might wrap across multiple lines in the display"
+      )
     ).toBeInTheDocument();
   });
 });

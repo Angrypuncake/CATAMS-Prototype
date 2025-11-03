@@ -87,9 +87,7 @@ describe("ClaimReview Component", () => {
   test("should handle API errors gracefully", async () => {
     const consoleErrorSpy = jest.spyOn(console, "error").mockImplementation();
 
-    mockGetAllocationById.mockRejectedValue(
-      new Error("Failed to fetch allocation"),
-    );
+    mockGetAllocationById.mockRejectedValue(new Error("Failed to fetch allocation"));
     mockGetTutorById.mockRejectedValue(new Error("Failed to fetch tutor"));
 
     render(<ClaimReview data={mockClaimRequest} />);
@@ -97,7 +95,7 @@ describe("ClaimReview Component", () => {
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(
         "Failed to fetch allocation details:",
-        expect.any(Error),
+        expect.any(Error)
       );
     });
 
@@ -128,9 +126,7 @@ describe("ClaimReview Component", () => {
 
     // Find the paycode span element
     const spans = container.querySelectorAll("span");
-    const paycodeSpan = Array.from(spans).find(
-      (span) => span.textContent === "CASUAL",
-    );
+    const paycodeSpan = Array.from(spans).find((span) => span.textContent === "CASUAL");
 
     // When paycode matches, style should have color: "inherit" (not red)
     expect(paycodeSpan).toBeDefined();

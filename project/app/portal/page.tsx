@@ -1,16 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import {
-  Button,
-  Typography,
-  Card,
-  CardContent,
-  CardActions,
-} from "@mui/material";
-import axios from "axios";
-import MinimalNav from "@/components/MinimalNav";
+import { Button, Typography, Card, CardContent, CardActions } from "@mui/material";
 import SchoolIcon from "@mui/icons-material/School";
 import GroupsIcon from "@mui/icons-material/Groups";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
@@ -68,13 +59,9 @@ export default function PortalPage() {
           >
             Casual Academic Time Allocation System
           </Typography>
-          <Typography
-            variant="h6"
-            color="text.secondary"
-            sx={{ maxWidth: 900, mt: 1 }}
-          >
-            One portal for coordinators, TAs, admins, and tutors to view
-            schedules and manage teaching allocations
+          <Typography variant="h6" color="text.secondary" sx={{ maxWidth: 900, mt: 1 }}>
+            One portal for coordinators, TAs, admins, and tutors to view schedules and manage
+            teaching allocations
           </Typography>
         </header>
 
@@ -106,11 +93,7 @@ export default function PortalPage() {
                 <Typography variant="h6" fontWeight={700} sx={{ mt: 1 }}>
                   {d.title}
                 </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ mt: 0.5 }}
-                >
+                <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
                   {d.description}
                 </Typography>
               </CardContent>

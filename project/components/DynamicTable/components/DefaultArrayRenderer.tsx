@@ -7,10 +7,7 @@ interface DefaultArrayRendererProps {
   maxChips?: number;
 }
 
-export const DefaultArrayRenderer = ({
-  arr,
-  maxChips = 4,
-}: DefaultArrayRendererProps) => {
+export const DefaultArrayRenderer = ({ arr, maxChips = 4 }: DefaultArrayRendererProps) => {
   const chips = arr.slice(0, maxChips);
   const remaining = arr.length - chips.length;
 
@@ -30,9 +27,7 @@ export const DefaultArrayRenderer = ({
           sx={{ maxWidth: 180 }}
         />
       ))}
-      {remaining > 0 && (
-        <Chip size="small" variant="outlined" label={`+${remaining} more`} />
-      )}
+      {remaining > 0 && <Chip size="small" variant="outlined" label={`+${remaining} more`} />}
     </Stack>
   );
 };

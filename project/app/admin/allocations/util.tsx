@@ -26,9 +26,7 @@ export function toInputDate(isoDate: string | null) {
   return isoDate.substring(0, 10);
 }
 
-export function labelName(
-  row: Pick<AllocationRow, "first_name" | "last_name">,
-) {
+export function labelName(row: Pick<AllocationRow, "first_name" | "last_name">) {
   const fn = row.first_name ?? "";
   const ln = row.last_name ?? "";
   return `${fn} ${ln}`.trim() || "—";
@@ -75,9 +73,7 @@ export function hoursFromTimes(start_at: string | null, end_at: string | null) {
   return ms > 0 ? Math.round((ms / 36e5) * 10) / 10 : 2;
 }
 export function weekKeyFor(date: Date, termStart: Date) {
-  const diffDays = Math.floor(
-    (date.getTime() - termStart.getTime()) / 86400000,
-  );
+  const diffDays = Math.floor((date.getTime() - termStart.getTime()) / 86400000);
   const wk = Math.floor(diffDays / 7);
   return `W${wk}`;
 }
@@ -96,12 +92,11 @@ import { ActivityRow, CellAllocation } from "./components/TimelineView";
 /** Convert table rows -> Timeline activities (scheduled rows only) */
 export function rowsToTimelineActivities(
   rows: AllocationRow[],
-  opts: { termStart: Date; termLabel: string },
+  opts: { termStart: Date; termLabel: string }
 ): ActivityRow[] {
   const map = new Map<string, ActivityRow>();
   for (const r of rows) {
-    const isScheduled =
-      r.mode === "scheduled" || (r.mode == null && !!r.session_date);
+    const isScheduled = r.mode === "scheduled" || (r.mode == null && !!r.session_date);
     if (!isScheduled) continue;
     const date = parseDateSafe(r.session_date);
     if (!date) continue;
@@ -128,10 +123,7 @@ export function rowsToTimelineActivities(
 
     const existing = act.allocations[wk];
     if (!existing) act.allocations[wk] = [cell];
-    else
-      act.allocations[wk] = Array.isArray(existing)
-        ? [...existing, cell]
-        : [existing, cell];
+    else act.allocations[wk] = Array.isArray(existing) ? [...existing, cell] : [existing, cell];
   }
   return Array.from(map.values());
 }

@@ -7,7 +7,7 @@ export type TableRowData<T = Record<string, unknown>> = T & {
 export type ColumnRenderer<T = Record<string, unknown>> = (
   value: T[keyof T],
   row: TableRowData<T>,
-  key: keyof T & string,
+  key: keyof T & string
 ) => React.ReactNode;
 
 export type ActionButton<T = Record<string, unknown>> = {

@@ -30,11 +30,7 @@ export default function HelpPage() {
             <Typography variant="h4" component="h1" fontWeight="bold">
               CATAMS — Help & User Guide
             </Typography>
-            <Typography
-              variant="subtitle1"
-              color="text.secondary"
-              sx={{ mt: 1 }}
-            >
+            <Typography variant="subtitle1" color="text.secondary" sx={{ mt: 1 }}>
               Tutor Allocation Management System
             </Typography>
           </Box>
@@ -56,10 +52,9 @@ export default function HelpPage() {
               Overview
             </Typography>
             <Typography paragraph>
-              CATAMS helps coordinators plan and assign teaching activities,
-              tutors track their work, and administrators keep data consistent
-              across the semester. This guide explains the core screens and
-              common actions.
+              CATAMS helps coordinators plan and assign teaching activities, tutors track their
+              work, and administrators keep data consistent across the semester. This guide explains
+              the core screens and common actions.
             </Typography>
           </section>
 
@@ -71,9 +66,8 @@ export default function HelpPage() {
               Getting Started
             </Typography>
             <Typography paragraph>
-              Use the <b>Portal</b> to choose the area that matches your role.
-              If you don’t have an account or can’t access a page listed below,
-              contact support.
+              Use the <b>Portal</b> to choose the area that matches your role. If you don’t have an
+              account or can’t access a page listed below, contact support.
             </Typography>
             <Box textAlign="center" sx={{ mt: 1 }}>
               <Button
@@ -103,32 +97,29 @@ export default function HelpPage() {
               <Paper variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
                 <Typography fontWeight="bold">Tutor</Typography>
                 <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-                  Access: Tutor Dashboard, My Allocations, Requests
-                  (Swap/Cancellation), Claims
+                  Access: Tutor Dashboard, My Allocations, Requests (Swap/Cancellation), Claims
                 </Typography>
               </Paper>
 
               <Paper variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
                 <Typography fontWeight="bold">Teaching Assistant</Typography>
                 <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-                  Access: Assistant Dashboard, Session Support, Review Tasks (as
-                  assigned)
+                  Access: Assistant Dashboard, Session Support, Review Tasks (as assigned)
                 </Typography>
               </Paper>
 
               <Paper variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
                 <Typography fontWeight="bold">Coordinator</Typography>
                 <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-                  Access: Coordinator Dashboard, Manual/Unscheduled Allocation,
-                  Request Review, Unit Offerings
+                  Access: Coordinator Dashboard, Manual/Unscheduled Allocation, Request Review, Unit
+                  Offerings
                 </Typography>
               </Paper>
 
               <Paper variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
                 <Typography fontWeight="bold">System Admin</Typography>
                 <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-                  Access: Admin Dashboard, User Management, Data Consistency,
-                  System Settings
+                  Access: Admin Dashboard, User Management, Data Consistency, System Settings
                 </Typography>
               </Paper>
             </Box>
@@ -144,36 +135,34 @@ export default function HelpPage() {
 
             <Box className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Paper variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
-                <Typography fontWeight="bold">
-                  Create a Manual Allocation
-                </Typography>
+                <Typography fontWeight="bold">Create a Manual Allocation</Typography>
                 <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-                  Coordinators can create unscheduled activities and assign
-                  tutors with defined hours and notes for tracking and approval.
+                  Coordinators can create unscheduled activities and assign tutors with defined
+                  hours and notes for tracking and approval.
                 </Typography>
               </Paper>
 
               <Paper variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
                 <Typography fontWeight="bold">Submit a Request</Typography>
                 <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-                  Tutors can request a swap or cancellation for an allocation
-                  with a reason and optional supporting details.
+                  Tutors can request a swap or cancellation for an allocation with a reason and
+                  optional supporting details.
                 </Typography>
               </Paper>
 
               <Paper variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
                 <Typography fontWeight="bold">Review Requests</Typography>
                 <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-                  Coordinators review request context, verify allocation
-                  details, and approve or reject with a short decision note.
+                  Coordinators review request context, verify allocation details, and approve or
+                  reject with a short decision note.
                 </Typography>
               </Paper>
 
               <Paper variant="outlined" sx={{ p: 2, borderRadius: 0 }}>
                 <Typography fontWeight="bold">Manage Users & Data</Typography>
                 <Typography color="text.secondary" sx={{ mt: 0.5 }}>
-                  Admins can add/update users and keep allocation/activity
-                  records consistent across the term.
+                  Admins can add/update users and keep allocation/activity records consistent across
+                  the term.
                 </Typography>
               </Paper>
             </Box>
@@ -193,9 +182,9 @@ export default function HelpPage() {
               <Chip label="Cancelled" size="small" variant="outlined" />
             </Box>
             <Typography color="text.secondary">
-              <b>Draft</b> — created but not finalized; <b>Approved</b> —
-              authorized and ready to action; <b>Claimed</b> — included in a
-              tutor claim; <b>Cancelled</b> — no longer active or valid.
+              <b>Draft</b> — created but not finalized; <b>Approved</b> — authorized and ready to
+              action; <b>Claimed</b> — included in a tutor claim; <b>Cancelled</b> — no longer
+              active or valid.
             </Typography>
           </section>
 
@@ -208,20 +197,18 @@ export default function HelpPage() {
             </Typography>
             <Box className="space-y-1.5">
               <Term label="Allocation">
-                A unit of assigned work (hours, activity type, tutor, notes)
-                that may be scheduled or unscheduled.
+                A unit of assigned work (hours, activity type, tutor, notes) that may be scheduled
+                or unscheduled.
               </Term>
               <Term label="Teaching Activity">
-                A class of work (e.g., Tutorial, Lecture, Marking, Consultation)
-                associated with a unit offering.
+                A class of work (e.g., Tutorial, Lecture, Marking, Consultation) associated with a
+                unit offering.
               </Term>
               <Term label="Session Occurrence">
-                A specific instance of a teaching activity (e.g., Week 3
-                Tutorial, Thu 2pm).
+                A specific instance of a teaching activity (e.g., Week 3 Tutorial, Thu 2pm).
               </Term>
               <Term label="Unit Offering">
-                A course unit in a particular year/session (e.g., INFO1111, 2025
-                S1).
+                A course unit in a particular year/session (e.g., INFO1111, 2025 S1).
               </Term>
             </Box>
           </section>
@@ -236,30 +223,25 @@ export default function HelpPage() {
 
             <Accordion disableGutters sx={{ borderRadius: 0 }}>
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography>
-                  Why don’t I see a page listed under my role?
-                </Typography>
+                <Typography>Why don’t I see a page listed under my role?</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 <Typography color="text.secondary">
-                  Your account may not have the required permissions yet.
-                  Contact support with your name, Uni email, and role so we can
-                  enable access.
+                  Your account may not have the required permissions yet. Contact support with your
+                  name, Uni email, and role so we can enable access.
                 </Typography>
               </AccordionDetails>
             </Accordion>
 
             <Accordion disableGutters sx={{ borderRadius: 0 }}>
               <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                <Typography>
-                  How do I know if an allocation is active?
-                </Typography>
+                <Typography>How do I know if an allocation is active?</Typography>
               </AccordionSummary>
               <AccordionDetails>
                 <Typography color="text.secondary">
-                  Check the status shown alongside the allocation.{" "}
-                  <b>Approved</b> indicates it’s ready; <b>Cancelled</b> items
-                  are inactive; <b>Draft</b> means it’s still being prepared.
+                  Check the status shown alongside the allocation. <b>Approved</b> indicates it’s
+                  ready; <b>Cancelled</b> items are inactive; <b>Draft</b> means it’s still being
+                  prepared.
                 </Typography>
               </AccordionDetails>
             </Accordion>
@@ -273,8 +255,8 @@ export default function HelpPage() {
               Need More Help?
             </Typography>
             <Typography color="text.secondary" paragraph>
-              Email <b>support@catams.example.edu</b> with your name, Uni email,
-              and a short description of the issue.
+              Email <b>support@catams.example.edu</b> with your name, Uni email, and a short
+              description of the issue.
             </Typography>
             <Box textAlign="center">
               <Button
@@ -299,13 +281,7 @@ export default function HelpPage() {
 }
 
 /** Small helper for consistent term rows */
-function Term({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
+function Term({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <Box>
       <Typography component="span" fontWeight="bold">

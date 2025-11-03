@@ -121,9 +121,7 @@ describe("SwapReview component", () => {
     expect(screen.getByTestId("progress")).toBeInTheDocument();
 
     await waitFor(() => {
-      expect(
-        screen.getByText("Eligible Allocations for Swap"),
-      ).toBeInTheDocument();
+      expect(screen.getByText("Eligible Allocations for Swap")).toBeInTheDocument();
     });
 
     // Verify component renders with proper structure
@@ -132,9 +130,7 @@ describe("SwapReview component", () => {
     expect(screen.getByText("PENDING")).toBeInTheDocument();
 
     // Verify reviewer note field exists
-    const commentField = screen.getByPlaceholderText(
-      "Add notes for this decision...",
-    );
+    const commentField = screen.getByPlaceholderText("Add notes for this decision...");
     expect(commentField).toBeInTheDocument();
 
     // Update comment text field
@@ -142,21 +138,15 @@ describe("SwapReview component", () => {
     expect(commentField).toHaveValue("Looks good");
 
     // Verify buttons exist
-    expect(
-      screen.getByRole("button", { name: /Approve/i }),
-    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Approve/i })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Reject/i })).toBeInTheDocument();
   });
 
   it("handles no eligible allocations found", async () => {
-    (getAllocationsByUnitAndActivityType as jest.Mock).mockResolvedValueOnce(
-      [],
-    );
+    (getAllocationsByUnitAndActivityType as jest.Mock).mockResolvedValueOnce([]);
     render(<SwapReview data={baseData} />);
     await waitFor(() => {
-      expect(
-        screen.getByText("No eligible allocations found"),
-      ).toBeInTheDocument();
+      expect(screen.getByText("No eligible allocations found")).toBeInTheDocument();
     });
   });
 
@@ -169,13 +159,9 @@ describe("SwapReview component", () => {
   });
 
   it("renders approve button after loading completes", async () => {
-    (getAllocationsByUnitAndActivityType as jest.Mock).mockResolvedValueOnce(
-      [],
-    );
+    (getAllocationsByUnitAndActivityType as jest.Mock).mockResolvedValueOnce([]);
     render(<SwapReview data={baseData} />);
-    await waitFor(() =>
-      expect(screen.queryByTestId("progress")).not.toBeInTheDocument(),
-    );
+    await waitFor(() => expect(screen.queryByTestId("progress")).not.toBeInTheDocument());
 
     // Verify approve button exists after loading
     const approveButton = screen.getByRole("button", { name: /Approve/i });

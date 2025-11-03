@@ -7,10 +7,9 @@ export async function GET(req: NextRequest) {
     const limit = Math.min(Number(url.searchParams.get("limit") || 50), 200);
 
     // ---- STAGED BATCHES (not yet committed/discarded) ----
-    const [stagedResult, stagedCountResult, runsResult, runsCountResult] =
-      await Promise.all([
-        query(
-          `
+    const [stagedResult, stagedCountResult, runsResult, runsCountResult] = await Promise.all([
+      query(
+        `
       SELECT
         b.batch_id,
         b.created_at,
@@ -28,17 +27,17 @@ export async function GET(req: NextRequest) {
       ORDER BY b.batch_id DESC
       LIMIT $1
       `,
-          [limit],
-        ),
-        query(
-          `
+        [limit]
+      ),
+      query(
+        `
       SELECT COUNT(*)::int AS total
       FROM public.import_batch
       WHERE status = 'staged'
-      `,
-        ),
-        query(
-          `
+      `
+      ),
+      query(
+        `
       SELECT
         r.run_id,
         r.batch_id,
@@ -59,15 +58,15 @@ export async function GET(req: NextRequest) {
       ORDER BY r.run_id DESC
       LIMIT $1
       `,
-          [limit],
-        ),
-        query(
-          `
+        [limit]
+      ),
+      query(
+        `
       SELECT COUNT(*)::int AS total
       FROM public.import_run
-      `,
-        ),
-      ]);
+      `
+      ),
+    ]);
 
     return NextResponse.json({
       staged: stagedResult.rows,
@@ -77,9 +76,6 @@ export async function GET(req: NextRequest) {
     });
   } catch (e) {
     console.error("history error", e);
-    return NextResponse.json(
-      { error: "Failed to load history" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to load history" }, { status: 500 });
   }
 }

@@ -165,9 +165,7 @@ describe("DynamicTable utils", () => {
         download: "",
         click: jest.fn(),
       } as unknown as HTMLAnchorElement;
-      createElementSpy = jest
-        .spyOn(document, "createElement")
-        .mockReturnValue(mockLink);
+      createElementSpy = jest.spyOn(document, "createElement").mockReturnValue(mockLink);
       global.URL.createObjectURL = jest.fn(() => "mock-url");
       global.URL.revokeObjectURL = jest.fn();
     });
@@ -215,9 +213,7 @@ describe("DynamicTable utils", () => {
         download: "",
         click: jest.fn(),
       } as unknown as HTMLAnchorElement;
-      createElementSpy = jest
-        .spyOn(document, "createElement")
-        .mockReturnValue(mockLink);
+      createElementSpy = jest.spyOn(document, "createElement").mockReturnValue(mockLink);
       global.URL.createObjectURL = jest.fn(() => "mock-url");
       global.URL.revokeObjectURL = jest.fn();
     });

@@ -38,31 +38,17 @@ export interface TimelineViewProps<A extends ActivityRow = ActivityRow> {
   activities: A[];
   extraColumns?: ExtraColumn<A>[];
   density?: "regular" | "compact";
-  onCellClick?: (args: {
-    activity: A;
-    week: WeekDef;
-    cell?: CellValue;
-  }) => void;
+  onCellClick?: (args: { activity: A; week: WeekDef; cell?: CellValue }) => void;
   /** New: called by the tooltip button (only when the cell has allocations) */
-  onCellEdit?: (args: {
-    activity: A;
-    week: WeekDef;
-    cell: CellAllocation[];
-  }) => void;
+  onCellEdit?: (args: { activity: A; week: WeekDef; cell: CellAllocation[] }) => void;
   className?: string;
 }
 
 /* ===================== Helpers ===================== */
-const cx = (...cls: Array<string | false | undefined>) =>
-  cls.filter(Boolean).join(" ");
-export function buildWeeksRange(
-  start: number,
-  end: number,
-  termLabel = "S1",
-): WeekDef[] {
+const cx = (...cls: Array<string | false | undefined>) => cls.filter(Boolean).join(" ");
+export function buildWeeksRange(start: number, end: number, termLabel = "S1"): WeekDef[] {
   const out: WeekDef[] = [];
-  for (let i = start; i <= end; i++)
-    out.push({ key: `W${i}`, label: `${termLabel} Week ${i}` });
+  for (let i = start; i <= end; i++) out.push({ key: `W${i}`, label: `${termLabel} Week ${i}` });
   return out;
 }
 
@@ -98,10 +84,7 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
     return `${COL_ACTIVITY}px ${extras}`.trim();
   }, [extraColumns]);
 
-  const weeksTemplate = useMemo(
-    () => weeks.map(() => `${COL_WEEK}px`).join(" "),
-    [weeks],
-  );
+  const weeksTemplate = useMemo(() => weeks.map(() => `${COL_WEEK}px`).join(" "), [weeks]);
 
   const WeekHeaderCells = useMemo(
     () =>
@@ -115,14 +98,14 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
           {w.label}
         </div>
       )),
-    [weeks, headerH],
+    [weeks, headerH]
   );
 
   const tooltipContent = (
     act: ActivityRow,
     w: WeekDef,
     cellList: CellAllocation[],
-    onEdit?: () => void,
+    onEdit?: () => void
   ) => (
     <div className="text-[12px] leading-5">
       {cellList.map((c, i) => (
@@ -162,25 +145,17 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
     <div className={cx("w-full", className)}>
       <div className="mb-2 flex items-center justify-between">
         <h2 className="text-lg font-semibold">{title}</h2>
-        <div className="text-xs text-gray-500">
-          Rows: activities • Columns: weeks
-        </div>
+        <div className="text-xs text-gray-500">Rows: activities • Columns: weeks</div>
       </div>
 
       {/* Outer container fixed to page width — only weeks scroll horizontally */}
       <div className="border rounded overflow-hidden">
-        <div
-          className="grid"
-          style={{ gridTemplateColumns: `${leftWidthPx}px 1fr` }}
-        >
+        <div className="grid" style={{ gridTemplateColumns: `${leftWidthPx}px 1fr` }}>
           {/* LEFT rail: header + rows */}
           <div>
             {/* Left header */}
             <div className="bg-gray-50 sticky top-0 z-30">
-              <div
-                className="grid"
-                style={{ gridTemplateColumns: leftGridTemplate }}
-              >
+              <div className="grid" style={{ gridTemplateColumns: leftGridTemplate }}>
                 <div
                   className="border-b border-gray-200 px-4 flex items-center text-xs font-semibold"
                   style={{ height: headerH }}
@@ -202,14 +177,8 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
             {/* Left rows */}
             <div>
               {activities.map((act, idx) => (
-                <div
-                  key={act.id}
-                  className={cx(idx % 2 === 1 && "bg-gray-50/40")}
-                >
-                  <div
-                    className="grid"
-                    style={{ gridTemplateColumns: leftGridTemplate }}
-                  >
+                <div key={act.id} className={cx(idx % 2 === 1 && "bg-gray-50/40")}>
+                  <div className="grid" style={{ gridTemplateColumns: leftGridTemplate }}>
                     {/* Activity cell */}
                     <div
                       className="border-t border-gray-200 px-4 flex items-center gap-3 text-sm"
@@ -225,12 +194,8 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
                         {act.paycode || act.flexTotal !== undefined ? (
                           <div className="truncate text-xs text-gray-500">
                             {act.paycode ? `Pay ${act.paycode}` : ""}
-                            {act.paycode && act.flexTotal !== undefined
-                              ? " • "
-                              : ""}
-                            {act.flexTotal !== undefined
-                              ? `Flex ${act.flexTotal}`
-                              : ""}
+                            {act.paycode && act.flexTotal !== undefined ? " • " : ""}
+                            {act.flexTotal !== undefined ? `Flex ${act.flexTotal}` : ""}
                           </div>
                         ) : null}
                       </div>
@@ -265,21 +230,11 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
             {/* Weeks rows */}
             <div>
               {activities.map((act, idx) => (
-                <div
-                  key={act.id}
-                  className={cx(idx % 2 === 1 && "bg-gray-50/40")}
-                >
-                  <div
-                    className="grid"
-                    style={{ gridTemplateColumns: weeksTemplate }}
-                  >
+                <div key={act.id} className={cx(idx % 2 === 1 && "bg-gray-50/40")}>
+                  <div className="grid" style={{ gridTemplateColumns: weeksTemplate }}>
                     {weeks.map((w) => {
                       const raw = act.allocations[w.key];
-                      const items: CellAllocation[] = Array.isArray(raw)
-                        ? raw
-                        : raw
-                          ? [raw]
-                          : [];
+                      const items: CellAllocation[] = Array.isArray(raw) ? raw : raw ? [raw] : [];
 
                       return (
                         <Tooltip
@@ -297,7 +252,7 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
                                           week: w,
                                           cell: items,
                                         })
-                                    : undefined,
+                                    : undefined
                                 )
                               : "No allocation"
                           }
@@ -325,10 +280,8 @@ export function TimelineView<A extends ActivityRow = ActivityRow>({
                             data-grid-cell="1"
                             className={cx(
                               "w-full border-t border-l border-gray-200 px-2 text-xs text-left outline-none bg-white",
-                              items.length
-                                ? "font-medium text-gray-900"
-                                : "text-gray-400",
-                              "focus-visible:ring-2 focus-visible:ring-indigo-500",
+                              items.length ? "font-medium text-gray-900" : "text-gray-400",
+                              "focus-visible:ring-2 focus-visible:ring-indigo-500"
                             )}
                             style={{ height: rowH }}
                             onClick={() =>

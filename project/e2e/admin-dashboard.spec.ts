@@ -9,15 +9,13 @@ test("navigate to Admin dashboard after login", async ({ page }) => {
   await expect(
     page.getByRole("heading", {
       name: /Casual Academic Time Allocation System/i,
-    }),
+    })
   ).toBeVisible();
 
   await page.getByRole("link", { name: /enter/i }).nth(3).click();
   await page.waitForURL("**/dashboard/admin");
   await expect(page).toHaveURL(/\/dashboard\/admin/);
-  await expect(
-    page.getByRole("heading", { name: /system admin dashboard/i }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: /system admin dashboard/i })).toBeVisible();
 });
 
 test("admin can view system statistics", async ({ page }) => {
@@ -88,9 +86,7 @@ test("admin can navigate to edit allocations", async ({ page }) => {
   await expect(page).toHaveURL(/\/admin\/allocations/);
 });
 
-test("admin can toggle between staged and runs in import history", async ({
-  page,
-}) => {
+test("admin can toggle between staged and runs in import history", async ({ page }) => {
   await page.route("**/api/admin/history**", async (route) => {
     await route.fulfill({
       status: 200,
@@ -161,9 +157,7 @@ test("admin can view validation reports", async ({ page }) => {
   await page.waitForURL("**/dashboard/admin");
 
   await expect(page.getByText(/validation reports/i)).toBeVisible();
-  await expect(
-    page.getByRole("button", { name: /invalid tutor emails/i }),
-  ).toBeVisible();
+  await expect(page.getByRole("button", { name: /invalid tutor emails/i })).toBeVisible();
 });
 
 test("admin can view user and role management table", async ({ page }) => {

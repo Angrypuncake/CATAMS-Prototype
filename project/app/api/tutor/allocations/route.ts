@@ -7,10 +7,7 @@ import { query } from "@/lib/db";
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const page = Math.max(1, Number(searchParams.get("page") ?? 1));
-  const limit = Math.min(
-    Math.max(1, Number(searchParams.get("limit") ?? 50)),
-    100,
-  );
+  const limit = Math.min(Math.max(1, Number(searchParams.get("limit") ?? 50)), 100);
   const offset = (page - 1) * limit;
 
   // For demo: just grab ?userId=... from the URL
@@ -64,8 +61,7 @@ export async function GET(req: Request) {
     paramIndex++;
   }
 
-  const where =
-    whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
+  const where = whereClauses.length > 0 ? `WHERE ${whereClauses.join(" AND ")}` : "";
 
   // Build ORDER BY clause - map frontend column names to SQL columns
   const columnMapping: Record<string, string> = {
@@ -80,9 +76,7 @@ export async function GET(req: Request) {
   };
 
   const orderByColumn =
-    sortColumn && columnMapping[sortColumn]
-      ? columnMapping[sortColumn]
-      : "so.session_date";
+    sortColumn && columnMapping[sortColumn] ? columnMapping[sortColumn] : "so.session_date";
 
   const orderBy = `ORDER BY ${orderByColumn} ${sortDirection}, a.allocation_id`;
 

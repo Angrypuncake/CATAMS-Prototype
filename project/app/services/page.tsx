@@ -15,11 +15,7 @@ import {
   // example: createSwapRequest, updateAllocationStatus, etc.
 } from "@/app/services/allocationService";
 
-import {
-  getTutorById,
-  getTutors,
-  getTutorsByUnit,
-} from "@/app/services/userService";
+import { getTutorById, getTutors, getTutorsByUnit } from "@/app/services/userService";
 import { getRequestById } from "./requestService";
 import { TutorRequest } from "../_types/request";
 import UserServiceTester from "./components/UserServiceTester";
@@ -28,9 +24,7 @@ import UserServiceTester from "./components/UserServiceTester";
 export default function ServicesTestPage() {
   // --- 1️⃣ Local React state variables ---
   // These hold data from your API calls or any errors/loading info.
-  const [tutorAllocationData, setTutorAllocationData] = useState<
-    TutorAllocationRow[]
-  >([]);
+  const [tutorAllocationData, setTutorAllocationData] = useState<TutorAllocationRow[]>([]);
   const [unitData, setUnitData] = useState<TutorAllocationRow[]>([]);
   const [tutorData, setTutorData] = useState<Tutor[]>([]);
   const [requestData, setRequestData] = useState<TutorRequest | null>(null);

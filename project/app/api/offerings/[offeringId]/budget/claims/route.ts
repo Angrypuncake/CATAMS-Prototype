@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
-export async function GET(
-  _req: Request,
-  context: { params: Promise<{ offeringId: string }> },
-) {
+export async function GET(_req: Request, context: { params: Promise<{ offeringId: string }> }) {
   const { offeringId } = await context.params;
   const id = Number(offeringId);
   if (isNaN(id)) {
@@ -23,7 +20,7 @@ export async function GET(
       JOIN unit_offering u ON t.unit_offering_id = u.offering_id
       WHERE u.offering_id = $1;
       `,
-      [id],
+      [id]
     );
 
     const totalClaimed = Number(result.rows[0]?.total_claimed ?? 0);
@@ -31,9 +28,6 @@ export async function GET(
     return NextResponse.json({ totalClaimed });
   } catch (err) {
     console.error("Error fetching total claimed amount:", err);
-    return NextResponse.json(
-      { error: "Failed to fetch total claimed amount" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch total claimed amount" }, { status: 500 });
   }
 }

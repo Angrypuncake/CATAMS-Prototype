@@ -51,9 +51,7 @@ export function FilterControls({
       </div>
 
       <div className="min-w-[200px]">
-        <label className="block text-sm text-gray-600 mb-1">
-          Activity Type
-        </label>
+        <label className="block text-sm text-gray-600 mb-1">Activity Type</label>
         <input
           value={activityType}
           onChange={(e) => onActivityTypeChange(e.target.value)}

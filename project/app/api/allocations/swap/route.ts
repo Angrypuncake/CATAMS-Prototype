@@ -14,10 +14,7 @@ export async function PATCH(req: Request) {
 
     if (!allocA || !allocB || Number.isNaN(allocA) || Number.isNaN(allocB)) {
       console.warn("⚠️ Invalid allocation IDs detected");
-      return NextResponse.json(
-        { error: "Invalid allocation IDs" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid allocation IDs" }, { status: 400 });
     }
 
     // 1️⃣ Fetch both allocations
@@ -32,10 +29,7 @@ export async function PATCH(req: Request) {
 
     if (rows.length !== 2) {
       console.warn("⚠️ Missing allocations for one or both IDs");
-      return NextResponse.json(
-        { error: "One or both allocations not found" },
-        { status: 404 },
-      );
+      return NextResponse.json({ error: "One or both allocations not found" }, { status: 404 });
     }
 
     // ✅ Convert user_ids to integers (fixes your error)
@@ -51,10 +45,7 @@ export async function PATCH(req: Request) {
     });
 
     if (Number.isNaN(userA) || Number.isNaN(userB)) {
-      return NextResponse.json(
-        { error: "Invalid user_id values" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Invalid user_id values" }, { status: 400 });
     }
 
     // 2️⃣ Perform swap
@@ -98,7 +89,7 @@ export async function PATCH(req: Request) {
     console.error(" [SWAP ERROR]:", error);
     return NextResponse.json(
       { error: error instanceof Error ? error.message : String(error) },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

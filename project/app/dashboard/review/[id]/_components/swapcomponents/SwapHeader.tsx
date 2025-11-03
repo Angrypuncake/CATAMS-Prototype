@@ -10,11 +10,7 @@ export default function SwapHeader({
   createdAt: string;
 }) {
   const color =
-    requestStatus === "approved"
-      ? "success"
-      : requestStatus === "rejected"
-        ? "error"
-        : "warning";
+    requestStatus === "approved" ? "success" : requestStatus === "rejected" ? "error" : "warning";
 
   return (
     <Box display="flex" justifyContent="space-between" alignItems="center">
@@ -23,8 +19,7 @@ export default function SwapHeader({
           Swap Request Review
         </Typography>
         <Typography variant="body2" color="text.secondary" mt={0.5}>
-          Request ID: {requestId} • Created:{" "}
-          {new Date(createdAt).toLocaleString()}
+          Request ID: {requestId} • Created: {new Date(createdAt).toLocaleString()}
         </Typography>
       </Box>
       <Chip label={requestStatus.toUpperCase()} color={color} />

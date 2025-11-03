@@ -27,17 +27,8 @@ describe("TutorCombo", () => {
 
   const mockOnChange = jest.fn();
 
-  const renderTutorCombo = (
-    props?: Partial<React.ComponentProps<typeof TutorCombo>>,
-  ) =>
-    render(
-      <TutorCombo
-        options={mockTutors}
-        valueId={null}
-        onChange={mockOnChange}
-        {...props}
-      />,
-    );
+  const renderTutorCombo = (props?: Partial<React.ComponentProps<typeof TutorCombo>>) =>
+    render(<TutorCombo options={mockTutors} valueId={null} onChange={mockOnChange} {...props} />);
 
   beforeEach(() => jest.clearAllMocks());
 
@@ -49,9 +40,7 @@ describe("TutorCombo", () => {
 
     test("displays selected tutor name and email", () => {
       renderTutorCombo({ valueId: 1 });
-      expect(
-        screen.getByText("John Doe (john.doe@example.com)"),
-      ).toBeInTheDocument();
+      expect(screen.getByText("John Doe (john.doe@example.com)")).toBeInTheDocument();
     });
   });
 
@@ -59,15 +48,11 @@ describe("TutorCombo", () => {
     test("opens on click and closes after selection", () => {
       renderTutorCombo();
       fireEvent.click(screen.getByText("Select tutor…"));
-      expect(
-        screen.getByPlaceholderText("Search name or email…"),
-      ).toBeInTheDocument();
+      expect(screen.getByPlaceholderText("Search name or email…")).toBeInTheDocument();
 
       fireEvent.click(screen.getByText("John Doe"));
       expect(mockOnChange).toHaveBeenCalledWith(mockTutors[0]);
-      expect(
-        screen.queryByPlaceholderText("Search name or email…"),
-      ).not.toBeInTheDocument();
+      expect(screen.queryByPlaceholderText("Search name or email…")).not.toBeInTheDocument();
     });
   });
 

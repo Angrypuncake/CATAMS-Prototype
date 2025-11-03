@@ -55,9 +55,7 @@ export async function GET(req: Request) {
       whereParts.push(`cu.unit_code = $${params.length}`);
     }
 
-    const whereSQL = whereParts.length
-      ? `WHERE ${whereParts.join(" AND ")}`
-      : "";
+    const whereSQL = whereParts.length ? `WHERE ${whereParts.join(" AND ")}` : "";
 
     const sql = `
       SELECT DISTINCT

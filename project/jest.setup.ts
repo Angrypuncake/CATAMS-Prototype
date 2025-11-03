@@ -5,10 +5,7 @@ const originalWarn = console.warn;
 // Create wrapper functions that filter specific warnings
 const filteredError = (...args: unknown[]) => {
   // Suppress React act() warnings - these are expected for async state updates
-  if (
-    typeof args[0] === "string" &&
-    args[0].includes("not wrapped in act(...)")
-  ) {
+  if (typeof args[0] === "string" && args[0].includes("not wrapped in act(...)")) {
     return;
   }
   // Suppress React key prop warnings in tests
@@ -23,10 +20,7 @@ const filteredError = (...args: unknown[]) => {
 
 const filteredWarn = (...args: unknown[]) => {
   // Suppress MUI Grid v2 migration warnings - already fixed in code
-  if (
-    typeof args[0] === "string" &&
-    args[0].includes("MUI Grid: The `md` prop has been removed")
-  ) {
+  if (typeof args[0] === "string" && args[0].includes("MUI Grid: The `md` prop has been removed")) {
     return;
   }
   originalWarn.call(console, ...args);

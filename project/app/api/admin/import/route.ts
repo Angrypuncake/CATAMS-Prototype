@@ -7,8 +7,7 @@ export async function POST(req: NextRequest) {
   try {
     const fd = await req.formData();
     const file = fd.get("file") as File | null;
-    if (!file)
-      return NextResponse.json({ error: "Missing file" }, { status: 400 });
+    if (!file) return NextResponse.json({ error: "Missing file" }, { status: 400 });
 
     const name = file.name.toLowerCase();
     let records: unknown[] = [];
@@ -24,10 +23,7 @@ export async function POST(req: NextRequest) {
       const sh = wb.Sheets[wb.SheetNames[0]];
       records = XLSX.utils.sheet_to_json(sh, { raw: true, range: 2 });
     } else {
-      return NextResponse.json(
-        { error: "Unsupported file type" },
-        { status: 400 },
-      );
+      return NextResponse.json({ error: "Unsupported file type" }, { status: 400 });
     }
 
     const MAX_INSERT = 2000;
@@ -35,9 +31,7 @@ export async function POST(req: NextRequest) {
 
     // --- NEW: create batch + insert ---
     await query("BEGIN");
-    const { rows: b } = await query(
-      `INSERT INTO import_batch DEFAULT VALUES RETURNING batch_id`,
-    );
+    const { rows: b } = await query(`INSERT INTO import_batch DEFAULT VALUES RETURNING batch_id`);
     const stagingId: number = b[0].batch_id;
 
     if (limited.length) {
@@ -74,7 +68,7 @@ export async function POST(req: NextRequest) {
           faculty text, school text, department text, units_hours text
         );
         `,
-        [json, stagingId],
+        [json, stagingId]
       );
     }
 
@@ -92,9 +86,6 @@ export async function POST(req: NextRequest) {
     try {
       await query("ROLLBACK");
     } catch {}
-    return NextResponse.json(
-      { error: "Failed to import file" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to import file" }, { status: 500 });
   }
 }

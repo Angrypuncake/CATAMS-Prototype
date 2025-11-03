@@ -11,7 +11,7 @@ export async function POST(req: NextRequest) {
   if (!Number.isInteger(batchId)) {
     return NextResponse.json(
       { error: "Missing or invalid batchId/stagingId", got: body },
-      { status: 400 },
+      { status: 400 }
     );
   }
 
@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
       `SELECT COUNT(*)::int AS n
          FROM import_run
         WHERE batch_id = $1 AND status = 'committed'`,
-      [batchId],
+      [batchId]
     );
     const committedCount = r?.[0]?.n ?? 0;
 
@@ -32,30 +32,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         {
           error: "Batch has committed data",
-          detail:
-            "Use /api/admin/rollback to revert committed runs before discarding the batch.",
+          detail: "Use /api/admin/rollback to revert committed runs before discarding the batch.",
           committedRuns: committedCount,
         },
-        { status: 409 },
+        { status: 409 }
       );
     }
 
     // No committed runs: safe to discard staging
-    await query(`DELETE FROM allocations_staging WHERE batch_id = $1`, [
-      batchId,
-    ]);
-    await query(
-      `UPDATE import_batch SET status = 'discarded' WHERE batch_id = $1`,
-      [batchId],
-    );
+    await query(`DELETE FROM allocations_staging WHERE batch_id = $1`, [batchId]);
+    await query(`UPDATE import_batch SET status = 'discarded' WHERE batch_id = $1`, [batchId]);
 
     await query("COMMIT");
     return NextResponse.json({ discarded: true, batchId });
   } catch (err) {
     await query("ROLLBACK");
-    return NextResponse.json(
-      { error: "Discard failed", detail: String(err) },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Discard failed", detail: String(err) }, { status: 500 });
   }
 }

@@ -1,23 +1,11 @@
 "use client";
-import {
-  Typography,
-  Paper,
-  Box,
-  TextField,
-  Button,
-  Stack,
-  Divider,
-} from "@mui/material";
+import { Typography, Paper, Box, TextField, Button, Stack, Divider } from "@mui/material";
 import type { TutorRequest } from "@/app/_types/request";
 import ReviewLayout from "./ReviewLayout";
 import { useEffect, useState } from "react";
 import { Tutor } from "@/app/_types/tutor";
 import { getTutorById } from "@/app/services/userService";
-import {
-  ucRejectRequest,
-  taForwardToUC,
-  taRejectRequest,
-} from "@/app/services/requestService";
+import { ucRejectRequest, taForwardToUC, taRejectRequest } from "@/app/services/requestService";
 
 type ReviewRole = "UC" | "TA" | "USER";
 
@@ -32,8 +20,7 @@ export default function QueryReview({
   readOnly?: boolean;
   currentUserId?: number;
 }) {
-  const { requesterId, requestReason, createdAt, requestStatus, requestId } =
-    data;
+  const { requesterId, requestReason, createdAt, requestStatus, requestId } = data;
   const [tutor, setTutor] = useState<Tutor | null>(null);
   const [response, setResponse] = useState("");
   const [reviewerNote, setReviewerNote] = useState("");
@@ -62,7 +49,7 @@ export default function QueryReview({
       Number(requestId),
       currentUserId,
       undefined,
-      reviewerNote || response || undefined,
+      reviewerNote || response || undefined
     );
   };
   const forwardTA = async () => {
@@ -71,7 +58,7 @@ export default function QueryReview({
       Number(requestId),
       currentUserId,
       requestReason ?? undefined,
-      reviewerNote || response || undefined,
+      reviewerNote || response || undefined
     );
   };
   const rejectTA = async () => {
@@ -80,7 +67,7 @@ export default function QueryReview({
       Number(requestId),
       currentUserId,
       requestReason ?? undefined,
-      reviewerNote || response || undefined,
+      reviewerNote || response || undefined
     );
   };
 
@@ -113,9 +100,7 @@ export default function QueryReview({
               </Typography>
             </Stack>
           ) : (
-            <Typography color="text.secondary">
-              Loading tutor info...
-            </Typography>
+            <Typography color="text.secondary">Loading tutor info...</Typography>
           )}
         </Paper>
 
@@ -134,30 +119,19 @@ export default function QueryReview({
             <Typography variant="h6" fontWeight={600} gutterBottom>
               Tutor Query
             </Typography>
-            <Typography
-              color="text.secondary"
-              sx={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}
-            >
+            <Typography color="text.secondary" sx={{ whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
               {requestReason || "No query message provided."}
             </Typography>
           </Box>
           <Divider sx={{ my: 2 }} />
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{ alignSelf: "flex-end" }}
-          >
-            Submitted on: {new Date(createdAt).toLocaleString()} • Status:{" "}
-            {requestStatus}
+          <Typography variant="body2" color="text.secondary" sx={{ alignSelf: "flex-end" }}>
+            Submitted on: {new Date(createdAt).toLocaleString()} • Status: {requestStatus}
           </Typography>
         </Paper>
       </Box>
 
       {/* Reviewer Response (note: disabled if readOnly/USER) */}
-      <Paper
-        variant="outlined"
-        sx={{ p: 3, display: "flex", flexDirection: "column", gap: 2 }}
-      >
+      <Paper variant="outlined" sx={{ p: 3, display: "flex", flexDirection: "column", gap: 2 }}>
         <Typography variant="h6" fontWeight={600} gutterBottom>
           Reviewer Response / Note
         </Typography>

@@ -1,10 +1,7 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
-export async function GET(
-  _req: Request,
-  context: { params: Promise<{ offeringId: string }> },
-) {
+export async function GET(_req: Request, context: { params: Promise<{ offeringId: string }> }) {
   const { offeringId } = await context.params;
   const id = Number(offeringId);
   if (isNaN(id)) {
@@ -38,7 +35,7 @@ export async function GET(
       WHERE u.offering_id = $1
       GROUP BY u.offering_id;
       `,
-      [id],
+      [id]
     );
 
     const allocatedAmount = res.rows?.[0]?.allocated_amount ?? 0;
@@ -48,9 +45,6 @@ export async function GET(
     });
   } catch (err) {
     console.error("Error fetching allocated amount:", err);
-    return NextResponse.json(
-      { error: "Failed to fetch allocated amount" },
-      { status: 500 },
-    );
+    return NextResponse.json({ error: "Failed to fetch allocated amount" }, { status: 500 });
   }
 }

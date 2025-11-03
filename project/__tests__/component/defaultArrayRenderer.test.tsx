@@ -92,9 +92,7 @@ describe("DefaultArrayRenderer", () => {
   test("handles nested objects", () => {
     const arr = [{ user: { name: "John", age: 30 } }];
     render(<DefaultArrayRenderer arr={arr} />);
-    expect(
-      screen.getByText('{"user":{"name":"John","age":30}}'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('{"user":{"name":"John","age":30}}')).toBeInTheDocument();
   });
 
   test("handles array of arrays", () => {
@@ -125,9 +123,7 @@ describe("DefaultArrayRenderer", () => {
   test("handles objects with special characters", () => {
     const arr = [{ message: 'Hello "World"' }];
     render(<DefaultArrayRenderer arr={arr} />);
-    expect(
-      screen.getByText('{"message":"Hello \\"World\\""}'),
-    ).toBeInTheDocument();
+    expect(screen.getByText('{"message":"Hello \\"World\\""}')).toBeInTheDocument();
   });
 
   // Explicitly exercise lines 26–28 branches:

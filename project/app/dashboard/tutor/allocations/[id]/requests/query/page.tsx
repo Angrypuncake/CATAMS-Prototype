@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import {
   Container,
   Typography,
-  Paper,
   TextField,
   Button,
   Box,
@@ -166,11 +165,7 @@ export default function QueryRequestPage() {
           </Button>
 
           <Tooltip
-            title={
-              isSubmitDisabled
-                ? "Please complete both fields before submitting"
-                : ""
-            }
+            title={isSubmitDisabled ? "Please complete both fields before submitting" : ""}
             placement="top"
           >
             <span>
@@ -194,11 +189,7 @@ export default function QueryRequestPage() {
         onClose={() => setSuccess(null)}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert
-          onClose={() => setSuccess(null)}
-          severity="success"
-          sx={{ width: "100%" }}
-        >
+        <Alert onClose={() => setSuccess(null)} severity="success" sx={{ width: "100%" }}>
           {success}
         </Alert>
       </Snackbar>
@@ -209,11 +200,7 @@ export default function QueryRequestPage() {
         onClose={() => setErr(null)}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert
-          onClose={() => setErr(null)}
-          severity="error"
-          sx={{ width: "100%" }}
-        >
+        <Alert onClose={() => setErr(null)} severity="error" sx={{ width: "100%" }}>
           {err}
         </Alert>
       </Snackbar>

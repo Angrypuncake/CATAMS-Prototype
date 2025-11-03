@@ -7,11 +7,7 @@ interface AdminBudgetBoxProps {
   href?: string;
 }
 
-const AdminBudgetBox: React.FC<AdminBudgetBoxProps> = ({
-  title,
-  description,
-  href,
-}) => {
+const AdminBudgetBox: React.FC<AdminBudgetBoxProps> = ({ title, description, href }) => {
   return (
     <Box>
       <Paper

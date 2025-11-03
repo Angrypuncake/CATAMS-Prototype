@@ -253,16 +253,14 @@ describe("CancelReview Component", () => {
     const consoleSpy = jest.spyOn(console, "error").mockImplementation();
 
     mockGetTutorById.mockRejectedValue(new Error("Failed to fetch tutor"));
-    mockGetAllocationById.mockRejectedValue(
-      new Error("Failed to fetch allocation"),
-    );
+    mockGetAllocationById.mockRejectedValue(new Error("Failed to fetch allocation"));
 
     render(<CancelReview data={mockCancelRequest} />);
 
     await waitFor(() => {
       expect(consoleSpy).toHaveBeenCalledWith(
         "Failed to load cancellation details:",
-        expect.any(Error),
+        expect.any(Error)
       );
     });
 
@@ -273,9 +271,7 @@ describe("CancelReview Component", () => {
     render(<CancelReview data={mockCancelRequest} />);
 
     expect(screen.getByText("Loading tutor details...")).toBeInTheDocument();
-    expect(
-      screen.getByText("Loading allocation details..."),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Loading allocation details...")).toBeInTheDocument();
   });
 
   test("should display chip with correct status color", async () => {

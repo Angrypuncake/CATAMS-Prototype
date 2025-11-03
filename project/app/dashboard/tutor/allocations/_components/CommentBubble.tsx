@@ -14,12 +14,7 @@ export default function CommentBubble({ comment }: { comment: CommentItem }) {
         borderRadius: 1.5,
       }}
     >
-      <Stack
-        direction="row"
-        alignItems="center"
-        justifyContent="space-between"
-        sx={{ mb: 0.5 }}
-      >
+      <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 0.5 }}>
         <Typography variant="body2" fontWeight={600}>
           {comment.author}
           {comment.role ? ` – ${comment.role}` : ""} ({comment.time})
@@ -29,12 +24,7 @@ export default function CommentBubble({ comment }: { comment: CommentItem }) {
             <Button size="small" variant="outlined" startIcon={<EditIcon />}>
               Edit
             </Button>
-            <Button
-              size="small"
-              variant="outlined"
-              color="error"
-              startIcon={<DeleteIcon />}
-            >
+            <Button size="small" variant="outlined" color="error" startIcon={<DeleteIcon />}>
               Delete
             </Button>
           </Stack>

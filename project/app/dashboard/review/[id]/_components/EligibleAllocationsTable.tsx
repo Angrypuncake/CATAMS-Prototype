@@ -1,16 +1,6 @@
 "use client";
-import {
-  Box,
-  Button,
-  CircularProgress,
-  Divider,
-  Paper,
-  Typography,
-} from "@mui/material";
-import type {
-  AdminAllocationRow,
-  TutorAllocationRow,
-} from "@/app/_types/allocations";
+import { Box, Button, CircularProgress, Divider, Paper, Typography } from "@mui/material";
+import type { AdminAllocationRow } from "@/app/_types/allocations";
 
 interface EligibleAllocationsTableProps {
   eligibleAllocations: AdminAllocationRow[];
@@ -58,10 +48,7 @@ export default function EligibleAllocationsTable({
             <tbody>
               {eligibleAllocations.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={8}
-                    className="px-3 py-3 text-center text-gray-500"
-                  >
+                  <td colSpan={8} className="px-3 py-3 text-center text-gray-500">
                     No eligible allocations found
                   </td>
                 </tr>

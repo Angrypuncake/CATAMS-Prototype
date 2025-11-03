@@ -230,22 +230,14 @@ export async function seedTestUnitOfferings(pool: Pool) {
 }
 
 export async function seedTestUserRoles(pool: Pool) {
-  const users = await pool.query(
-    "SELECT user_id, email FROM test_users ORDER BY user_id",
-  );
-  const roles = await pool.query(
-    "SELECT role_id, role_name FROM test_role ORDER BY role_id",
-  );
+  const users = await pool.query("SELECT user_id, email FROM test_users ORDER BY user_id");
+  const roles = await pool.query("SELECT role_id, role_name FROM test_role ORDER BY role_id");
   const offerings = await pool.query(
-    "SELECT offering_id FROM test_unit_offering ORDER BY offering_id",
+    "SELECT offering_id FROM test_unit_offering ORDER BY offering_id"
   );
 
-  const tutorId = users.rows.find(
-    (u) => u.email === "testtutor@demo.edu",
-  )?.user_id;
-  const adminId = users.rows.find(
-    (u) => u.email === "testadmin@demo.edu",
-  )?.user_id;
+  const tutorId = users.rows.find((u) => u.email === "testtutor@demo.edu")?.user_id;
+  const adminId = users.rows.find((u) => u.email === "testadmin@demo.edu")?.user_id;
   const ucId = users.rows.find((u) => u.email === "testuc@demo.edu")?.user_id;
   const taId = users.rows.find((u) => u.email === "testta@demo.edu")?.user_id;
 
@@ -279,7 +271,7 @@ export async function seedTestUserRoles(pool: Pool) {
       taId,
       taRoleId,
       offering1,
-    ],
+    ]
   );
 }
 
@@ -296,7 +288,7 @@ export async function seedTestPaycodes(pool: Pool) {
 
 export async function seedTestActivities(pool: Pool) {
   const offerings = await pool.query(
-    "SELECT offering_id FROM test_unit_offering ORDER BY offering_id",
+    "SELECT offering_id FROM test_unit_offering ORDER BY offering_id"
   );
   const offering1 = offerings.rows[0]?.offering_id;
   const offering2 = offerings.rows[1]?.offering_id;
@@ -309,14 +301,14 @@ export async function seedTestActivities(pool: Pool) {
     ($3, 'Tutorial', 'Tutorial 1', 25)
     RETURNING activity_id;
   `,
-    [offering1, offering1, offering2],
+    [offering1, offering1, offering2]
   );
   return result.rows.map((row) => row.activity_id);
 }
 
 export async function seedTestSessionOccurrences(pool: Pool) {
   const activities = await pool.query(
-    "SELECT activity_id FROM test_teaching_activity ORDER BY activity_id",
+    "SELECT activity_id FROM test_teaching_activity ORDER BY activity_id"
   );
   const activity1 = activities.rows[0]?.activity_id;
   const activity2 = activities.rows[1]?.activity_id;
@@ -329,25 +321,21 @@ export async function seedTestSessionOccurrences(pool: Pool) {
     ($3, '2025-11-02', '14:00:00', '16:00:00', 'Lab 456', 2)
     RETURNING occurrence_id;
   `,
-    [activity1, activity1, activity2],
+    [activity1, activity1, activity2]
   );
   return result.rows.map((row) => row.occurrence_id);
 }
 
 export async function seedTestAllocations(pool: Pool) {
-  const users = await pool.query(
-    "SELECT user_id, email FROM test_users ORDER BY user_id",
-  );
+  const users = await pool.query("SELECT user_id, email FROM test_users ORDER BY user_id");
   const occurrences = await pool.query(
-    "SELECT occurrence_id FROM test_session_occurrence ORDER BY occurrence_id",
+    "SELECT occurrence_id FROM test_session_occurrence ORDER BY occurrence_id"
   );
   const activities = await pool.query(
-    "SELECT activity_id FROM test_teaching_activity ORDER BY activity_id",
+    "SELECT activity_id FROM test_teaching_activity ORDER BY activity_id"
   );
 
-  const tutorId = users.rows.find(
-    (u) => u.email === "testtutor@demo.edu",
-  )?.user_id;
+  const tutorId = users.rows.find((u) => u.email === "testtutor@demo.edu")?.user_id;
   const occurrence1 = occurrences.rows[0]?.occurrence_id;
   const occurrence2 = occurrences.rows[1]?.occurrence_id;
   const activity1 = activities.rows[0]?.activity_id;
@@ -359,15 +347,6 @@ export async function seedTestAllocations(pool: Pool) {
     ($4, $5, $6, 'pending', 'TUT01', 'Tutor', 'scheduled', 2.0),
     ($7, NULL, $8, 'confirmed', 'MARK', 'Tutor', 'unscheduled', 10.0);
   `,
-    [
-      tutorId,
-      occurrence1,
-      activity1,
-      tutorId,
-      occurrence2,
-      activity1,
-      tutorId,
-      activity1,
-    ],
+    [tutorId, occurrence1, activity1, tutorId, occurrence2, activity1, tutorId, activity1]
   );
 }

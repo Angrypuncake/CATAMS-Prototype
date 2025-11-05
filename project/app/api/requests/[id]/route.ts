@@ -3,7 +3,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/lib/db";
 
-export async function GET(request: NextRequest, context: { params: { id: string } }) {
+export async function GET(
+  request: NextRequest,
+  context: { params: Promise<{ id: string }> },
+) {
   const { id } = await context.params;
 
   const sql = `
@@ -27,7 +30,10 @@ export async function GET(request: NextRequest, context: { params: { id: string 
   const row = rows[0];
 
   if (!row) {
-    return NextResponse.json({ error: `Request ${id} not found` }, { status: 404 });
+    return NextResponse.json(
+      { error: `Request ${id} not found` },
+      { status: 404 },
+    );
   }
 
   return NextResponse.json({ data: row });

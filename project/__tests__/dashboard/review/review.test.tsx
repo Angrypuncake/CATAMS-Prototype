@@ -11,11 +11,13 @@ const mockGetAllocationById = jest.fn();
 
 jest.mock("../../../app/services/requestService", () => ({
   getRequestById: (...args: unknown[]) => mockGetRequestById(...args),
-  getRequestByRequestId: (...args: unknown[]) => mockGetRequestByRequestId(...args),
+  getRequestByRequestId: (...args: unknown[]) =>
+    mockGetRequestByRequestId(...args),
 }));
 
 jest.mock("../../../app/services/allocationService", () => ({
-  getFormattedAllocationById: (...args: unknown[]) => mockGetFormattedAllocationById(...args),
+  getFormattedAllocationById: (...args: unknown[]) =>
+    mockGetFormattedAllocationById(...args),
   getAllocationById: (...args: unknown[]) => mockGetAllocationById(...args),
 }));
 
@@ -78,7 +80,13 @@ describe("ReviewPage", () => {
   });
 
   test("should render review page component with loading state", async () => {
-    render(<ReviewShell role="UC" currentUserId={5} requestId="123" readOnly={false} />);
+    const params = Promise.resolve({ id: "123" });
+    const searchParams = Promise.resolve({
+      role: "UC",
+      currentUserId: "5",
+      readOnly: "false",
+    });
+    render(<ReviewShell params={params} searchParams={searchParams} />);
 
     // Verify component mounts and shows loading state
     expect(screen.getByRole("progressbar")).toBeInTheDocument();
@@ -88,7 +96,7 @@ describe("ReviewPage", () => {
       () => {
         expect(mockGetRequestByRequestId).toHaveBeenCalledWith("123");
       },
-      { timeout: 3000 }
+      { timeout: 3000 },
     );
 
     // Wait for loading to complete
@@ -96,7 +104,7 @@ describe("ReviewPage", () => {
       () => {
         expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
       },
-      { timeout: 3000 }
+      { timeout: 3000 },
     );
 
     // Verify claim review content appears

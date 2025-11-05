@@ -1,16 +1,8 @@
 "use client";
 import ReviewShell from "@/app/dashboard/review/[id]/page";
-import { useParams } from "next/navigation";
 
-export default function Page() {
-  const { id } = useParams<{ id: string }>();
-  const requestId = Array.isArray(id) ? id[0] : id;
+export default function Page({ params }: { params: Promise<{ id: string }> }) {
+  const searchParams = Promise.resolve({ role: "UC", readOnly: "false" });
 
-  return (
-    <ReviewShell
-      role="UC"
-      readOnly={false}
-      requestId={requestId} // <-- pass explicit request ID
-    />
-  );
+  return <ReviewShell params={params} searchParams={searchParams} />;
 }

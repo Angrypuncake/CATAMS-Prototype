@@ -6,13 +6,17 @@ import { Chip, Button } from "@mui/material";
 import { JSX } from "react";
 import { useRouter } from "next/navigation";
 
-export default function TAAllocationsTable({ allocations }: { allocations: AdminAllocationRow[] }) {
+export default function TAAllocationsTable({
+  allocations,
+}: {
+  allocations: AdminAllocationRow[];
+}) {
   const router = useRouter();
 
   // -------------------------------------------------
   // 🔹 Define columns to show
   // -------------------------------------------------
-  const columns: { key: keyof AdminAllocationRow | "view"; label: string }[] = [
+  const columns = [
     { key: "activity_name", label: "Activity" },
     { key: "activity_type", label: "Type" },
     { key: "session_date", label: "Date" },
@@ -43,7 +47,7 @@ export default function TAAllocationsTable({ allocations }: { allocations: Admin
       keyof AdminAllocationRow | "view",
       (
         value: AdminAllocationRow[keyof AdminAllocationRow],
-        row: AdminAllocationRow
+        row: AdminAllocationRow,
       ) => JSX.Element | string
     >
   > = {
@@ -91,7 +95,9 @@ export default function TAAllocationsTable({ allocations }: { allocations: Admin
   return (
     <DynamicTable<AdminAllocationRow>
       rows={allocations}
-      columns={columns}
+      columns={
+        columns as { key: keyof AdminAllocationRow & string; label?: string }[]
+      }
       columnRenderers={columnRenderers}
       defaultSortColumn="session_date"
       defaultSortDirection="asc"

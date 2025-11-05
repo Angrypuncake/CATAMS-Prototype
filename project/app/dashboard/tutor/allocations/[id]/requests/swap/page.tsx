@@ -100,7 +100,10 @@ export default function SwapRequestPage() {
         requestReason: reason.trim(),
         details: {
           suggested_tutor_id:
-            swapType === "suggest" && selectedTutor ? selectedTutor.user_id : null,
+            swapType === "suggest" && selectedTutor
+              ? selectedTutor.user_id
+              : null,
+          suggested_alloc_id: null,
         },
       };
 
@@ -151,7 +154,10 @@ export default function SwapRequestPage() {
       <form onSubmit={handleSubmit}>
         <FormControl component="fieldset" sx={{ mb: 3 }}>
           <FormLabel component="legend">Swap Type</FormLabel>
-          <RadioGroup value={swapType} onChange={(e) => setSwapType(e.target.value)}>
+          <RadioGroup
+            value={swapType}
+            onChange={(e) => setSwapType(e.target.value)}
+          >
             <FormControlLabel
               value="suggest"
               control={<Radio />}
@@ -172,7 +178,11 @@ export default function SwapRequestPage() {
           value={selectedTutor}
           onChange={(e, newValue) => setSelectedTutor(newValue)}
           renderInput={(params) => (
-            <TextField {...params} label="Find Tutor to Swap With" sx={{ mb: 3 }} />
+            <TextField
+              {...params}
+              label="Find Tutor to Swap With"
+              sx={{ mb: 3 }}
+            />
           )}
         />
 
@@ -206,7 +216,11 @@ export default function SwapRequestPage() {
           </Button>
 
           <Tooltip
-            title={isSubmitDisabled ? "Please enter a justification to enable submission" : ""}
+            title={
+              isSubmitDisabled
+                ? "Please enter a justification to enable submission"
+                : ""
+            }
             placement="top"
           >
             {/* span is required because disabled buttons don't trigger tooltips */}
@@ -229,7 +243,11 @@ export default function SwapRequestPage() {
         onClose={() => setSuccess(null)}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={() => setSuccess(null)} severity="success" sx={{ width: "100%" }}>
+        <Alert
+          onClose={() => setSuccess(null)}
+          severity="success"
+          sx={{ width: "100%" }}
+        >
           {success}
         </Alert>
       </Snackbar>
@@ -240,7 +258,11 @@ export default function SwapRequestPage() {
         onClose={() => setErr(null)}
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
-        <Alert onClose={() => setErr(null)} severity="error" sx={{ width: "100%" }}>
+        <Alert
+          onClose={() => setErr(null)}
+          severity="error"
+          sx={{ width: "100%" }}
+        >
           {err}
         </Alert>
       </Snackbar>

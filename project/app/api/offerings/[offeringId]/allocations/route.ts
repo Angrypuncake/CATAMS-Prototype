@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
 import { AdminAllocationRow } from "@/app/_types/allocations";
 
-export async function GET(_req: Request, context: { params: { offeringId: string } }) {
-  const { offeringId } = context.params;
+export async function GET(
+  _req: Request,
+  context: { params: Promise<{ offeringId: string }> },
+) {
+  const { offeringId } = await context.params;
   const id = Number(offeringId);
 
   if (isNaN(id)) {
@@ -43,7 +46,7 @@ export async function GET(_req: Request, context: { params: { offeringId: string
       WHERE uo.offering_id = $1
       ORDER BY so.session_date, so.start_at;
       `,
-      [id]
+      [id],
     );
 
     const allocations: AdminAllocationRow[] = res.rows.map((r) => ({
@@ -72,6 +75,9 @@ export async function GET(_req: Request, context: { params: { offeringId: string
     return NextResponse.json(allocations);
   } catch (err) {
     console.error("Error fetching allocations by offering:", err);
-    return NextResponse.json({ error: "Failed to fetch allocations" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Failed to fetch allocations" },
+      { status: 500 },
+    );
   }
 }

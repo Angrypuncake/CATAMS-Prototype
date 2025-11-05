@@ -20,17 +20,30 @@ import ReviewFallback from "./_components/ReviewFallback";
 export type ReviewRole = "UC" | "TA" | "USER";
 
 export default function ReviewShell({
-  role,
-  readOnly = role === "USER",
-  currentUserId,
-  requestId,
+  params,
+  searchParams,
 }: {
-  role: ReviewRole;
-  readOnly?: boolean;
-  currentUserId?: number;
-  requestId: string;
+  params: Promise<{ id: string }>;
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const id = requestId;
+  const [id, setId] = useState<string>("");
+  const [role, setRole] = useState<ReviewRole>("USER");
+  const [readOnly, setReadOnly] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<number | undefined>(
+    undefined,
+  );
+
+  useEffect(() => {
+    params.then((p) => setId(p.id));
+    searchParams?.then((sp) => {
+      const roleParam = sp.role as ReviewRole | undefined;
+      if (roleParam) setRole(roleParam);
+      const readOnlyParam = sp.readOnly;
+      if (readOnlyParam !== undefined) setReadOnly(readOnlyParam === "true");
+      const userIdParam = sp.currentUserId;
+      if (userIdParam) setCurrentUserId(Number(userIdParam));
+    });
+  }, [params, searchParams]);
   const [data, setData] = useState<TutorRequest | null>(null);
   const [allocation, setAllocation] = useState<TutorAllocationRow | null>(null);
   const [tutors, setTutors] = useState<Tutor[]>([]);
@@ -50,7 +63,9 @@ export default function ReviewShell({
         if (cancelled) return;
         setData(req);
 
-        const alloc = await getFormattedAllocationById(String(req.allocationId));
+        const alloc = await getFormattedAllocationById(
+          String(req.allocationId),
+        );
         if (cancelled) return;
         setAllocation(alloc);
 
@@ -90,7 +105,9 @@ export default function ReviewShell({
   if (!data || !allocation) {
     return (
       <Box p={3}>
-        <Typography color="error">{err ?? "Request or allocation not found."}</Typography>
+        <Typography color="error">
+          {err ?? "Request or allocation not found."}
+        </Typography>
       </Box>
     );
   }

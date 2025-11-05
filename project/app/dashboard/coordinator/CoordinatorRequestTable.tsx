@@ -5,13 +5,17 @@ import { JSX } from "react";
 import { useRouter } from "next/navigation";
 
 // Suppose this is inside your UCRequestsPage.tsx
-export default function UCRequestsTable({ requests }: { requests: UCApproval[] }) {
+export default function UCRequestsTable({
+  requests,
+}: {
+  requests: UCApproval[];
+}) {
   const router = useRouter();
 
   // -------------------------------------------------
   // 🔹 Define base columns
   // -------------------------------------------------
-  const columns: { key: keyof UCApproval | "review"; label: string }[] = [
+  const columns = [
     { key: "requestId", label: "Request ID" },
     { key: "requestType", label: "Request Type" },
     { key: "activityName", label: "Activity" },
@@ -40,7 +44,10 @@ export default function UCRequestsTable({ requests }: { requests: UCApproval[] }
   const columnRenderers: Partial<
     Record<
       keyof UCApproval | "review",
-      (value: UCApproval[keyof UCApproval], row: UCApproval) => JSX.Element | string
+      (
+        value: UCApproval[keyof UCApproval],
+        row: UCApproval,
+      ) => JSX.Element | string
     >
   > = {
     requestStatus: (value) => {
@@ -80,7 +87,9 @@ export default function UCRequestsTable({ requests }: { requests: UCApproval[] }
         variant="outlined"
         size="small"
         color="warning" // ⬅️ MUI orange accent
-        onClick={() => router.push(`/dashboard/coordinator/review/${row.requestId}`)}
+        onClick={() =>
+          router.push(`/dashboard/coordinator/review/${row.requestId}`)
+        }
       >
         Review
       </Button>
@@ -93,7 +102,7 @@ export default function UCRequestsTable({ requests }: { requests: UCApproval[] }
   return (
     <DynamicTable<UCApproval>
       rows={requests}
-      columns={columns}
+      columns={columns as { key: keyof UCApproval & string; label?: string }[]}
       columnRenderers={columnRenderers}
       defaultSortColumn="sessionDate"
       defaultSortDirection="asc"

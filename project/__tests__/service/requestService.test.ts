@@ -39,7 +39,10 @@ describe("getRequestById (mocked paths)", () => {
       expect(r.details).toEqual({ hours: 2, paycode: "TUT01" });
     }
     if (type === "swap") {
-      expect(r.details).toEqual({ suggested_tutor_id: 10 });
+      expect(r.details).toEqual({
+        suggested_tutor_id: 10,
+        suggested_alloc_id: null,
+      });
     }
     if (type === "correction") {
       expect(r.details).toEqual({
@@ -75,7 +78,7 @@ describe("postCorrectionRequest", () => {
     const res = await postCorrectionRequest(45, payload);
     expect(mockedAxios.post).toHaveBeenCalledWith(
       "/tutor/allocations/45/requests/correction",
-      payload
+      payload,
     );
     expect(res).toEqual({ ok: true });
   });
@@ -209,7 +212,10 @@ describe("getRequestsByAllocation", () => {
       },
     });
     const res = await getRequestsByAllocation(3);
-    expect(mockedAxios.get).toHaveBeenCalledWith("/requests?allocationId=3", undefined);
+    expect(mockedAxios.get).toHaveBeenCalledWith(
+      "/requests?allocationId=3",
+      undefined,
+    );
     expect(res).toEqual([
       {
         requestId: 1,

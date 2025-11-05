@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { query } from "@/lib/db";
-import { PatchDetailsUnion, PatchTutorRequestBase } from "@/app/_types/requestsPatch";
+import {
+  PatchDetailsUnion,
+  PatchTutorRequestBase,
+} from "@/app/_types/requestsPatch";
 
 /**
  * Generic endpoint to create a tutor request (claim, swap, correction, cancellation, query)
@@ -30,21 +33,29 @@ export async function POST(req: Request) {
         AND request_type = $3
         AND request_status IN ('pending_ta', 'pending_uc');
     `;
-    const { rows: existing } = await query(dupCheckSQL, [requesterId, allocationId, requestType]);
+    const { rows: existing } = await query(dupCheckSQL, [
+      requesterId,
+      allocationId,
+      requestType,
+    ]);
 
     if (existing.length > 0) {
       return NextResponse.json(
         {
-          error: "Duplicate open request detected for this allocation and type.",
+          error:
+            "Duplicate open request detected for this allocation and type.",
         },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
     // Optional: Validate requestType for safety
     const validTypes = ["claim", "swap", "correction", "cancellation", "query"];
     if (!validTypes.includes(requestType)) {
-      return NextResponse.json({ error: "Invalid request type" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Invalid request type" },
+        { status: 400 },
+      );
     }
 
     // Assign status based on request type (you can refine later)
@@ -80,7 +91,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true, requestId: insertedId });
   } catch (error) {
     console.error("Error inserting request:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -93,7 +107,10 @@ export async function GET(req: Request) {
     const requesterId = req.headers.get("x-user-id"); // optional filtering
 
     if (!allocationId) {
-      return NextResponse.json({ error: "Missing allocationId query parameter" }, { status: 400 });
+      return NextResponse.json(
+        { error: "Missing allocationId query parameter" },
+        { status: 400 },
+      );
     }
 
     // Define which statuses count as "open"
@@ -106,7 +123,10 @@ export async function GET(req: Request) {
       WHERE allocation_id = $1
         AND request_status = ANY($2)
     `;
-    const params: (string | readonly string[])[] = [allocationId, OPEN_STATUSES];
+    const params: (string | readonly string[])[] = [
+      allocationId,
+      OPEN_STATUSES,
+    ];
 
     // Optionally scope to current user (frontend header: x-user-id)
     if (requesterId) {
@@ -121,7 +141,10 @@ export async function GET(req: Request) {
     return NextResponse.json({ data: rows });
   } catch (error) {
     console.error("Error fetching open requests:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }
 
@@ -129,7 +152,9 @@ export async function GET(req: Request) {
 // 🔹 PATCH — update an existing request
 // -----------------------------------------------
 
-type PatchBody = PatchTutorRequestBase | (PatchTutorRequestBase & PatchDetailsUnion);
+type PatchBody =
+  | PatchTutorRequestBase
+  | (PatchTutorRequestBase & PatchDetailsUnion);
 
 export async function PATCH(req: Request) {
   try {
@@ -169,18 +194,25 @@ export async function PATCH(req: Request) {
 
     // Details patching is allowed only when both discriminator and payload exist
     if ("requestType" in body && "details" in body) {
-      if (body.details === null || body.requestType === "query") {
+      const detailsBody = body as PatchDetailsUnion;
+      const reqType = detailsBody.requestType as string;
+      if (detailsBody.details === null || reqType === "query") {
         // explicit clear (or query has no details)
         updates.push(`details = NULL`);
       } else {
         // shallow-merge JSON (preserve unspecified keys)
-        updates.push(`details = COALESCE(details, '{}'::jsonb) || $${updates.length + 1}::jsonb`);
-        values.push(JSON.stringify(body.details));
+        updates.push(
+          `details = COALESCE(details, '{}'::jsonb) || $${updates.length + 1}::jsonb`,
+        );
+        values.push(JSON.stringify(detailsBody.details));
       }
     }
 
     if (updates.length === 0) {
-      return NextResponse.json({ error: "No fields provided for update" }, { status: 400 });
+      return NextResponse.json(
+        { error: "No fields provided for update" },
+        { status: 400 },
+      );
     }
 
     const sql = `
@@ -199,6 +231,9 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ success: true, data: rows[0] });
   } catch (error) {
     console.error("Error updating request:", error);
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Internal Server Error" },
+      { status: 500 },
+    );
   }
 }

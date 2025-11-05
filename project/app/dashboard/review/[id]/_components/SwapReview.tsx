@@ -18,12 +18,17 @@ import SwapHeader from "./swapcomponents/SwapHeader";
 import InitiatorCard from "./swapcomponents/InitiatorCard";
 import SuggestedTutorCard from "./swapcomponents/SuggestedTutorCard";
 import ReviewerActions from "./swapcomponents/ReviewerActions";
-import { getAdminAllocationById, swapAllocations } from "@/app/services/allocationService";
+import {
+  getAdminAllocationById,
+  swapAllocations,
+} from "@/app/services/allocationService";
 
 type ReviewRole = "UC" | "TA" | "USER";
 
 // Helper that extracts a tutor id from the selected allocation row without `any`
-function getTutorIdFromAllocation(row: AdminAllocationRow | null): number | null {
+function getTutorIdFromAllocation(
+  row: AdminAllocationRow | null,
+): number | null {
   if (!row) return null;
   // Prefer explicit fields if you have them on AdminAllocationRow:
   // Try common candidates in a safe order:
@@ -34,7 +39,7 @@ function getTutorIdFromAllocation(row: AdminAllocationRow | null): number | null
     "tutorId" as keyof AdminAllocationRow,
   ];
   for (const k of candidateKeys) {
-    const v = (row as Record<string, unknown>)[k];
+    const v = (row as unknown as Record<string, unknown>)[k];
     if (typeof v === "number") return v;
   }
   return null;
@@ -51,16 +56,23 @@ export default function SwapReview({
   readOnly?: boolean;
   currentUserId?: number;
 }) {
-  const { allocationId, requestStatus, requestId, createdAt, requesterId } = data || {};
+  const { allocationId, requestStatus, requestId, createdAt, requesterId } =
+    data || {};
 
-  const { loadingEligible, sourceTutor, suggestedTutor, sourceAllocation, eligibleAllocations } =
-    useSwapReview(data);
+  const {
+    loadingEligible,
+    sourceTutor,
+    suggestedTutor,
+    sourceAllocation,
+    eligibleAllocations,
+  } = useSwapReview(data);
 
   const [reviewerNote, setReviewerNote] = useState("");
-  const [selectedAllocation, setSelectedAllocation] = useState<AdminAllocationRow | null>(null);
+  const [selectedAllocation, setSelectedAllocation] =
+    useState<AdminAllocationRow | null>(null);
 
   useEffect(() => {
-    if (!data) return;
+    if (!data || data.requestType !== "swap") return;
     const suggestedAllocId = data.details?.suggested_alloc_id;
     console.log("DATA", data);
     console.log("DATA.details", data.details);
@@ -70,7 +82,9 @@ export default function SwapReview({
 
     (async () => {
       try {
-        const allocation = await getAdminAllocationById(String(suggestedAllocId));
+        const allocation = await getAdminAllocationById(
+          String(suggestedAllocId),
+        );
         console.log("Fetched allocation:", allocation);
         setSelectedAllocation(allocation);
       } catch (err) {
@@ -82,7 +96,8 @@ export default function SwapReview({
   // Only render for swap requests (after all hooks are called)
   if (!data || data.requestType !== "swap") return null;
 
-  const isReadOnly = readOnly || role === "USER" || requestStatus === "approved";
+  const isReadOnly =
+    readOnly || role === "USER" || requestStatus === "approved";
 
   // Resolve the suggested tutor id from either a selection or the pre-filled suggestion
   const resolvedSuggestedTutorId: number | null = (() => {
@@ -91,18 +106,26 @@ export default function SwapReview({
     // Fallback to suggestedTutor object (from hook) if it exists
     if (
       suggestedTutor &&
-      typeof (suggestedTutor as Record<string, unknown>)["user_id"] === "number"
+      typeof (suggestedTutor as unknown as Record<string, unknown>)[
+        "user_id"
+      ] === "number"
     ) {
-      return (suggestedTutor as Record<string, number>)["user_id"];
+      return (suggestedTutor as unknown as Record<string, number>)["user_id"];
     }
     if (
       suggestedTutor &&
-      typeof (suggestedTutor as Record<string, unknown>)["tutor_id"] === "number"
+      typeof (suggestedTutor as unknown as Record<string, unknown>)[
+        "tutor_id"
+      ] === "number"
     ) {
-      return (suggestedTutor as Record<string, number>)["tutor_id"];
+      return (suggestedTutor as unknown as Record<string, number>)["tutor_id"];
     }
-    if (suggestedTutor && typeof (suggestedTutor as Record<string, unknown>)["id"] === "number") {
-      return (suggestedTutor as Record<string, number>)["id"];
+    if (
+      suggestedTutor &&
+      typeof (suggestedTutor as unknown as Record<string, unknown>)["id"] ===
+        "number"
+    ) {
+      return (suggestedTutor as unknown as Record<string, number>)["id"];
     }
     return null;
   })();
@@ -133,14 +156,22 @@ export default function SwapReview({
       }
     },
 
-    rejectUC: () => ucRejectRequest(Number(requestId), currentUserId!, undefined, reviewerNote),
+    rejectUC: () =>
+      ucRejectRequest(
+        Number(requestId),
+        currentUserId!,
+        undefined,
+        reviewerNote,
+      ),
 
     // 🔹 TA forwards to UC AND includes swap details (suggested_tutor_id)
     forwardTA: async () => {
       // Require a concrete suggested tutor id to forward a swap
       if (resolvedSuggestedTutorId === null) {
         // Replace with your toast/snackbar
-        throw new Error("Please select a tutor to propose for the swap before forwarding.");
+        throw new Error(
+          "Please select a tutor to propose for the swap before forwarding.",
+        );
       }
       return taForwardWithDetails(
         Number(requestId),
@@ -149,20 +180,32 @@ export default function SwapReview({
           requestType: "swap",
           details: {
             suggested_tutor_id: resolvedSuggestedTutorId,
-            suggested_alloc_id: Number(selectedAllocation.id),
+            suggested_alloc_id: selectedAllocation
+              ? Number(selectedAllocation.id)
+              : null,
           },
         },
         undefined, // reason
-        reviewerNote ?? undefined
+        reviewerNote ?? undefined,
       );
     },
 
-    rejectTA: () => taRejectRequest(Number(requestId), currentUserId!, undefined, reviewerNote),
+    rejectTA: () =>
+      taRejectRequest(
+        Number(requestId),
+        currentUserId!,
+        undefined,
+        reviewerNote,
+      ),
   };
 
   return (
     <Paper elevation={2} sx={{ p: 4, mb: 6 }}>
-      <SwapHeader requestId={requestId} requestStatus={requestStatus} createdAt={createdAt} />
+      <SwapHeader
+        requestId={requestId}
+        requestStatus={requestStatus}
+        createdAt={createdAt}
+      />
       <Divider sx={{ my: 3 }} />
 
       {/* INITIATOR + SUGGESTED TUTOR */}

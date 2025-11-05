@@ -8,15 +8,21 @@ import {
 import { getTutorById } from "@/app/services/userService";
 import type { Tutor } from "@/app/_types/tutor";
 import type { TutorRequest } from "@/app/_types/request";
-import type { TutorAllocationRow, AdminAllocationRow } from "@/app/_types/allocations";
+import type {
+  TutorAllocationRow,
+  AdminAllocationRow,
+} from "@/app/_types/allocations";
 
 export function useSwapReview(data: TutorRequest) {
   const { allocationId, requesterId } = data;
   const [loadingEligible, setLoadingEligible] = useState(true);
   const [sourceTutor, setSourceTutor] = useState<Tutor | null>(null);
   const [suggestedTutor, setSuggestedTutor] = useState<Tutor | null>(null);
-  const [sourceAllocation, setSourceAllocation] = useState<TutorAllocationRow | null>(null);
-  const [eligibleAllocations, setEligibleAllocations] = useState<AdminAllocationRow[]>([]);
+  const [sourceAllocation, setSourceAllocation] =
+    useState<TutorAllocationRow | null>(null);
+  const [eligibleAllocations, setEligibleAllocations] = useState<
+    AdminAllocationRow[]
+  >([]);
 
   useEffect(() => {
     (async () => {
@@ -26,15 +32,17 @@ export function useSwapReview(data: TutorRequest) {
         setSourceTutor(tutor);
         setSourceAllocation(source);
 
-        if (data.details?.suggested_tutor_id) {
-          const sug = await getTutorById(String(data.details.suggested_tutor_id));
+        if (data.requestType === "swap" && data.details?.suggested_tutor_id) {
+          const sug = await getTutorById(
+            String(data.details.suggested_tutor_id),
+          );
           setSuggestedTutor(sug);
         }
 
         const allocations = await getAllocationsByUnitAndActivityType(
           source.unit_code,
           source.activity_type,
-          requesterId
+          requesterId,
         );
         setEligibleAllocations(allocations);
       } catch (err) {
